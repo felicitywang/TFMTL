@@ -4,9 +4,3 @@
 
 1. Python (v2.7+)
 2. TensorFlow (v1.2+)
-
-## Tasks
-
-### Multi-Task Learning
-
-### Multi-Label Classification
