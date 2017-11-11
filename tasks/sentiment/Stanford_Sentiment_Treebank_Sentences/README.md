@@ -8,12 +8,12 @@ Rotten Tomatoes review sentences with positivity probabilities.
 **Basic stats:**
 
 + \# items = 11,855
-+ labels : a real-valued positivity probability in [0,1], can be mapped into 5 categories:
-    - [0, 0.2]: very negative
-    - (0.2, 0.4]: negative
-    - (0.4, 0.6]: neutral
-    - (0.6, 0.8]: positive
-    - (0.8, 1.0]: very positive
++ \# labels = 5
+    - 1: very negative
+    - 2: negative
+    - 3: neutral
+    - 4: positive
+    - 5: very positive
 
 **Basic Unit**: sentences
 
