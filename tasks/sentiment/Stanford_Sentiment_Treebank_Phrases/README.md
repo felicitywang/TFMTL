@@ -17,7 +17,7 @@ Phrases from Rotten Tomatoes reviews with sentiment labels.
 
 **Basic Unit**: phrases
 
-**Cite**
+**bibtex**
 ```
 @incollection{SocherEtAl2013:RNTN,
 title = {{Parsing With Compositional Vector Grammars}},

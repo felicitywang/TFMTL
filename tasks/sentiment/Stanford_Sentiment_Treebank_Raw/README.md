@@ -12,7 +12,7 @@ Raw sentiment scores for original vocabulary of the SST final dataset(some not u
 
 **Basic Unit**: phrases
 
-**Cite**
+**bibtex**
 ```
 @incollection{SocherEtAl2013:RNTN,
 title = {{Parsing With Compositional Vector Grammars}},

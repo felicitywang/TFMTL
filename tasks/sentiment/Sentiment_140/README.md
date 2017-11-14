@@ -3,7 +3,7 @@
 **Summary**
 
 Tweets with labeled brand/product/topic and sentiment.
-The training data was automatically created according to emoticons instead of manually annotated. 
+The training data was automatically created according to emoticons instead of manually annotated.
 
 **Basic stats:**
 (English)(Arabic/Spanish to be posted shortly)

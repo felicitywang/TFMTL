@@ -17,7 +17,7 @@ Rotten Tomatoes review sentences with positivity probabilities.
 
 **Basic Unit**: sentences
 
-**Cite**
+**bibtex**
 ```
 @incollection{SocherEtAl2013:RNTN,
 title = {{Parsing With Compositional Vector Grammars}},
