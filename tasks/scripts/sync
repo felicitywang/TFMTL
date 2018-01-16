@@ -1,0 +1,1 @@
+rsync -auzvr --bwlimit=2000 ~/.work/dc/ /export/b02/fwang/.work/dc/
