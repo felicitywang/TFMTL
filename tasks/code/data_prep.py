@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Data reprocessing
 
-transform text data into n-gram models
-split data into train/dev/test sets
-"""
+"""Data Preprocessing"""
 
-import numpy as np
-import pandas as pd
-import scipy
+import itertools
+import re
+from collections import Counter
+
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import TweetTokenizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import KFold
 
 # stemmer and tokenizer in NLTK
-from sklearn.preprocessing import LabelEncoder
-
 stemmer = PorterStemmer()
 
 
@@ -44,6 +38,11 @@ tweet_tokenizer = TweetTokenizer(strip_handles=True,
                                  reduce_len=True)  # e.g. waaaayyyyyy -> waayyy
 
 
+def tweet_clean(text):
+    tokens = tweet_tokenizer.tokenize(text)
+    return ' '.join(tokens)
+
+
 def my_tokenizer(text):
     # remove punctuations other than ?!.
     # remove urls
@@ -51,6 +50,7 @@ def my_tokenizer(text):
     #     r'(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,'
     #     r'.;]+[-A-Za-z0-9+&@#/%=~_|][\r\n]*',
     #     ' ', text, flags=re.MULTILINE)
+    # text=clean_str(text)
     tokens = tweet_tokenizer.tokenize(text)
 
     # stems = stem_tokens(tokens, stemmer)
@@ -62,97 +62,41 @@ def my_tokenizer(text):
 # transform data['text'](string) to ngram model using
 # sklearn.feature_extraction.text.TfidfVectorizer
 
-def transform_data(data_dir, index_data_name,
-                   mtx_data_name, min_ngram=1, max_ngram=3, min_df=50):
-    data = pd.read_json(path_or_buf=data_dir + index_data_name)
-
-    # texts = my_tokenizer(data['text']).values.tolist()
-    # tfidf using keras
-    # tokenizer = Tokenizer()
-    # tokenizer.fit_on_texts(texts)
-    # encoded_texts = tokenizer.texts_to_matrix(texts, mode='tfidf')
-
-    # tfidf using sklearn
-    tfidf_vectorizer = TfidfVectorizer(
-        tokenizer=my_tokenizer,
-        ngram_range=(min_ngram, max_ngram),
-        min_df=min_df
-    )
-    tfidf_data = tfidf_vectorizer.fit_transform(data['text'])
-    scipy.io.mmwrite(data_dir + mtx_data_name, tfidf_data)
-    return tfidf_data
-
-
-# randomly split data into train, dev, test = 3:1:1
-# using sklearn.model_selection.KFold
-def random_split_data(data_dir, index_data_name, mtx_data_name):
-    # load data
-    x = pd.read_json(path_or_buf=data_dir + index_data_name)
-    label_encoder = LabelEncoder()
-    y_all = label_encoder.fit_transform(x.label)
-    # y_all = x.label
-    # output_size = len(list(y_all.unique()))
-
-    # transform
-    # transform_data(data_dir, index_data_name, mtx_data_name)
-    x_data = scipy.io.mmread(data_dir + mtx_data_name)
-    x_data = x_data.tocsr()
-
-    # split data into (train, dev), (test) sets
-    kfold_test = KFold(n_splits=5, shuffle=True)
-    index, test_index = next(kfold_test.split(x_data))
-
-    x, y = x_data[index], y_all[index]
-    x_test, y_test = x_data[test_index], y_all[test_index]
-
-    # split left data into train and dev sets
-    kfold_dev = KFold(n_splits=4, shuffle=True)
-
-    # run once only
-    train_index, dev_index = next(kfold_dev.split(y))
-
-    x_train, y_train = x[train_index], y[train_index]
-    x_dev, y_dev = x[dev_index], y[dev_index]
-
-    # print('X shape:', X.shape)
-    # print('y shape:', y.shape)
-    print('x_train shape:', x_train.shape)
-    print('y_train shape:', y_train.shape)
-    print('x_dev  shape:', x_dev.shape)
-    print('y_dev  shape:', y_dev.shape)
-    print('x_test  shape:', x_test.shape)
-    print('y_test  shape:', y_test.shape)
-
-    output_size = len(label_encoder.classes_)
-    return x_train, y_train, x_dev, y_dev, x_test, y_test, output_size
+def clean_str(string):
+    """
+    Tokenization/string cleaning for all datasets except for SST.
+    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+    not used
+    """
+    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+    string = re.sub(r"\'s", " \'s", string)
+    string = re.sub(r"\'ve", " \'ve", string)
+    string = re.sub(r"n\'t", " n\'t", string)
+    string = re.sub(r"\'re", " \'re", string)
+    string = re.sub(r"\'d", " \'d", string)
+    string = re.sub(r"\'ll", " \'ll", string)
+    string = re.sub(r",", " , ", string)
+    string = re.sub(r"!", " ! ", string)
+    string = re.sub(r"\(", " \( ", string)
+    string = re.sub(r"\)", " \) ", string)
+    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\s{2,}", " ", string)
+    return string.strip().lower()
 
 
-# split data according to given train/dev/test indices
-def split_data(data_dir, index_data_name, mtx_data_name, index_dict):
-    # load data
-    x = pd.read_json(path_or_buf=data_dir + index_data_name)
-    label_encoder = LabelEncoder()
-    y = label_encoder.fit_transform(x.label)
-    # y = x.label
-    # output_size = len(list(y.unique()))
+def build_vocab(text_list):
+    word_counts = Counter(itertools.chain(*text_list))
+    vocabulary_inv = [word[0] for word in word_counts.most_common()]
+    vocabulary = {word: index for index, word in enumerate(vocabulary_inv)}
+    print(vocabulary)
+    print(vocabulary_inv)
+    return vocabulary, vocabulary_inv
 
-    x_data = scipy.io.mmread(data_dir + mtx_data_name)
-    x_data = x_data.tocsr()
 
-    train_index = np.array(index_dict['train_index'])
-    dev_index = np.array(index_dict['dev_index'])
-    test_index = np.array(index_dict['test_index'])
+def main():
+    sentence = 'this is aaaaaaaaa a aaaaaa badly beautiful day . , / ? ! :) '
+    print(tweet_clean(sentence))
 
-    x_train, y_train = x_data[train_index], y[train_index]
-    x_dev, y_dev = x_data[dev_index], y[dev_index]
-    x_test, y_test = x_data[test_index], y[test_index]
 
-    print('x_train shape:', x_train.shape)
-    print('y_train shape:', y_train.shape)
-    print('x_dev  shape:', x_dev.shape)
-    print('y_dev  shape:', y_dev.shape)
-    print('x_test  shape:', x_test.shape)
-    print('y_test  shape:', y_test.shape)
-
-    output_size = len(label_encoder.classes_)
-    return x_train, y_train, x_dev, y_dev, x_test, y_test, output_size
+if __name__ == "__main__":
+    main()
