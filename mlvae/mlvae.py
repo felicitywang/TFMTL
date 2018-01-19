@@ -34,6 +34,7 @@ from vae_common import log_normal
 from vae_common import gaussian_sample
 from vae_common import get_tau
 
+from encoders import cnn
 
 Categorical = tf.contrib.distributions.Categorical
 ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategorical
@@ -42,6 +43,8 @@ kl_divergence = tf.contrib.distributions.kl_divergence
 def default_hparams():
   return HParams(embed_dim=256,
                  latent_dim=256,
+                 encode_dim=256,
+                 word_embed_dim=256,
                  tau0=0.5,  # temperature
                  decay_tau=False,
                  alpha=0.1,
@@ -54,77 +57,27 @@ def default_hparams():
 
 
 class MultiLabel(object):
-  def __init__(self, inputs=None, targets=None,
-               feature_dict=None, observed_dict=None,
-               class_sizes=None, decoder=None,
+  def __init__(self,
+               feature_dict=None,
+               class_sizes=None,
+               decoder=None,
                hp=None, is_training=True):
-
-    # inputs: representation of x
-    # targets: integer-ID sequence of words in x
 
     # feature_dict: map from feature names to values (None if feature is unobserved)
     #   key: feature name
     #   values: Tensor of size <batch_size>, where each value in the Tensor is in range(0,...,|label_set|)
-    # observed_dict: map from feature names to booleans (True if observed, False otherwise)
     # class_sizes: map from feature names to cardinality of label sets
 
+    # Save hyper-parameters.
     if hp is None:
       tf.logging.info("Using default hyper-parameters; none provided.")
       hp = default_hparams()
+    self._hp = hp
 
-    if type(inputs) is not list:
-      inputs = [inputs]
-
-    if type(targets) is not list:
-      targets = [targets]
-
-    self._inputs = inputs
-    self._targets = targets
     self._decoder = decoder
 
     # Keep track of batch size.
     self._batch_size = batch_size = tf.shape(inputs[0])[0]
-
-    # Save hyper-parameters.
-    self._hp = hp
-
-    # Distributions
-    def MLP_gaussian_posterior(inputs):
-      if type(inputs) is list:
-        x = tf.concat(inputs, axis=1)
-      else:
-        x = inputs
-
-      x = dense_layer(x, hp.embed_dim, 'l1', tf.nn.elu)
-      x = dense_layer(x, hp.embed_dim, 'l2', tf.nn.elu)
-      zm = dense_layer(x, hp.latent_dim, 'zm')
-      zv = dense_layer(x, hp.latent_dim, 'zv', tf.nn.softplus)
-
-      return zm, zv
-
-    def MLP_unnormalized_categorical(inputs, output_size):
-      if type(inputs) is list:
-        x = tf.concat(inputs, axis=1)
-      else:
-        x = inputs
-
-      x = dense_layer(x, hp.embed_dim, 'l1', tf.nn.elu)
-      x = dense_layer(x, hp.embed_dim, 'l2', tf.nn.elu)
-      x = dense_layer(x, output_size, 'logit', tf.nn.softplus)
-
-      return x
-
-    def MLP_ordinal(inputs):
-      if type(inputs) is list:
-        x = tf.concat(inputs, axis=1)
-      else:
-        x = inputs
-
-      x = dense_layer(x, hp.embed_dim, 'l1', tf.nn.elu)
-      x = dense_layer(x, hp.embed_dim, 'l2', tf.nn.elu)
-      x = dense_layer(x, 1, 'val', None)
-
-      return x
 
     ####################################
     
@@ -135,94 +88,114 @@ class MultiLabel(object):
     # if you make a mistake. Note that variables should be properly
     # re-used if the enclosing variable scope has reuse=True.
 
+    # Create templates for the parametrized parts of the computation
+    # graph that are re-used in different places.
+    self._encoder = tf.make_template(encoder_graph,
+                                     encode_dim=hp.encode_dim)
     # Generative networks
-    py_templates = dict()
+    self._py_templates = dict()
     for k, v in feature_dict:
-      py_templates[k] = tf.make_template('py_{}'.format(k), MLP_unnormalized_categorical, output_size=class_sizes[k])
-
+      self._py_templates[k] = tf.make_template('py_{}'.format(k), MLP_unnormalized_categorical, output_size=class_sizes[k])
     # Inference networks
-    qy_templates = dict()
+    self._qy_templates = dict()
     for k, v in feature_dict:
-      qy_templates[k] = tf.make_template('qy_{}'.format(k), MLP_unnormalized_categorical, output_size=class_sizes[k])
+      self._qy_templates[k] = tf.make_template('qy_{}'.format(k), MLP_unnormalized_categorical, output_size=class_sizes[k])
+    self._qz_template = tf.make_template('qz', MLP_gaussian_posterior)
 
-    qz_template = tf.make_template('qz', MLP_gaussian_posterior)
+    self._tau = get_tau(hp, decay=hp.decay_tau)
 
-    tau = get_tau(hp, decay=hp.decay_tau)
+    self._zm_prior = 0
+    self._zv_prior = 1
 
-    # Sample (approximate inference)
-    # Options:
-    #   y <- z <- x
-    #   y <- x <- z
-    qy_logits = dict()
-    py_logits = dict()
-    observations = dict()
-    predicted_log_ys = dict()
 
-    # sample z from x
-    zm, zv = qz_template(inputs)
-    z = gaussian_sample(zm, zv)
+    # TODO: assert that class_sizes[k] > max(feature_dict[k])
 
-    zm_prior = 0.0
-    zv_prior = 1.0
 
-    for k, v in observed_dict:
-      if v is True:
-        # this feature is observed, so don't sample
-        observations[k] = feature_dict[k]
+  # General helpers
+  def listify(x):
+    if type(x) is not list:
+      return [x]
+    else:
+      return x
 
-        # get predicted y[k] from inference network
-        qy_logit = qy_templates[k](inputs + [z])
-        # qy_normalized = tf.nn.softmax(qy_logit)
+  def maybe_concat(x):
+    if type(x) is list:
+      return tf.concat(x, axis=1)
+    else:
+      return x
 
-        true_y = sampled_observations[k]
+  # Encoding (feature extraction)
+  def encode(self, targets):
+    return self._encoder(targets)
 
-        true_one_hot_y = tf.one_hot(true_y, 1)  # distribution over label set for label y: one-hot vector
+  def encoder_graph(inputs, encode_dim, vocab_size):
+    return cnn(inputs,
+               input_size=vocab_size,
+               embed_dim=word_embed_dim,
+               encode_dim=encode_dim)
 
-        # Here, rather than computing KL[qy_k || py_k], we compute 
-        #   \alpha * \log q(true_y | ...)
-        # which is the discriminative term from Kingma & Welling (2015)
-        # where \alpha is a hyperparameter.
+  # Distributions
+  def preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu):
+    # Returns output of last layer of N-layer dense MLP that can then be passed to an output layer
+    x = maybe_concat(inputs)
+    for i in range(num_layers):
+      x = dense_layer(x, hp.embed_dim, 'l{}'.format(i+1), activation=activation)
+    return x
 
-        # py_logit is unnormalized log distribution output of MLP
-        py_logit = py_templates[k](z)
+  def MLP_gaussian_posterior(inputs):
+    # Returns mean and variance parametrizing a (multivariate) Gaussian
+    x = preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu)
+    zm = dense_layer(x, hp.latent_dim, 'zm', activation=None)
+    zv = dense_layer(x, hp.latent_dim, 'zv', tf.nn.softplus)  # variance must be positive
 
-        qy_logits[k] = qy_logit
-        py_logits[k] = py_logit
+    return zm, zv
 
-        # TODO: check TF documentation for xent functions and if they want logits or distributions
-        # discriminative_labeled_loss += alpha * xent(true_y, qy_logit/qy_normalized/???)
+  def MLP_unnormalized_log_categorical(inputs, output_size):
+    # Returns logits (unnormalized log probabilities)
+    x = preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu)
+    x = dense_layer(x, output_size, 'logit', activation=None)
 
-      else:
-        # sample y from z, x
-        qy_logit = qy_templates[k](inputs + [z])
-        # qy_normalized = tf.nn.softmax(qy_logit)
-        qy_concrete = ExpRelaxedOneHotCategorical(tau,
-                                                  logits=qy_logit,
-                                                  name='qy_{}_concrete'.format(k))
+    return x
 
-        predicted_log_y = qy_concrete.sample()  # relaxed one-hot vector in log space
-        predicted_y = tf.exp(predicted_log_y)  # distribution over label set for label y: relaxed one-hot vector
-        
-        predicted_log_ys[k] = predicted_log_y
+  def MLP_ordinal(inputs):
+    # Returns scalar output
+    x = preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu)
+    x = dense_layer(x, 1, 'val', activation=None)
 
-        py_logit = py_templates[k](z)
+    return x
 
-        qy_logits[k] = qy_logit
-        py_logits[k] = py_logit
+  # Distribution + sampling helpers
+  def sample_y(self, logits, name, argmax=False):
+    # Returns an *approximately* one-hot vector representing a single sample of y (argmax is False)
+    # OR
+    # returns the index (label) with the highest probability (argmax is True)
+    qy_concrete = ExpRelaxedOneHotCategorical(tau,
+                                              logits=logits,
+                                              name='qy_concrete_{}'.format(name))
+    y_sample = tf.exp(qy_concrete.sample())
+    if argmax:
+      y_sample = tf.argmax(y_sample, axis=1)
+    return y_sample
 
-    self._labels = dict()
-    for k, v in qy_logits:
-      if k not in observations:
-        observations[k] = tf.argmax(v, axis=1)
-    self._labels = observations
-    self._loss = self.approx_labeled_loss(observations, qy_logits, py_logits, z,
-                                          zm, zv)
+  def get_predictions(self, inputs, z, feature_name):
+    # Returns most likely label given conditioning variables
+    features = self.encode(inputs)
+    logits = self._qy_templates[feature_name](features + [z])
+    return tf.argmax(logits)
 
-    # Scalar summaries
-    if is_training:
-      tf.summary.scalar("NLL", self._nll)
-      tf.summary.scalar("KL_y", self._kl_y)
-      tf.summary.scalar("KL_z", self._kl_z)
+  def get_label_log_probability(self, inputs, z, label_idx, feature_name):
+    # Returns the log probability (log q(y|x, z)) of a given label y
+    features = self.encode(inputs)
+    logits = self._qy_templates[feature_name](features + [z])
+    log_dist = tf.nn.log_softmax(logits)
+    r = tf.range(0, batch_size, 1)
+    r = tf.expand_dims(r, axis=0)
+    idx = feature_dict[feature_name]
+    idx = tf.concat([tf.transpose(r), idx], axis=1)
+
+    probs = tf.gather_nd(log_dist[i], idx)  # get the feature_dict[feature_name][i]'th element from log_dist[i] (in batch mode)
+    return probs
+    # return logits[label_idx]
 
   def get_var_grads(self):
     # TODO: check if this is correct
@@ -232,10 +205,30 @@ class MultiLabel(object):
     grads = tf.gradients(loss, tvars)
     return (tvars, grads)
 
-  def approx_labeled_loss(self, ys, qy_logits, py_logits, predicted_log_ys,
-                          z, zm, zv,
-                          zm_prior, zv_prior):
+  def get_loss(self,
+               targets,
+               labels,
+               observed_dict,
+               zm_prior,
+               zv_prior,
+               dataset_order):
     # TODO: make sure we are averaging/adding losses correctly across labels and across batch
+
+    # features: representation of x
+    # targets: integer-ID sequence of words in x
+    # observed_dict: map from feature names to booleans (True if observed, False otherwise)
+
+    # inputs = listify(inputs)
+    targets = listify(targets)
+
+    features = encode(targets)
+
+    # TODO: rename `inputs` to `features` below
+
+    batch_size = self._batch_size
+
+    num_z_samples = hp.num_z_samples
+    num_y_samples = hp.num_y_samples
 
     zm, zv = qz_template(inputs)
     res = 0
@@ -264,7 +257,7 @@ class MultiLabel(object):
           idxs = tf.concat([tf.transpose(r), idxs], axis=1)
           vals = tf.gather_nd(log_py_k[i], idxs)  # get the feature_dict[k][i] element from log_py_k[i] (in batch mode)
           res_p += tf.reduce_sum(vals)
-        Eq_log_py = res / num_z_samples
+        Eq_log_py = res_p / num_z_samples
         Eq_log_qy = 0  # entropy of a degenerate point-mass (one-hot) probability distribution is 0
       else:
         # feature is unobserved (in all examples in this batch)
@@ -299,14 +292,14 @@ class MultiLabel(object):
               qy_concrete = ExpRelaxedOneHotCategorical(tau,
                                                         logits=qy_logits,
                                                         name='qy_{}_{}_concrete'.format(k, i))
-              y_samples = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
-              res_q = qy_concrete.log_prob(y_samples)  # log q(y_samp)
+              y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
+              res_q = qy_concrete.log_prob(y_sample)  # log q(y_samp)
 
               py_logits = py_templates[k](z)
               pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(k, i))
-              y_preds = tf.argmax(y_samples, axis=1)  # TODO: try annealing also
+              y_pred = tf.argmax(y_sample, axis=1)  # TODO: try annealing also
               # y_preds = tf.one_hot(y_preds, class_sizes[k])
-              res_p = pcat.log_prob(y_preds)  # log p(y_samp)
+              res_p = pcat.log_prob(y_pred)  # log p(y_samp)
               res += res_q - res_p  # == -(log_p - log_q) (a sampled value of KL(q || p))
           # Eq_log_py = res_p / (num_z_samples * num_y_samples)
           # Eq_log_qy = res_q / (num_z_samples * num_y_samples)
@@ -329,17 +322,24 @@ class MultiLabel(object):
     for _ in range(num_z_samples):
       z = gaussian_sample(zm, zv)
       for _ in range(num_y_samples):
-        instantiation = []
+        instantiation = dict()
         for k in feature_dict:
           inst = None
           if observed_dict[k] is False:
-            # TODO: sample a value of y_k
-            inst = ???
+            # sample a value of y_k
+            qy_logits = qy_templates[k](inputs + [z])
+            qy_concrete = ExpRelaxedOneHotCategorical(tau,
+                                                      logits=qy_logits,
+                                                      name='qy_{}_{}_concrete'.format(k, i))
+            y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
+            y_pred = tf.argmax(y_sample, axis=1)
+            inst = y_pred
           else:
             inst = feature_dict[k]
-          # TODO: put value of y in instantiation -- we need a feature ordering here
-          pass
-        markov_blanket = tf.concat([y], axis=1)  # parents of x in p model
+          instantiation[k] = inst
+        # instantiation dict to list with canonical ordering
+        instantiation_list = [instantiation[k] for k in dataset_order]  # dataset_order: consistent ordering of tasks/datasets
+        markov_blanket = tf.concat([instantiation_list], axis=1)  # parents of x in p model
         nll = self._decoder(self._targets, markov_blanket)  # reconstruction loss
         res += nll
     Eq_log_px = res / (num_z_samples * num_y_samples)
@@ -360,36 +360,6 @@ class MultiLabel(object):
       return -(Eq_log_pz - sum_sampled_kl_qp + Eq_log_px - Eq_log_qz)
     else:
       raise ValueError('unrecognized expectation mode: %s' % (hp.expectation))
-
-    # kl_z = log_normal(z, zm, zv) - log_normal(z, zm_prior, zv_prior)  
-
-    # z_loss = tf.zeros([batch_size])
-    # # kl_ys = dict()
-    # for k, v in feature_dict:
-    #   qy_logit = qy_logits[k]
-    #   py_logit = py_logits[k]
-
-    #   if k in observed_dict:
-    #     # add discriminative (alpha) term
-    #     # TODO
-    #     z_loss += alpha*obs_label_loss
-    #     pass
-    #   else:
-    #     if EXPECTATION_MODE == 'exact':
-    #       # Exact expectation
-    #       qcat = Categorical(logits=qy_logit, name='qy_{}_cat'.format(k))
-    #       pcat = Categorical(logits=py_logit, name='py_{}_cat'.format(k))
-
-    #       z_loss += kl_divergence(qcat, pcat)
-    #       # kl_ys[k] = kl_divergence(qcat, pcat)
-    #     else:
-    #       # TODO
-    #       # Sample expectation
-    #       #               ????        - Concrete(sampled_y | logits_qy)
-    #       # kl_ys[k] = log_p(sampled_y) - qy_concrete.log_p(predicted_log_ys[k])
-    #       z_loss += log_p(sampled_y) - qy_concrete.log_p(predicted_log_ys[k])
-
-    # return nll + z_loss + kl_z
 
   @property
   def decoder(self):
