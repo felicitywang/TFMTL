@@ -46,6 +46,8 @@ def default_hparams():
                  decay_tau=False,
                  alpha=0.1,
                  expectation='exact',
+                 num_z_samples=1,
+                 num_y_samples=1,
                  # inference=Inference.EXACT.value,
                  # K=20,  # number of classes
                  dtype='float32')
@@ -298,13 +300,13 @@ class MultiLabel(object):
                                                         logits=qy_logits,
                                                         name='qy_{}_{}_concrete'.format(k, i))
               y_samples = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
+              res_q = qy_concrete.log_prob(y_samples)  # log q(y_samp)
 
               py_logits = py_templates[k](z)
               pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(k, i))
-              y_preds = tf.argmax(y_samples, axis=1)
+              y_preds = tf.argmax(y_samples, axis=1)  # TODO: try annealing also
               # y_preds = tf.one_hot(y_preds, class_sizes[k])
               res_p = pcat.log_prob(y_preds)  # log p(y_samp)
-              res_q = qy_concrete.log_prob(y_samples)  # log q(y_samp)
               res += res_q - res_p  # == -(log_p - log_q) (a sampled value of KL(q || p))
           # Eq_log_py = res_p / (num_z_samples * num_y_samples)
           # Eq_log_qy = res_q / (num_z_samples * num_y_samples)
