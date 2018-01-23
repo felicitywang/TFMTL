@@ -82,7 +82,7 @@ class Dataset():
             min_frequency=min_frequency)
 
         self.word_ids = list(vocab_processor.fit_transform(self.text_list))
-        self.word_ids = [list(i.astype(float)) for i in self.word_ids]
+        self.word_ids = [list(i) for i in self.word_ids]
         # print(self.word_ids)
         # self.word_ids = [i.tolist() for i in self.word_ids]
         # save categorical vocabulary to disk
@@ -120,7 +120,7 @@ class Dataset():
             max_document_length=self.max_document_length,
             min_frequency=min_frequency)
         self.word_ids = list(vocab_processor.fit_transform(self.text_list))
-        self.word_ids = [list(i.astype(float)) for i in self.word_ids]
+        self.word_ids = [list(i) for i in self.word_ids]
 
     def write_examples(self, file_name, split_index):
         # write to TFRecord data file
@@ -134,7 +134,7 @@ class Dataset():
                                 int64_list=tf.train.Int64List(
                                     value=[self.label_list[index]])),
                             'text': tf.train.Feature(
-                                float_list=tf.train.FloatList(
+                                int64_list=tf.train.Int64List(
                                     value=self.word_ids[index]))
                         }))
                 writer.write(example.SerializeToString())
@@ -180,58 +180,6 @@ def main():
     # print(combine_dicts(A,B))
     data_dir = "./cache/"
     dataset = Dataset(data_dir=data_dir)
-
-    # build = Dataset(data_dir=data_dir)
-    # load = Dataset(data_dir=data_dir, vocab_dir=data_dir)
-
-    # print(build.word_ids)
-    # print(load.word_ids)
-
-    # # print(build.word_id_list[0])
-    # # print(load.word_id_list[0])
-    # assert np.array_equal(build.word_id_list, load.word_id_list)
-
-    # # with tf.Graph().as_default():
-    # #     train_path = "./cache/train.tf"
-    # #     valid_path = "./cache/valid.tf"
-    # #     test_path = "./cache/test.tf"
-    # #
-    # #     train = InputDataset(train_path, FEATURES, 32)
-    # #     train_batch = train.batch
-    # #     train_init = train.init_op
-    # #
-    # #     text = train_batch['text']
-    # #     label = train_batch['label']
-    # #
-    #
-    # # reading tf record data
-    # filename_queue = tf.train.string_input_producer(
-    #     ['./cache/train.tf'], num_epochs=1)
-    #
-    # reader = tf.TFRecordReader()
-    # _, serialized_example = reader.read(filename_queue)
-    #
-    # max_document_length = dataset.max_document_length
-    #
-    # features = tf.parse_single_example(
-    #     serialized_example,
-    #     features={
-    #         'text': tf.FixedLenFeature(
-    #             [max_document_length],
-    #             dtype=tf.float32),
-    #         'label': tf.FixedLenFeature([],
-    #                                     dtype=tf.int64)
-    #     })
-    #
-    # texts = features['text']
-    # labels = features['label']
-    #
-    # init = tf.global_variables_initializer()
-    # with tf.device('/cpu:0'), tf.name_scope("test"):
-    #     sess = tf.Session()
-    #     sess.run(init)
-    #     sess.run(texts)
-    #     sess.run(labels)
 
 
 if __name__ == '__main__':
