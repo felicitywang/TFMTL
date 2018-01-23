@@ -122,6 +122,3 @@ class InputDataset(object):
 # func: a mapping from examples to tf.int64 keys
 # pads: a set of tf shapes that correspond to padded examples
 bucket_info = namedtuple("bucket_info", "func pads")
-
-
-
