@@ -106,9 +106,9 @@ def run_epoch(sess, model, init_op=None, train_op=None):
 
 def log_result(split, result):
     total_loss, total_acc, elapsed = result
-    hrs, mins, secs = hours_and_minutes_and_seconds(elapsed)
-    logging.info("[%d hrs %d mins %d secs] %s: loss=%f acc=%f",
-                 hrs, mins, secs, split, total_loss, total_acc)
+    hrs, mins = hours_and_minutes(elapsed)
+    logging.info("[%d hrs %d mins] %s: loss=%f acc=%f",
+                 hrs, mins, split, total_loss, total_acc)
 
 
 def main(_):
@@ -155,16 +155,43 @@ def main(_):
             test_init = dataset.init_op
             with tf.variable_scope("Model", reuse=True):
                 mtest = make_model(test_batch, num_classes, is_training=False)
-        with tf.train.SingularMonitoredSession() as sess:
+
+        saver = tf.train.Saver(var_list=tf.global_variables())
+        with tf.train.SingularMonitoredSession() as session:
+            # for epoch in range(FLAGS.num_epoch):
+            #     logging.info("Epoch %d", epoch)
+            #     train_result = run_epoch(sess, m, init_op=train_init,
+            #                              train_op=train_op)
+            #     log_result('train', train_result)
+            #     valid_result = run_epoch(sess, mvalid, init_op=valid_init)
+            #     log_result('valid', valid_result)
+
+
+            best_epoch = 0
+            max_valid_acc = 0.0
+
             for epoch in range(FLAGS.num_epoch):
                 logging.info("Epoch %d", epoch)
-                train_result = run_epoch(sess, m, init_op=train_init,
+                train_result = run_epoch(session, m, init_op=train_init,
                                          train_op=train_op)
                 log_result('train', train_result)
-                valid_result = run_epoch(sess, mvalid, init_op=valid_init)
+                valid_result = run_epoch(session, mvalid, init_op=valid_init)
                 log_result('valid', valid_result)
-            test_result = run_epoch(sess, mtest, init_op=test_init)
-            log_result('test', test_result)
+                _, valid_acc, _ = valid_result
+                if valid_acc > max_valid_acc:
+                    best_epoch = epoch
+                    max_valid_acc = valid_acc
+                    # TODO model path
+                    saver.save(session.raw_session(), 'best_model/model.ckpt')
+
+            logging.info(
+                "Achieved max valid accuracy at epoch %d out of %d epochs",
+                best_epoch + 1, FLAGS.num_epoch)
+
+            with tf.Session() as session:
+                saver.restore(session, "best_model/model.ckpt")
+                test_result = run_epoch(session, mtest, init_op=test_init)
+                log_result('test', test_result)
 
 
 def get_proto_config():
