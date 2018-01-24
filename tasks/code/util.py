@@ -55,11 +55,6 @@ def hours_and_minutes(elapsed_sec):
     return sec // 3600, sec // 60 % 60
 
 
-def hours_and_minutes_and_seconds(elapsed_sec):
-    sec = timedelta(seconds=elapsed_sec).seconds
-    return sec // 3600, sec // 60, sec % 60
-
-
 def get_dropout_mask(keep_prob, shape):
     keep_prob = tf.convert_to_tensor(keep_prob)
     random_tensor = keep_prob + tf.random_uniform(shape)
