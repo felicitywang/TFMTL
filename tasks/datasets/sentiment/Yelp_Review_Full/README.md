@@ -7,7 +7,7 @@ The Yelp reviews dataset consists of reviews from Yelp. It is extracted from the
 
 **Basic stats:**
 + \# items = 700,000
-+ \# label = 5
++ \# labels = 5
 
 **Basic Unit**: paragraph
 

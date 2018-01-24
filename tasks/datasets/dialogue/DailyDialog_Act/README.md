@@ -5,8 +5,7 @@ DailyDialog is created with human-written dialogs of various topics from English
 
 
 **Basic stats:**
-
-+ \# items = 102,979
++ \# sentences = 102,979 （13,118 dialogues)
 + \# labels = 4
     - 1: inform(all statements and questions by which the speaker is providing information)
     - 2: question(when the speaker wants to know something and seeks for some information)
@@ -14,6 +13,10 @@ DailyDialog is created with human-written dialogs of various topics from English
     - 4: commissive(accept/reject request or suggestion and offer)
 
 **Basic Unit**: sentence
+
+**Split: the author suggests a train:valid:test = 11,118 : 1000 : 1000 based on dialogue_id **
+**Note: one such random split is provided but without 'topic' label, and the author suggests a random split by yourself**
+
 
 **bibtex**
 ```

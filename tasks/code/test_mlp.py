@@ -34,21 +34,25 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 flags = tf.flags
 logging = tf.logging
 
-flags.DEFINE_string("data_path", "yelp_data",
-                    "Where the training/test data is stored.")
-flags.DEFINE_string("save_path", None,
-                    "Model output directory.")
+flags.DEFINE_string("data_dir", "../datasets/sentiment/SSTb/",
+                    "Where data.json.gz is loaded.")
+flags.DEFINE_string("model_path", "./cache/best_model/model.ckpt",
+                    "Directory to save the best model checkpoint.")
 flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
-flags.DEFINE_float('keep_prob', 0.75, "Dropout rate (keep probability)")
+flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
+flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
+                                                "fields, separated by ' '")
+flags.DEFINE_float('dropout_rate', 0.5, "Dropout rate (1.0 - keep "
+                                        "probability)")
 flags.DEFINE_float('lr', 0.00005, "Learning rate")
-flags.DEFINE_float('l2_weight', 0.1, "L2 regularization weight")
+flags.DEFINE_float('l2_weight', 0.0001, "L2 regularization weight")
 flags.DEFINE_integer("num_components", 64,
                      "Number of mixture components for p(z)")
 flags.DEFINE_integer("embed_dim", 128, "embedding dimension (VAE)")
 flags.DEFINE_integer("latent_dim", 128, "latent dimension (VAE)")
 flags.DEFINE_integer("seed", 42, "RNG seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size.")
-flags.DEFINE_integer("num_epoch", 10, "Epochs until LR is decayed.")
+flags.DEFINE_integer("num_epoch", 10, "Total number of training epochs.")
 flags.DEFINE_integer('num_intra_threads', 0,
                      """Number of threads to use for intra-op
                      parallelism. If set to 0, the system will pick
@@ -65,7 +69,7 @@ FLAGS = flags.FLAGS
 
 
 def make_model(batch, num_classes, is_training):
-    model = MLP(batch['bow'], batch['label'], num_classes=num_classes,
+    model = MLP(batch[FLAGS.encoding], batch['label'], num_classes=num_classes,
                 dropout_rate=0.5, layers=[200, 200], is_training=is_training)
     return model
 
@@ -117,8 +121,9 @@ def main(_):
     np.random.seed(FLAGS.seed)
     tf.set_random_seed(FLAGS.seed)
 
-    data_dir = "../datasets/sentiment/SSTb/"
-    dataset = Dataset(data_dir=data_dir)
+    dataset = Dataset(data_dir=FLAGS.data_dir, encoding=FLAGS.encoding,
+                      text_field_names=FLAGS.text_field_names.split())
+
     num_classes = dataset.num_classes
     max_document_length = dataset.max_document_length
     vocab_size = dataset.vocab_size
@@ -129,9 +134,10 @@ def main(_):
 
     features = {
         'word_id': tf.FixedLenFeature([max_document_length], dtype=tf.int64),
-        'label': tf.FixedLenFeature([], dtype=tf.int64),
-        'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+        'label': tf.FixedLenFeature([], dtype=tf.int64)
     }
+    if FLAGS.encoding == 'bow':
+        features['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
 
     with tf.Graph().as_default():
         with tf.name_scope("Train"):
@@ -139,9 +145,9 @@ def main(_):
             train_batch = dataset.batch
             train_init = dataset.init_op
             with tf.variable_scope("Model", reuse=None):
-                m = make_model(train_batch, num_classes, is_training=True)
+                mtrain = make_model(train_batch, num_classes, is_training=True)
                 opt = Optimizer()
-                train_op = opt.optimize(m.loss)
+                train_op = opt.optimize(mtrain.loss)
         with tf.name_scope("Valid"):
             dataset = InputDataset(valid_path, features, FLAGS.batch_size)
             valid_batch = dataset.batch
@@ -166,13 +172,12 @@ def main(_):
             #     valid_result = run_epoch(sess, mvalid, init_op=valid_init)
             #     log_result('valid', valid_result)
 
-
             best_epoch = 0
             max_valid_acc = 0.0
 
             for epoch in range(FLAGS.num_epoch):
                 logging.info("Epoch %d", epoch)
-                train_result = run_epoch(session, m, init_op=train_init,
+                train_result = run_epoch(session, mtrain, init_op=train_init,
                                          train_op=train_op)
                 log_result('train', train_result)
                 valid_result = run_epoch(session, mvalid, init_op=valid_init)
@@ -182,14 +187,14 @@ def main(_):
                     best_epoch = epoch
                     max_valid_acc = valid_acc
                     # TODO model path
-                    saver.save(session.raw_session(), 'best_model/model.ckpt')
+                    saver.save(session.raw_session(), FLAGS.model_path)
 
             logging.info(
                 "Achieved max valid accuracy at epoch %d out of %d epochs",
                 best_epoch + 1, FLAGS.num_epoch)
 
             with tf.Session() as session:
-                saver.restore(session, "best_model/model.ckpt")
+                saver.restore(session, FLAGS.model_path)
                 test_result = run_epoch(session, mtest, init_op=test_init)
                 log_result('test', test_result)
 

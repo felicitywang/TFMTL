@@ -5,8 +5,7 @@ DailyDialog is created with human-written dialogs of various topics from English
 
 
 **Basic stats:**
-
-+ \# items = 102,979
++ \# sentences = 102,979 （13,118 dialogues)
 + \# labels = 7
     - 0: no emotion
     - 1: anger
@@ -16,12 +15,12 @@ DailyDialog is created with human-written dialogs of various topics from English
     - 5: sadness
     - 6: surprise
 
-** Note: this dataset also has "act" class in dialogue/ and a dialogu topic feature only in data.json **
+
 
 **Basic Unit**: sentence
 
-** Split: train:dev:test = 11,118 : 1,000 : 1,000 **
-
+**Split: the author suggests a train:valid:test = 11,118 : 1000 : 1000 based on dialogue_id **
+**Note: one such random split is provided but without 'topic' label, and the author suggests a random split by yourself**
 
 **bibtex**
 ```

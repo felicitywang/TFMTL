@@ -9,10 +9,11 @@ The AG's news topic classification dataset is constructed by Xiang Zhang (xiang.
 **Basic stats:**
 + \# items = 127,600
 + \# labels = 4
-    - World
-    - Sports
-    - Business
-    - Sci/Tech
+    - 1: World
+    - 2: Sports
+    - 3: Business
+    - 4: Sci/Tech
+
 
 **Basic Unit**: document
 

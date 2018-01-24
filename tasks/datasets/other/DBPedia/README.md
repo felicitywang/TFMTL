@@ -7,20 +7,20 @@ The DBPedia ontology classification dataset is constructed from DBPedia, a large
 **Basic stats:**
 + \# items = 63,000
 + \# label = 14
-    - Company
-    - EducationalInstitution
-    - Artist
-    - Athlete
-    - OfficeHolder
-    - MeanOfTransportation
-    - Building
-    - NaturalPlace
-    - Village
-    - Animal
-    - Plant
-    - Album
-    - Film
-    - WrittenWork
+    - 1: Company
+    - 2: EducationalInstitution
+    - 3: Artist
+    - 4: Athlete
+    - 5: OfficeHolder
+    - 6: MeanOfTransportation
+    - 7: Building
+    - 8: NaturalPlace
+    - 9: Village
+    - 10: Animal
+    - 11: Plant
+    - 12: Album
+    - 13: Film
+    - 14: WrittenWork
 
 
 **Basic Unit**: paragraph

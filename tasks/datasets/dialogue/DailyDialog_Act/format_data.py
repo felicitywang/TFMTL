@@ -38,14 +38,15 @@ for text_line in text.readlines():
 
     for i in range(len(texts) - 1):
         content = dict()
-        content['dialogue_id'] = index
-        content['index'] = index
+        content['dialogue_id'] = index # which dialogue it's in
+        content['sentence_id'] = i # index of the sentence in the current dialogue(shall be used to track context)
         index += 1
         content['text'] = texts[i]
         content['act'] = acts[i]
         content['emotion'] = acts[i]
         content['topic'] = topics[0]
         content['label'] = content['act']
+        content['dialogue_num_sentence'] = len(texts) # how many sentences(paragraphs) there are in each dialogue
         all_list.append(content)
     dialogue_id += 1
 
@@ -53,70 +54,72 @@ with open('data.json', 'w') as file:
     json.dump(all_list, file)
 
 
-text = open('train/dialogues_train.txt', 'r')
-act = open('train/dialogues_act_train.txt', 'r')
-emotion = open('train/dialogues_emotion_train.txt', 'r')
+# topic label not included in the traind/valid/test splits the author provided
 
-train_list = []
-index = 0
-for text_line in text.readlines():
-    texts = text_line.split('__eou__')[:-1]
-    acts = act.readline().split()
-    emotions = emotion.readline().split()
-    topics = topic.readline().split()
+# text = open('train/dialogues_train.txt', 'r')
+# act = open('train/dialogues_act_train.txt', 'r')
+# emotion = open('train/dialogues_emotion_train.txt', 'r')
 
-    for i in range(len(texts) - 1):
-        content = dict()
-        content['index'] = index
-        index += 1
-        content['text'] = texts[i]
-        content['act'] = acts[i]
-        content['emotion'] = acts[i]
-        content['label'] = content['act']
-        all_list.append(content)
+# train_list = []
+# index = 0
+# for text_line in text.readlines():
+#     texts = text_line.split('__eou__')[:-1]
+#     acts = act.readline().split()
+#     emotions = emotion.readline().split()
+#     topics = topic.readline().split()
 
-with open('train.json', 'w') as file:
-    json.dump(all_list, file)
+#     for i in range(len(texts) - 1):
+#         content = dict()
+#         content['index'] = index
+#         index += 1
+#         content['text'] = texts[i]
+#         content['act'] = acts[i]
+#         content['emotion'] = acts[i]
+#         content['label'] = content['act']
+#         all_list.append(content)
 
-validation_list = []
-index = 0
-for text_line in text.readlines():
-    texts = text_line.split('__eou__')[:-1]
-    acts = act.readline().split()
-    emotions = emotion.readline().split()
-    topics = topic.readline().split()
+# with open('train.json', 'w') as file:
+#     json.dump(all_list, file)
 
-    for i in range(len(texts) - 1):
-        content = dict()
-        content['index'] = index
-        index += 1
-        content['text'] = texts[i]
-        content['act'] = acts[i]
-        content['emotion'] = acts[i]
-        content['label'] = content['act']
-        all_list.append(content)
+# validation_list = []
+# index = 0
+# for text_line in text.readlines():
+#     texts = text_line.split('__eou__')[:-1]
+#     acts = act.readline().split()
+#     emotions = emotion.readline().split()
+#     topics = topic.readline().split()
 
-with open('dev.json', 'w') as file:
-    json.dump(all_list, file)
+#     for i in range(len(texts) - 1):
+#         content = dict()
+#         content['index'] = index
+#         index += 1
+#         content['text'] = texts[i]
+#         content['act'] = acts[i]
+#         content['emotion'] = acts[i]
+#         content['label'] = content['act']
+#         all_list.append(content)
+
+# with open('dev.json', 'w') as file:
+#     json.dump(all_list, file)
 
 
-test_list = []
-index = 0
-for text_line in text.readlines():
-    texts = text_line.split('__eou__')[:-1]
-    acts = act.readline().split()
-    emotions = emotion.readline().split()
-    topics = topic.readline().split()
+# test_list = []
+# index = 0
+# for text_line in text.readlines():
+#     texts = text_line.split('__eou__')[:-1]
+#     acts = act.readline().split()
+#     emotions = emotion.readline().split()
+#     topics = topic.readline().split()
 
-    for i in range(len(texts) - 1):
-        content = dict()
-        content['index'] = index
-        index += 1
-        content['text'] = texts[i]
-        content['act'] = acts[i]
-        content['emotion'] = acts[i]
-        content['label'] = content['act']
-        all_list.append(content)
+#     for i in range(len(texts) - 1):
+#         content = dict()
+#         content['index'] = index
+#         index += 1
+#         content['text'] = texts[i]
+#         content['act'] = acts[i]
+#         content['emotion'] = acts[i]
+#         content['label'] = content['act']
+#         all_list.append(content)
 
-with open('test.json', 'w') as file:
-    json.dump(all_list, file)
+# with open('test.json', 'w') as file:
+#     json.dump(all_list, file)

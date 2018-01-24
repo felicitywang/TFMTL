@@ -15,7 +15,7 @@
 """Transform original SSTb file into json format using pytreebank parser"""
 
 import json
-
+import gzip
 import pytreebank
 
 # path that saves
@@ -35,19 +35,19 @@ label_list = ["very negative", "negative", "neutral", "positive",
 for data in train_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
-    dic['class'] = label_list[dic['label']]
+    # dic['class'] = label_list[dic['label']]
     train_list.append(dic)
 
 for data in dev_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
-    dic['class'] = label_list[dic['label']]
+    # dic['class'] = label_list[dic['label']]
     dev_list.append(dic)
 
 for data in test_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
-    dic['class'] = label_list[dic['label']]
+    # dic['class'] = label_list[dic['label']]
     test_list.append(dic)
 
 all_list = []
@@ -69,10 +69,10 @@ test_index = list(range(len(train_list) + len(dev_list), len(all_list)))
 # test_index = pickle.load(open("test_index.pickle", "rb"))
 
 index_dict = dict()
-index_dict['train_index'] = train_index
-index_dict['dev_index'] = dev_index
-index_dict['test_index'] = test_index
-with open('index.json', 'w') as file:
+index_dict['train'] = train_index
+index_dict['valid'] = dev_index
+index_dict['test'] = test_index
+with gzip.open('index.json.gz', mode='wt') as file:
     json.dump(index_dict, file)
 
 # with open('train.json', 'w') as file:
@@ -81,7 +81,7 @@ with open('index.json', 'w') as file:
 #     json.dump(dev_list, file)
 # with open('test.json', 'w') as file:
 #     json.dump(test_list, file)
-with open('data.json', 'w') as file:
+with gzip.open('data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
 
 # # read json to list

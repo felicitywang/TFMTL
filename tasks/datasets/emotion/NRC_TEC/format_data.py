@@ -21,5 +21,4 @@ label_encoder = LabelEncoder()
 df.label = label_encoder.fit_transform(df.emotion)
 print(label_encoder.classes_)
 print(len(data_list))
-df.to_json('data.json', orient='index')
-
+df.to_json('data.json', orient='records')

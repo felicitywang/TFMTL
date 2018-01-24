@@ -17,13 +17,14 @@
 
 # transform IMDB files to json
 
+import gzip
 import json
 import re
 from os import listdir
 
 train_list = []
 test_list = []
-all_list = []
+
 
 
 # train pos
@@ -73,22 +74,35 @@ for file_name in file_names:
             'score': file_name_split[1],
             'label': "0"})
 
-# save json
-with open('train.json', 'w') as file:
-    json.dump(train_list, file)
-with open('test.json', 'w') as file:
-    json.dump(test_list, file)
+# # save json
+# with open('train.json', 'w') as file:
+#     json.dump(train_list, file)
+# with open('test.json', 'w') as file:
+#     json.dump(test_list, file)
 
+all_list=[]
 all_list.extend(train_list)
 all_list.extend(test_list)
-with open('data.json', 'w') as file:
+
+with gzip.open('data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
 
+# indices
+train_index = list(range(len(train_list)))
+test_index = list(range(len(train_list), len(train_list) + len(test_list)))
+index = {
+    'train': train_index,
+    'test': test_index
+}
+assert len(set(index['train']).intersection(index['test'])) == 0
 
-# read json to list
-json_data = open("train.json").read()
-train_list = json.loads(json_data)
-json_data = open("test.json").read()
-test_list = json.loads(json_data)
-json_data = open("data.json").read()
-all_list = json.loads(json_data)
+with gzip.open('index.json.gz', mode='wt') as file:
+    json.dump(index, file)
+
+# # read json to list
+# json_data = open("train.json").read()
+# train_list = json.loads(json_data)
+# json_data = open("test.json").read()
+# test_list = json.loads(json_data)
+# json_data = open("data.json").read()
+# all_list = json.loads(json_data)
