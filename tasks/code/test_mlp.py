@@ -42,6 +42,7 @@ flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
 flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
 flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
                                                 "fields, separated by ' '")
+flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
 flags.DEFINE_float('dropout_rate', 0.5, "Dropout rate (1.0 - keep "
                                         "probability)")
 flags.DEFINE_float('lr', 0.00005, "Learning rate")
@@ -72,6 +73,14 @@ def make_model(batch, num_classes, is_training):
     model = MLP(batch[FLAGS.encoding], batch['label'], num_classes=num_classes,
                 dropout_rate=0.5, layers=[200, 200], is_training=is_training)
     return model
+
+
+#
+# def make_loss(batch):
+#     x = tf.embed_sequence(batch)
+#     x = cnn(x, ...)
+#     x = tf.layers.dense(x, output_size=NUMBER_OF_CLASSES)
+#     predicted_classes = tf.argmax(input=logits, axis=1)
 
 
 def run_epoch(sess, model, init_op=None, train_op=None):
@@ -122,7 +131,9 @@ def main(_):
     tf.set_random_seed(FLAGS.seed)
 
     dataset = Dataset(data_dir=FLAGS.data_dir, encoding=FLAGS.encoding,
-                      text_field_names=FLAGS.text_field_names.split())
+                      text_field_names=FLAGS.text_field_names.split(),
+                      label_field_name=FLAGS.label_field_name,
+                      valid_ratio=0.1, train_ratio=0.8, random_seed=42)
 
     num_classes = dataset.num_classes
     max_document_length = dataset.max_document_length

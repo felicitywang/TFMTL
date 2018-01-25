@@ -95,10 +95,10 @@ class Dataset():
             self.categorical_vocab = self.load_vocab(vocab_dir,
                                                      min_frequency=min_frequency,
                                                      max_frequency=max_frequency)
-        print("-- freq:")
-        print(self.categorical_vocab._freq)
-        print("-- mapping:")
-        print(self.categorical_vocab._mapping)
+        # print("-- freq:")
+        # print(self.categorical_vocab._freq)
+        # print("-- mapping:")
+        # print(self.categorical_vocab._mapping)
         self.vocab_size = len(self.categorical_vocab._mapping)
 
         # write to tf records
