@@ -143,11 +143,6 @@ class MultiLabel(object):
     # Create templates for the parametrized parts of the computation
     # graph that are re-used in different places.
     
-    # self._encoder = tf.make_template(encoder,
-    #                                  encode_dim=hp.encode_dim,
-    #                                  word_embed_dim=hp.word_embed_dim,
-    #                                  vocab_size=vocab_size)
-    
     # Generative networks
     self._py_templates = dict()
     for k, v in class_sizes.items():
@@ -158,8 +153,13 @@ class MultiLabel(object):
       self._qy_templates[k] = tf.make_template('qy_{}'.format(k), MLP_unnormalized_log_categorical, output_size=v)
     self._qz_template = tf.make_template('qz', MLP_gaussian_posterior)
 
+    # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
+    # We assume a standard N(0, 1) prior p(z) in some model
+    # structures. Note that this is not necessary, and we may prefer
+    # to use different priors, e.g. a parametrized
+    # mixture-of-Gaussians.
     self._zm_prior = 0.0
     self._zv_prior = 1.0
 
