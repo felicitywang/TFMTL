@@ -48,6 +48,10 @@ def default_hparams():
                  num_z_samples=1,
                  num_y_samples=1,
                  min_var=0.0001,
+                 labels_key="LABELS",
+                 inputs_key="TEXT",
+                 targets_key="TARGETS"
+                 loss_type="discriminative",
                  # inference=Inference.EXACT.value,
                  dtype='float32')
 
@@ -357,9 +361,22 @@ class MultiLabel(object):
 
     return disc_loss
 
-  def get_multi_task_loss(self, dataset_iterators):
-    for k in datasets:
-      get_loss(feature_dict, inputs, targets, loss_type, features)
+  def get_multi_task_loss(self, dataset_batches):
+    # dataset_batches: map from dataset names to training batches (one batch per dataset)
+    # we assume only one dataset's labels are observed; the rest are unobserved
+    for dataset_name, batch in dataset_batches.items():
+      inputs = batch[hp.inputs_key]
+      targets = batch[hp.targets_key]
+      labels = batch[hp.labels_key]
+
+      feature_dict = dict()
+      for dataset_name_2 in dataset_batches:
+        if dataset_name == dataset_name_2:
+          feature_dict[dataset_name] = labels
+        else:
+          feature_dict[dataset_name_2] = None
+
+      get_loss(feature_dict, inputs=inputs, targets=targets, loss_type=hp.loss_type, features=None)
     
   
   def get_loss(self,

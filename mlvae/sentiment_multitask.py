@@ -64,8 +64,8 @@ def parse_args():
   #                help='Size of unlabeled batch.')
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--max_N_train', type=int,
-                 help='Size of largest training split among all datasets.')
+  #p.add_argument('--max_N_train', type=int,
+  #               help='Size of largest training split among all datasets.')
   p.add_argument('--alpha', default=10.0, type=float,
                  help='Weight assigned to discriminative term in the objective')
   p.add_argument('--beta', choices=['empirical', 'even'], default='even',
@@ -77,9 +77,9 @@ def parse_args():
   # p.add_argument('--setting', choices=['sup', 'unsup', 'semisup'],
   #                default='semisup',
   #                help='Training regime')
-  p.add_argument('--optim_style', choices=['combined', 'alternating'],
-                 default='combined',
-                 help='Semi-sup opt style (combined or alternating updates)')
+  #p.add_argument('--optim_style', choices=['combined', 'alternating'],
+  #               default='combined',
+  #               help='Semi-sup opt style (combined or alternating updates)')
   # p.add_argument('--warmup_iter', default=500, type=int,
   #                help='[semisup] Pre-train q(y | x) for this many iter.')
   p.add_argument('--supervised_loss', choices=['hybrid', 'discriminative'],
@@ -121,6 +121,8 @@ def parse_args():
                  help='Throw error if any operations are not GPU-compatible')
   p.add_argument('--tau0', default=0.5, type=float,
                  help='Annealing parameter for Concrete/Gumbal-Softmax')
+  p.add_argument('--datasets', nargs='+', type=str,
+                 help="Key of the dataset(s) to train and evaluate on [IMDB|SSTb]")
   return p.parse_args()
 
 def cnn(inputs,
@@ -190,7 +192,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   # Get training objective. The inputs are:
   #   1. A dict of { dataset_key: dataset_iterator }
   #
-  loss = model.get_multi_task_loss(train_batches, model_info)
+  train_batches = {name: model_info[name]['train_batch'] for name in model_info}
+  loss = model.get_multi_task_loss(train_batches)
 
   preds = {}
   for key for dataset_info:
@@ -230,8 +233,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
       # Evaluate held-out accuracy
       for dataset_name in dataset_info:
-        _pred_op = model_info[dataset_name]['valid_pred_op']
-        _valid_labels = model_info[dataset_name]['valid_labels']
+        #_pred_op = model_info[dataset_name]['valid_pred_op']
+        #_valid_labels = model_info[dataset_name]['valid_labels']
         _valid_iterator = dataset_info[dataset_name]['valid_iter']
         _metrics = compute_held_out_performance(sess, _pred_op,
                                                _eval_labels,
@@ -248,8 +251,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     # Final test data evaluation
     for dataset_name in dataset_info:
-      _pred_op = model_info[dataset_name]['test_pred_op']
-      _valid_labels = model_info[dataset_name]['test_labels']
+      #_pred_op = model_info[dataset_name]['test_pred_op']
+      #_valid_labels = model_info[dataset_name]['test_labels']
       _valid_iterator = dataset_info[dataset_name]['test_iter']
       _metrics = compute_held_out_performance(sess, _pred_op,
                                              _eval_labels,
@@ -313,24 +316,31 @@ def main():
   # Seed numpy RNG
   np.random.seed(args.seed)
 
+  dirs = dict()
+  dirs['IMDB'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/IMDB/"
+  dirs['SSTb'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/SSTb/"
+
+  class_sizes = dict()
+  class_sizes['IMDB'] = 2
+  class_sizes['SSTb'] = 5
+
+  ordering = dict()
+  ordering['IMDB'] = 0
+  ordering['SSTb'] = 1
+
   # Read data
   dataset_info = dict()
-
-  dataset_info['IMDB'] = dict()
-  dataset_info['SSTb'] = dict()
+  for d in args.datasets:
+    dataset_info[d] = dict()
 
   for dataset_name in dataset_info:
     dataset_info[dataset_name]['feature_name'] = dataset_name  # feature name is just dataset name
+    dataset_info[dataset_name]['dir'] = dirs[dataset_name]
+    dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
+    dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
 
-  dataset_info['IMDB']['dir'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/IMDB/"
-  dataset_info['SSTb']['dir'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/SSTb/"
-
-  dataset_info['IMDB']['class_size'] = 2
-  dataset_info['SSTb']['class_size'] = 5
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
 
-  dataset_info['IMDB']['ordering'] = 0
-  dataset_info['SSTb']['ordering'] = 1
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
 
@@ -447,17 +457,17 @@ def fill_info_dicts(dataset_info, args):
   # Data iterators
   for dataset_name in dataset_info:
     _train_dataset = dataset_info[dataset_name]['train_dataset']
-    dataset_info[dataset_name]['train_iter'] = get_train_iter(args.batch_size, _train_dataset, args, name='{}_train_dataset'.format(dataset_name))
+    model_info[dataset_name]['train_iter'] = get_train_iter(args.batch_size, _train_dataset, args, name='{}_train_dataset'.format(dataset_name))
 
     # Held-out test data
     if args.test:
       logging.info("Using test data for evaluation.")
       _test_dataset = dataset_info[dataset_name]['test_dataset']
-      dataset_info[dataset_name]['test_iter'] = get_test_iter(args.eval_batch_size, _test_dataset, args)
+      model_info[dataset_name]['test_iter'] = get_test_iter(args.eval_batch_size, _test_dataset, args)
     else:
       logging.info("Using validation data for evaluation.")
       _valid_dataset = dataset_info[dataset_name]['valid_dataset']
-      dataset_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
+      model_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
 
   # Get targets and labels
   for dataset_name in model_info:
