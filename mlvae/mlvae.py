@@ -48,6 +48,7 @@ def default_hparams():
                  expectation='exact',
                  num_z_samples=1,
                  num_y_samples=1,
+                 min_var=0.0001,
                  # inference=Inference.EXACT.value,
                  dtype='float32')
 
@@ -79,11 +80,13 @@ def preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu):
     x = dense_layer(x, hp.embed_dim, 'l{}'.format(i+1), activation=activation)
   return x
 
-def MLP_gaussian_posterior(inputs):
+def MLP_gaussian_posterior(inputs, min_var=0.0):
   # Returns mean and variance parametrizing a (multivariate) Gaussian
   x = preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu)
   zm = dense_layer(x, hp.latent_dim, 'zm', activation=None)
   zv = dense_layer(x, hp.latent_dim, 'zv', tf.nn.softplus)  # variance must be positive
+  if min_var > 0.0:
+    zv = tf.maximum(min_var, zv)  # ensure zv is *no smaller* than min_var
   return zm, zv
 
 def MLP_unnormalized_log_categorical(inputs, output_size):
@@ -158,7 +161,7 @@ class MultiLabel(object):
     self._qy_templates = dict()
     for k, v in class_sizes.items():
       self._qy_templates[k] = tf.make_template('qy_{}'.format(k), MLP_unnormalized_log_categorical, output_size=v)
-    self._qz_template = tf.make_template('qz', MLP_gaussian_posterior)
+    self._qz_template = tf.make_template('qz', MLP_gaussian_posterior, min_var=hp.min_var)
 
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
@@ -166,8 +169,8 @@ class MultiLabel(object):
     self._zv_prior = 1.0
 
   # Encoding (feature extraction)
-  def encode(self, inputs):
-    return self._encoder(inputs)
+  def encode(self, inputs, feature_name):
+    return self._encoders[feature_name](inputs)
 
   # Distribution + sampling helpers
   def sample_y(self, logits, name, argmax=False):
@@ -185,9 +188,10 @@ class MultiLabel(object):
   def get_predictions(self, inputs, feature_name, features=None, z=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
     if features is None:
-      features = self.encode(inputs)
+      features = self.encode(inputs, feature_name)
     if z is None:
       zm, zv = self._qz_template(features)
+      # TODO: average over many samples of z?
       z = gaussian_sample(zm, zv)
     logits = self._qy_templates[feature_name](features + [z])
     return tf.argmax(logits, axis=1)
@@ -258,7 +262,7 @@ class MultiLabel(object):
     if observed_dict[feature_name] is True:
       # feature is observed (in all examples in this batch)
       # Decouples into q and p terms (linearity of expectation), so we calculate the q and p terms separately
-      kl_qp += self.get_Eq_log_qy(feature_name, zm, zv) - self.get_Eq_log_py(features, feature_name, feature_dict, observed_dict, zm, zv)
+      kl_qp += self.get_Eq_log_qy(feature_name, zm, zv, z_samples=z_samples) - self.get_Eq_log_py(features, feature_name, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
     else:
       if hp.expectation == 'exact':
         # Does not easily decouple into q and p terms, so we calculate kl as a whole here
@@ -277,7 +281,7 @@ class MultiLabel(object):
         kl_qp += res / len(z_samples)  # average KL divergence between q and p for feature k
       elif hp.expectation == 'sample':
         # Decouples into q and p terms (linearity of expectation), so we calculate the q and p terms separately
-        kl_qp += self.get_Eq_log_qy(feature_name, zm, zv) - self.get_Eq_log_py(features, feature_name, feature_dict, observed_dict, zm, zv)
+        kl_qp += self.get_Eq_log_qy(feature_name, zm, zv, z_samples=z_samples) - self.get_Eq_log_py(features, feature_name, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
       else:
         raise ValueError('unrecognized expectation mode: %s' % (hp.expectation))
 
@@ -382,7 +386,8 @@ class MultiLabel(object):
                inputs=None,
                targets=None,
                loss_type=None,
-               features=None):
+               features=None,
+               reuse_z=False):
     # TODO: make sure we are averaging/adding losses correctly across labels and across batch
 
     # inputs: integer IDs of words in x
@@ -397,7 +402,8 @@ class MultiLabel(object):
     #   key: feature name
     #   values: Tensor of size <batch_len>, where each value in the Tensor is in range(0,...,|label_set|)
     #
-    # features: representation of inputs, e.g., from a CNN
+    # features: representation of inputs, e.g., from a CNN (*NOT* names of labels or the values of labels)
+    # reuse_z: whether to reuse the same samples of z throughout the computation (True: reuse, False: resample throughout)
 
     assert inputs is not None or features is not None
     assert targets is not None
@@ -414,29 +420,34 @@ class MultiLabel(object):
 
     # features: representation of x
     if features is None:
-      features = self.encode(inputs)
+      _feature_name = set(f for f in observed_dict if observed_dict[f] is True)
+      assert len(_feature_name) == 1
+      features = self.encode(inputs, _feature_name)  # encode with encoder corresponding to observed feature
 
     zm, zv = self._qz_template(features)
 
-    # z = gaussian_sample(zm, zv)
+    if reuse_z is True:
+      z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
+    else:
+      z_samples = None
 
     if loss_type == 'discriminative':
       total_disc_loss = 0
       for k in feature_dict:
-        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv)
+        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
       loss = tf.reduce_mean(total_disc_loss, axis=0)  # average across batch
 
     elif loss_type == 'gen+disc':
-      Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior)
+      Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior, z_samples=z_samples)
       total_kl_qp = 0
       for k in feature_dict:
-        total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv)
-      Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv)
-      Eq_log_qz = self.get_Eq_log_qz(zm, zv)
+        total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      Eq_log_qz = self.get_Eq_log_qz(zm, zv, z_samples=z_samples)
 
       total_disc_loss = 0
       for k in feature_dict:
-        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv)
+        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
       scaled_disc_loss = tf.reduce_mean(total_disc_loss, axis=0) * hp.alpha
 
       # maximize the term in parentheses, which means minimize its negation
@@ -449,9 +460,13 @@ class MultiLabel(object):
 
     return loss
 
-  # @property
-  # def decoder(self):
-  #   return self._decoder
+  @property
+  def encoders(self):
+    return self._encoders
+
+  @property
+  def decoders(self):
+    return self._decoders
 
   @property
   def hp(self):

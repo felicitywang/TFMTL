@@ -33,6 +33,8 @@ from tflm.data import InputDataset
 from tflm.optim import Optimizer
 from tflm.nets import unigram
 
+from vae_common import dense_layer
+
 from mlvae import MultiLabel
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -111,12 +113,6 @@ def parse_args():
                  help='Annealing parameter for Concrete/Gumbal-Softmax')
   return p.parse_args()
 
-def encoder_graph(self, inputs, encode_dim, word_embed_dim, vocab_size):
-  return cnn(inputs,
-             input_size=vocab_size,
-             embed_dim=word_embed_dim,
-             encode_dim=encode_dim)
-
 def cnn(inputs,
         input_size=None,
         embed_dim=128,
@@ -162,8 +158,11 @@ def cnn(inputs,
   return dense_layer(inputs, output_size=encode_dim, name='l1',
                      activation=activation_fn)
 
-
-
+def encoder_graph(self, inputs, encode_dim, word_embed_dim, vocab_size):
+  return cnn(inputs,
+             input_size=vocab_size,
+             embed_dim=word_embed_dim,
+             encode_dim=encode_dim)
 
 def get_num_records(tf_record_filename):
   c = 0
@@ -171,8 +170,7 @@ def get_num_records(tf_record_filename):
       c += 1
   return c
 
-
-def train_model(model, ???,
+def train_model(model, datast_info,
                 steps_per_epoch, args):
 
   model_info = dict()
@@ -194,6 +192,7 @@ def train_model(model, ???,
         _feature_dict[dataset_name_1] = None
     model_info[dataset_name]['feature_dict'] = _feature_dict
 
+  # Set beta weights
   if args.beta == 'empirical':
     raise ValueError("empirical beta option not implemented")
   elif args.beta == 'even':
@@ -208,13 +207,13 @@ def train_model(model, ???,
     for dataset_name in model_info:
       _targets = model_info[dataset_name]['targets']
       _feature_dict = model_info[dataset_name]['feature_dict']
-      loss += model.get_loss(_targets, _feature_dict) # TODO: weight these? 
+      loss += model.get_loss(_targets, _feature_dict, loss_type=???) # TODO: weight these? 
   elif args.optim_style == 'alternating':
     logging.info("  -> -> separate losses (alternating opt)")
     for dataset_name in model_info:
       _targets = model_info[dataset_name]['targets']
       _feature_dict = model_info[dataset_name]['feature_dict']
-      model_info[dataset_name]['loss'] = model.get_loss(_targets, _feature_dict)
+      model_info[dataset_name]['loss'] = model.get_loss(_targets, _feature_dict, loss_type=???)
   else:
     raise ValueError("unrecognized optim style=%d" % (args.optim_style))
 
@@ -302,15 +301,34 @@ def train_model(model, ???,
         _metrics = compute_held_out_performance(sess, _pred_op,
                                                _eval_labels,
                                                _eval_iter, args)
-        model_info[dataset_name]['metrics'] = _metrics
+        model_info[dataset_name]['valid_metrics'] = _metrics
 
       str_ = '[epoch=%d step=%d] train_loss=%s' % (epoch, np.asscalar(step), train_loss)
       for dataset_name in model_info:
-        _num_eval_total = model_info[dataset_name]['metrics']['ntotal']
-        _eval_acc = model_info[dataset_name]['metrics']['accuracy']
-        _eval_align_acc = model_info[dataset_name]['metrics']['aligned_accuracy']
+        _num_eval_total = model_info[dataset_name]['valid_metrics']['ntotal']
+        _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
+        _eval_align_acc = model_info[dataset_name]['valid_metrics']['aligned_accuracy']
         str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
       logging.info(str_)
+
+    # Final test data evaluation
+    for dataset_name in dataset_info:
+      _pred_op = model_info[dataset_name]['test_pred_op']
+      _valid_labels = model_info[dataset_name]['test_labels']
+      _valid_iterator = dataset_info[dataset_name]['test_iter']
+      _metrics = compute_held_out_performance(sess, _pred_op,
+                                             _eval_labels,
+                                             _eval_iter, args)
+      model_info[dataset_name]['test_metrics'] = _metrics
+
+    str_ = 'FINAL TEST EVAL:'
+    for dataset_name in model_info:
+      _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
+      _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
+      _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
+      str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
+    logging.info(str_)
+
 
 def compute_held_out_performance(session, pred_op, eval_label,
                                  eval_iterator, args):
@@ -469,7 +487,8 @@ def main():
                    hp=None)
 
     # Do training
-    train_model(m, ???)
+    train_model(m, dataset_info,
+                steps_per_epoch, args)
 
 
 def get_train_iter(batch_size, data, args,
