@@ -41,9 +41,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logging = tf.logging
 
-TRAIN = 'train'
-TEST = 'test'
-VALID = 'valid'
+TRAIN_ITER = 'train_iter'
+TEST_ITER = 'test_iter'
+
+# This defines ALL the features that ANY model possibly needs access
+# to. That is, some models will only need a subset of these features.
+FEATURES = {
+  'targets': tf.VarLenFeature(dtype=tf.int64),
+  'length': tf.FixedLenFeature([], dtype=tf.int64),
+  'label': tf.FixedLenFeature([], dtype=tf.int64)
+}
 
 def parse_args():
   p = ap.ArgumentParser()
@@ -174,18 +181,19 @@ def get_num_records(tf_record_filename):
   return c
 
 def train_model(model, dataset_info, steps_per_epoch, args):
-  # 
+  # DO we need this?
   fill_info_dicts(dataset_info, args)
 
   # Build compute graph
-  # The input to this function is a dict:
-  #   { dataset_key: }
-  #
-  loss = model.get_multi_task_loss(train_iters)
+  logging.info("Creating computation graph.")
+
+  # Get training objective
+  loss = model.get_multi_task_loss(???)
 
   preds = {}
   for key for dataset_info:
-    preds[key] model.get_predictions(dataset_info[key][TEST])
+    test_inputs, test_targets, test_labels = dataset_info[key][TEST_ITER].get_next()
+    preds[key] = model.get_predictions(test_labels)
 
   # Done building compute graph; set up training ops.
   
@@ -335,59 +343,53 @@ def main():
   # max_document_length = dataset.max_document_length
   # vocab_size = dataset.vocab_size
 
-  # TFRecord files
+  # Set paths to TFRecord files
   for dataset_name in dataset_info:
     _dataset = dataset_info[dataset_name]['dataset']
     dataset_info[dataset_name]['train_path'] = _dataset.train_path
-    dataset_info[dataset_name]['valid_path'] = _dataset.valid_path
-    dataset_info[dataset_name]['test_path'] = _dataset.test_path
+    if args.test:
+      dataset_info[dataset_name]['test_path'] = _dataset.test_path
+    else:
+      dataset_info[dataset_name]['test_path'] = _dataset.valid_path
 
+  # Creating the batch input pipelines.  These will load & batch
+  # examples from serialized TF record files.
   for dataset_name in dataset_info:
     _train_path = dataset_info[dataset_name]['train_path']
-    dataset_info[dataset_name]['train_dataset'] = InputDataset(_train_path, FEATURES, args.batch_size)
-    _valid_path = dataset_info[dataset_name]['valid_path']
-    dataset_info[dataset_name]['valid_dataset'] = InputDataset(_valid_path, FEATURES, args.batch_size)
-    _test_path = dataset_info[dataset_name]['test_path']
-    dataset_info[dataset_name]['test_dataset'] = InputDataset(_test_path, FEATURES, args.batch_size)
+    ds = build_input_dataset(_train_path, FEATURES, args.batch_size)
+    dataset_info[dataset_name]['train_dataset'] = ds
+    if args.test:
+      _test_path = dataset_info[dataset_name]['test_path']
+      ds = build_input_dataset(_test_path, FEATURES, args.batch_size)
+      dataset_info[dataset_name]['test_dataset'] = ds
+    else:
+      _valid_path = dataset_info[dataset_name]['valid_path']
+      ds = build_input_dataset(_valid_path, FEATURES, args.batch_size)
+      dataset_info[dataset_name]['valid_dataset'] = ds
 
-  FEATURES = {
-    'targets': tf.VarLenFeature(dtype=tf.int64),
-    'length': tf.FixedLenFeature([], dtype=tf.int64),
-    'label': tf.FixedLenFeature([], dtype=tf.int64)
-  }
 
-
+  # This finds the size of the largest training dataset.
   training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
   max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in training_files])
-
-  # Embed words
-  # TODO
-  # x = tf.contrib.layers.embed_sequence(inputs,
-  #                                      vocab_size=input_size,
-  #                                      embed_dim=embed_dim)
-
-
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
     # Seed TensorFlow RNG
     tf.set_random_seed(args.seed)
 
+    # Maybe check for NaNs
     if args.check_numerics:
       logging.info("Checking numerics.")
       tf.add_check_numerics_ops()
 
+    # Maybe print out trainable variables of the model
     if args.print_trainable_variables:
       for tvar in tf.trainable_variables():
+        # TODO: also print and sum up all their sizes
         print(tvar)
 
-    # Steps per epoch
-    steps_per_epoch = int(max_N_train / args.batch_size)  # cycle through datasets until all datasets have been exhaustively seen
-
-
-
-    # Initialize model
-    logging.info("Creating computation graph.")
+    # Steps per epoch. 
+    steps_per_epoch = int(max_N_train / args.batch_size)  
 
     # Seth's multi-task VAE model
     if args.model == 'mlvae':
@@ -400,48 +402,12 @@ def main():
     elif args.model == 'mult':
       # TODO: Felicity: please fill in your MULT baseline here
       # m = MULT(...)
+      raise "TODO"
+    else:
+      raise ValueError("unrecognized model: %s" % (args.model))
 
     # Do training
-    train_model(m, dataset_info,
-                steps_per_epoch, args)
-
-
-def get_train_iter(batch_size, data, args,
-                   name='train_data',
-                   num_epochs=None,  # None := repeat indefinitely
-                   shuffle_buffer_size=10000,
-                   one_shot=True,
-                   prefetch_buffer_size=5000):
-  # data: all training data
-  with tf.name_scope(name):
-    # TODO
-    targets = data['text']
-    labels = data['label']
-    dataset = tf.data.Dataset.from_tensor_slices((targets, labels))    
-    dataset = dataset.repeat(count=num_epochs)
-    dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(prefetch_buffer_size)
-    if one_shot:
-      iterator = dataset.make_one_shot_iterator()
-    else:
-      iterator = dataset.make_initializable_iterator()
-  return iterator
-
-
-def get_test_iter(batch_size, data, args,
-                  prefetch_buffer_size=1):
-  # data: all validation or test data
-  with tf.name_scope('test_data'):
-    targets = data['text']
-    labels = data['label']
-    logging.info("Creating evaluation dataset: %d images %d labels",
-                 targets.shape[0], labels.shape[0])
-    dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(prefetch_buffer_size)
-    iterator = dataset.make_initializable_iterator()
-  return iterator
+    train_model(m, dataset_info, steps_per_epoch, args)
 
 
 def get_learning_rate(learning_rate):
@@ -524,6 +490,22 @@ def fill_info_dicts(dataset_info, args):
   # Return dataset_info dict
   return dataset_info, model_info
 
+
+def build_input_dataset(tfrecord_path, batch_size, is_training=True):
+  if is_training:
+    ds = InputDataset(tfrecord_path, FEATURES, batch_size,
+                      num_epochs=None,  # repeat indefinitely
+                      )
+  else:
+    ds = InputDataset(tfrecord_path, FEATURES, batch_size,
+                      num_epochs=1)
+
+  # We return the class because we might need to access the
+  # initializer op for TESTING, while training only requires the
+  # batches returned by the iterator.
+  return ds
+
+
 def get_var_grads(loss):
   tvars = tf.trainable_variables()
   grads = tf.gradients(loss, tvars)
@@ -532,3 +514,4 @@ def get_var_grads(loss):
 
 if __name__ == "__main__":
   main()
+                      
