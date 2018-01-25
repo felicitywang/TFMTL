@@ -13,8 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-# Reference: https://arxiv.org/abs/1406.5298
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
