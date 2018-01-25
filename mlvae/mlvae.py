@@ -438,10 +438,6 @@ class MultiLabel(object):
 
     return loss
 
-  # @property
-  # def decoder(self):
-  #   return self._decoder
-
   @property
   def hp(self):
     return self._hp
