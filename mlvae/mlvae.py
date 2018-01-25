@@ -428,7 +428,10 @@ class MultiLabel(object):
       # in the loss below.
       
       loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
-      loss = tf.reduce_mean(loss, axis=0)  # average across batch
+
+      # The loss at this point should be a vector of size batch_size,
+      # therefore reduce_mean below is over the batch dimension.
+      loss = tf.reduce_mean(loss)
 
     else:
       raise ValueError("unrecognized loss type: %s" % (loss_type))
