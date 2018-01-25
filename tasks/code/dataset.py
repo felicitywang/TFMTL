@@ -338,8 +338,8 @@ def main():
     # print(dataset.valid_index)
     # print(dataset.test_index)
 
-    data_dir_1 = "./cache/1/"
-    data_dir_2 = "./cache/2/"
+    data_dir_1 = "./vocab_test/1/"
+    data_dir_2 = "./vocab_test/2/"
 
     random_seed = 3
     num = 3
@@ -363,7 +363,7 @@ def main():
                                        vocab_dir_2=data_dir_2 + "single/")
 
     print(vocab_freq_dict)
-    vocab_dir = "./cache/"
+    vocab_dir = "./vocab_test/"
     with open(vocab_dir + "vocab_freq_dict.pickle", "wb") as file:
         pickle.dump(vocab_freq_dict, file)
         file.close()
