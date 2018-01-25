@@ -187,13 +187,15 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   # Build compute graph
   logging.info("Creating computation graph.")
 
-  # Get training objective
-  loss = model.get_multi_task_loss(???)
+  # Get training objective. The inputs are:
+  #   1. A dict of { dataset_key: dataset_iterator }
+  #
+  loss = model.get_multi_task_loss(train_batches)
 
   preds = {}
   for key for dataset_info:
     test_inputs, test_targets, test_labels = dataset_info[key][TEST_ITER].get_next()
-    preds[key] = model.get_predictions(test_labels)
+    preds[key] = model.get_predictions(test_inputs)
 
   # Done building compute graph; set up training ops.
   

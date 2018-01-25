@@ -353,6 +353,9 @@ class MultiLabel(object):
 
     return disc_loss
 
+  def get_multi_task_loss(self, dataset_iterators):
+    
+  
   def get_loss(self,
                feature_dict,
                inputs=None,
