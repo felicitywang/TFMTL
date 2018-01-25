@@ -296,28 +296,9 @@ class MultiLabel(object):
       Eq_log_py = res_p / len(z_samples)
     else:
       if hp.expectation == 'exact':
-        assert False  # this branch should not be reachable because kl for the exact case is calculated in get_kl_qp()
+        assert False, "this branch should not be reachable because kl for the exact case is calculated in get_kl_qp()"
       elif hp.expectation == 'sample':
-        # not sure if argmax below is what we want because it's not differentiable
-        # can pcat really give a log_prob for a relaxed one-hot?
         raise ValueError('sample expectation mode not supported: %s' % (hp.expectation))
-        # res = 0
-        # if z_samples is None:
-        #   z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
-        # for z in z_samples:
-        #   qy_logits = self._qy_templates[feature_name](features + [z])
-        #   qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
-        #                                             logits=qy_logits,
-        #                                             name='qy_{}_{}_concrete'.format(feature_name, i))
-        #   py_logits = self._py_templates[feature_name](z)
-        #   pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(feature_name, i))
-        #   for _ in range(hp.num_y_samples):
-        #     y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
-        #     y_pred = tf.argmax(y_sample, axis=1)  # TODO: try annealing also
-        #     # y_preds = tf.one_hot(y_preds, class_sizes[k])
-        #     res_p = pcat.log_prob(y_pred)  # log p(y_samp)
-        #     res += res_p
-        # Eq_log_py = res / (len(z_samples) * hp.num_y_samples)
       else:
         raise ValueError('unrecognized expectation mode: %s' % (hp.expectation))
     return Eq_log_py
