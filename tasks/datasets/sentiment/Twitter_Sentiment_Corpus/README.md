@@ -6,7 +6,7 @@ Free data set is for training and testing sentiment analysis algorithms. It cons
 
 **Basic stats:**
 + \# items = 5,513
-+ \# labels = 4(positive, negative, neutral, irrelevant)
++ \# labels(sentiment) = 4(positive, negative, neutral, irrelevant)
 + \# topics = 4(apple, google, microsoft, twitter)
 
 

@@ -32,21 +32,29 @@ test_list = []
 label_list = ["very negative", "negative", "neutral", "positive",
               "very positive"]
 
+index = 0
+
 for data in train_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
+    dic['index'] = index
+    index += 1
     # dic['class'] = label_list[dic['label']]
     train_list.append(dic)
 
 for data in dev_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
+    dic['index'] = index
+    index += 1
     # dic['class'] = label_list[dic['label']]
     dev_list.append(dic)
 
 for data in test_data:
     dic = dict()
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
+    dic['index'] = index
+    index += 1
     # dic['class'] = label_list[dic['label']]
     test_list.append(dic)
 
