@@ -33,8 +33,6 @@ from vae_common import log_normal
 from vae_common import gaussian_sample
 from vae_common import get_tau
 
-from encoders import cnn
-
 Categorical = tf.contrib.distributions.Categorical
 ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategorical
 kl_divergence = tf.contrib.distributions.kl_divergence
@@ -73,12 +71,6 @@ def validate_labels(feature_dict, class_sizes):
   for k in feature_dict:
     assert class_sizes[k] > tf.reduce_max(feature_dict[k], axis=0), "Label for %s is out of range" % (k)
 
-def encoder_graph(self, inputs, encode_dim, word_embed_dim, vocab_size):
-  return cnn(inputs,
-             input_size=vocab_size,
-             embed_dim=word_embed_dim,
-             encode_dim=encode_dim)
-
 # Distributions
 def preoutput_MLP(inputs, num_layers=2, activation=tf.nn.elu):
   # Returns output of last layer of N-layer dense MLP that can then be passed to an output layer
@@ -110,12 +102,20 @@ class MultiLabel(object):
   def __init__(self,
                class_sizes=None,
                dataset_order=None,
-               decoder=None,
+               encoders=None,
+               decoders=None,
                hp=None):
 
     # class_sizes: map from feature names to cardinality of label sets
     # dataset_order: list of features in some fixed order
     #   (concatenated order matters for decoding)
+    # encoders: one per dataset
+    # decoders: one per dataset
+
+    assert class_sizes is not None
+    assert dataset_order is not None
+    assert encoders is not None
+    assert decoders is not None
 
     # Save hyper-parameters.
     if hp is None:
@@ -129,7 +129,9 @@ class MultiLabel(object):
 
     assert class_sizes.keys() == set(dataset_order)  # all feature names are present and consistent across data structures
 
-    self._decoder = decoder
+    self._decoders = decoders
+
+    self._encoders = encoders
 
     ####################################
     
@@ -142,9 +144,12 @@ class MultiLabel(object):
 
     # Create templates for the parametrized parts of the computation
     # graph that are re-used in different places.
-    self._encoder = tf.make_template(encoder_graph,
-                                     encode_dim=hp.encode_dim,
-                                     embed_dim=hp.word_embed_dim)
+    
+    # self._encoder = tf.make_template(encoder,
+    #                                  encode_dim=hp.encode_dim,
+    #                                  word_embed_dim=hp.word_embed_dim,
+    #                                  vocab_size=vocab_size)
+    
     # Generative networks
     self._py_templates = dict()
     for k, v in class_sizes.items():
@@ -161,8 +166,8 @@ class MultiLabel(object):
     self._zv_prior = 1.0
 
   # Encoding (feature extraction)
-  def encode(self, targets):
-    return self._encoder(targets)
+  def encode(self, inputs):
+    return self._encoder(inputs)
 
   # Distribution + sampling helpers
   def sample_y(self, logits, name, argmax=False):
@@ -177,16 +182,19 @@ class MultiLabel(object):
       y_sample = tf.argmax(y_sample, axis=1)
     return y_sample
 
-  def get_predictions(self, inputs, z, feature_name, features=None):
-    # Returns most likely label given conditioning variables
+  def get_predictions(self, inputs, feature_name, features=None, z=None):
+    # Returns most likely label given conditioning variables (only run this on eval data)
     if features is None:
       features = self.encode(inputs)
+    if z is None:
+      zm, zv = self._qz_template(features)
+      z = gaussian_sample(zm, zv)
     logits = self._qy_templates[feature_name](features + [z])
     return tf.argmax(logits, axis=1)
 
   def get_label_log_probability(self, feature_dict, features, z, feature_name, label_idx, distribution_type=None):
     # Returns the log probability (log p(y|z) or log q(y|x, z)) of a given label y
-    # label_idx: Tensor of size <batch_size> that specifies which label index to query
+    # label_idx: Tensor of size <batch_len> that specifies which label index to query
     if distribution_type == 'p':
       logits = self._py_templates[feature_name](z)
     elif distribution_type == 'q':
@@ -195,7 +203,7 @@ class MultiLabel(object):
       raise ValueError('unrecognized distribution type: %s' % (distribution_type))
     log_dist = tf.nn.log_softmax(logits)
 
-    r = tf.range(0, self._batch_size, 1)
+    r = tf.range(0, self._batch_len, 1)
     r = tf.expand_dims(r, axis=0)
 
     label_idx = tf.expand_dims(label_idx, axis=0)
@@ -212,11 +220,11 @@ class MultiLabel(object):
     instantiation = dict()
     for k in feature_dict:
       if observed_dict[k] is True:
-        instantiation[k] = feature_dict[k]
+        instantiation[k] = tf.one_hot(feature_dict[k], self._class_sizes[k])  # one-hot
       else:
         # sample a value of y_k
         qy_logits = self._qy_templates[k](features + [z])
-        instantiation[k] = self.sample_y(qy_logits, k, argmax=True)
+        instantiation[k] = self.sample_y(qy_logits, k, argmax=False)  # approx one-hot
     return instantiation
 
   def get_var_grads(self):
@@ -290,23 +298,26 @@ class MultiLabel(object):
       if hp.expectation == 'exact':
         assert False  # this branch should not be reachable because kl for the exact case is calculated in get_kl_qp()
       elif hp.expectation == 'sample':
-        res = 0
-        if z_samples is None:
-          z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
-        for z in z_samples:
-          qy_logits = self._qy_templates[feature_name](features + [z])
-          qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
-                                                    logits=qy_logits,
-                                                    name='qy_{}_{}_concrete'.format(feature_name, i))
-          py_logits = self._py_templates[feature_name](z)
-          pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(feature_name, i))
-          for _ in range(hp.num_y_samples):
-            y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
-            y_pred = tf.argmax(y_sample, axis=1)  # TODO: try annealing also
-            # y_preds = tf.one_hot(y_preds, class_sizes[k])
-            res_p = pcat.log_prob(y_pred)  # log p(y_samp)
-            res += res_p
-        Eq_log_py = res / (len(z_samples) * hp.num_y_samples)
+        # not sure if argmax below is what we want because it's not differentiable
+        # can pcat really give a log_prob for a relaxed one-hot?
+        raise ValueError('sample expectation mode not supported: %s' % (hp.expectation))
+        # res = 0
+        # if z_samples is None:
+        #   z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
+        # for z in z_samples:
+        #   qy_logits = self._qy_templates[feature_name](features + [z])
+        #   qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
+        #                                             logits=qy_logits,
+        #                                             name='qy_{}_{}_concrete'.format(feature_name, i))
+        #   py_logits = self._py_templates[feature_name](z)
+        #   pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(feature_name, i))
+        #   for _ in range(hp.num_y_samples):
+        #     y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
+        #     y_pred = tf.argmax(y_sample, axis=1)  # TODO: try annealing also
+        #     # y_preds = tf.one_hot(y_preds, class_sizes[k])
+        #     res_p = pcat.log_prob(y_pred)  # log p(y_samp)
+        #     res += res_p
+        # Eq_log_py = res / (len(z_samples) * hp.num_y_samples)
       else:
         raise ValueError('unrecognized expectation mode: %s' % (hp.expectation))
     return Eq_log_py
@@ -367,56 +378,80 @@ class MultiLabel(object):
     return disc_loss
 
   def get_loss(self,
-               targets,
                feature_dict,
+               inputs=None,
+               targets=None,
+               loss_type=None,
                features=None):
     # TODO: make sure we are averaging/adding losses correctly across labels and across batch
 
-    # targets: integer-ID sequence of words in x
+    # inputs: integer IDs of words in x
+    #
+    # targets: what the decoder is trying to reconstruct
+    # NOTE: inputs and targets represent the same text. they are usually the same representation,
+    #         although they may be different representations
+    #         e.g., inputs: sequence of words
+    #               targets: bag of words
+    #
     # feature_dict: map from feature names to values (None if feature is unobserved)
     #   key: feature name
-    #   values: Tensor of size <batch_size>, where each value in the Tensor is in range(0,...,|label_set|)
+    #   values: Tensor of size <batch_len>, where each value in the Tensor is in range(0,...,|label_set|)
+    #
+    # features: representation of inputs, e.g., from a CNN
+
+    assert inputs is not None or features is not None
+    assert targets is not None
+    assert loss_type is not None
 
     validate_labels(feature_dict, self._class_sizes)
 
-    targets = listify(targets)
-
-    # Keep track of batch size.
-    self._batch_size = tf.shape(targets[0])[0]
+    # Keep track of batch length and size.
+    # self._batch_size = tf.shape(targets[0])[0]
+    self._batch_size = tf.shape(inputs)[0]
 
     # observed_dict: map from feature names to booleans (True if observed, False otherwise)
     observed_dict = {k : (v is not None) for k, v in feature_dict.items()}
 
     # features: representation of x
     if features is None:
-      features = self.encode(targets)
+      features = self.encode(inputs)
 
     zm, zv = self._qz_template(features)
 
     # z = gaussian_sample(zm, zv)
 
-    Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior)
-    total_kl_qp = 0
-    for k in feature_dict:
-      total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv)
-    Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv)
-    Eq_log_qz = self.get_Eq_log_qz(zm, zv)
+    if loss_type == 'discriminative':
+      total_disc_loss = 0
+      for k in feature_dict:
+        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv)
+      loss = tf.reduce_mean(total_disc_loss, axis=0)  # average across batch
 
-    total_disc_loss = 0
-    for k in feature_dict:
-      total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv)
-    scaled_disc_loss = tf.reduce_mean(total_disc_loss, axis=0) * (hp.alpha * self._batch_size)
+    elif loss_type == 'gen+disc':
+      Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior)
+      total_kl_qp = 0
+      for k in feature_dict:
+        total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv)
+      Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv)
+      Eq_log_qz = self.get_Eq_log_qz(zm, zv)
 
+      total_disc_loss = 0
+      for k in feature_dict:
+        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv)
+      scaled_disc_loss = tf.reduce_mean(total_disc_loss, axis=0) * hp.alpha
 
-    # maximize the term in parentheses, which means minimize its negation
-    #   this entire negated term is the cost (loss) to minimize
-    loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
-    loss = tf.reduce_mean(loss, axis=0)
+      # maximize the term in parentheses, which means minimize its negation
+      #   this entire negated term is the cost (loss) to minimize
+      loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
+      loss = tf.reduce_mean(loss, axis=0)  # average across batch
+
+    else:
+      raise ValueError("unrecognized loss type: %s" % (loss_type))
+
     return loss
 
-  @property
-  def decoder(self):
-    return self._decoder
+  # @property
+  # def decoder(self):
+  #   return self._decoder
 
   @property
   def hp(self):
