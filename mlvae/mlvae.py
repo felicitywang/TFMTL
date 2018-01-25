@@ -13,8 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-# Reference: https://arxiv.org/abs/1406.5298
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -148,11 +146,6 @@ class MultiLabel(object):
     # Create templates for the parametrized parts of the computation
     # graph that are re-used in different places.
     
-    # self._encoder = tf.make_template(encoder,
-    #                                  encode_dim=hp.encode_dim,
-    #                                  word_embed_dim=hp.word_embed_dim,
-    #                                  vocab_size=vocab_size)
-    
     # Generative networks
     self._py_templates = dict()
     for k, v in class_sizes.items():
@@ -163,8 +156,13 @@ class MultiLabel(object):
       self._qy_templates[k] = tf.make_template('qy_{}'.format(k), MLP_unnormalized_log_categorical, output_size=v)
     self._qz_template = tf.make_template('qz', MLP_gaussian_posterior, min_var=hp.min_var)
 
+    # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
+    # We assume a standard N(0, 1) prior p(z) in some model
+    # structures. Note that this is not necessary, and we may prefer
+    # to use different priors, e.g. a parametrized
+    # mixture-of-Gaussians.
     self._zm_prior = 0.0
     self._zv_prior = 1.0
 
@@ -182,6 +180,8 @@ class MultiLabel(object):
                                               name='qy_concrete_{}'.format(name))
     y_sample = tf.exp(qy_concrete.sample())
     if argmax:
+      # NOTE: the argmax operation is not differentiable. This branch
+      # should only be used for predictions at test time.
       y_sample = tf.argmax(y_sample, axis=1)
     return y_sample
 
@@ -300,28 +300,9 @@ class MultiLabel(object):
       Eq_log_py = res_p / len(z_samples)
     else:
       if hp.expectation == 'exact':
-        assert False  # this branch should not be reachable because kl for the exact case is calculated in get_kl_qp()
+        assert False, "this branch should not be reachable because kl for the exact case is calculated in get_kl_qp()"
       elif hp.expectation == 'sample':
-        # not sure if argmax below is what we want because it's not differentiable
-        # can pcat really give a log_prob for a relaxed one-hot?
         raise ValueError('sample expectation mode not supported: %s' % (hp.expectation))
-        # res = 0
-        # if z_samples is None:
-        #   z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
-        # for z in z_samples:
-        #   qy_logits = self._qy_templates[feature_name](features + [z])
-        #   qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
-        #                                             logits=qy_logits,
-        #                                             name='qy_{}_{}_concrete'.format(feature_name, i))
-        #   py_logits = self._py_templates[feature_name](z)
-        #   pcat = Categorical(logits=py_logits, name='py_samp_{}_{}_cat'.format(feature_name, i))
-        #   for _ in range(hp.num_y_samples):
-        #     y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
-        #     y_pred = tf.argmax(y_sample, axis=1)  # TODO: try annealing also
-        #     # y_preds = tf.one_hot(y_preds, class_sizes[k])
-        #     res_p = pcat.log_prob(y_pred)  # log p(y_samp)
-        #     res += res_p
-        # Eq_log_py = res / (len(z_samples) * hp.num_y_samples)
       else:
         raise ValueError('unrecognized expectation mode: %s' % (hp.expectation))
     return Eq_log_py
@@ -430,6 +411,12 @@ class MultiLabel(object):
       z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
     else:
       z_samples = None
+    # TODO(noa): support needs to be added to compute all the
+    # expectations below using the same sample z, since this is the
+    # standard way to compute them and so we should support it as a
+    # baseline, even if other methods work better.
+
+    # z = gaussian_sample(zm, zv)
 
     if loss_type == 'discriminative':
       total_disc_loss = 0
@@ -452,8 +439,17 @@ class MultiLabel(object):
 
       # maximize the term in parentheses, which means minimize its negation
       #   this entire negated term is the cost (loss) to minimize
+
+      # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
+      # analytically, since Eq_log_pz and Eq_log_qz are separate terms
+      # in the loss below. Instead, we should have a KL_z method that
+      # support *either* analytic or MCMC modes.
+      
       loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
-      loss = tf.reduce_mean(loss, axis=0)  # average across batch
+
+      # The loss at this point should be a vector of size batch_size,
+      # therefore reduce_mean below is over the batch dimension.
+      loss = tf.reduce_mean(loss)
 
     else:
       raise ValueError("unrecognized loss type: %s" % (loss_type))
