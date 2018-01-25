@@ -25,62 +25,68 @@ from os import listdir
 train_list = []
 test_list = []
 
-
+index = 0
 
 # train pos
-path = 'aclImdb/train/pos/'
+path = 'original/aclImdb/train/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     with open(path + file_name, "r") as file:
         train_list.append({
+            'index': index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "1"})
+    index += 1
 # train neg
-path = 'aclImdb/train/neg/'
+path = 'original/aclImdb/train/neg/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     with open(path + file_name, "r") as file:
         train_list.append({
+            'index':index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "0"})
-
+    index += 1
 # test pos
-path = 'aclImdb/test/pos/'
+path = 'original/aclImdb/test/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     with open(path + file_name, "r") as file:
         test_list.append({
+            'index':index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "1"})
+    index+=1
 # test neg
-path = 'aclImdb/test/neg/'
+path = 'original/aclImdb/test/neg/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     (file_name_split)
     with open(path + file_name, "r") as file:
         test_list.append({
+            'index': index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "0"})
-
+    index+=1
 # # save json
 # with open('train.json', 'w') as file:
 #     json.dump(train_list, file)
 # with open('test.json', 'w') as file:
 #     json.dump(test_list, file)
 
-all_list=[]
+all_list = []
 all_list.extend(train_list)
 all_list.extend(test_list)
 

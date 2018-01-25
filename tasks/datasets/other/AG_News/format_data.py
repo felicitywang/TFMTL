@@ -29,7 +29,7 @@ for line in file.readlines():
 train_index = list(range(len(train_list)))
 test_index = list(range(len(train_list), len(train_list) + len(test_list)))
 index = {
-    'train':train_index,
+    'train': train_index,
     'test':test_index
 }
 assert len(set(index['train']).intersection(index['test']))==0

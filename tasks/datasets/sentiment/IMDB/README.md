@@ -12,7 +12,7 @@ Labeled and unlabeled IMDB movie reviews with sentiment polarities. There are no
 
 **Basic Unit**: document
 
-**Split**: train:test=1:1
+**Split**: train : test = 1 : 1
 
 **bibtex**
 
