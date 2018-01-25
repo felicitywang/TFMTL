@@ -182,7 +182,7 @@ def get_num_records(tf_record_filename):
 
 def train_model(model, dataset_info, steps_per_epoch, args):
   # DO we need this?
-  fill_info_dicts(dataset_info, args)
+  dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
   # Build compute graph
   logging.info("Creating computation graph.")
@@ -190,7 +190,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   # Get training objective. The inputs are:
   #   1. A dict of { dataset_key: dataset_iterator }
   #
-  loss = model.get_multi_task_loss(train_batches)
+  loss = model.get_multi_task_loss(train_batches, model_info)
 
   preds = {}
   for key for dataset_info:
@@ -436,6 +436,9 @@ def get_proto_config(args):
 
 
 def fill_info_dicts(dataset_info, args):
+  # Organizes inputs to the computation graph
+  # The corresponding outputs are defined in train_model()
+  
   # Storage for pointers to dataset-specific Tensors
   model_info = dict()
   for dataset_name in dataset_info:
@@ -456,10 +459,11 @@ def fill_info_dicts(dataset_info, args):
       _valid_dataset = dataset_info[dataset_name]['valid_dataset']
       dataset_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
 
-    # Get targets and labels
+  # Get targets and labels
   for dataset_name in model_info:
     _train_iter = dataset_info[dataset_name]['train_iter']
-    model_info[dataset_name]['targets'], model_info[dataset_name]['labels'] = _train_iter.get_next()
+    model_info[dataset_name]['train_batch'] = _train_iter.get_next()
+    #model_info[dataset_name]['targets'], model_info[dataset_name]['labels'] = _train_iter.get_next()
 
   # Create feature_dicts for each dataset
   for dataset_name_1 in model_info:
@@ -472,22 +476,27 @@ def fill_info_dicts(dataset_info, args):
     model_info[dataset_name]['feature_dict'] = _feature_dict
 
   # TODO(noa): maybe remove this 
-  for dataset_name in model_info:
-    _targets = model_info[dataset_name]['targets']
-    _feature_dict = model_info[dataset_name]['feature_dict']
-    loss = model.get_loss(_targets, _feature_dict, loss_type=???)
+  #for dataset_name in model_info:
+  #  _targets = model_info[dataset_name]['targets']
+  #  _feature_dict = model_info[dataset_name]['feature_dict']
+  #  loss = model.get_loss(_targets, _feature_dict, loss_type=???)
 
   # Predictions
   for dataset_name in model_info:
-    _valid_iter = dataset_info[dataset_name]['valid_iter']
-    model_info[dataset_name]['valid_targets'], model_info[dataset_name]['valid_labels'] = _valid_iter.get_next()
-    _test_iter = dataset_info[dataset_name]['test_iter']
-    model_info[dataset_name]['test_targets'], model_info[dataset_name]['test_labels'] = _test_iter.get_next()
+    if args.test:
+      _test_iter = dataset_info[dataset_name]['test_iter']
+      model_info[dataset_name]['test_batch'] = _test_iter.get_next()
+      #_test_pred_op = model.get_predictions(model_info[dataset_name]['test_targets'], dataset_info[dataset_name]['feature_name'])
+      #model_info[dataset_name]['test_pred_op'] = _test_pred_op
+    else:
+      _valid_iter = dataset_info[dataset_name]['valid_iter']
+      model_info[dataset_name]['valid_batch'] = _valid_iter.get_next()
+      #_valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_targets'], dataset_info[dataset_name]['feature_name'])
+      #model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+
+    #model_info[dataset_name]['valid_targets'], model_info[dataset_name]['valid_labels'] = _valid_iter.get_next()
+    #model_info[dataset_name]['test_targets'], model_info[dataset_name]['test_labels'] = _test_iter.get_next()
   
-    _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_targets'], dataset_info[dataset_name]['feature_name'])
-    model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
-    _test_pred_op = model.get_predictions(model_info[dataset_name]['test_targets'], dataset_info[dataset_name]['feature_name'])
-    model_info[dataset_name]['test_pred_op'] = _test_pred_op
     
   # Return dataset_info dict
   return dataset_info, model_info

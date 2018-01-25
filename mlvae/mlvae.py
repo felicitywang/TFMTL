@@ -106,6 +106,8 @@ class MultiLabel(object):
                dataset_order=None,
                encoders=None,
                decoders=None,
+               encoder_features=None,
+               decoder_features=None,  # x's that are being reconstructed; keys in a dictinary corresponding to input batches
                hp=None):
 
     # class_sizes: map from feature names to cardinality of label sets
@@ -118,6 +120,8 @@ class MultiLabel(object):
     assert dataset_order is not None
     assert encoders is not None
     assert decoders is not None
+    assert encoder_features is not None
+    assert decoder_features is not None
 
     # Save hyper-parameters.
     if hp is None:
@@ -354,6 +358,8 @@ class MultiLabel(object):
     return disc_loss
 
   def get_multi_task_loss(self, dataset_iterators):
+    for k in datasets:
+      get_loss(feature_dict, inputs, targets, loss_type, features)
     
   
   def get_loss(self,
