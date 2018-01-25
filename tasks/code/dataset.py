@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,7 +27,9 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from data_prep import tweet_clean
-from tensorflow.contrib import learn
+from tensorflow.contrib.learn.python.learn.preprocessing import \
+    CategoricalVocabulary
+from text import VocabularyProcessor
 from util import bag_of_words
 
 flags = tf.flags
@@ -40,7 +41,8 @@ FLAGS = flags.FLAGS
 class Dataset():
     def __init__(self, data_dir, vocab_dir=None, tfrecord_dir=None,
                  max_document_length=None,
-                 min_frequency=0, encoding=None, text_field_names=['text'],
+                 min_frequency=0, max_frequency=-1, encoding=None,
+                 text_field_names=['text'],
                  label_field_name='label',
                  valid_ratio=0.1, train_ratio=0.8, random_seed=42):
 
@@ -82,14 +84,17 @@ class Dataset():
 
         self.vocab_dict = None
         self.categorical_vocab = None
+
+        self.save_vocab(vocab_dir=os.path.join(data_dir, "single/"))
         if vocab_dir is None:
             self.categorical_vocab = self.build_vocab(
-                os.path.join(data_dir,
-                             "single/"),
-                min_frequency)
+                os.path.join(data_dir, "single/"),
+                min_frequency=min_frequency,
+                max_frequency=max_frequency)
         else:
             self.categorical_vocab = self.load_vocab(vocab_dir,
-                                                     min_frequency)
+                                                     min_frequency=min_frequency,
+                                                     max_frequency=max_frequency)
         print("-- freq:")
         print(self.categorical_vocab._freq)
         print("-- mapping:")
@@ -111,48 +116,88 @@ class Dataset():
         self.write_examples(self.valid_path, self.valid_index)
         self.write_examples(self.test_path, self.test_index)
 
-    def build_vocab(self, vocab_dir, min_frequency):
-        # build vocab of only this dataset and save to disk
-        vocab_processor = learn.preprocessing.VocabularyProcessor(
+    def build_vocab(self, vocab_dir, min_frequency, max_frequency):
+        """Builds vocabulary for this dataset only using tensorflow's
+        VocabularyProcessor
+
+        This vocabulary is only used for this dataset('s training data)
+        Files saved to the disk should be:
+        vocab_freq_dict_(min_freq).pickle
+        vocab_i2v_list_(min_freq).pickle
+        vocab_v2i_dict_(min_freq).pickle
+        """
+        vocab_processor = VocabularyProcessor(
             max_document_length=self.max_document_length,
-            min_frequency=min_frequency)
+            min_frequency=min_frequency,
+            max_frequency=max_frequency)
 
         # build vocabulary only according to training data
         train_list = [self.text_list[i] for i in self.train_index]
         # print("train: ", train_list)
         vocab_processor.fit(train_list)
+
         self.word_id_list = list(
             vocab_processor.transform(self.text_list))
         self.word_id_list = [list(i) for i in self.word_id_list]
-        # print(self.word_ids)
-        # self.word_ids = [i.tolist() for i in self.word_ids]
-        # save categorical vocabulary to disk
-        # python dict {word:freq}
-        self.vocab_dict = vocab_processor.vocabulary_._freq
-        # print("freq:")
-        # print(vocab_dict)
-        # print("mapping:")
-        # print(vocab_processor.vocabulary_._mapping)
-        # print("reverse mapping:")
-        # print(vocab_processor.vocabulary_._reverse_mapping)
+        self.vocab_freq_dict = vocab_processor.vocabulary_._freq
+
+        # save
         try:
             os.stat(vocab_dir)
         except:
             os.mkdir(vocab_dir)
-        with open(vocab_dir + "vocab_dict.pickle", "wb") as file:
-            pickle.dump(self.vocab_dict, file)
+        with open(vocab_dir + "vocab_freq_dict_" + str(
+                min_frequency) + ".pickle",
+                  "wb") as file:
+            pickle.dump(self.vocab_freq_dict, file)
             file.close()
+        with open(vocab_dir + "vocab_v2i_dict_" + str(
+                min_frequency) + ".pickle",
+                  "wb") as file:
+            pickle.dump(vocab_processor.vocabulary_._mapping, file)
+            file.close()
+        with open(vocab_dir + "vocab_i2v_list_" + str(
+                min_frequency) + ".pickle",
+                  "wb") as file:
+            pickle.dump(vocab_processor.vocabulary_._reverse_mapping, file)
+            file.close()
+
         return vocab_processor.vocabulary_
 
-    def load_vocab(self, vocab_dir, min_frequency):
-        with open(vocab_dir + "vocab_dict.pickle", "rb") as file:
-            self.vocab_dict = pickle.load(file)
+    def save_vocab(self, vocab_dir):
+        """Bulid vocabulary with min_frequency=0 for this dataset'
+
+
+        training data only and save to the directory
+        minimum frequency is always 0 so that all the words of this dataset(
+        's training data) are taken into account when merging with other
+        vocabularies"""
+
+        vocab_processor = VocabularyProcessor(
+            max_document_length=self.max_document_length)
+
+        # build vocabulary only according to training data
+        train_list = [self.text_list[i] for i in self.train_index]
+        # print("train: ", train_list)
+        vocab_processor.fit(train_list)
+        vocab_freq_dict = vocab_processor.vocabulary_._freq
+        try:
+            os.stat(vocab_dir)
+        except:
+            os.mkdir(vocab_dir)
+        with open(vocab_dir + "vocab_freq_dict.pickle", "wb") as file:
+            pickle.dump(vocab_freq_dict, file)
             file.close()
-        categorical_vocab = learn.preprocessing.CategoricalVocabulary()
-        for word in self.vocab_dict:
-            categorical_vocab.add(word, count=self.vocab_dict[word])
-        if min_frequency is not None:
-            categorical_vocab.trim(min_frequency)
+
+    def load_vocab(self, vocab_dir, min_frequency, max_frequency):
+        with open(vocab_dir + "vocab_freq_dict.pickle", "rb") as file:
+            self.vocab_freq_dict = pickle.load(file)
+            file.close()
+        categorical_vocab = CategoricalVocabulary()
+        for word in self.vocab_freq_dict:
+            categorical_vocab.add(word, count=self.vocab_freq_dict[word])
+        categorical_vocab.trim(min_frequency=min_frequency,
+                               max_frequency=max_frequency)
         categorical_vocab.freeze()
 
         # print("freq:")
@@ -160,7 +205,7 @@ class Dataset():
         # print("mapping:")
         # print(categorical_vocab._mapping)
 
-        vocab_processor = learn.preprocessing.VocabularyProcessor(
+        vocab_processor = VocabularyProcessor(
 
             vocabulary=categorical_vocab,
             max_document_length=self.max_document_length,
@@ -257,18 +302,17 @@ class Dataset():
 
 # add the frequencies of each in two vocabulary dictionary
 def merge_vocab_dict(vocab_dir_1, vocab_dir_2):
-    with open(vocab_dir_1 + "vocab_dict.pickle", "rb") as file:
-        vocab_dict_1 = pickle.load(file)
+    with open(vocab_dir_1 + "vocab_freq_dict.pickle", "rb") as file:
+        vocab_freq_dict_1 = pickle.load(file)
         file.close()
-    with open(vocab_dir_2 + "vocab_dict.pickle", "rb") as file:
-        vocab_dict_2 = pickle.load(file)
+    with open(vocab_dir_2 + "vocab_freq_dict.pickle", "rb") as file:
+        vocab_freq_dict_2 = pickle.load(file)
         file.close()
-    vocab_dict = combine_dicts(vocab_dict_1, vocab_dict_2)
-    return vocab_dict
+    vocab_freq_dict = combine_dicts(vocab_freq_dict_1, vocab_freq_dict_2)
+    return vocab_freq_dict
 
 
 def combine_dicts(x, y):
-    z = {i: x.get(i, 0) + y.get(i, 0) for i in set(itertools.chain(x, y))}
     return {i: x.get(i, 0) + y.get(i, 0) for i in
             set(itertools.chain(x, y))}
 
@@ -303,25 +347,25 @@ def main():
     print("--- 1")
     dataset_1 = Dataset(data_dir=data_dir_1, text_field_names=['text'],
                         random_seed=random_seed)
-    # print("--- 1 freq:", dataset_1.vocab_dict)
+    # print("--- 1 freq:", dataset_1.vocab_freq_dict)
     for i in range(num):
         print(dataset_1.text_list[i], dataset_1.word_id_list[i])
 
     print("--- 2")
     dataset_2 = Dataset(data_dir=data_dir_2, text_field_names=['text'],
                         random_seed=random_seed)
-    # print("--- 1 freq:", dataset_2.vocab_dict)
+    # print("--- 1 freq:", dataset_2.vocab_freq_dict)
     for i in range(num):
         print(dataset_2.text_list[i], dataset_2.word_id_list[i])
 
     print("--- merged")
-    vocab_dict = merge_vocab_dict(vocab_dir_1=data_dir_1 + "single/",
-                                  vocab_dir_2=data_dir_2 + "single/")
+    vocab_freq_dict = merge_vocab_dict(vocab_dir_1=data_dir_1 + "single/",
+                                       vocab_dir_2=data_dir_2 + "single/")
 
-    print(vocab_dict)
+    print(vocab_freq_dict)
     vocab_dir = "./cache/"
-    with open(vocab_dir + "vocab_dict.pickle", "wb") as file:
-        pickle.dump(vocab_dict, file)
+    with open(vocab_dir + "vocab_freq_dict.pickle", "wb") as file:
+        pickle.dump(vocab_freq_dict, file)
         file.close()
 
     max_document_length = max(dataset_1.max_document_length,
@@ -330,12 +374,16 @@ def main():
     dataset_1 = Dataset(data_dir=data_dir_1, vocab_dir=vocab_dir,
                         text_field_names=['text'],
                         random_seed=random_seed,
-                        max_document_length=max_document_length)
+                        max_document_length=max_document_length,
+                        min_frequency=1,
+                        max_frequency=4)
     print("--- 2")
     dataset_2 = Dataset(data_dir=data_dir_2, vocab_dir=vocab_dir,
                         text_field_names=['text'],
                         random_seed=random_seed,
-                        max_document_length=max_document_length)
+                        max_document_length=max_document_length,
+                        min_frequency=1,
+                        max_frequency=4)
 
 
 if __name__ == '__main__':
