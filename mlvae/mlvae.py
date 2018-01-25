@@ -430,7 +430,8 @@ class MultiLabel(object):
 
       # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
       # analytically, since Eq_log_pz and Eq_log_qz are separate terms
-      # in the loss below.
+      # in the loss below. Instead, we should have a KL_z method that
+      # support *either* analytic or MCMC modes.
       
       loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
 
