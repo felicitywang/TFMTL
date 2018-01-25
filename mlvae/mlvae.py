@@ -422,6 +422,11 @@ class MultiLabel(object):
 
       # maximize the term in parentheses, which means minimize its negation
       #   this entire negated term is the cost (loss) to minimize
+
+      # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
+      # analytically, since Eq_log_pz and Eq_log_qz are separate terms
+      # in the loss below.
+      
       loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
       loss = tf.reduce_mean(loss, axis=0)  # average across batch
 
