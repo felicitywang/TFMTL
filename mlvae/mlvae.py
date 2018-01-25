@@ -399,6 +399,11 @@ class MultiLabel(object):
 
     zm, zv = self._qz_template(features)
 
+    # TODO(noa): support needs to be added to compute all the
+    # expectations below using the same sample z, since this is the
+    # standard way to compute them and so we should support it as a
+    # baseline, even if other methods work better.
+
     # z = gaussian_sample(zm, zv)
 
     if loss_type == 'discriminative':
