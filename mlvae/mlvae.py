@@ -177,6 +177,8 @@ class MultiLabel(object):
                                               name='qy_concrete_{}'.format(name))
     y_sample = tf.exp(qy_concrete.sample())
     if argmax:
+      # NOTE: the argmax operation is not differentiable. This branch
+      # should only be used for predictions at test time.
       y_sample = tf.argmax(y_sample, axis=1)
     return y_sample
 
