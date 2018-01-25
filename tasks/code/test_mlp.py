@@ -40,9 +40,9 @@ flags.DEFINE_string("model_path", "./cache/best_model/model.ckpt",
                     "Directory to save the best model checkpoint.")
 flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
 flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
-flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
-                                                "fields, separated by ' '")
-flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
+# flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
+#                                                 "fields, separated by ' '")
+# flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
 flags.DEFINE_float('dropout_rate', 0.5, "Dropout rate (1.0 - keep "
                                         "probability)")
 flags.DEFINE_float('lr', 0.00005, "Learning rate")
@@ -131,8 +131,7 @@ def main(_):
     tf.set_random_seed(FLAGS.seed)
 
     dataset = Dataset(data_dir=FLAGS.data_dir, encoding=FLAGS.encoding,
-                      text_field_names=FLAGS.text_field_names.split(),
-                      label_field_name=FLAGS.label_field_name,
+                      # text_field_names=FLAGS.text_field_names.split(),
                       valid_ratio=0.1, train_ratio=0.8, random_seed=42)
 
     num_classes = dataset.num_classes

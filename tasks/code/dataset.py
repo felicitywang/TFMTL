@@ -42,11 +42,23 @@ class Dataset():
     def __init__(self, data_dir, vocab_dir=None, tfrecord_dir=None,
                  max_document_length=None,
                  min_frequency=0, max_frequency=-1, encoding=None,
-                 text_field_names=['text'],
-                 label_field_name='label',
+                 # text_field_names=['text'],
+                 # label_field_name='label',
                  valid_ratio=0.1, train_ratio=0.8, random_seed=42):
 
         df = pd.read_json(data_dir + "data.json.gz")
+
+        label_field_name = 'label'
+        if Path(os.path.join(data_dir, "label_field_name")).exists():
+            file = open(os.path.join(data_dir, "label_field_name"))
+            label_field_name = file.readline().strip()
+
+        text_field_names = ['text']
+        if Path(os.path.join(data_dir, "text_field_names")).exists():
+            file = open(os.path.join(data_dir, "text_field_names"))
+            text_field_names = file.readline().split()
+        print(text_field_names)
+
         self.label_list = df[label_field_name].tolist()
         self.num_classes = len(set(self.label_list))
         self.text_list = df[text_field_names].astype(str).sum(axis=1).tolist()
