@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+tasks/datasets/
+!datasets/*/*/README.md
+!format_data.py

@@ -1,0 +1,14 @@
+[
+    {
+        "text": "a b b c c c",
+        "label": 1
+    },
+    {
+        "text": "a b c d e f",
+        "label": 2
+    },
+    {
+        "text": "a b c d e f g h",
+        "label": 3
+    }
+]
