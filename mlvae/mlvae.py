@@ -39,6 +39,7 @@ def default_hparams():
   return HParams(embed_dim=256,
                  latent_dim=256,
                  encode_dim=256,
+                 reuse_z=False,
                  word_embed_dim=256,
                  tau0=0.5,  # temperature
                  decay_tau=False,
@@ -185,14 +186,12 @@ class MultiLabel(object):
       y_sample = tf.argmax(y_sample, axis=1)
     return y_sample
 
-  def get_predictions(self, inputs, feature_name, features=None, z=None):
+  def get_predictions(self, inputs, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
     if features is None:
       features = self.encode(inputs, feature_name)
-    if z is None:
-      zm, zv = self._qz_template(features)
-      # TODO: average over many samples of z?
-      z = gaussian_sample(zm, zv)
+    zm, zv = self._qz_template(features)
+    z = gaussian_sample(zm, zv)
     logits = self._qy_templates[feature_name](features + [z])
     return tf.argmax(logits, axis=1)
 
@@ -230,14 +229,6 @@ class MultiLabel(object):
         qy_logits = self._qy_templates[k](features + [z])
         instantiation[k] = self.sample_y(qy_logits, k, argmax=False)  # approx one-hot
     return instantiation
-
-  def get_var_grads(self):
-    # TODO: check if this is correct
-    tvars = tf.trainable_variables()
-    loss = tf.reduce_mean(self._loss)
-    self._loss = loss
-    grads = tf.gradients(loss, tvars)
-    return (tvars, grads)
 
   def get_Eq_log_pz(self, zm, zv, zm_prior, zv_prior, z_samples=None):
     res = 0
@@ -367,8 +358,7 @@ class MultiLabel(object):
                inputs=None,
                targets=None,
                loss_type=None,
-               features=None,
-               reuse_z=False):
+               features=None):
     # TODO: make sure we are averaging/adding losses correctly across labels and across batch
 
     # inputs: integer IDs of words in x
@@ -407,7 +397,7 @@ class MultiLabel(object):
 
     zm, zv = self._qz_template(features)
 
-    if reuse_z is True:
+    if hp.reuse_z is True:
       z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
     else:
       z_samples = None

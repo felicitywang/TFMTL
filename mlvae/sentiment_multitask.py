@@ -41,6 +41,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logging = tf.logging
 
+TRAIN = 'train'
+TEST = 'test'
+VALID = 'valid'
 
 def parse_args():
   p = ap.ArgumentParser()
@@ -170,97 +173,32 @@ def get_num_records(tf_record_filename):
       c += 1
   return c
 
-def train_model(model, datast_info,
-                steps_per_epoch, args):
+def train_model(model, dataset_info, steps_per_epoch, args):
+  # 
+  fill_info_dicts(dataset_info, args)
 
-  model_info = dict()
-  for dataset_name in dataset_info:
-    model_info[dataset_name] = dict()
+  # Build compute graph
+  # The input to this function is a dict:
+  #   { dataset_key: }
+  #
+  loss = model.get_multi_task_loss(train_iters)
 
-  # Get targets and labels
-  for dataset_name in model_info:
-    _train_iter = dataset_info[dataset_name]['train_iter']
-    model_info[dataset_name]['targets'], model_info[dataset_name]['labels'] = _train_iter.get_next()
+  preds = {}
+  for key for dataset_info:
+    preds[key] model.get_predictions(dataset_info[key][TEST])
 
-  # Create feature_dicts for each dataset
-  for dataset_name_1 in model_info:
-    _feature_dict = dict()
-    for dataset_name_2 in dataset_info:
-      if dataset_name_1 == dataset_name_2:
-        _feature_dict[dataset_name_1] = model_info[dataset_name_1]['labels']
-      else:
-        _feature_dict[dataset_name_1] = None
-    model_info[dataset_name]['feature_dict'] = _feature_dict
-
-  # Set beta weights
-  if args.beta == 'empirical':
-    raise ValueError("empirical beta option not implemented")
-  elif args.beta == 'even':
-    beta = 0.5
-    logging.info("  -> -> using beta=%f" % (beta))
-  else:
-    raise ValueError("unrecognized beta option: %s" % (args.beta))
-
-  if args.optim_style == 'combined':
-    logging.info("  -> -> combined loss")
-    loss = 0
-    for dataset_name in model_info:
-      _targets = model_info[dataset_name]['targets']
-      _feature_dict = model_info[dataset_name]['feature_dict']
-      loss += model.get_loss(_targets, _feature_dict, loss_type=???) # TODO: weight these? 
-  elif args.optim_style == 'alternating':
-    logging.info("  -> -> separate losses (alternating opt)")
-    for dataset_name in model_info:
-      _targets = model_info[dataset_name]['targets']
-      _feature_dict = model_info[dataset_name]['feature_dict']
-      model_info[dataset_name]['loss'] = model.get_loss(_targets, _feature_dict, loss_type=???)
-  else:
-    raise ValueError("unrecognized optim style=%d" % (args.optim_style))
-
-  # Predictions
-  for dataset_name in model_info:
-    _valid_iter = dataset_info[dataset_name]['valid_iter']
-    model_info[dataset_name]['valid_targets'], model_info[dataset_name]['valid_labels'] = _valid_iter.get_next()
-    _test_iter = dataset_info[dataset_name]['test_iter']
-    model_info[dataset_name]['test_targets'], model_info[dataset_name]['test_labels'] = _test_iter.get_next()
+  # Done building compute graph; set up training ops.
   
-    _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_targets'], dataset_info[dataset_name]['feature_name'])
-    model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
-    _test_pred_op = model.get_predictions(model_info[dataset_name]['test_targets'], dataset_info[dataset_name]['feature_name'])
-    model_info[dataset_name]['test_pred_op'] = _test_pred_op
-
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
   zero_global_step_op = global_step_tensor.assign(0)
   lr = get_learning_rate(args.lr0)
-  # alternating = args.setting == 'semisup' and args.optim_style == 'alternating'
-  alternating = (args.optim_style == 'alternating')
-  if args.optim_style == 'alternating':
-    # TODO: generalize to T datasets
-    # take a gradient step after training on each dataset
-    logging.info("  -> %d train ops for alternating optimization" % (len(dataset_info)))
-    for dataset_name in model_info:
-      _loss = model_info[dataset_name]['loss']
-      tvars, grads = get_var_grads(_loss)
-      _train_op = get_train_op(tvars, grads, lr,
-                               args.max_grad_norm,
-                               global_step_tensor,
-                               name='{}_train_op'.format(dataset_name))
-      model_info[dataset_name]['train_op'] = _train_op
-
-
-  elif args.optim_style == 'combined':
-    # take a combined gradient step after training on all datasets (one batch each)
-    tvars, grads = get_var_grads(loss)
-    lr = get_learning_rate(args.lr0)
-    train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
-                            global_step_tensor, name='train_op')
-  else:
-    raise ValueError("unrecognized optim style=%d" % (args.optim_style))
-
+  tvars, grads = get_var_grads(loss)
+  lr = get_learning_rate(args.lr0)
+  train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
+                          global_step_tensor, name='train_op')
   init_ops = [tf.global_variables_initializer(),
               tf.local_variables_initializer()]
-
   config = get_proto_config(args)
   with tf.train.SingularMonitoredSession(config=config) as sess:
     # Initialize model parameters
@@ -272,26 +210,13 @@ def train_model(model, datast_info,
       total_loss = 0
       num_iter = 0
       for _ in xrange(steps_per_epoch):
-        if alternating:
-          if len(dataset_info) > 2:
-            raise ValueError("cannot currently support alternating training for more than 2 datasets at a time")
-          u = np.random.uniform()
-          if u < beta:
-            # Choose dataset 0
-            for dataset_name in dataset_info:
-              if dataset_info[dataset_name]['ordering'] == 0:
-                loss, train_op = (model_info[dataset_name]['loss'], model_info[dataset_name]['train_op'])
-          else:
-            # Choose dataset 1
-            for dataset_name in dataset_info:
-              if dataset_info[dataset_name]['ordering'] == 1:
-                loss, train_op = (model_info[dataset_name]['loss'], model_info[dataset_name]['train_op'])
-
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v
       assert num_iter > 0
-      train_loss = float(total_loss) / float(num_iter)  # average loss per batch (which is in turn averaged across examples)
+
+      # average loss per batch (which is in turn averaged across examples)
+      train_loss = float(total_loss) / float(num_iter)  
 
       # Evaluate held-out accuracy
       for dataset_name in dataset_info:
@@ -459,32 +384,22 @@ def main():
     # Steps per epoch
     steps_per_epoch = int(max_N_train / args.batch_size)  # cycle through datasets until all datasets have been exhaustively seen
 
-    # Data iterators
-    for dataset_name in dataset_info:
-      _train_dataset = dataset_info[dataset_name]['train_dataset']
-      dataset_info[dataset_name]['train_iter'] = get_train_iter(args.batch_size, _train_dataset, args, name='{}_train_dataset'.format(dataset_name))
 
-    # Held-out test data
-    if args.test:
-      logging.info("Using test data for evaluation.")
-      for dataset_name in dataset_info:
-        _test_dataset = dataset_info[dataset_name]['test_dataset']
-        dataset_info[dataset_name]['test_iter'] = get_test_iter(args.eval_batch_size, _test_dataset, args)
-
-    else:
-      logging.info("Using validation data for evaluation.")
-      for dataset_name in dataset_info:
-        _valid_dataset = dataset_info[dataset_name]['valid_dataset']
-        dataset_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
 
     # Initialize model
     logging.info("Creating computation graph.")
 
-    m = MultiLabel(class_sizes=class_sizes,
-                   dataset_order=dataset_order,
-                   encoders=encoders,
-                   decoders=decoders,
-                   hp=None)
+    # Seth's multi-task VAE model
+    if args.model == 'mlvae':
+      m = MultiLabel(class_sizes=class_sizes,
+                     dataset_order=dataset_order,
+                     encoders=encoders,
+                     decoders=decoders,
+                     hp=None)
+    # Felicity's discriminative baseline
+    elif args.model == 'mult':
+      # TODO: Felicity: please fill in your MULT baseline here
+      # m = MULT(...)
 
     # Do training
     train_model(m, dataset_info,
@@ -550,6 +465,69 @@ def get_proto_config(args):
   config.log_device_placement = args.log_device_placement
   config.gpu_options.force_gpu_compatible = args.force_gpu_compatible
   return config
+
+
+def fill_info_dicts(dataset_info, args):
+  # Storage for pointers to dataset-specific Tensors
+  model_info = dict()
+  for dataset_name in dataset_info:
+    model_info[dataset_name] = dict()
+  
+  # Data iterators
+  for dataset_name in dataset_info:
+    _train_dataset = dataset_info[dataset_name]['train_dataset']
+    dataset_info[dataset_name]['train_iter'] = get_train_iter(args.batch_size, _train_dataset, args, name='{}_train_dataset'.format(dataset_name))
+
+    # Held-out test data
+    if args.test:
+      logging.info("Using test data for evaluation.")
+      _test_dataset = dataset_info[dataset_name]['test_dataset']
+      dataset_info[dataset_name]['test_iter'] = get_test_iter(args.eval_batch_size, _test_dataset, args)
+    else:
+      logging.info("Using validation data for evaluation.")
+      _valid_dataset = dataset_info[dataset_name]['valid_dataset']
+      dataset_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
+
+    # Get targets and labels
+  for dataset_name in model_info:
+    _train_iter = dataset_info[dataset_name]['train_iter']
+    model_info[dataset_name]['targets'], model_info[dataset_name]['labels'] = _train_iter.get_next()
+
+  # Create feature_dicts for each dataset
+  for dataset_name_1 in model_info:
+    _feature_dict = dict()
+    for dataset_name_2 in dataset_info:
+      if dataset_name_1 == dataset_name_2:
+        _feature_dict[dataset_name_1] = model_info[dataset_name_1]['labels']
+      else:
+        _feature_dict[dataset_name_1] = None
+    model_info[dataset_name]['feature_dict'] = _feature_dict
+
+  # TODO(noa): maybe remove this 
+  for dataset_name in model_info:
+    _targets = model_info[dataset_name]['targets']
+    _feature_dict = model_info[dataset_name]['feature_dict']
+    loss = model.get_loss(_targets, _feature_dict, loss_type=???)
+
+  # Predictions
+  for dataset_name in model_info:
+    _valid_iter = dataset_info[dataset_name]['valid_iter']
+    model_info[dataset_name]['valid_targets'], model_info[dataset_name]['valid_labels'] = _valid_iter.get_next()
+    _test_iter = dataset_info[dataset_name]['test_iter']
+    model_info[dataset_name]['test_targets'], model_info[dataset_name]['test_labels'] = _test_iter.get_next()
+  
+    _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_targets'], dataset_info[dataset_name]['feature_name'])
+    model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+    _test_pred_op = model.get_predictions(model_info[dataset_name]['test_targets'], dataset_info[dataset_name]['feature_name'])
+    model_info[dataset_name]['test_pred_op'] = _test_pred_op
+    
+  # Return dataset_info dict
+  return dataset_info, model_info
+
+def get_var_grads(loss):
+  tvars = tf.trainable_variables()
+  grads = tf.gradients(loss, tvars)
+  return (tvars, grads)
 
 
 if __name__ == "__main__":
