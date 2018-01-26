@@ -8,10 +8,14 @@ Tweets on a set of eight basic bipolar emotions defined by Plutchik. The emotion
 
 + \# items = 38,900,000
 + \# labels = 8
-    - joy/sadness
-    - anticipation/surprise
-    - anger/fear
-    - disgust/trust
+  - 0: anger
+  - 1: anticipation
+  - 2: disgust
+  - 3: fear
+  - 4: joy
+  - 5: sadness
+  - 6: surprise
+  - 7: trust
 
 **Basic Unit**: paragraph
 

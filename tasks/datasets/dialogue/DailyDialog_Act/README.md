@@ -1,4 +1,4 @@
-**Daily Dialog Emotion**
+**Daily Dialog Act**
 
 **Summary**
 DailyDialog is created with human-written dialogs of various topics from English-learning websites and manually labeled communication intention and emotion information. This is the dailog intention part.
