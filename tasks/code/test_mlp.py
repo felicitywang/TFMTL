@@ -45,7 +45,9 @@ flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
 # flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
 flags.DEFINE_float('dropout_rate', 0.5, "Dropout rate (1.0 - keep "
                                         "probability)")
-flags.DEFINE_float('lr', 0.00005, "Learning rate")
+flags.DEFINE_float('scale_ratio', 1.0, "Dropout rate (1.0 - keep "
+                                       "probability)")
+flags.DEFINE_float('lr', 0.0001, "Learning rate")
 flags.DEFINE_float('l2_weight', 0.0001, "L2 regularization weight")
 flags.DEFINE_integer("num_components", 64,
                      "Number of mixture components for p(z)")
@@ -53,7 +55,7 @@ flags.DEFINE_integer("embed_dim", 128, "embedding dimension (VAE)")
 flags.DEFINE_integer("latent_dim", 128, "latent dimension (VAE)")
 flags.DEFINE_integer("seed", 42, "RNG seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size.")
-flags.DEFINE_integer("num_epoch", 10, "Total number of training epochs.")
+flags.DEFINE_integer("num_epoch", 20, "Total number of training epochs.")
 flags.DEFINE_integer('num_intra_threads', 0,
                      """Number of threads to use for intra-op
                      parallelism. If set to 0, the system will pick
@@ -65,13 +67,14 @@ flags.DEFINE_integer('num_inter_threads', 0,
 flags.DEFINE_boolean('force_gpu_compatible', True,
                      """whether to enable force_gpu_compatible in
                      GPU_Options""")
-
+flags.DEFINE_integer("min_freq", 10, 'minimum frequency to build the '
+                                     'vocabulary.')
 FLAGS = flags.FLAGS
 
 
 def make_model(batch, num_classes, is_training):
     model = MLP(batch[FLAGS.encoding], batch['label'], num_classes=num_classes,
-                dropout_rate=0.5, layers=[200, 200], is_training=is_training)
+                dropout_rate=0.5, layers=[100, 100], is_training=is_training)
     return model
 
 
@@ -131,8 +134,11 @@ def main(_):
     tf.set_random_seed(FLAGS.seed)
 
     dataset = Dataset(data_dir=FLAGS.data_dir, encoding=FLAGS.encoding,
-                      # text_field_names=FLAGS.text_field_names.split(),
-                      valid_ratio=0.1, train_ratio=0.8, random_seed=42)
+                      # text_field_names=FLAGS.text_field_names,
+                      # label_field_name=FLAGS.text_field_name,
+                      min_frequency=FLAGS.min_freq,
+                      valid_ratio=0.1, train_ratio=0.8, random_seed=42,
+                      scale_ratio=FLAGS.scale_ratio)
 
     num_classes = dataset.num_classes
     max_document_length = dataset.max_document_length
@@ -184,6 +190,8 @@ def main(_):
 
             best_epoch = 0
             max_valid_acc = 0.0
+            last_valid_acc = 0.0
+            decrease_time = 0
 
             for epoch in range(FLAGS.num_epoch):
                 logging.info("Epoch %d", epoch)
@@ -193,6 +201,13 @@ def main(_):
                 valid_result = run_epoch(session, mvalid, init_op=valid_init)
                 log_result('valid', valid_result)
                 _, valid_acc, _ = valid_result
+                # early stop if valid accuracy stops improving for 3
+                # continuous times
+                if valid_acc <= last_valid_acc:
+                    decrease_time += 1
+                    if decrease_time == 3:
+                        break
+                last_valid_acc = valid_acc
                 if valid_acc > max_valid_acc:
                     best_epoch = epoch
                     max_valid_acc = valid_acc
@@ -215,6 +230,9 @@ def get_proto_config():
     config.intra_op_parallelism_threads = FLAGS.num_intra_threads
     config.inter_op_parallelism_threads = FLAGS.num_inter_threads
     config.gpu_options.force_gpu_compatible = FLAGS.force_gpu_compatible
+    # maximun alloc gpu50% of MEM
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    config.gpu_options.allow_growth = True
     return config
 
 
