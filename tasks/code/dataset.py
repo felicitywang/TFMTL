@@ -191,6 +191,20 @@ class Dataset():
         self.write_examples(self.valid_path, self.valid_index)
         self.write_examples(self.test_path, self.test_index)
 
+        # save dataset arguments
+        args = {
+            'num_classes': self.num_classes,
+            'max_document_length': self.max_document_length,
+            'vocab_size': self.vocab_size,
+            'min_frequency': min_frequency,
+            'max_frequency': max_frequency,
+            'random_seed': random_seed
+        }
+        args_path = os.path.join(tfrecord_dir, "args_dict.json")
+        with open(args_path, "wb") as file:
+            pickle.dump(args, file)
+            print("data arguments saved to", args_path)
+
     def build_vocab(self, min_frequency, max_frequency, vocab_dir):
         """Builds vocabulary for this dataset only using tensorflow's
         VocabularyProcessor
