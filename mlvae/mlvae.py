@@ -52,6 +52,7 @@ def default_hparams():
                  inputs_key="TEXT",
                  targets_key="TARGETS"
                  loss_type="discriminative",
+                 loss_combination="even",
                  # inference=Inference.EXACT.value,
                  dtype='float32')
 
@@ -194,8 +195,9 @@ class MultiLabel(object):
       y_sample = tf.argmax(y_sample, axis=1)
     return y_sample
 
-  def get_predictions(self, inputs, feature_name, features=None):
+  def get_predictions(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
+    inputs = batch[hp.inputs_key]
     if features is None:
       features = self.encode(inputs, feature_name)
     zm, zv = self._qz_template(features)
@@ -356,7 +358,7 @@ class MultiLabel(object):
         res += self.get_label_log_probability(feature_dict, features, z, feature_name, feature_dict[feature_name], distribution_type='q')
       disc_loss = res / len(z_samples)
     else:
-      # TODO: does anything need to happen in this case?
+      #Discriminative loss not defined for unobserved examples
       pass
 
     return disc_loss
@@ -364,7 +366,10 @@ class MultiLabel(object):
   def get_multi_task_loss(self, dataset_batches):
     # dataset_batches: map from dataset names to training batches (one batch per dataset)
     # we assume only one dataset's labels are observed; the rest are unobserved
+
+    total_loss = 0
     for dataset_name, batch in dataset_batches.items():
+      # We assume that the encoders and decoders always use the same fields/features (given by the keys in the batch accesses below)
       inputs = batch[hp.inputs_key]
       targets = batch[hp.targets_key]
       labels = batch[hp.labels_key]
@@ -375,9 +380,12 @@ class MultiLabel(object):
           feature_dict[dataset_name] = labels
         else:
           feature_dict[dataset_name_2] = None
+      if hp.loss_combination == "even":
+        total_loss += get_loss(feature_dict, inputs=inputs, targets=targets, loss_type=hp.loss_type, features=None)
+      else:
+        raise ValueError("unrecognized loss combination type: %s" % (hp.loss_combination))
 
-      get_loss(feature_dict, inputs=inputs, targets=targets, loss_type=hp.loss_type, features=None)
-    
+    return total_loss
   
   def get_loss(self,
                feature_dict,

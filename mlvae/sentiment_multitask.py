@@ -66,6 +66,14 @@ def parse_args():
                  help='Size of evaluation batch.')
   #p.add_argument('--max_N_train', type=int,
   #               help='Size of largest training split among all datasets.')
+  p.add_argument('--embed_dim', default=128, type=int,
+                 help='Word embedding size')
+  p.add_argument('--encode_dim', default=128, type=int,
+                 help='Encoder embedding size')
+  p.add_argument('--share_embed', action='store_true', default=False,
+                 help='Whether datasets share word embeddings')
+  p.add_argument('--share_decoders', action='store_true', default=False,
+                 help='Whether decoders are shared across datasets')
   p.add_argument('--alpha', default=10.0, type=float,
                  help='Weight assigned to discriminative term in the objective')
   p.add_argument('--beta', choices=['empirical', 'even'], default='even',
@@ -121,60 +129,49 @@ def parse_args():
                  help='Throw error if any operations are not GPU-compatible')
   p.add_argument('--tau0', default=0.5, type=float,
                  help='Annealing parameter for Concrete/Gumbal-Softmax')
+  p.add_argument('--label_key', default="LABELS", type=str,
+                 help='Key for label field in the batches')
   p.add_argument('--datasets', nargs='+', type=str,
                  help="Key of the dataset(s) to train and evaluate on [IMDB|SSTb]")
   return p.parse_args()
 
-def cnn(inputs,
-        input_size=None,
-        embed_dim=128,
-        num_filter=64,
-        max_width=3,
-        encode_dim=256,
-        activation_fn=tf.nn.elu):
-  # inputs: word embeddings
 
-  if input_size is None:
-    raise ValueError("Must provide input_size.")
-
-  filter_sizes = []
-  for i in xrange(2, max_width+1):
-    filter_sizes.append((i + 1, num_filter))
-
-  # Convolutional layers
-  filters = []
-  for width, num_filter in filter_sizes:
-    conv_i = tf.layers.conv1d(
-      inputs,
-      num_filter,  # dimensionality of output space (num filters)
-      width,  # length of the 1D convolutional window
-      data_format='channels_last',  # (batch, time, embed_dim)
-      strides=1,  # stride length of the convolution
-      activation=tf.nn.relu,
-      padding='SAME',  # zero padding (left and right)
-      name='conv_{}'.format(width))
-
-    # Max pooling
-    pool_i = tf.reduce_max(conv_i, axis=1, keep_dims=False)
-
-    # Append the filter
-    filters.append(pool_i)
-
-    # Increment filter index
-    i += 1
-
-  # Concatenate the filters
-  inputs = tf.concat(filters, 1)
-
-  # Return a dense transform
-  return dense_layer(inputs, output_size=encode_dim, name='l1',
-                     activation=activation_fn)
-
-def encoder_graph(self, inputs, encode_dim, word_embed_dim, vocab_size):
-  return cnn(inputs,
-             input_size=vocab_size,
-             embed_dim=word_embed_dim,
+def encoder_graph(inputs, embed_fn, encode_dim):
+  embed = embed_fn(inputs)
+  return cnn(embed,
              encode_dim=encode_dim)
+
+def build_encoders(vocab_size, args):
+  encoders = dict()
+  if args.share_embed:
+    # One shared word embedding matrix for all datasets
+    embed_temp = tf.make_template('embedding', tf.contrib.layers.embed_sequence,
+                                  vocab_size=vocab_size,
+                                  embed_dim=args.embed_dim)
+    for ds in args.datasets:
+      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
+                                      embed_fn=embed_temp,
+                                      encode_dim=args.encode_dim)
+  else:
+    # A unique word embedding matrix for each dataset
+    for ds in args.datasets:
+      embed_temp = tf.make_template('embedding_{}'.format(ds), tf.contrib.layers.embed_sequence,
+                                    vocab_size=vocab_size,
+                                    embed_dim=args.embed_dim)
+      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
+                                      embed_fn=embed_temp,
+                                      encode_dim=args.encode_dim)
+
+  return encoders
+
+def build_decoders(???):
+  decoders = dict()
+  if args.share_decoders:
+    raise "TODO"
+  else:
+    raise "TODO"
+
+  return decoders
 
 def get_num_records(tf_record_filename):
   c = 0
@@ -195,11 +192,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   train_batches = {name: model_info[name]['train_batch'] for name in model_info}
   loss = model.get_multi_task_loss(train_batches)
 
-  preds = {}
-  for key for dataset_info:
-    test_inputs, test_targets, test_labels = dataset_info[key][TEST_ITER].get_next()
-    preds[key] = model.get_predictions(test_inputs)
-
   # Done building compute graph; set up training ops.
   
   # Training ops
@@ -207,7 +199,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   zero_global_step_op = global_step_tensor.assign(0)
   lr = get_learning_rate(args.lr0)
   tvars, grads = get_var_grads(loss)
-  lr = get_learning_rate(args.lr0)
   train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
                           global_step_tensor, name='train_op')
   init_ops = [tf.global_variables_initializer(),
@@ -225,47 +216,34 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       for _ in xrange(steps_per_epoch):
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
-        total_loss += loss_v
+        total_loss += loss_v  # loss_v is average loss *per training example*
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
       train_loss = float(total_loss) / float(num_iter)  
 
       # Evaluate held-out accuracy
-      for dataset_name in dataset_info:
-        #_pred_op = model_info[dataset_name]['valid_pred_op']
-        #_valid_labels = model_info[dataset_name]['valid_labels']
-        _valid_iterator = dataset_info[dataset_name]['valid_iter']
-        _metrics = compute_held_out_performance(sess, _pred_op,
-                                               _eval_labels,
-                                               _eval_iter, args)
-        model_info[dataset_name]['valid_metrics'] = _metrics
+      if not args.test:  # Validation mode
+        # Get performance metrics on each dataset
+        for dataset_name in dataset_info:
+          _pred_op = model_info[dataset_name]['test_pred_op']
+          _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
+          _eval_iterator = dataset_info[dataset_name]['test_iter']
+          _metrics = compute_held_out_performance(sess, _pred_op,
+                                                  _eval_labels,
+                                                  _eval_iter, args)
+          model_info[dataset_name]['test_metrics'] = _metrics
 
-      str_ = '[epoch=%d step=%d] train_loss=%s' % (epoch, np.asscalar(step), train_loss)
-      for dataset_name in model_info:
-        _num_eval_total = model_info[dataset_name]['valid_metrics']['ntotal']
-        _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
-        _eval_align_acc = model_info[dataset_name]['valid_metrics']['aligned_accuracy']
-        str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
+        # Log performance(s)
+        str_ = '[epoch=%d step=%d] train_loss=%s' % (epoch, np.asscalar(step), train_loss)
+        for dataset_name in model_info:
+          _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
+          _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
+          _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
+          str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
       logging.info(str_)
-
-    # Final test data evaluation
-    for dataset_name in dataset_info:
-      #_pred_op = model_info[dataset_name]['test_pred_op']
-      #_valid_labels = model_info[dataset_name]['test_labels']
-      _valid_iterator = dataset_info[dataset_name]['test_iter']
-      _metrics = compute_held_out_performance(sess, _pred_op,
-                                             _eval_labels,
-                                             _eval_iter, args)
-      model_info[dataset_name]['test_metrics'] = _metrics
-
-    str_ = 'FINAL TEST EVAL:'
-    for dataset_name in model_info:
-      _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
-      _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
-      _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-      str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
-    logging.info(str_)
+      else:
+        raise "final evaluation mode not implemented"
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
@@ -317,6 +295,7 @@ def main():
   np.random.seed(args.seed)
 
   dirs = dict()
+  # TODO: don't hard-code these paths
   dirs['IMDB'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/IMDB/"
   dirs['SSTb'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/SSTb/"
 
@@ -324,36 +303,34 @@ def main():
   class_sizes['IMDB'] = 2
   class_sizes['SSTb'] = 5
 
+  # Ordering of concatenation for input to decoder
   ordering = dict()
   ordering['IMDB'] = 0
   ordering['SSTb'] = 1
 
   # Read data
   dataset_info = dict()
-  for d in args.datasets:
-    dataset_info[d] = dict()
-
-  for dataset_name in dataset_info:
+  for dataset_name in args.datasets:
+    dataset_info[dataset_name] = dict()
     dataset_info[dataset_name]['feature_name'] = dataset_name  # feature name is just dataset name
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
+    _dir = dataset_info[dataset_name]['dir']
+    dataset_info[dataset_name]['dataset'] = Dataset(data_dir=_dir)
 
+  # TODO: merge dataset vocabs (call to a function in Dataset)
+
+  vocab_size = ??? merged_vocab.vocab_size
+  
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
 
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
 
-  encoders = {'IMDB': ???, 'SSTb': ???}
-  decoders = {'IMDB': unigram, 'SSTb': unigram}
-
-  for dataset_name in dataset_info:
-    _dir = dataset_info[dataset_name]['dir']
-    dataset_info[dataset_name]['dataset'] = Dataset(data_dir=_dir)
-
-  # num_classes = dataset.num_classes
-  # max_document_length = dataset.max_document_length
-  # vocab_size = dataset.vocab_size
+  encoders = build_encoders(vocab_size, args)
+  decoders = build_decoders()
+  #decoders = {'IMDB': unigram, 'SSTb': unigram}
 
   # Set paths to TFRecord files
   for dataset_name in dataset_info:
@@ -370,14 +347,11 @@ def main():
     _train_path = dataset_info[dataset_name]['train_path']
     ds = build_input_dataset(_train_path, FEATURES, args.batch_size)
     dataset_info[dataset_name]['train_dataset'] = ds
-    if args.test:
-      _test_path = dataset_info[dataset_name]['test_path']
-      ds = build_input_dataset(_test_path, FEATURES, args.batch_size)
-      dataset_info[dataset_name]['test_dataset'] = ds
-    else:
-      _valid_path = dataset_info[dataset_name]['valid_path']
-      ds = build_input_dataset(_valid_path, FEATURES, args.batch_size)
-      dataset_info[dataset_name]['valid_dataset'] = ds
+
+    # Validation or test dataset
+    _test_path = dataset_info[dataset_name]['test_path']
+    ds = build_input_dataset(_test_path, FEATURES, args.batch_size)
+    dataset_info[dataset_name]['test_dataset'] = ds
 
 
   # This finds the size of the largest training dataset.
@@ -400,7 +374,8 @@ def main():
         # TODO: also print and sum up all their sizes
         print(tvar)
 
-    # Steps per epoch. 
+    # Steps per epoch.
+    # One epoch: all datasets have been seen completely at least once
     steps_per_epoch = int(max_N_train / args.batch_size)  
 
     # Seth's multi-task VAE model
@@ -491,23 +466,15 @@ def fill_info_dicts(dataset_info, args):
   #  _feature_dict = model_info[dataset_name]['feature_dict']
   #  loss = model.get_loss(_targets, _feature_dict, loss_type=???)
 
-  # Predictions
+  # Evaluation batches and prediction operations
   for dataset_name in model_info:
-    if args.test:
-      _test_iter = dataset_info[dataset_name]['test_iter']
-      model_info[dataset_name]['test_batch'] = _test_iter.get_next()
-      #_test_pred_op = model.get_predictions(model_info[dataset_name]['test_targets'], dataset_info[dataset_name]['feature_name'])
-      #model_info[dataset_name]['test_pred_op'] = _test_pred_op
-    else:
-      _valid_iter = dataset_info[dataset_name]['valid_iter']
-      model_info[dataset_name]['valid_batch'] = _valid_iter.get_next()
-      #_valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_targets'], dataset_info[dataset_name]['feature_name'])
-      #model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+    _test_iter = dataset_info[dataset_name]['test_iter']
+    _test_batch = _test_iter.get_next()
+    model_info[dataset_name]['test_batch'] = _test_batch
+    _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
+    model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
-    #model_info[dataset_name]['valid_targets'], model_info[dataset_name]['valid_labels'] = _valid_iter.get_next()
-    #model_info[dataset_name]['test_targets'], model_info[dataset_name]['test_labels'] = _test_iter.get_next()
-  
-    
+
   # Return dataset_info dict
   return dataset_info, model_info
 
