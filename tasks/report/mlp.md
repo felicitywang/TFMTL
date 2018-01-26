@@ -1,12 +1,12 @@
-type|dataset|accuracy|min_freq|
+type|dataset|accuracy|min_freq
 ---|---|---|---
 sentiment|SSTb|40.7240%|1
 sentiment|IMDB|89.0160%|50
-sentiment|Twitter_Sentiment_Corpus|76.3672%|1
+sentiment|Twitter_Sentiment_Corpus|77.3438%|0
 emotion|NRC_TEC|61.1586%|2
 emotion|NLP-dataste|90.4633%|50
-emotion|Twitter_18|18.1818%|50
-
+emotion|Twitter_18|22.1344%|2
+emotion|Crowdflower_Emotion_in_Text|34.8250%|10
 
 ### hyperparameters:
 - learning rate: 0.00005
