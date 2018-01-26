@@ -38,15 +38,18 @@ for text_line in text.readlines():
 
     for i in range(len(texts) - 1):
         content = dict()
-        content['dialogue_id'] = index # which dialogue it's in
-        content['sentence_id'] = i # index of the sentence in the current dialogue(shall be used to track context)
+        content['dialogue_id'] = index  # which dialogue it's in
+        # index of the sentence in the current dialogue(shall be used to track
+        # context)
+        content['sentence_id'] = i
         index += 1
         content['text'] = texts[i]
         content['act'] = acts[i]
         content['emotion'] = acts[i]
         content['topic'] = topics[0]
         content['label'] = content['act']
-        content['dialogue_num_sentence'] = len(texts) # how many sentences(paragraphs) there are in each dialogue
+        # how many sentences(paragraphs) there are in each dialogue
+        content['dialogue_num_sentence'] = len(texts)
         all_list.append(content)
     dialogue_id += 1
 

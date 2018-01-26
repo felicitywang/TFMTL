@@ -2,7 +2,8 @@
 
 **Summary**
 
-This dataset consists of movie reviews from amazon. The data span a period of more than 10 years, including all ~8 million reviews up to October 2012. Reviews include product and user information, ratings, and a plaintext review. We also have reviews from all other Amazon categories.
+A large corpus of discourse annotations and relations on ~10K forum(Reddit) threads.
+
 
 **Basic stats:**
 + \# posts = 101,498

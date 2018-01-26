@@ -7,12 +7,12 @@ An emotion corpus found from https://github.com/huseinzol05/NLP-Dataset without 
 **Basic stats:**
 + \# items = 416,809
 + \# label = 6
-    - anger
-    - fear
-    - joy
-    - love
-    - sadness
-    - surprise
+    - 0: anger
+    - 1: fear
+    - 2: joy
+    - 3: love
+    - 4: sadness
+    - 5: surprise
 
 **Basic Unit**: paragraph
 
