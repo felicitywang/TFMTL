@@ -5,16 +5,42 @@ from tensorflow.python.ops.init_ops import glorot_uniform_initializer
 from tensorflow.python.ops.init_ops import zeros_initializer
 
 
-class Inference(Enum):
-  EXACT = 'sum'
-  SAMPLE = 'sample'
-
-
 def dense_layer(x, output_size, name, activation=None):
+  """ Wrapper for building dense linear layers. """
+  
+  if activation == tf.nn.selu:
+    init = tf.variance_scaling_initializer(scale=1.0, mode='fan_in')
+  else:
+    init = glorot_uniform_initializer()
+  
   return tf.layers.dense(x, output_size, name=name,
-                         kernel_initializer=glorot_uniform_initializer(),
+                         kernel_initializer=init,
                          bias_initializer=zeros_initializer(),
                          activation=activation)
+
+
+def mvn_diag_kl(p_loc=None, p_log_sigma=None, q_loc=None, q_log_sigma=None, pq=True):
+  """Compute the analytic KL divergence between two multivariate
+  Gaussians (p and q) with diagonal covariences.
+
+  """
+  if pq:
+    p_mu = tf.convert_to_tensor(p_loc)
+    p_ls = tf.convert_to_tensor(p_log_sigma)
+    q_mu = tf.convert_to_tensor(q_loc)
+    q_ls = tf.convert_to_tensor(q_log_sigma)
+  else:
+    p_mu = tf.convert_to_tensor(q_loc)
+    p_ls = tf.convert_to_tensor(q_log_sigma)
+    q_mu = tf.convert_to_tensor(p_loc)
+    q_ls = tf.convert_to_tensor(p_log_sigma)
+  D = tf.to_float(tf.shape(p_mu)[-1])
+  delta = p_mu - q_mu
+  delta_sq = delta * delta
+  a = tf.reduce_sum(q_ls, axis=1, keep_dims=True) - tf.reduce_sum(p_ls, axis=1, keep_dims=True)
+  b = tf.reduce_sum(tf.exp(2.0 * (p_ls - q_ls)), axis=1, keep_dims=True)
+  c = tf.reduce_sum(delta_sq * tf.exp(-2.0 * q_ls), axis=1, keep_dims=True)
+  return a + 0.5 * (b - D + c)
 
 
 def cross_entropy_with_logits(logits, targets):
