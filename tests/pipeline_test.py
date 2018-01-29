@@ -72,15 +72,13 @@ class PipelineTests(tf.test.TestCase):
       'sequence': tf.VarLenFeature(tf.int64),
       'length': tf.FixedLenFeature([1], tf.int64)
     }
-    dataset = Pipeline(tf_path, feature_map,
+    dataset = Pipeline(tf_path, feature_map, one_shot=False,
                        batch_size=self._batch_size)
     with self.test_session() as sess:
       sess.run(dataset.init_op)
-      for i in range(int(self._N / self._batch_size)):
+      for i in range(int(self._N / self._batch_size) + 1):
         batch_v = sess.run(dataset.batch)
         self.assertEqual(batch_v['sequence'].shape[0], self._batch_size)
-      with self.assertRaises(tf.errors.OutOfRangeError):
-        batch_v = sess.run(dataset.batch)
 
   def test_epochs(self):
     tf_path = self.write_examples()

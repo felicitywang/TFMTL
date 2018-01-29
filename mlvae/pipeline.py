@@ -45,7 +45,7 @@ class Pipeline(object):
       prefetch_buffer_size: how many batches to keep buffered
       shuffle_buffer_size: how many examples to buffer for purposes of randomizing order
       num_epochs: how many times to repeat over the data (None := indefinitely)
-      one_shot: if True, create a re-initializable iterator
+      one_shot: if False, create a re-initializable iterator
       bucket_info: if examples should be bucketed
     """
     
