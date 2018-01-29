@@ -28,14 +28,10 @@ from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 
-from tflm.metrics.clustering import accuracy
-from tflm.data import InputDataset
-from tflm.optim import Optimizer
-from tflm.nets import unigram
 
-from sentiment_model import cnn
-
-from vae_common import dense_layer
+from mlvae.data import Pipeline
+from mlvae.cnn import conv_and_pool
+from mlvae.vae import dense_layer
 
 from mlvae import MultiLabel
 
