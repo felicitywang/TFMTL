@@ -380,6 +380,7 @@ class MultiLabel(object):
           feature_dict[dataset_name] = labels
         else:
           feature_dict[dataset_name_2] = None
+
       if hp.loss_combination == "even":
         total_loss += get_loss(feature_dict, inputs=inputs, targets=targets, loss_type=hp.loss_type, features=None)
       else:
@@ -435,12 +436,6 @@ class MultiLabel(object):
       z_samples = [gaussian_sample(zm, zv) for _ in range(hp.num_z_samples)]
     else:
       z_samples = None
-    # TODO(noa): support needs to be added to compute all the
-    # expectations below using the same sample z, since this is the
-    # standard way to compute them and so we should support it as a
-    # baseline, even if other methods work better.
-
-    # z = gaussian_sample(zm, zv)
 
     if loss_type == 'discriminative':
       total_disc_loss = 0
@@ -468,6 +463,8 @@ class MultiLabel(object):
       # analytically, since Eq_log_pz and Eq_log_qz are separate terms
       # in the loss below. Instead, we should have a KL_z method that
       # support *either* analytic or MCMC modes.
+      #
+      # (sethebner): there is a get_kl_qp() function that supports both
       
       loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
 

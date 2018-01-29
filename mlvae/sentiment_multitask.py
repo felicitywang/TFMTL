@@ -33,6 +33,8 @@ from tflm.data import InputDataset
 from tflm.optim import Optimizer
 from tflm.nets import unigram
 
+from sentiment_model import cnn
+
 from vae_common import dense_layer
 
 from mlvae import MultiLabel
@@ -350,7 +352,7 @@ def main():
 
     # Validation or test dataset
     _test_path = dataset_info[dataset_name]['test_path']
-    ds = build_input_dataset(_test_path, FEATURES, args.batch_size)
+    ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size)
     dataset_info[dataset_name]['test_dataset'] = ds
 
 
@@ -423,59 +425,52 @@ def get_proto_config(args):
 def fill_info_dicts(dataset_info, args):
   # Organizes inputs to the computation graph
   # The corresponding outputs are defined in train_model()
-  
+
+  # dataset_info: dict containing dataset-specific parameters/statistics
+  #  e.g., number of classes, path to data
+  # model_info: dict containing dataset-specific information w.r.t. running the model
+  #  e.g., data iterators, batches, prediction operations
+
   # Storage for pointers to dataset-specific Tensors
   model_info = dict()
   for dataset_name in dataset_info:
     model_info[dataset_name] = dict()
   
-  # Data iterators
+  # Data iterators, etc.
   for dataset_name in dataset_info:
+    # Training data, iterator, and batch
     _train_dataset = dataset_info[dataset_name]['train_dataset']
-    model_info[dataset_name]['train_iter'] = get_train_iter(args.batch_size, _train_dataset, args, name='{}_train_dataset'.format(dataset_name))
+    _train_iter = _train_dataset.iterator
+    _train_batch = _train_iter.get_next()
+    model_info[dataset_name]['train_iter'] = _train_iter
+    model_info[dataset_name]['train_batch'] = _train_batch
 
-    # Held-out test data
+    # Held-out test data, iterator, batch, and prediction operation
+    _test_dataset = dataset_info[dataset_name]['test_dataset']
+    _test_iter = _test_dataset.iterator
+    _test_batch = _test_iter.get_next()
+    _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
+    model_info[dataset_name]['test_iter'] = _test_iter
+    model_info[dataset_name]['test_batch'] = _test_batch
+    model_info[dataset_name]['test_pred_op'] = _test_pred_op
     if args.test:
       logging.info("Using test data for evaluation.")
-      _test_dataset = dataset_info[dataset_name]['test_dataset']
-      model_info[dataset_name]['test_iter'] = get_test_iter(args.eval_batch_size, _test_dataset, args)
     else:
       logging.info("Using validation data for evaluation.")
-      _valid_dataset = dataset_info[dataset_name]['valid_dataset']
-      model_info[dataset_name]['valid_iter'] = get_test_iter(args.eval_batch_size, _valid_dataset, args)
-
-  # Get targets and labels
-  for dataset_name in model_info:
-    _train_iter = dataset_info[dataset_name]['train_iter']
-    model_info[dataset_name]['train_batch'] = _train_iter.get_next()
-    #model_info[dataset_name]['targets'], model_info[dataset_name]['labels'] = _train_iter.get_next()
 
   # Create feature_dicts for each dataset
   for dataset_name_1 in model_info:
     _feature_dict = dict()
     for dataset_name_2 in dataset_info:
       if dataset_name_1 == dataset_name_2:
-        _feature_dict[dataset_name_1] = model_info[dataset_name_1]['labels']
+        # Observe the labels (from batch)
+        _feature_dict[dataset_name_1] = model_info[dataset_name_1][train_batch]
       else:
+        # Don't observe the labels
         _feature_dict[dataset_name_1] = None
     model_info[dataset_name]['feature_dict'] = _feature_dict
 
-  # TODO(noa): maybe remove this 
-  #for dataset_name in model_info:
-  #  _targets = model_info[dataset_name]['targets']
-  #  _feature_dict = model_info[dataset_name]['feature_dict']
-  #  loss = model.get_loss(_targets, _feature_dict, loss_type=???)
-
-  # Evaluation batches and prediction operations
-  for dataset_name in model_info:
-    _test_iter = dataset_info[dataset_name]['test_iter']
-    _test_batch = _test_iter.get_next()
-    model_info[dataset_name]['test_batch'] = _test_batch
-    _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
-    model_info[dataset_name]['test_pred_op'] = _test_pred_op
-
-
-  # Return dataset_info dict
+  # Return dataset_info dict and model_info dict
   return dataset_info, model_info
 
 
