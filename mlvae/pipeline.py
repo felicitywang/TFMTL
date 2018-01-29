@@ -25,10 +25,30 @@ from collections import namedtuple
 
 
 class Pipeline(object):
-  def __init__(self, tfrecord_file, feature_map, batch_size, num_threads = 4,
-               map_buffer_size = 512, shuffle_buffer_size = 128,
-               shuffle=True, num_epochs=1, one_shot=False,
-               bucket_info=None):
+  def __init__(self, tfrecord_file, feature_map, batch_size=32,
+               num_threads=4, prefetch_buffer_size=1,
+               shuffle_buffer_size=10000, shuffle=True,
+               num_epochs=None, one_shot=False, bucket_info=None):
+    """ 
+    Inputs
+    ------
+      tfrecord_file: path to TF protobuf records
+      feature_map: dict mapping feature keys to feature type, e.g.:
+
+        feature_map = {
+          'sequence': tf.VarLenFeature(tf.int64),
+          'length': tf.FixedLenFeature([1], tf.int64)
+        }
+      
+      batch_size: how many examples to batch together
+      num_threads: how many threads to keep the pipeline full
+      prefetch_buffer_size: how many batches to keep buffered
+      shuffle_buffer_size: how many examples to buffer for purposes of randomizing order
+      num_epochs: how many times to repeat over the data (None := indefinitely)
+      one_shot: if True, create a re-initializable iterator
+      bucket_info: if examples should be bucketed
+    """
+    
     self._feature_map = feature_map
     self._batch_size = batch_size
 
@@ -41,8 +61,11 @@ class Pipeline(object):
     elif num_epochs > 1:
       dataset = dataset.repeat(count=num_epochs)
 
+    # Maybe randomize
+    if shuffle:
+      dataset = dataset.shuffle(shuffle_buffer_size)
+
     if bucket_info is None:
-      # Process in batches
       dataset = dataset.batch(batch_size)
       dataset = dataset.map(self.parse_example, num_parallel_calls=num_threads)
     else:
@@ -68,10 +91,8 @@ class Pipeline(object):
       dataset = dataset.padded_batch(batch_size,
                                      padded_shapes=bucket_info.pads)
 
-    if shuffle:
-      dataset = dataset.shuffle(shuffle_buffer_size)
-
-    dataset = dataset.prefetch(map_buffer_size)
+    # Prefetch a batch for faster processing
+    dataset = dataset.prefetch(prefetch_buffer_size)
 
     # Get the iterator
     if one_shot:
@@ -120,3 +141,13 @@ class Pipeline(object):
 # func: a mapping from examples to tf.int64 keys
 # pads: a set of tf shapes that correspond to padded examples
 bucket_info = namedtuple("bucket_info", "func pads")
+
+
+def int64_feature(value):
+  """ Takes a single int (e.g. 3) and converts it to a tf Feature """
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def int64_list_feature(sequence):
+  """ Sequence of ints (e.g [1,2,3]) to TF feature """
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=sequence))
