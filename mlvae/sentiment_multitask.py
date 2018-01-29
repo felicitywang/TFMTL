@@ -56,6 +56,8 @@ FEATURES = {
 
 def parse_args():
   p = ap.ArgumentParser()
+  p.add_argument('--model', type=str,
+                 help='Which model to use [mlvae|mult]')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=128, type=int,
@@ -380,6 +382,15 @@ def main():
     # One epoch: all datasets have been seen completely at least once
     steps_per_epoch = int(max_N_train / args.batch_size)  
 
+    # Create model(s):
+    # NOTE: models must support the following functions:
+    #  * get_multi_task_loss()
+    #        args: dictionary that maps dataset -> training batch
+    #        returns: total loss accumulated over all batches in the dictionary
+    #  * get_predictions()
+    #        args: test batch (with <batch_len> examples), name of feature to predict
+    #        returns: Tensor of size <batch_len> specifying the predicted label
+    #                 for the specified feature for each of the examples in the batch
     # Seth's multi-task VAE model
     if args.model == 'mlvae':
       m = MultiLabel(class_sizes=class_sizes,
