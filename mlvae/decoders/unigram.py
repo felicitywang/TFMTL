@@ -21,7 +21,7 @@ import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
 
 
-def unigram(x, z, vocab_size):
+def unigram(x, z, vocab_size=10000):
   """ This implements the unigram output projection from:
 
     Neural Variational Inference for Text Processing

@@ -180,6 +180,9 @@ class MultiLabel(object):
   def encode(self, inputs, feature_name):
     return self._encoders[feature_name](inputs)
 
+  def decode(self, x, z, feature_name):
+    return self._decoders[feature_name](x, z)
+
   # Distribution + sampling helpers
   def sample_y(self, logits, name, argmax=False):
     # Returns an *approximately* one-hot vector representing a single sample of y (argmax is False)
@@ -344,7 +347,9 @@ class MultiLabel(object):
         # instantiation dict to list with canonical ordering
         instantiation_list = [instantiation[k] for k in self._dataset_order]  # dataset_order: consistent ordering of tasks/datasets
         markov_blanket = tf.concat([instantiation_list], axis=1)  # parents of x in p model
-        nll = self._decoder(targets, markov_blanket)  # reconstruction loss
+        _feature_name = set(f for f in observed_dict if observed_dict[f] is True)
+        assert len(_feature_name) == 1
+        nll = self.decode(targets, markov_blanket, _feature_name)  # reconstruction loss
         res += nll
     Eq_log_px = res / (len(z_samples) * hp.num_y_samples)
 
@@ -387,6 +392,31 @@ class MultiLabel(object):
         raise ValueError("unrecognized loss combination type: %s" % (hp.loss_combination))
 
     return total_loss
+
+  def get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples):
+    total_disc_loss = 0
+    for k in feature_dict:
+      total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
+    return total_disc_loss
+
+  def get_total_generative_loss(features, feature_dict, observed_dict, targets, zm, zv, z_samples=z_samples):
+    # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
+    # analytically, since Eq_log_pz and Eq_log_qz are separate terms
+    # in the loss below. Instead, we should have a KL_z method that
+    # support *either* analytic or MCMC modes.
+
+    Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior, z_samples=z_samples)
+    total_kl_qp = 0
+    for k in feature_dict:
+      total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+    Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+    Eq_log_qz = self.get_Eq_log_qz(zm, zv, z_samples=z_samples)
+
+    # We want to maximize the term in parentheses,
+    # which means minimize its negation
+    # This entire negated term is the cost (loss) to minimize
+
+    return -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz)
   
   def get_loss(self,
                feature_dict,
@@ -438,35 +468,20 @@ class MultiLabel(object):
       z_samples = None
 
     if loss_type == 'discriminative':
-      total_disc_loss = 0
-      for k in feature_dict:
-        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
-      loss = tf.reduce_mean(total_disc_loss, axis=0)  # average across batch
+      # Discriminative loss
+      d_loss = get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      loss = tf.reduce_mean(d_loss, axis=0)  # average across batch
 
     elif loss_type == 'gen+disc':
-      Eq_log_pz = self.get_Eq_log_pz(zm, zv, self._zm_prior, self._zv_prior, z_samples=z_samples)
-      total_kl_qp = 0
-      for k in feature_dict:
-        total_kl_qp += self.get_kl_qp(features, k, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
-      Eq_log_px = self.get_Eq_log_px(targets, features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
-      Eq_log_qz = self.get_Eq_log_qz(zm, zv, z_samples=z_samples)
+      # Generative loss
+      g_loss = get_total_generative_loss(features, feature_dict, observed_dict, targets, zm, zv, z_samples=z_samples)
 
-      total_disc_loss = 0
-      for k in feature_dict:
-        total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
-      scaled_disc_loss = tf.reduce_mean(total_disc_loss, axis=0) * hp.alpha
+      # Discriminative loss, scaled by a hyperparameter
+      # See: https://arxiv.org/abs/1406.5298
+      d_loss = get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      scaled_disc_loss = tf.reduce_mean(d_loss, axis=0) * hp.alpha
 
-      # maximize the term in parentheses, which means minimize its negation
-      #   this entire negated term is the cost (loss) to minimize
-
-      # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
-      # analytically, since Eq_log_pz and Eq_log_qz are separate terms
-      # in the loss below. Instead, we should have a KL_z method that
-      # support *either* analytic or MCMC modes.
-      #
-      # (sethebner): there is a get_kl_qp() function that supports both
-      
-      loss = -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz - scaled_disc_loss)
+      loss = g_loss + scaled_disc_loss
 
       # The loss at this point should be a vector of size batch_size,
       # therefore reduce_mean below is over the batch dimension.

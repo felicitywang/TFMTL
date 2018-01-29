@@ -32,6 +32,7 @@ from mlvae.data import Pipeline
 from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 from mlvae.vae import dense_layer
+from decoders import unigram
 
 from mlvae import MultiLabel
 
@@ -132,7 +133,9 @@ def parse_args():
   p.add_argument('--label_key', default="LABELS", type=str,
                  help='Key for label field in the batches')
   p.add_argument('--datasets', nargs='+', type=str,
-                 help="Key of the dataset(s) to train and evaluate on [IMDB|SSTb]")
+                 help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
+  p.add_argument('--dataset_paths', nargs='+', type=str,
+                 help='Paths to the dataset(s) given by the --datasets flag (in the same order)')
   return p.parse_args()
 
 
@@ -140,6 +143,10 @@ def encoder_graph(inputs, embed_fn, encode_dim):
   embed = embed_fn(inputs)
   return cnn(embed,
              encode_dim=encode_dim)
+
+def decoder_graph(x, z, vocab_size):
+  return unigram(x, z,
+                 vocab_size=vocab_size)
 
 def build_encoders(vocab_size, args):
   encoders = dict()
@@ -164,12 +171,17 @@ def build_encoders(vocab_size, args):
 
   return encoders
 
-def build_decoders(???):
+def build_decoders(vocab_size, args):
   decoders = dict()
   if args.share_decoders:
-    raise "TODO"
+    decoder = tf.make_template('decoder', decoder_graph,
+                               vocab_size=vocab_size)
+    for ds in args.datasets:
+      decoders[ds] = decoder
   else:
-    raise "TODO"
+    for ds in args.datasets:
+      decoders[ds] = tf.make_template('decoder_{}'.format(ds), decoder_graph,
+                                      vocab_size=vocab_size)
 
   return decoders
 
@@ -216,11 +228,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       for _ in xrange(steps_per_epoch):
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
-        total_loss += loss_v  # loss_v is average loss *per training example*
+        total_loss += loss_v  # loss_v is sum over a batch from each dataset of the average loss *per training example*
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
-      train_loss = float(total_loss) / float(num_iter)  
+      train_loss = float(total_loss) / float(num_iter)
 
       # Evaluate held-out accuracy
       if not args.test:  # Validation mode
@@ -294,11 +306,13 @@ def main():
   # Seed numpy RNG
   np.random.seed(args.seed)
 
+  # Path to each dataset
   dirs = dict()
-  # TODO: don't hard-code these paths
-  dirs['IMDB'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/IMDB/"
-  dirs['SSTb'] = "/export/b02/fwang/mlvae/tasks/datasets/sentiment/SSTb/"
+  _dirs = zip(args.datasets, args.dataset_paths)
+  for ds, path in _dirs:
+    dirs[ds] = path
 
+  # Number of label types in each dataset
   class_sizes = dict()
   class_sizes['IMDB'] = 2
   class_sizes['SSTb'] = 5
