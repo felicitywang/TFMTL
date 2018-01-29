@@ -483,12 +483,12 @@ def fill_info_dicts(dataset_info, args):
 
 def build_input_dataset(tfrecord_path, batch_size, is_training=True):
   if is_training:
-    ds = InputDataset(tfrecord_path, FEATURES, batch_size,
-                      num_epochs=None,  # repeat indefinitely
-                      )
+    ds = Pipeline(tfrecord_path, FEATURES, batch_size,
+                  num_epochs=None,  # repeat indefinitely
+    )
   else:
-    ds = InputDataset(tfrecord_path, FEATURES, batch_size,
-                      num_epochs=1)
+    ds = Pipeline(tfrecord_path, FEATURES, batch_size,
+                  num_epochs=1)
 
   # We return the class because we might need to access the
   # initializer op for TESTING, while training only requires the
