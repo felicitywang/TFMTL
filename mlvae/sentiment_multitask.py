@@ -28,8 +28,8 @@ from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 
-
 from mlvae.data import Pipeline
+from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 from mlvae.vae import dense_layer
 
@@ -145,7 +145,7 @@ def build_encoders(vocab_size, args):
   encoders = dict()
   if args.share_embed:
     # One shared word embedding matrix for all datasets
-    embed_temp = tf.make_template('embedding', tf.contrib.layers.embed_sequence,
+    embed_temp = tf.make_template('embedding', embed_sequence,
                                   vocab_size=vocab_size,
                                   embed_dim=args.embed_dim)
     for ds in args.datasets:
