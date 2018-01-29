@@ -169,10 +169,10 @@ class Dataset():
         # vocab_v2i_dict_(min_freq).pickle
         # save
 
-        print("-- freq:")
-        print(self.categorical_vocab._freq)
-        print("-- mapping:")
-        print(self.categorical_vocab._mapping)
+        # print("-- freq:")
+        # print(self.categorical_vocab._freq)
+        # print("-- mapping:")
+        # print(self.categorical_vocab._mapping)
         self.vocab_size = len(self.categorical_vocab._mapping)
         print("used vocab size =", self.vocab_size)
 
@@ -289,7 +289,7 @@ class Dataset():
         with open(vocab_dir + "vocab_freq_dict.pickle", "rb") as file:
             self.vocab_freq_dict = pickle.load(file)
             file.close()
-        print(self.vocab_freq_dict)
+        # print(self.vocab_freq_dict)
         categorical_vocab = CategoricalVocabulary()
         for word in self.vocab_freq_dict:
             categorical_vocab.add(word, count=self.vocab_freq_dict[word])
@@ -472,11 +472,11 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
         os.stat(new_data_dir)
     except:
         os.mkdir(new_data_dir)
-    new_data_dir = new_data_dir + '_'.join(data_names) + '/'
-    try:
-        os.stat(new_data_dir)
-    except:
-        os.mkdir(new_data_dir)
+    # new_data_dir = new_data_dir + '_'.join(data_names) + '/'
+    # try:
+    #     os.stat(new_data_dir)
+    # except:
+    #     os.mkdir(new_data_dir)
 
     # merge all the vocabularies
     vocab_paths = []
