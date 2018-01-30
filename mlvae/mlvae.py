@@ -391,13 +391,13 @@ class MultiLabel(object):
 
     return total_loss
 
-  def get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples):
+  def get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=None):
     total_disc_loss = 0
     for k in feature_dict:
       total_disc_loss += self.get_disc_loss(features, feature_dict, k, observed_dict, zm, zv, z_samples=z_samples)
     return total_disc_loss
 
-  def get_total_generative_loss(features, feature_dict, observed_dict, targets, zm, zv, z_samples=z_samples):
+  def get_total_generative_loss(features, feature_dict, observed_dict, targets, zm, zv, z_samples=None):
     # TODO(noa): this doesn't support computing KL[q(z) || p(z)]
     # analytically, since Eq_log_pz and Eq_log_qz are separate terms
     # in the loss below. Instead, we should have a KL_z method that
