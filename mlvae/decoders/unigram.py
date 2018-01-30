@@ -21,7 +21,10 @@ import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
 
 
-def unigram(x, z, vocab_size=None):
+def unigram(batch, z, vocab_size=None,
+            targets_key="targets",
+            counts_key="counts",
+            lens_key="lens"):
   """ This implements the unigram output projection from:
 
     Neural Variational Inference for Text Processing
@@ -33,10 +36,12 @@ def unigram(x, z, vocab_size=None):
   assert vocab_size is not None
 
   # Unpack observations
-  if len(x) != 3:
-    raise ValueError('expected x to contain (targets, counts, lens)')
-
-  targets, counts, lens = x
+  try:
+    targets = batch[targets_key]
+    counts = batch[counts_key]
+    lens = batch[lens_key]
+  except KeyError:
+    raise ValueError('expected batch to contain (targets, counts, lens)')
 
   targets_shape = targets.get_shape()
   if len(targets_shape) != 2:
