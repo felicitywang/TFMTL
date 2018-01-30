@@ -24,7 +24,6 @@ import tensorflow as tf
 
 from tensorflow.contrib.training import HParams
 
-from mlvae.vae import Inference
 from mlvae.vae import dense_layer
 from mlvae.vae import cross_entropy_with_logits
 from mlvae.vae import log_normal
@@ -53,7 +52,6 @@ def default_hparams():
                  targets_key="TARGETS",
                  loss_type="discriminative",
                  loss_combination="even",
-                 # inference=Inference.EXACT.value,
                  dtype='float32')
 
 # General helpers
