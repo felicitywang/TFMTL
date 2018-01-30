@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from data_prep import tweet_clean
+from tasks.code.data_prep import tweet_clean
+from tasks.code.text import VocabularyProcessor
+from tasks.code.util import bag_of_words
 from tensorflow.contrib.learn.python.learn.preprocessing import \
     CategoricalVocabulary
-from text import VocabularyProcessor
-from util import bag_of_words
 
 flags = tf.flags
 logging = tf.logging
@@ -46,7 +46,7 @@ class Dataset():
                  label_field_name=None,
                  valid_ratio=0.1, train_ratio=0.8, random_seed=42,
                  scale_ratio=None, generate_basic_vocab=False,
-                 generate_tf_record=True):
+                 generate_tf_record=True, padding=False):
         """
 
         :param data_dir: where data.json.gz and index.json.gz are
@@ -78,6 +78,8 @@ class Dataset():
         :param generate_basic_vocab: True if the basic vocabulary(which
         shall be used to merge the public vocabulary) needs to be generated
         :param generate_tf_record: True if tf record files need generating
+        :param generate_tf_record: True if word_id needs padding to
+        max_document_length
         """
 
         print("data in", data_dir)
@@ -110,6 +112,7 @@ class Dataset():
         #     # print(self.text_list[i])
 
         self.encoding = encoding
+        self.padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
         # takes as input)
@@ -119,7 +122,6 @@ class Dataset():
         # # print(len(self.text_list))
         # for i in range(3):
         #     # print(self.text_list[i])
-
 
         # get index
         index_path = os.path.join(data_dir, "index.json.gz")
@@ -145,7 +147,7 @@ class Dataset():
                 vocab_dir=os.path.join(data_dir, "single/"))
 
         if generate_tf_record is False:
-            print("No need to generate tr records. Done. ")
+            print("No need to generate tf records. Done. ")
             return
 
         if vocab_dir is None:
@@ -221,8 +223,12 @@ class Dataset():
         # print("train: ", train_list)
         vocab_processor.fit(train_list)
 
-        self.word_id_list = list(
-            vocab_processor.transform(self.text_list))
+        if self.padding is True:
+            self.word_id_list = list(
+                vocab_processor.transform_pad(self.text_list))
+        else:
+            self.word_id_list = list(
+                vocab_processor.transform(self.text_list))
         self.word_id_list = [list(i) for i in self.word_id_list]
         self.vocab_freq_dict = vocab_processor.vocabulary_._freq
 
@@ -307,8 +313,13 @@ class Dataset():
             vocabulary=categorical_vocab,
             max_document_length=self.max_document_length,
             min_frequency=min_frequency)
-        self.word_id_list = list(
-            vocab_processor.transform(self.text_list))
+
+        if self.padding is True:
+            self.word_id_list = list(
+                vocab_processor.transform_pad(self.text_list))
+        else:
+            self.word_id_list = list(
+                vocab_processor.transform(self.text_list))
         self.word_id_list = [list(i) for i in self.word_id_list]
         return vocab_processor.vocabulary_
 
@@ -324,12 +335,8 @@ class Dataset():
                     'word_id': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=self.word_id_list[index])),
-                    # 'bow': tf.train.Feature(
-                    #     float_list=tf.train.FloatList(
-                    #         value=bag_of_words(
-                    #             self.word_id_list[index],
-                    #             self.vocab_size).tolist()))
                 }
+
                 if self.encoding == 'bow':
                     feature['bow'] = tf.train.Feature(
                         float_list=tf.train.FloatList(
