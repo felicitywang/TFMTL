@@ -32,7 +32,7 @@ from mlvae.data import Pipeline
 from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 from mlvae.vae import dense_layer
-from decoders import unigram
+from mlvae.decoders import unigram
 
 from mlvae import MultiLabel
 

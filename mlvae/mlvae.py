@@ -24,12 +24,12 @@ import tensorflow as tf
 
 from tensorflow.contrib.training import HParams
 
-from vae_common import Inference
-from vae_common import dense_layer
-from vae_common import cross_entropy_with_logits
-from vae_common import log_normal
-from vae_common import gaussian_sample
-from vae_common import get_tau
+from mlvae.vae import Inference
+from mlvae.vae import dense_layer
+from mlvae.vae import cross_entropy_with_logits
+from mlvae.vae import log_normal
+from mlvae.vae import gaussian_sample
+from mlvae.vae import get_tau
 
 Categorical = tf.contrib.distributions.Categorical
 ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategorical
@@ -50,7 +50,7 @@ def default_hparams():
                  min_var=0.0001,
                  labels_key="LABELS",
                  inputs_key="TEXT",
-                 targets_key="TARGETS"
+                 targets_key="TARGETS",
                  loss_type="discriminative",
                  loss_combination="even",
                  # inference=Inference.EXACT.value,
@@ -470,6 +470,7 @@ class MultiLabel(object):
     if loss_type == 'discriminative':
       # Discriminative loss
       d_loss = get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      assert len(d_loss.get_shape()) == 1, "expected dim(d_loss) == 1"
       loss = tf.reduce_mean(d_loss, axis=0)  # average across batch
 
     elif loss_type == 'gen+disc':
