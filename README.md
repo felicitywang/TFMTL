@@ -33,7 +33,7 @@ pip install -r requirements.txt
 * Implement tests by subclassing `tf.test.TestCase`. Put tests in
   `tests` and affix `"test_*.py"` or `"*_test.py"`.
 * Follow the TensorFlow style guidelines.
-* Make sure `scripts/run_checks.sh` completes before pushing into
+* Make sure `run_checks.sh` completes before pushing into
   `origin/master`. You may need to run the following first:
   ```
   pip install flake8
