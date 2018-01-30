@@ -2,10 +2,10 @@
 
 ## Attribution
 
-If you want to use code in this repository as part of published work,
-please consult the author(s) of the relevant code to agree on
-appropriate attribution. Depending on the usage, one of these may be
-appropriate:
+If code in this repository contributes to work to be submitted for
+publication, please consult the author(s) of the relevant code to
+agree on appropriate attribution. Depending on the usage, one of these
+may be appropriate:
 
 * No special attribution necessary. This will most often be the case;
   for instance, for low-level infrastructure or simple baselines.
