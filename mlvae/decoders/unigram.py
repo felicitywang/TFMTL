@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
 
 
-def unigram(x, z, vocab_size):
+def unigram(x, z, vocab_size=None):
   """ This implements the unigram output projection from:
 
     Neural Variational Inference for Text Processing
@@ -29,6 +29,9 @@ def unigram(x, z, vocab_size):
     https://arxiv.org/abs/1511.06038
 
   """
+
+  assert vocab_size is not None
+
   # Unpack observations
   if len(x) != 3:
     raise ValueError('expected x to contain (targets, counts, lens)')
