@@ -35,8 +35,10 @@ pip install -r requirements.txt
 * Follow the TensorFlow style guidelines.
 * Make sure `run_checks.sh` completes before pushing into
   `origin/master`. You may need to run the following first:
-  ```
+
+  ``` bash
   pip install flake8
   pip install -U setuptools
   ```
+
 * Use `six` to maintain backwards compatibility with Python 2.7.
