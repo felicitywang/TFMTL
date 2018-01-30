@@ -117,8 +117,11 @@ class Dataset():
         # tokenize and reconstruct as string(which vocabulary processor
         # takes as input)
         # TODO more on tokenizer
+
+        self.old_length_list = [len(text) for text in self.text_list]
         self.text_list = [tweet_clean(i) for i in
                           self.text_list]
+        self.new_length_list = [len(text) for text in self.text_list]
         # # print(len(self.text_list))
         # for i in range(3):
         #     # print(self.text_list[i])
@@ -335,6 +338,12 @@ class Dataset():
                     'word_id': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=self.word_id_list[index])),
+                    'old_length': tf.train.Feature(
+                        int64_list=tf.train.Int64List(
+                            value=[self.old_length_list[index]])),
+                    'new_length': tf.train.Feature(
+                        int64_list=tf.train.Int64List(
+                            value=[self.new_length_list[index]])),
                 }
 
                 if self.encoding == 'bow':
