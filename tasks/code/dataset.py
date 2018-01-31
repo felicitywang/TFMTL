@@ -444,7 +444,7 @@ def combine_dicts(x, y):
 def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                               max_document_length=None, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO):
+                              valid_ratio=VALID_RATIO, encoding=None):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -460,7 +460,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     max_document_lengths = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False)
+                          generate_tf_record=False, encoding=None)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names
