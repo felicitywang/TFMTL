@@ -20,7 +20,7 @@ wget -nc http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 tar zxvf aclImdb_v1.tar.gz
 mv aclImdb_v1.tar.gz data/raw/LMRD/ -f
 python3 ../../tasks/datasets/sentiment/LMRD/convert_LMRD_to_JSON.py ./
-mv aclImdb data/raw/LMRD/ -fr
+mv aclImdb data/raw/LMRD/ -f
 mv data.json.gz data/json/LMRD/ -f
 mv index.json.gz data/json/LMRD/ -f
 
