@@ -409,7 +409,7 @@ class Dataset():
         index = np.array(train_index)
         np.random.seed(random_seed)
         index = np.random.permutation(index)
-        return np.split(index, [int(1.0 - valid_ratio * len(index))])
+        return np.split(index, [int((1.0 - valid_ratio) * len(index))])
 
 
 # add the frequencies of each in two vocabulary dictionary
