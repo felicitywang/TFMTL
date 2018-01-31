@@ -83,8 +83,7 @@ class Dataset():
         :param generate_basic_vocab: True if the basic vocabulary(which
         shall be used to merge the public vocabulary) needs to be generated
         :param generate_tf_record: True if tf record files need generating
-        :param generate_tf_record: True if word_id needs padding to
-        max_document_length
+        :param padding: True if word_id needs padding to max_document_length
         """
 
         print("data in", data_dir)
@@ -444,7 +443,7 @@ def combine_dicts(x, y):
 def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                               max_document_length=None, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO):
+                              valid_ratio=VALID_RATIO, encoding=None):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -460,7 +459,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     max_document_lengths = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False)
+                          generate_tf_record=False, encoding=encoding)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names
@@ -489,6 +488,9 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                                                                  "vocab_freq_dict.pickle"))
 
     # write tf records
+    vocab_i2v_list = []
+    vocab_v2i_dict = []
+    vocab_sizes = []
     for data_dir in data_dirs:
         tfrecord_dir = os.path.join(new_data_dir, os.path.basename(
             os.path.normpath(data_dir)))
@@ -502,6 +504,23 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           generate_tf_record=True,
                           train_ratio=train_ratio,
                           valid_ratio=valid_ratio)
+        vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
+        vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
+        vocab_sizes.append(dataset.vocab_size)
+
+    assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
+    assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
+    assert all(x == vocab_sizes[0] for x in vocab_sizes)
+
+    with open(new_data_dir + "vocab_v2i_dict.pickle", 'wb') as file:
+        pickle.dump(vocab_v2i_dict, file)
+        file.close()
+    with open(new_data_dir + "vocab_i2v_list.pickle", 'wb') as file:
+        pickle.dump(vocab_i2v_list, file)
+        file.close()
+    with open(new_data_dir + "vocab_size.txt", "w") as file:
+        file.write(str(vocab_sizes[0]))
+        file.close()
 
 
 def main():
