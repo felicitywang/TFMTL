@@ -136,6 +136,8 @@ def parse_args():
                  help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help='Paths to the dataset(s) given by the --datasets flag (in the same order)')
+  p.add_argument('--vocab_path', type=str,
+                 help='Path to the shared vocabulary for the datasets')
   return p.parse_args()
 
 
@@ -194,8 +196,13 @@ def get_num_records(tf_record_filename):
 def get_data_split_path(dataset_name, split):
   return "data/tf/{}/{}.tf".format(dataset_name, split)
 
+def get_vocab_size(vocab_file_path):
+  with open(vocab_file_path, "r") as f:
+    line = f.readline().strip()
+    vocab_size = int(line)
+  return vocab_size
+
 def train_model(model, dataset_info, steps_per_epoch, args):
-  # DO we need this?
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
   # Build compute graph
@@ -344,7 +351,7 @@ def main():
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
     dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
-  vocab_size = ??? merged_vocab.vocab_size
+  vocab_size = get_vocab_size(args.vocab_path)
   
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
 
