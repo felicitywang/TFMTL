@@ -83,8 +83,7 @@ class Dataset():
         :param generate_basic_vocab: True if the basic vocabulary(which
         shall be used to merge the public vocabulary) needs to be generated
         :param generate_tf_record: True if tf record files need generating
-        :param generate_tf_record: True if word_id needs padding to
-        max_document_length
+        :param padding: True if word_id needs padding to max_document_length
         """
 
         print("data in", data_dir)
