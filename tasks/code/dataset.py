@@ -116,7 +116,6 @@ class Dataset():
         self.text_list = [tweet_clean(text) for text in
                           self.text_list]
         self.text_list = [text + " EOS" for text in self.text_list]
-        print(self.text_list)
         self.new_length_list = [len(text) for text in self.text_list]
 
         # get index
@@ -167,9 +166,6 @@ class Dataset():
         # vocab_v2i_dict_(min_freq).pickle
         # save
 
-
-
-        print("freq:", self.categorical_vocab._freq)
         self.vocab_size = len(self.categorical_vocab._mapping)
         print("used vocab size =", self.vocab_size)
 
