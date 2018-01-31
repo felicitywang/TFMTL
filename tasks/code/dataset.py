@@ -37,6 +37,10 @@ logging = tf.logging
 
 FLAGS = flags.FLAGS
 
+TRAIN_RATIO = 0.8
+VALID_RATIO = 0.1
+RANDOM_SEED = 42
+
 
 class Dataset():
     def __init__(self, data_dir, vocab_dir=None, tfrecord_dir=None,
@@ -44,7 +48,8 @@ class Dataset():
                  min_frequency=0, max_frequency=-1, encoding=None,
                  text_field_names=None,
                  label_field_name=None,
-                 valid_ratio=0.1, train_ratio=0.8, random_seed=42,
+                 valid_ratio=VALID_RATIO, train_ratio=TRAIN_RATIO,
+                 random_seed=RANDOM_SEED,
                  scale_ratio=None, generate_basic_vocab=False,
                  generate_tf_record=True, padding=False):
         """
@@ -193,7 +198,7 @@ class Dataset():
             'max_frequency': max_frequency,
             'random_seed': random_seed
         }
-        args_path = os.path.join(tfrecord_dir, "args_dict.json")
+        args_path = os.path.join(tfrecord_dir, "args_dict.pickle")
         with open(args_path, "wb") as file:
             pickle.dump(args, file)
             print("data arguments saved to", args_path)
@@ -438,7 +443,8 @@ def combine_dicts(x, y):
 
 def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                               max_document_length=None, min_frequency=0,
-                              max_frequency=-1):
+                              max_frequency=-1, train_ratio=TRAIN_RATIO,
+                              valid_ratio=VALID_RATIO):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -493,7 +499,9 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           max_frequency=max_frequency,
                           max_document_length=max(max_document_lengths),
                           generate_basic_vocab=False,
-                          generate_tf_record=True)
+                          generate_tf_record=True,
+                          train_ratio=train_ratio,
+                          valid_ratio=valid_ratio)
 
 
 def main():
