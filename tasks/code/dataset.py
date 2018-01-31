@@ -460,7 +460,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     max_document_lengths = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False, encoding=None)
+                          generate_tf_record=False, encoding=encoding)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names
