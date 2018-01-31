@@ -105,12 +105,6 @@ class Dataset():
 
         self.text_list = df[text_field_names].astype(str).sum(axis=1).tolist()
 
-        # for i in range(10):
-        #     print(self.text_list[i])
-        # # print(len(self.text_list))
-        # for i in range(3):
-        #     # print(self.text_list[i])
-
         self.encoding = encoding
         self.padding = padding
 
@@ -119,12 +113,11 @@ class Dataset():
         # TODO more on tokenizer
 
         self.old_length_list = [len(text) for text in self.text_list]
-        self.text_list = [tweet_clean(i) for i in
+        self.text_list = [tweet_clean(text) for text in
                           self.text_list]
+        self.text_list = [text + " EOS" for text in self.text_list]
+        print(self.text_list)
         self.new_length_list = [len(text) for text in self.text_list]
-        # # print(len(self.text_list))
-        # for i in range(3):
-        #     # print(self.text_list[i])
 
         # get index
         index_path = os.path.join(data_dir, "index.json.gz")
@@ -174,10 +167,9 @@ class Dataset():
         # vocab_v2i_dict_(min_freq).pickle
         # save
 
-        # print("-- freq:")
-        # print(self.categorical_vocab._freq)
-        # print("-- mapping:")
-        # print(self.categorical_vocab._mapping)
+
+
+        print("freq:", self.categorical_vocab._freq)
         self.vocab_size = len(self.categorical_vocab._mapping)
         print("used vocab size =", self.vocab_size)
 
@@ -223,7 +215,7 @@ class Dataset():
 
         # build vocabulary only according to training data
         train_list = [self.text_list[i] for i in self.train_index]
-        # print("train: ", train_list)
+
         vocab_processor.fit(train_list)
 
         if self.padding is True:
@@ -270,19 +262,18 @@ class Dataset():
         vocabularies"""
 
         vocab_path = os.path.join(vocab_dir, "vocab_freq_dict.pickle")
-        # print(vocab_path)
 
-        if Path(vocab_path).exists():
-            print("vocabulary file already exists!")
-            return
-        print("vocabulary file doesn't exits. Generate.")
+        # if Path(vocab_path).exists():
+        #     print("vocabulary file already exists!")
+        #     return
+        # print("vocabulary file doesn't exits. Generate.")
 
         vocab_processor = VocabularyProcessor(
             max_document_length=self.max_document_length)
 
         # build vocabulary only according to training data
         train_list = [self.text_list[i] for i in self.train_index][:]
-        # print("train: ", train_list)
+
         vocab_processor.fit(train_list)
         vocab_freq_dict = vocab_processor.vocabulary_._freq
         print("total word size =", len(vocab_freq_dict))
@@ -298,18 +289,12 @@ class Dataset():
         with open(vocab_dir + "vocab_freq_dict.pickle", "rb") as file:
             self.vocab_freq_dict = pickle.load(file)
             file.close()
-        # print(self.vocab_freq_dict)
         categorical_vocab = CategoricalVocabulary()
         for word in self.vocab_freq_dict:
             categorical_vocab.add(word, count=self.vocab_freq_dict[word])
         categorical_vocab.trim(min_frequency=min_frequency,
                                max_frequency=max_frequency)
         categorical_vocab.freeze()
-
-        # print("freq:")
-        # print(categorical_vocab._freq)
-        # print("mapping:")
-        # print(categorical_vocab._mapping)
 
         vocab_processor = VocabularyProcessor(
 
@@ -367,10 +352,7 @@ class Dataset():
                 = self.random_split_train_valid_test(len(self.text_list),
                                                      train_ratio, valid_ratio,
                                                      random_seed)
-            print("train, valid, test index", train_index, valid_index,
-                  test_index)
-            # for i in train_index:
-            #     print(self.text_list[i], self.label_list[i])
+
         else:
             index = json.load(gzip.open(index_path, mode='rt'))
             assert 'train' in index and 'test' in index
@@ -416,8 +398,7 @@ class Dataset():
         index = np.array(list(range(length)))
         np.random.seed(random_seed)
         index = np.random.permutation(index)
-        # # print(type(index))
-        # # print(index)
+
         return np.split(index,
                         [int(train_ratio * len(index)),
                          int((train_ratio + valid_ratio) * len(index))])
@@ -520,80 +501,6 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
 
 
 def main():
-    # combine dict
-    # A = {'a': 1, 'b': 2, 'c': 3}
-    # B = {'b': 3, 'c': 4, 'd': 5}
-    # print(combine_dicts(A,B))
-
-    # data_dir = "../datasets/other/AG_News/"
-    # dataset = Dataset(data_dir=data_dir, text_field_names="title "
-    #                                                       "description".split())
-
-    # data_dir = "./cache/"
-    # dataset = Dataset(data_dir=data_dir, text_field_names=['text'],
-    #                   random_seed=random_seed)
-    # data_dir = "../datasets/sentiment/SSTb/"
-    # data_dir = "../datasets/sentiment/IMDB/"
-    # dataset = Dataset(data_dir=data_dir, text_field_names=['text'])
-    # print("index")
-    # print(dataset.train_index)
-    # print(dataset.valid_index)
-    # print(dataset.test_index)
-
-    # test generating/merging vocabularies
-    # data_dir_1 = "./vocab_test/1/"
-    # data_dir_2 = "./vocab_test/2/"
-    #
-    # random_seed = 3
-    # num = 3
-    #
-    # print("--- 1")
-    # dataset_1 = Dataset(data_dir=data_dir_1, text_field_names=['text'],
-    #                     random_seed=random_seed)
-    # # print("--- 1 freq:", dataset_1.vocab_freq_dict)
-    # for i in range(num):
-    #     print(dataset_1.text_list[i], dataset_1.word_id_list[i])
-    #
-    # print("--- 2")
-    # dataset_2 = Dataset(data_dir=data_dir_2, text_field_names=['text'],
-    #                     random_seed=random_seed)
-    # # print("--- 1 freq:", dataset_2.vocab_freq_dict)
-    # for i in range(num):
-    #     print(dataset_2.text_list[i], dataset_2.word_id_list[i])
-    #
-    # print("--- merged")
-    # vocab_freq_dict = merge_vocab_dict(vocab_dir_1=data_dir_1 + "single/",
-    #                                    vocab_dir_2=data_dir_2 + "single/")
-    #
-    # print(vocab_freq_dict)
-    # vocab_dir = "./vocab_test/"
-    # with open(vocab_dir + "vocab_freq_dict.pickle", "wb") as file:
-    #     pickle.dump(vocab_freq_dict, file)
-    #     file.close()
-    #
-    # max_document_length = max(dataset_1.max_document_length,
-    #                           dataset_2.max_document_length)
-    # print("--- 1 ")
-    # dataset_1 = Dataset(data_dir=data_dir_1, vocab_dir=vocab_dir,
-    #                     text_field_names=['text'],
-    #                     random_seed=random_seed,
-    #                     max_document_length=max_document_length,
-    #                     min_frequency=1,
-    #                     max_frequency=4)
-    # print("--- 2")
-    # dataset_2 = Dataset(data_dir=data_dir_2, vocab_dir=vocab_dir,
-    #                     text_field_names=['text'],
-    #                     random_seed=random_seed,
-    #                     max_document_length=max_document_length,
-    #                     min_frequency=1,
-    #                     max_frequency=4)
-    #
-    # # test merge_save_vocab_dicts
-    # vocab_paths = ['./vocab_test/1/single/vocab_freq_dict.pickle',
-    #                './vocab_test/2/single/vocab_freq_dict.pickle',
-    #                './vocab_test/1/single/vocab_freq_dict.pickle', ]
-    # merge_save_vocab_dicts(vocab_paths, './vocab_test/vocab_freq_dict.pickle')
-
     # test
     data_dirs = ["./vocab_test/1/", "./vocab_test/2/", "./vocab_test/3/"]
     merge_dict_write_tfrecord(data_dirs, new_data_dir="./public/")
