@@ -6,7 +6,6 @@ Rotten Tomatoes review sentences with positivity probabilities.
 
 **Basic stats:**
 
-
 + \# items = 11,855
 + \# labels = 5
     - 1: very negative
@@ -34,4 +33,3 @@ year = {2013}
 [**Research Overview**](https://github.com/magizbox/underthesea/wiki/DATA-SST)
 
 [**A Python Parser and Visualizer**](https://github.com/JonathanRaiman/pytreebank)
-

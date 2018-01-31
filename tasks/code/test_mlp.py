@@ -23,11 +23,11 @@ import os
 import random
 from time import time
 
-from dataset import Dataset
-from input_dataset import InputDataset
-from mlp import MLP
-from optimizer import Optimizer
-from util import *
+from tasks.code.dataset import Dataset
+from tasks.code.input_dataset import InputDataset
+from tasks.code.mlp import MLP
+from tasks.code.optimizer import Optimizer
+from tasks.code.util import *
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -138,7 +138,7 @@ def main(_):
                       # label_field_name=FLAGS.text_field_name,
                       min_frequency=FLAGS.min_freq,
                       valid_ratio=0.1, train_ratio=0.8, random_seed=42,
-                      scale_ratio=FLAGS.scale_ratio)
+                      scale_ratio=FLAGS.scale_ratio, padding=True)
 
     num_classes = dataset.num_classes
     max_document_length = dataset.max_document_length
@@ -149,9 +149,15 @@ def main(_):
                                         dataset.test_path
 
     features = {
-        'word_id': tf.FixedLenFeature([max_document_length], dtype=tf.int64),
         'label': tf.FixedLenFeature([], dtype=tf.int64)
     }
+    padding = True
+    if padding is True:
+        features['word_id'] = tf.FixedLenFeature([max_document_length],
+                                                 dtype=tf.int64)
+    else:
+        features['word_id'] = tf.VarLenFeature(dtype=tf.int64)
+
     if FLAGS.encoding == 'bow':
         features['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
 
