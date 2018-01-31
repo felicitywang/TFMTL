@@ -191,6 +191,9 @@ def get_num_records(tf_record_filename):
       c += 1
   return c
 
+def get_data_split_path(dataset_name, split):
+  return "data/tf/{}/{}.tf".format(dataset_name, split)
+
 def train_model(model, dataset_info, steps_per_epoch, args):
   # DO we need this?
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
@@ -326,14 +329,20 @@ def main():
   dataset_info = dict()
   for dataset_name in args.datasets:
     dataset_info[dataset_name] = dict()
+    # Collect dataset information/statistics
     dataset_info[dataset_name]['feature_name'] = dataset_name  # feature name is just dataset name
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     _dir = dataset_info[dataset_name]['dir']
-    dataset_info[dataset_name]['dataset'] = Dataset(data_dir=_dir)
-
-  # TODO: merge dataset vocabs (call to a function in Dataset)
+    # Set paths to TFRecord files
+    _dataset_train_path = get_data_split_path(dataset_name, "train")
+    if args.test:
+      _dataset_test_path = get_data_split_path(dataset_name, "test")
+    else:
+      _dataset_test_path = get_data_split_path(dataset_name, "valid")
+    dataset_info[dataset_name]['train_path'] = _dataset_train_path
+    dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
   vocab_size = ??? merged_vocab.vocab_size
   
@@ -343,17 +352,8 @@ def main():
   dataset_order = sorted(order_dict, key=order_dict.get)
 
   encoders = build_encoders(vocab_size, args)
-  decoders = build_decoders()
-  #decoders = {'IMDB': unigram, 'SSTb': unigram}
+  decoders = build_decoders(vocab_size, args)
 
-  # Set paths to TFRecord files
-  for dataset_name in dataset_info:
-    _dataset = dataset_info[dataset_name]['dataset']
-    dataset_info[dataset_name]['train_path'] = _dataset.train_path
-    if args.test:
-      dataset_info[dataset_name]['test_path'] = _dataset.test_path
-    else:
-      dataset_info[dataset_name]['test_path'] = _dataset.valid_path
 
   # Creating the batch input pipelines.  These will load & batch
   # examples from serialized TF record files.
