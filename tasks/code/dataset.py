@@ -489,6 +489,9 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                                                                  "vocab_freq_dict.pickle"))
 
     # write tf records
+    vocab_i2v_list = []
+    vocab_v2i_dict = []
+    vocab_sizes = []
     for data_dir in data_dirs:
         tfrecord_dir = os.path.join(new_data_dir, os.path.basename(
             os.path.normpath(data_dir)))
@@ -502,6 +505,23 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           generate_tf_record=True,
                           train_ratio=train_ratio,
                           valid_ratio=valid_ratio)
+        vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
+        vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
+        vocab_sizes.append(dataset.vocab_size)
+
+    assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
+    assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
+    assert all(x == vocab_sizes[0] for x in vocab_sizes)
+
+    with open(new_data_dir + "vocab_v2i_dict.pickle", 'wb') as file:
+        pickle.dump(vocab_v2i_dict, file)
+        file.close()
+    with open(new_data_dir + "vocab_i2v_list.pickle", 'wb') as file:
+        pickle.dump(vocab_i2v_list, file)
+        file.close()
+    with open(new_data_dir + "vocab_size.txt", "w") as file:
+        file.write(str(vocab_sizes[0]))
+        file.close()
 
 
 def main():
