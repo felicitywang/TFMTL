@@ -4,7 +4,7 @@
 type|name|#items|#labels|unit|summary
 ---|---|---|---|---|---
 sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews
-sentiment|IMDB|50,000|2|document|IMDB movie reviews
+sentiment|LMRD|50,000|2|document|IMDB movie reviews
 sentiment|Amazon_Movie_Reviews_Categories|7,911,684|5|document|Amazon movie reviews
 sentiment|Amazon_Review_Full|3,650,000|5|document|Amazon product reviews
 sentiment|Amazon_Review_Polarity|4,000,000|2|document|Amazon product review
@@ -25,6 +25,7 @@ emotion|Emoti_Tweets|38,900,000|8|paragraph|Tweets with emotional hashtags, emot
 emotion|NLP-dataset|416,809|6|paragraph|Unknown source
 emotion|NRC_TEC|21,051|6|paragraph|Tweets self-labeled with hashtag annotations
 emotion|Twitter_18|2,524|18|sentence|Emotional tweets
+domain|MATERIAL|276
 
 
 ### file structure

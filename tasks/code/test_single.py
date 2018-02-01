@@ -92,14 +92,6 @@ def make_model(batch, num_classes, vocab_size, is_training):
     return model
 
 
-#
-# def make_loss(batch):
-#     x = tf.embed_sequence(batch)
-#     x = cnn(x, ...)
-#     x = tf.layers.dense(x, output_size=NUMBER_OF_CLASSES)
-#     predicted_classes = tf.argmax(input=logits, axis=1)
-
-
 def run_epoch(sess, model, init_op=None, train_op=None):
     start_time = time()
     total_loss = 0

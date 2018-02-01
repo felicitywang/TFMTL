@@ -191,17 +191,24 @@ class Dataset():
         self.write_examples(self.test_path, self.test_index)
 
         # save dataset arguments
-        args = {
+        self.args = {
             'num_classes': self.num_classes,
             'max_document_length': self.max_document_length,
             'vocab_size': self.vocab_size,
             'min_frequency': min_frequency,
             'max_frequency': max_frequency,
-            'random_seed': random_seed
+            'random_seed': random_seed,
+            'train_path': os.path.abspath(self.train_path),
+            'valid_path': os.path.abspath(self.valid_path),
+            'test_path': os.path.abspath(self.test_path),
+            'train_size': len(self.train_index),
+            'valid_size': len(self.valid_index),
+            'test_size': len(self.test_index)
         }
+        print(self.args)
         args_path = os.path.join(tfrecord_dir, "args_dict.pickle")
         with open(args_path, "wb") as file:
-            pickle.dump(args, file)
+            pickle.dump(self.args, file)
             print("data arguments saved to", args_path)
 
     def build_vocab(self, min_frequency, max_frequency, vocab_dir):
@@ -459,10 +466,12 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     # the generated vocab freq dicts shall be saved at
     # data_dir/single/vocab_freq_dict.pickle
     max_document_lengths = []
+    args_list = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
                           generate_tf_record=False, encoding=encoding)
         max_document_lengths.append(dataset.max_document_length)
+        args_list.append(dataset.args)
 
     # new data dir based all the datasets' names
     data_names = [os.path.basename(os.path.normpath(data_dir)) for data_dir
@@ -523,6 +532,8 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     with open(new_data_dir + "vocab_size.txt", "w") as file:
         file.write(str(vocab_sizes[0]))
         file.close()
+
+    return args_list
 
 
 def main():

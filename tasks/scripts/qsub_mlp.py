@@ -18,13 +18,14 @@ import subprocess
 import sys
 
 
-def make_job(dc_type, data_name, i):
-    code_path = "/export/b02/fwang/mlvae/tasks/code/test_mlp.py"
+def make_job(dc_type, data_name, i, min_freq):
+    code_path = "/export/b02/fwang/mlvae/tasks/code/test_single.py"
     base_dir = "/export/b02/fwang/mlvae/tasks/workspace/" + dc_type + "/" + \
                data_name + "/"
     data_dir = "/export/b02/fwang/mlvae/tasks/datasets/" + \
                dc_type + "/" + data_name + "/"
-    job_name = "job_" + str(i) + "_" + dc_type + "_" + data_name
+    job_name = "job_" + str(i) + "_" + dc_type + "_" + data_name + "_" + str(
+        min_freq)
     model_dir = base_dir + "models/" + job_name + "/"
     best_model_dir = model_dir + "best_model/"
     model_path = best_model_dir + "model.ckpt"
@@ -54,7 +55,7 @@ def make_job(dc_type, data_name, i):
 #$ -e " + model_dir + "err \n\
 #$ -m eas\n\
 #$ -M cnfxwang@gmail.com\n\
-#$ -l gpu=1,mem_free=80G,ram_free=80G,hostname='b*|c*'\n\
+#$ -l gpu=1,mem_free=80G,ram_free=80G'\n\
 #$ -pe smp 2\n\
 #$ -V\n\
 #$ -q g.q\n\
@@ -65,7 +66,8 @@ mkdir " + model_dir + " \n\
 \n\
 CUDA_VISIBLE_DEVICES=`free-gpu` python3 " + code_path + \
              "  --data_dir=" + data_dir + \
-             "  --model_path=" + model_path
+             "  --model_path=" + model_path + \
+             "  --min_freq=" + str(min_freq)
     #  "  --learning_rate=" + str(learning_rate) + \
     #  "  --dropout_rate=" + str(dropout_rate) + \
     #  "  --lambda_=" + str(lambda_) + \
@@ -93,8 +95,9 @@ def main():
     # output size (# labels)
     # output_size = int(input())
     # whether to split
+    min_freq = int(input())
 
-    make_job(dc_type, data_name, i)
+    make_job(dc_type, data_name, i, min_freq)
 
 
 if __name__ == "__main__":

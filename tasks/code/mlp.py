@@ -20,13 +20,9 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-def trunc_normal(stddev):
-    return tf.truncated_normal_initializer(stddev=stddev)
-
-
 class MLP(object):
     def __init__(self,
-                 x,  # Batch of examples: [batch_size, feature_size]
+                 inputs,  # Batch of examples: [batch_size, feature_size]
                  labels,  # Batch of targets: [batch_size]
                  num_classes,  # Number of classes
                  dropout_rate=0.5,
@@ -36,13 +32,13 @@ class MLP(object):
                  is_training=True,
                  name='MLP'):
         with tf.name_scope(name=name):
-            self._batch_size = tf.shape(x)[0]
+            self._batch_size = tf.shape(inputs)[0]
             self._targets = labels
 
             for layer in layers:
-                x = tf.layers.dense(inputs=x, units=layer,
-                                    activation=tf.nn.relu)
-            dropout = tf.layers.dropout(inputs=x, rate=dropout_rate,
+                inputs = tf.layers.dense(inputs=inputs, units=layer,
+                                         activation=tf.nn.relu)
+            dropout = tf.layers.dropout(inputs=inputs, rate=dropout_rate,
                                         training=is_training)
             logits = tf.layers.dense(inputs=dropout, units=num_classes,
                                      activation=tf.nn.relu)

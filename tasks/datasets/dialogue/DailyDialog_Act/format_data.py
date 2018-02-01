@@ -36,6 +36,9 @@ for text_line in text.readlines():
     emotions = emotion.readline().split()
     topics = topic.readline().split()
 
+    prev_text = ""
+    next_text = ""
+
     for i in range(len(texts) - 1):
         content = dict()
         content['dialogue_id'] = index  # which dialogue it's in
@@ -50,6 +53,13 @@ for text_line in text.readlines():
         content['label'] = content['act']
         # how many sentences(paragraphs) there are in each dialogue
         content['dialogue_num_sentence'] = len(texts)
+        # add contents
+        if i > 0:
+            prev_text = texts[i - 1]
+        if i < len(texts) - 1:
+            next_text = texts[i + 1]
+        content['prev_text'] = prev_text
+        content['next_text'] = next_text
         all_list.append(content)
     dialogue_id += 1
 
