@@ -185,7 +185,31 @@ class VocabularyProcessor(object):
           raw_documents: An iterable which yield either str or unicode.
 
         Yields:
+          x: iterable, [n_samples, variable length]. Word-id matrix.
+          (No padding)
+        """
+        for tokens in self._tokenizer(raw_documents):
+            # word_ids = np.zeros(self.max_document_length, np.int64)
+            word_ids = np.zeros(
+                min(len(tokens), self.max_document_length), np.int64)
+            for idx, token in enumerate(tokens):
+                if idx >= self.max_document_length:
+                    break
+                word_ids[idx] = self.vocabulary_.get(token)
+            yield word_ids
+
+    def transform_pad(self, raw_documents):
+        """Transform documents to word-id matrix.
+
+        Convert words to ids with vocabulary fitted with fit or the one
+        provided in the constructor.
+
+        Args:
+          raw_documents: An iterable which yield either str or unicode.
+
+        Yields:
           x: iterable, [n_samples, max_document_length]. Word-id matrix.
+          (With padding.) (Original tensorflow function.)
         """
         for tokens in self._tokenizer(raw_documents):
             word_ids = np.zeros(self.max_document_length, np.int64)

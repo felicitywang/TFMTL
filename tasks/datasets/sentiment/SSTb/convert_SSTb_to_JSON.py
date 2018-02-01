@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,15 @@
 # ==============================================================================
 """Transform original SSTb file into json format using pytreebank parser"""
 
-import json
 import gzip
+import json
+# path that saves
+import sys
+
 import pytreebank
 
-# path that saves
-dataset = pytreebank.load_sst("./original/")
+path = sys.argv[1]
+dataset = pytreebank.load_sst(path+"trees/")
 
 train_data = dataset['train']
 dev_data = dataset['dev']
@@ -29,9 +32,6 @@ train_list = []
 dev_list = []
 test_list = []
 
-label_list = ["very negative", "negative", "neutral", "positive",
-              "very positive"]
-
 index = 0
 
 for data in train_data:
@@ -39,7 +39,6 @@ for data in train_data:
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
     dic['index'] = index
     index += 1
-    # dic['class'] = label_list[dic['label']]
     train_list.append(dic)
 
 for data in dev_data:
@@ -47,7 +46,6 @@ for data in dev_data:
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
     dic['index'] = index
     index += 1
-    # dic['class'] = label_list[dic['label']]
     dev_list.append(dic)
 
 for data in test_data:
@@ -55,7 +53,6 @@ for data in test_data:
     dic['label'], dic['text'] = data.to_labeled_lines()[0]
     dic['index'] = index
     index += 1
-    # dic['class'] = label_list[dic['label']]
     test_list.append(dic)
 
 all_list = []
@@ -67,39 +64,12 @@ train_index = list(range(len(train_list)))
 dev_index = list(range(len(train_list), len(train_list) + len(dev_list)))
 test_index = list(range(len(train_list) + len(dev_list), len(all_list)))
 
-# pickle.dump(train_index, open("train_index.pickle", "wb"))
-# pickle.dump(dev_index, open("dev_index.pickle", "wb"))
-# pickle.dump(test_index, open("test_index.pickle", "wb"))
-#
-# # read index
-# train_index = pickle.load(open("train_index.pickle", "rb"))
-# dev_index = pickle.load(open("dev_index.pickle", "rb"))
-# test_index = pickle.load(open("test_index.pickle", "rb"))
-
 index_dict = dict()
 index_dict['train'] = train_index
 index_dict['valid'] = dev_index
 index_dict['test'] = test_index
-with gzip.open('index.json.gz', mode='wt') as file:
+with gzip.open(path + 'index.json.gz', mode='wt') as file:
     json.dump(index_dict, file)
 
-# with open('train.json', 'w') as file:
-#     json.dump(train_list, file)
-# with open('dev.json', 'w') as file:
-#     json.dump(dev_list, file)
-# with open('test.json', 'w') as file:
-#     json.dump(test_list, file)
-with gzip.open('data.json.gz', mode='wt') as file:
+with gzip.open(path + 'data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
-
-# # read json to list
-# json_data = open("train.json").read()
-# train_list = json.loads(json_data)
-# json_data = open("dev.json").read()
-# dev_list = json.loads(json_data)
-# json_data = open("test.json").read()
-# test_list = json.loads(json_data)
-# json_data = open("data.json").read()
-# all_list = json.loads(json_data)
-
-# read json to dict

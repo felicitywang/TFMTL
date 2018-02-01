@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Transform original LMRD files into json format"""
+
 
 # -*- coding: utf-8 -*-
-
-# transform IMDB files to json
 
 import gzip
 import json
 import re
 from os import listdir
+import sys
+
+dir = sys.argv[1]
 
 train_list = []
 test_list = []
@@ -28,7 +31,7 @@ test_list = []
 index = 0
 
 # train pos
-path = 'original/aclImdb/train/pos/'
+path = dir + 'aclImdb/train/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
@@ -40,34 +43,37 @@ for file_name in file_names:
             'score': file_name_split[1],
             'label': "1"})
     index += 1
+
 # train neg
-path = 'original/aclImdb/train/neg/'
+path = dir + 'aclImdb/train/neg/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     with open(path + file_name, "r") as file:
         train_list.append({
-            'index':index,
+            'index': index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "0"})
     index += 1
+
 # test pos
-path = 'original/aclImdb/test/pos/'
+path = dir + 'aclImdb/test/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     with open(path + file_name, "r") as file:
         test_list.append({
-            'index':index,
+            'index': index,
             'id': file_name_split[0],
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "1"})
-    index+=1
+    index += 1
+
 # test neg
-path = 'original/aclImdb/test/neg/'
+path = dir + 'aclImdb/test/neg/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
@@ -79,18 +85,14 @@ for file_name in file_names:
             'text': file.readline(),
             'score': file_name_split[1],
             'label': "0"})
-    index+=1
-# # save json
-# with open('train.json', 'w') as file:
-#     json.dump(train_list, file)
-# with open('test.json', 'w') as file:
-#     json.dump(test_list, file)
+    index += 1
+
 
 all_list = []
 all_list.extend(train_list)
 all_list.extend(test_list)
 
-with gzip.open('data.json.gz', mode='wt') as file:
+with gzip.open(dir+'data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
 
 # indices
@@ -102,13 +104,5 @@ index = {
 }
 assert len(set(index['train']).intersection(index['test'])) == 0
 
-with gzip.open('index.json.gz', mode='wt') as file:
+with gzip.open(dir + 'index.json.gz', mode='wt') as file:
     json.dump(index, file)
-
-# # read json to list
-# json_data = open("train.json").read()
-# train_list = json.loads(json_data)
-# json_data = open("test.json").read()
-# test_list = json.loads(json_data)
-# json_data = open("data.json").read()
-# all_list = json.loads(json_data)
