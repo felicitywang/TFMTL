@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import gzip
-import itertools
 import json
 import os
 import pickle
@@ -26,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tasks.code.data_prep import tweet_clean
+from tasks.code.data_prep import *
 from tasks.code.text import VocabularyProcessor
 from tasks.code.util import bag_of_words
 from tensorflow.contrib.learn.python.learn.preprocessing import \
@@ -115,11 +114,14 @@ class Dataset():
         # tokenize and reconstruct as string(which vocabulary processor
         # takes as input)
         # TODO more on tokenizer
-
         self.old_length_list = [len(text) for text in self.text_list]
         self.text_list = [tweet_clean(text) for text in
                           self.text_list]
+        # self.text_list = [clean_str(text) for text in self.text_list]
+        # self.text_list = [' '.join([i.lower() for i in text.split()]) for
+        #                   text in self.text_list]
         self.text_list = [text + " EOS" for text in self.text_list]
+        # print(self.text_list)
         self.new_length_list = [len(text) for text in self.text_list]
 
         # get index

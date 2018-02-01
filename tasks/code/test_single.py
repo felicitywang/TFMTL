@@ -1,6 +1,4 @@
-#! /usr/bin/env python
-
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +21,7 @@ import os
 import random
 from time import time
 
+from tasks.code.cnn import CNN
 from tasks.code.dataset import Dataset
 from tasks.code.input_dataset import InputDataset
 from tasks.code.mlp import MLP
@@ -55,7 +54,7 @@ flags.DEFINE_integer("embed_dim", 128, "embedding dimension (VAE)")
 flags.DEFINE_integer("latent_dim", 128, "latent dimension (VAE)")
 flags.DEFINE_integer("seed", 42, "RNG seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size.")
-flags.DEFINE_integer("num_epoch", 20, "Total number of training epochs.")
+flags.DEFINE_integer("num_epoch", 40, "Total number of training epochs.")
 flags.DEFINE_integer('num_intra_threads', 0,
                      """Number of threads to use for intra-op
                      parallelism. If set to 0, the system will pick
@@ -69,12 +68,27 @@ flags.DEFINE_boolean('force_gpu_compatible', True,
                      GPU_Options""")
 flags.DEFINE_integer("min_freq", 10, 'minimum frequency to build the '
                                      'vocabulary.')
+flags.DEFINE_boolean("padding", True, 'whether to pad each sentence, should '
+                                      'be True if encoding if bow')
+flags.DEFINE_string("model", "mlp", "Which model to use.")
 FLAGS = flags.FLAGS
 
 
-def make_model(batch, num_classes, is_training):
-    model = MLP(batch[FLAGS.encoding], batch['label'], num_classes=num_classes,
-                dropout_rate=0.5, layers=[100, 100], is_training=is_training)
+def make_model(batch, num_classes, vocab_size, is_training):
+    if FLAGS.model == 'mlp':
+        model = MLP(batch[FLAGS.encoding], batch['label'],
+                    num_classes=num_classes,
+                    dropout_rate=0.5,
+                    layers=[100, 100],
+                    is_training=is_training)
+    elif FLAGS.model == 'cnn':
+        model = CNN(batch[FLAGS.encoding], batch['label'],
+                    num_classes=num_classes,
+                    input_size=vocab_size,
+                    # num_filter=128,
+                    is_training=is_training)
+    else:
+        raise ValueError("No such model!")
     return model
 
 
@@ -151,15 +165,18 @@ def main(_):
     features = {
         'label': tf.FixedLenFeature([], dtype=tf.int64)
     }
-    padding = True
-    if padding is True:
-        features['word_id'] = tf.FixedLenFeature([max_document_length],
-                                                 dtype=tf.int64)
-    else:
-        features['word_id'] = tf.VarLenFeature(dtype=tf.int64)
 
-    if FLAGS.encoding == 'bow':
+    if FLAGS.encoding == 'word_id':
+        print(FLAGS.padding)
+        if FLAGS.padding is True:
+            features['word_id'] = tf.FixedLenFeature([max_document_length],
+                                                     dtype=tf.int64)
+        else:
+            features['word_id'] = tf.VarLenFeature(dtype=tf.int64)
+    elif FLAGS.encoding == 'bow':
         features['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+    else:
+        raise ValueError("No such encoding!")
 
     with tf.Graph().as_default():
         with tf.name_scope("Train"):
@@ -167,7 +184,8 @@ def main(_):
             train_batch = dataset.batch
             train_init = dataset.init_op
             with tf.variable_scope("Model", reuse=None):
-                mtrain = make_model(train_batch, num_classes, is_training=True)
+                mtrain = make_model(train_batch, num_classes, vocab_size,
+                                    is_training=True)
                 opt = Optimizer()
                 train_op = opt.optimize(mtrain.loss)
         with tf.name_scope("Valid"):
@@ -175,14 +193,15 @@ def main(_):
             valid_batch = dataset.batch
             valid_init = dataset.init_op
             with tf.variable_scope("Model", reuse=True):
-                mvalid = make_model(valid_batch, num_classes,
+                mvalid = make_model(valid_batch, num_classes, vocab_size,
                                     is_training=False)
         with tf.name_scope("Test"):
             dataset = InputDataset(test_path, features, FLAGS.batch_size)
             test_batch = dataset.batch
             test_init = dataset.init_op
             with tf.variable_scope("Model", reuse=True):
-                mtest = make_model(test_batch, num_classes, is_training=False)
+                mtest = make_model(test_batch, num_classes,
+                                   vocab_size, is_training=False)
 
         saver = tf.train.Saver(var_list=tf.global_variables())
         with tf.train.SingularMonitoredSession() as session:
