@@ -37,7 +37,7 @@ python3 test_single.py --data_dir=../datasets/sentiment/LMRD/ --min_freq=50 --en
 
 - Check `test_single.py` and `dataset.py` for all the arguments.
 
-- I use `../scripts/qsub_mlp` to tune hyperparameters on the grid. Probably needs fixing since I added some more arguments and changed some paths.
+- I use `../scripts/qsub_mlp.py` to tune hyperparameters on the grid. Probably needs fixing since I added some more arguments and changed some paths.
 
 
 ## Results
