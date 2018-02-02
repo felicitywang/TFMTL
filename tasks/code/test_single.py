@@ -35,7 +35,7 @@ logging = tf.logging
 
 flags.DEFINE_string("data_dir", "../datasets/sentiment/SSTb/",
                     "Where data.json.gz is loaded.")
-flags.DEFINE_string("model_path", "./cache/best_model/model.ckpt",
+flags.DEFINE_string("model_path", "./best_model/model.ckpt",
                     "Directory to save the best model checkpoint.")
 flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
 flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
@@ -70,7 +70,7 @@ flags.DEFINE_integer("min_freq", 10, 'minimum frequency to build the '
                                      'vocabulary.')
 flags.DEFINE_boolean("padding", True, 'whether to pad each sentence, should '
                                       'be True if encoding if bow')
-flags.DEFINE_string("model", "mlp", "Which model to use.")
+flags.DEFINE_string("model", "mlp", "Which model to use: mlp/cnn")
 FLAGS = flags.FLAGS
 
 
