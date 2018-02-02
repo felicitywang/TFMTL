@@ -103,3 +103,4 @@ ENV/
 tasks/datasets/
 !datasets/*/*/README.md
 !format_data.py
+tasks/report/
