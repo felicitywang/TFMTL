@@ -466,12 +466,10 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     # the generated vocab freq dicts shall be saved at
     # data_dir/single/vocab_freq_dict.pickle
     max_document_lengths = []
-    args_list = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
                           generate_tf_record=False, encoding=encoding)
         max_document_lengths.append(dataset.max_document_length)
-        args_list.append(dataset.args)
 
     # new data dir based all the datasets' names
     data_names = [os.path.basename(os.path.normpath(data_dir)) for data_dir
@@ -502,6 +500,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     vocab_i2v_list = []
     vocab_v2i_dict = []
     vocab_sizes = []
+    args_list = []
     for data_dir in data_dirs:
         tfrecord_dir = os.path.join(new_data_dir, os.path.basename(
             os.path.normpath(data_dir)))
@@ -518,6 +517,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
         vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
         vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
         vocab_sizes.append(dataset.vocab_size)
+        args_list.append(dataset.args)
 
     assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
     assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
