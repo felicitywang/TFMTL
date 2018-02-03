@@ -1,4 +1,4 @@
-# Copyright 2018 Johns Hopkins University. All Rights Reserved.
+# Copyright 2017 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,10 +21,7 @@ import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
 
 
-def unigram(batch, z, vocab_size=None,
-            targets_key="targets",
-            counts_key="counts",
-            lens_key="lens"):
+def unigram(x, z, vocab_size):
   """ This implements the unigram output projection from:
 
     Neural Variational Inference for Text Processing
@@ -32,16 +29,11 @@ def unigram(batch, z, vocab_size=None,
     https://arxiv.org/abs/1511.06038
 
   """
-
-  assert vocab_size is not None
-
   # Unpack observations
-  try:
-    targets = batch[targets_key]
-    counts = batch[counts_key]
-    lens = batch[lens_key]
-  except KeyError:
-    raise ValueError('expected batch to contain (targets, counts, lens)')
+  if len(x) != 3:
+    raise ValueError('expected x to contain (targets, counts, lens)')
+
+  targets, counts, lens = x
 
   targets_shape = targets.get_shape()
   if len(targets_shape) != 2:
