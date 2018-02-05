@@ -124,6 +124,14 @@ def parse_args():
                  help='RNG seed')
   p.add_argument('--check_numerics', action='store_true', default=False,
                  help='Add operations to check for NaNs')
+  p.add_argument('--num_intra_threads', default=1, type=int,
+                 help="""Number of threads to use for intra-op
+                     parallelism. If set to 0, the system will pick
+                     an appropriate number.""")
+  p.add_argument('--num_inter_threads', default=1, type=int,
+                 help="""Number of threads to use for inter-op
+                     parallelism. If set to 0, the system will pick
+                     an appropriate number.""")
   p.add_argument('--log_device_placement', action='store_true', default=False,
                  help='Log where compute graph is placed.')
   p.add_argument('--force_gpu_compatible', action='store_true', default=False,
@@ -447,6 +455,8 @@ def get_proto_config(args):
   config.allow_soft_placement = True
   config.log_device_placement = args.log_device_placement
   config.gpu_options.force_gpu_compatible = args.force_gpu_compatible
+  config.intra_op_parallelism_threads = args.num_intra_threads
+  config.inter_op_parallelism_threads = args.num_inter_threads
   return config
 
 
