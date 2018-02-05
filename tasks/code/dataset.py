@@ -23,6 +23,7 @@ import gzip
 import json
 import os
 import pickle
+import sys
 
 import numpy as np
 import pandas as pd
@@ -111,9 +112,12 @@ class Dataset():
         self.label_list = df[label_field_name].tolist()
         self.num_classes = len(set(self.label_list))
 
-        self.text_list = df[text_field_names].astype(unicode).sum(
-            axis=1).tolist()
-
+        if sys.version_info[0] < 3:
+            self.text_list = df[text_field_names].astype(unicode).sum(
+                axis=1).tolist()
+        else:
+            self.text_list = df[text_field_names].astype(str).sum(
+                axis=1).tolist()
         self.padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
@@ -191,9 +195,9 @@ class Dataset():
         self.valid_path = os.path.join(tfrecord_dir, 'valid.tf')
         self.test_path = os.path.join(tfrecord_dir, 'test.tf')
 
-        self.write_examples(self.train_path, self.train_index,write_bow)
-        self.write_examples(self.valid_path, self.valid_index,write_bow)
-        self.write_examples(self.test_path, self.test_index,write_bow)
+        self.write_examples(self.train_path, self.train_index, write_bow)
+        self.write_examples(self.valid_path, self.valid_index, write_bow)
+        self.write_examples(self.test_path, self.test_index, write_bow)
 
         # save dataset arguments
         self.args = {
@@ -518,7 +522,8 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           generate_basic_vocab=False,
                           generate_tf_record=True,
                           train_ratio=train_ratio,
-                          valid_ratio=valid_ratio)
+                          valid_ratio=valid_ratio,
+                          write_bow=write_bow)
         vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
         vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
         vocab_sizes.append(dataset.vocab_size)
@@ -529,10 +534,10 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     assert all(x == vocab_sizes[0] for x in vocab_sizes)
 
     with open(new_data_dir + "vocab_v2i_dict.pickle", 'wb') as file:
-        pickle.dump(vocab_v2i_dict, file)
+        pickle.dump(vocab_v2i_dict[0], file)
         file.close()
     with open(new_data_dir + "vocab_i2v_list.pickle", 'wb') as file:
-        pickle.dump(vocab_i2v_list, file)
+        pickle.dump(vocab_i2v_list[0], file)
         file.close()
     with open(new_data_dir + "vocab_size.txt", "w") as file:
         file.write(str(vocab_sizes[0]))
