@@ -91,7 +91,7 @@ all_list.extend(train_list)
 all_list.extend(test_list)
 
 with gzip.open(dir + 'data.json.gz', mode='wt') as file:
-    json.dump(all_list, file)
+    json.dump(all_list, file, ensure_ascii=False)
 
 # indices
 train_index = list(range(len(train_list)))
@@ -103,4 +103,4 @@ index = {
 assert len(set(index['train']).intersection(index['test'])) == 0
 
 with gzip.open(dir + 'index.json.gz', mode='wt') as file:
-    json.dump(index, file)
+    json.dump(index, file, ensure_ascii=False)

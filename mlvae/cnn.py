@@ -13,8 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-import tensorflow as tf
-
 def conv_and_pool(inputs,
                   num_filter=64,
                   max_width=5,
