@@ -72,7 +72,7 @@ index_dict['train'] = train_index
 index_dict['valid'] = dev_index
 index_dict['test'] = test_index
 with gzip.open(path + 'index.json.gz', mode='wt') as file:
-    json.dump(index_dict, file)
+    json.dump(index_dict, file, ensure_ascii=False)
 
 with gzip.open(path + 'data.json.gz', mode='wt') as file:
-    json.dump(all_list, file)
+    json.dump(all_list, file, ensure_ascii=False)

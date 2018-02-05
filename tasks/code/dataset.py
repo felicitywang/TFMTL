@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -20,21 +23,23 @@ import gzip
 import json
 import os
 import pickle
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from pathlib import Path
+from tensorflow.contrib.learn.python.learn.preprocessing import \
+    CategoricalVocabulary
+
 from tasks.code.data_prep import *
 from tasks.code.text import VocabularyProcessor
 from tasks.code.util import bag_of_words
-from tensorflow.contrib.learn.python.learn.preprocessing import \
-    CategoricalVocabulary
 
 flags = tf.flags
 logging = tf.logging
 
 FLAGS = flags.FLAGS
+from six.moves import xrange
 
 TRAIN_RATIO = 0.8
 VALID_RATIO = 0.1
@@ -44,7 +49,7 @@ RANDOM_SEED = 42
 class Dataset():
     def __init__(self, data_dir, vocab_dir=None, tfrecord_dir=None,
                  max_document_length=None,
-                 min_frequency=0, max_frequency=-1, encoding=None,
+                 min_frequency=0, max_frequency=-1, write_bow=True,
                  text_field_names=None,
                  label_field_name=None,
                  valid_ratio=VALID_RATIO, train_ratio=TRAIN_RATIO,
@@ -52,7 +57,7 @@ class Dataset():
                  scale_ratio=None, generate_basic_vocab=False,
                  generate_tf_record=True, padding=False):
         """
-
+        :param data_type: whether the data is json data or tf records
         :param data_dir: where data.json.gz and index.json.gz are
         located, and vocabulary/tf records built from the single datasets
         are to be saved
@@ -66,7 +71,7 @@ class Dataset():
         words that appear lower than or equal to this number would be discarded
         :param max_frequency: maximum frequency to build the vocabulray,
         words that appear more than or equal to this number would be discarded
-        :param encoding: e.g. bow, etc. written to TFRecord files
+        :param bow: True if to write bag of words as a feature in the tf record
         :param text_field_names: string of a list of text field names joined
         with spaces, read from data_dir if None
         :param label_field_name: label field name(only 1), read from
@@ -106,9 +111,9 @@ class Dataset():
         self.label_list = df[label_field_name].tolist()
         self.num_classes = len(set(self.label_list))
 
-        self.text_list = df[text_field_names].astype(str).sum(axis=1).tolist()
+        self.text_list = df[text_field_names].astype(unicode).sum(
+            axis=1).tolist()
 
-        self.encoding = encoding
         self.padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
@@ -186,9 +191,9 @@ class Dataset():
         self.valid_path = os.path.join(tfrecord_dir, 'valid.tf')
         self.test_path = os.path.join(tfrecord_dir, 'test.tf')
 
-        self.write_examples(self.train_path, self.train_index)
-        self.write_examples(self.valid_path, self.valid_index)
-        self.write_examples(self.test_path, self.test_index)
+        self.write_examples(self.train_path, self.train_index,write_bow)
+        self.write_examples(self.valid_path, self.valid_index,write_bow)
+        self.write_examples(self.test_path, self.test_index,write_bow)
 
         # save dataset arguments
         self.args = {
@@ -320,7 +325,7 @@ class Dataset():
         self.word_id_list = [list(i) for i in self.word_id_list]
         return vocab_processor.vocabulary_
 
-    def write_examples(self, file_name, split_index):
+    def write_examples(self, file_name, split_index, write_bow):
         # write to TFRecord data file
         tf.logging.info("Writing to: %s", file_name)
         with tf.python_io.TFRecordWriter(file_name) as writer:
@@ -340,7 +345,7 @@ class Dataset():
                             value=[self.new_length_list[index]])),
                 }
 
-                if self.encoding == 'bow':
+                if write_bow is True:
                     feature['bow'] = tf.train.Feature(
                         float_list=tf.train.FloatList(
                             value=bag_of_words(
@@ -404,7 +409,7 @@ class Dataset():
 
     def random_split_train_valid_test(self, length, train_ratio, valid_ratio,
                                       random_seed):
-        index = np.array(list(range(length)))
+        index = np.array(list(xrange(length)))
         np.random.seed(random_seed)
         index = np.random.permutation(index)
 
@@ -452,7 +457,7 @@ def combine_dicts(x, y):
 def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                               max_document_length=None, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO, encoding=None):
+                              valid_ratio=VALID_RATIO, write_bow=True):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -468,7 +473,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     max_document_lengths = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False, encoding=encoding)
+                          generate_tf_record=False, write_bow=write_bow)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names

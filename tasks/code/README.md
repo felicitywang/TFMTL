@@ -26,13 +26,18 @@ See `../datasets/README.md`
 - an example testing MLP with bag of words:
 
 ```
-python3 test_single.py --data_dir=../datasets/sentiment/SSTb/ --min_freq=1 --encoding=bow --model=mlp --padding=True
+python test_single.py --data_type=json --data_dir=../tasks/datasets/sentiment/SSTb/ --min_freq=1  --model=mlp --bow=True
+```
+
+```
+python test_single.py --data_type=tf --data_dir=../../expts/sentiment_1/data/tf/SSTb --min_freq=1  --model=mlp --bow=True
 ```
 
 - an example testing CNN:
 
 ```
-python3 test_single.py --data_dir=../datasets/sentiment/LMRD/ --min_freq=50 --encoding=word_id --model=cnn --padding=False
+python test_single.py --data_dir=../datasets/sentiment/LMRD/ --min_freq=50
+--model=cnn
 ```
 
 - Check `test_single.py` and `dataset.py` for all the arguments.

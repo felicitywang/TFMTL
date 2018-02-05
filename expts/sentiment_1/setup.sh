@@ -25,4 +25,4 @@ mv -f data.json.gz data/json/LMRD/
 mv -f index.json.gz data/json/LMRD/
 
 
-python3 write_tfrecords.py
+python write_tfrecords.py
