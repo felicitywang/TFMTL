@@ -23,10 +23,8 @@ import gzip
 import json
 import os
 import pickle
-import sys
 
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 from tensorflow.contrib.learn.python.learn.preprocessing import \
@@ -93,8 +91,6 @@ class Dataset():
 
         print("data in", data_dir)
 
-        df = pd.read_json(data_dir + "data.json.gz", encoding='utf-8')
-
         if label_field_name is None:
             label_field_name = 'label'
             if Path(os.path.join(data_dir, "label_field_name")).exists():
@@ -109,15 +105,26 @@ class Dataset():
                 text_field_names = file.readline().split()
             print("text:", text_field_names)
 
-        self.label_list = df[label_field_name].tolist()
-        self.num_classes = len(set(self.label_list))
+        with gzip.open(os.path.join(data_dir, "data.json.gz"), "rt") as file:
+            data = json.load(file)
+            self._label_list = [item[label_field_name] for item in data]
+            self._num_classes = len(set(self._label_list))
 
-        if sys.version_info[0] < 3:
-            self.text_list = df[text_field_names].astype(unicode).sum(
-                axis=1).tolist()
-        else:
-            self.text_list = df[text_field_names].astype(str).sum(
-                axis=1).tolist()
+        # if sys.version_info[0] < 3:
+        #     self.text_list = df[text_field_names].astype(unicode).sum(
+        #         axis=1).tolist()
+        # else:
+        #     self.text_list = df[text_field_names].astype(str).sum(
+        #         axis=1).tolist()
+        self.text_list = [' '.join([item[text_field_name]])
+                          for text_field_name in text_field_names for
+                          item in data]
+        # self.text_list = [' '.join(
+        #     [item[text_field_name]] for text_field_name in text_field_names)
+        #                   for item in data]
+
+        # print(self.text_list)
+
         self.padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
@@ -201,7 +208,7 @@ class Dataset():
 
         # save dataset arguments
         self.args = {
-            'num_classes': self.num_classes,
+            'num_classes': self._num_classes,
             'max_document_length': self.max_document_length,
             'vocab_size': self.vocab_size,
             'min_frequency': min_frequency,
@@ -337,7 +344,7 @@ class Dataset():
                 feature = {
                     'label': tf.train.Feature(
                         int64_list=tf.train.Int64List(
-                            value=[self.label_list[index]])),
+                            value=[self._label_list[index]])),
                     'word_id': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=self.word_id_list[index])),
