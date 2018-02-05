@@ -40,8 +40,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logging = tf.logging
 
-TRAIN_ITER = 'train_iter'
-TEST_ITER = 'test_iter'
 
 # This defines ALL the features that ANY model possibly needs access
 # to. That is, some models will only need a subset of these features.
@@ -258,7 +256,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         for dataset_name in dataset_info:
           _pred_op = model_info[dataset_name]['test_pred_op']
           _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
-          _eval_iterator = dataset_info[dataset_name]['test_iter']
+          _eval_iter = dataset_info[dataset_name]['test_iter']
           _metrics = compute_held_out_performance(sess, _pred_op,
                                                   _eval_labels,
                                                   _eval_iter, args)
@@ -496,17 +494,20 @@ def fill_info_dicts(dataset_info, args):
     else:
       logging.info("Using validation data for evaluation.")
 
-  # Create feature_dicts for each dataset
-  for dataset_name_1 in model_info:
+  def _create_feature_dict(ds, dataset_info, model_info):
     _feature_dict = dict()
-    for dataset_name_2 in dataset_info:
-      if dataset_name_1 == dataset_name_2:
+    for dataset_name in dataset_info:
+      if ds == dataset_name:
         # Observe the labels (from batch)
-        _feature_dict[dataset_name_1] = model_info[dataset_name_1][train_batch]
+        _feature_dict[ds] = model_info[ds]['train_batch']
       else:
         # Don't observe the labels
-        _feature_dict[dataset_name_1] = None
-    model_info[dataset_name]['feature_dict'] = _feature_dict
+        _feature_dict[ds] = None
+    return _feature_dict
+
+  # Create feature_dicts for each dataset
+  for dataset_name in model_info:
+    model_info[dataset_name]['feature_dict'] = _create_feature_dict(dataset_name, dataset_info, model_info)
 
   # Return dataset_info dict and model_info dict
   return dataset_info, model_info
