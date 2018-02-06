@@ -73,10 +73,10 @@ def parse_args():
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
-  p.add_argument('--alpha', default=10.0, type=float,
-                 help='Weight assigned to discriminative term in the objective')
-  p.add_argument('--beta', choices=['empirical', 'even'], default='even',
-                 help='How the unsupervised and supervised batches are weighted')
+  #p.add_argument('--alpha', default=10.0, type=float,
+  #               help='Weight assigned to discriminative term in the objective')
+  #p.add_argument('--beta', choices=['empirical', 'even'], default='even',
+  #               help='How the unsupervised and supervised batches are weighted')
   p.add_argument('--lr0', default=0.0002, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
@@ -89,11 +89,11 @@ def parse_args():
   #               help='Semi-sup opt style (combined or alternating updates)')
   # p.add_argument('--warmup_iter', default=500, type=int,
   #                help='[semisup] Pre-train q(y | x) for this many iter.')
-  p.add_argument('--supervised_loss', choices=['hybrid', 'discriminative'],
-                 default='discriminative',
-                 help='Loss function for supervised training.')
-  p.add_argument('--gauss_kl', choices=['exact', 'approx'], default='approx',
-                 help='MCMC estimate of Gaussian KL or analytic computation')
+  #p.add_argument('--supervised_loss', choices=['hybrid', 'discriminative'],
+  #               default='discriminative',
+  #               help='Loss function for supervised training.')
+  #p.add_argument('--gauss_kl', choices=['exact', 'approx'], default='approx',
+  #               help='MCMC estimate of Gaussian KL or analytic computation')
   # p.add_argument('--mlp_activation', type=check_activation, default='selu',
   #                help='Activation to use for intermediate MLP layers')
   # p.add_argument('--encoder_keep_prob', default=1.0, type=float,
@@ -349,11 +349,11 @@ def main():
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     _dir = dataset_info[dataset_name]['dir']
     # Set paths to TFRecord files
-    _dataset_train_path = get_data_split_path(dataset_name, "train")
+    _dataset_train_path = os.path.join(_dir, get_data_split_path(dataset_name, "train"))
     if args.test:
-      _dataset_test_path = get_data_split_path(dataset_name, "test")
+      _dataset_test_path = os.path.join(_dir, get_data_split_path(dataset_name, "test"))
     else:
-      _dataset_test_path = get_data_split_path(dataset_name, "valid")
+      _dataset_test_path = os.path.join(_dir, get_data_split_path(dataset_name, "valid"))
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
     dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
