@@ -136,8 +136,6 @@ def parse_args():
                  help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help='Paths to the dataset(s) given by the --datasets flag (in the same order)')
-  p.add_argument('--vocab_path', type=str,
-                 help='Path to the shared vocabulary for the datasets')
   return p.parse_args()
 
 
@@ -193,16 +191,8 @@ def get_num_records(tf_record_filename):
       c += 1
   return c
 
-def get_data_split_path(dataset_name, split):
-  return "data/tf/{}/{}.tf".format(dataset_name, split)
-
-def get_vocab_size(vocab_file_path):
-  with open(vocab_file_path, "r") as f:
-    line = f.readline().strip()
-    vocab_size = int(line)
-  return vocab_size
-
 def train_model(model, dataset_info, steps_per_epoch, args):
+  # DO we need this?
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
   # Build compute graph
@@ -336,22 +326,16 @@ def main():
   dataset_info = dict()
   for dataset_name in args.datasets:
     dataset_info[dataset_name] = dict()
-    # Collect dataset information/statistics
     dataset_info[dataset_name]['feature_name'] = dataset_name  # feature name is just dataset name
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     _dir = dataset_info[dataset_name]['dir']
-    # Set paths to TFRecord files
-    _dataset_train_path = get_data_split_path(dataset_name, "train")
-    if args.test:
-      _dataset_test_path = get_data_split_path(dataset_name, "test")
-    else:
-      _dataset_test_path = get_data_split_path(dataset_name, "valid")
-    dataset_info[dataset_name]['train_path'] = _dataset_train_path
-    dataset_info[dataset_name]['test_path'] = _dataset_test_path
+    dataset_info[dataset_name]['dataset'] = Dataset(data_dir=_dir)
 
-  vocab_size = get_vocab_size(args.vocab_path)
+  # TODO: merge dataset vocabs (call to a function in Dataset)
+
+  vocab_size = ??? merged_vocab.vocab_size
   
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
 
@@ -359,8 +343,17 @@ def main():
   dataset_order = sorted(order_dict, key=order_dict.get)
 
   encoders = build_encoders(vocab_size, args)
-  decoders = build_decoders(vocab_size, args)
+  decoders = build_decoders()
+  #decoders = {'IMDB': unigram, 'SSTb': unigram}
 
+  # Set paths to TFRecord files
+  for dataset_name in dataset_info:
+    _dataset = dataset_info[dataset_name]['dataset']
+    dataset_info[dataset_name]['train_path'] = _dataset.train_path
+    if args.test:
+      dataset_info[dataset_name]['test_path'] = _dataset.test_path
+    else:
+      dataset_info[dataset_name]['test_path'] = _dataset.valid_path
 
   # Creating the batch input pipelines.  These will load & batch
   # examples from serialized TF record files.
