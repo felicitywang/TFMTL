@@ -48,7 +48,7 @@ def default_hparams():
                  num_y_samples=1,
                  min_var=0.0001,
                  labels_key="LABELS",
-                 inputs_key="TEXT",
+                 inputs_key="word_id",
                  targets_key="TARGETS",
                  loss_type="discriminative",
                  loss_combination="even",
@@ -197,6 +197,7 @@ class MultiLabel(object):
 
   def get_predictions(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
+    print(batch.items())
     inputs = batch[self._hp.inputs_key]
     if features is None:
       features = self.encode(inputs, feature_name)

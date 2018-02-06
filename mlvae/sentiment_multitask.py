@@ -43,11 +43,20 @@ logging = tf.logging
 
 # This defines ALL the features that ANY model possibly needs access
 # to. That is, some models will only need a subset of these features.
+#FEATURES = {
+#  'targets': tf.VarLenFeature(dtype=tf.int64),
+#  'length': tf.FixedLenFeature([], dtype=tf.int64),
+#  'label': tf.FixedLenFeature([], dtype=tf.int64)
+#}
+
 FEATURES = {
-  'targets': tf.VarLenFeature(dtype=tf.int64),
-  'length': tf.FixedLenFeature([], dtype=tf.int64),
-  'label': tf.FixedLenFeature([], dtype=tf.int64)
-}
+  'label': tf.VarLenFeature(dtype=tf.int64),
+  'word_id': tf.VarLenFeature(dtype=tf.int64),
+  'old_length': tf.VarLenFeature(dtype=tf.int64),
+  'new_length': tf.VarLenFeature(dtype=tf.int64),
+  'bow': tf.VarLenFeature(dtype=tf.float32),
+  }
+
 
 def parse_args():
   p = ap.ArgumentParser()
@@ -147,10 +156,10 @@ def parse_args():
   return p.parse_args()
 
 
-def encoder_graph(inputs, embed_fn, encode_dim):
+def encoder_graph(inputs, embed_fn):
   embed = embed_fn(inputs)
-  return cnn(embed,
-             encode_dim=encode_dim)
+  print('encoder_graph: {}'.format(embed.graph))
+  return conv_and_pool(embed)
 
 def decoder_graph(x, z, vocab_size):
   return unigram(x, z,
@@ -165,8 +174,7 @@ def build_encoders(vocab_size, args):
                                   embed_dim=args.embed_dim)
     for ds in args.datasets:
       encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp,
-                                      encode_dim=args.encode_dim)
+                                      embed_fn=embed_temp)
   else:
     # A unique word embedding matrix for each dataset
     for ds in args.datasets:
@@ -174,8 +182,7 @@ def build_encoders(vocab_size, args):
                                     vocab_size=vocab_size,
                                     embed_dim=args.embed_dim)
       encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp,
-                                      encode_dim=args.encode_dim)
+                                      embed_fn=embed_temp)
 
   return encoders
 
@@ -209,7 +216,7 @@ def get_vocab_size(vocab_file_path):
   return vocab_size
 
 def train_model(model, dataset_info, steps_per_epoch, args):
-  dataset_info, model_info = fill_info_dicts(dataset_info, args)
+  dataset_info, model_info = fill_info_dicts(dataset_info, model, args)
 
   # Build compute graph
   logging.info("Creating computation graph.")
@@ -372,12 +379,12 @@ def main():
   # examples from serialized TF record files.
   for dataset_name in dataset_info:
     _train_path = dataset_info[dataset_name]['train_path']
-    ds = build_input_dataset(_train_path, FEATURES, args.batch_size)
+    ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
     dataset_info[dataset_name]['train_dataset'] = ds
 
     # Validation or test dataset
     _test_path = dataset_info[dataset_name]['test_path']
-    ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size)
+    ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
     dataset_info[dataset_name]['test_dataset'] = ds
 
 
@@ -458,7 +465,7 @@ def get_proto_config(args):
   return config
 
 
-def fill_info_dicts(dataset_info, args):
+def fill_info_dicts(dataset_info, model, args):
   # Organizes inputs to the computation graph
   # The corresponding outputs are defined in train_model()
 
@@ -477,14 +484,16 @@ def fill_info_dicts(dataset_info, args):
     # Training data, iterator, and batch
     _train_dataset = dataset_info[dataset_name]['train_dataset']
     _train_iter = _train_dataset.iterator
-    _train_batch = _train_iter.get_next()
+    #_train_batch = _train_iter.get_next()
+    _train_batch = _train_dataset.batch
     model_info[dataset_name]['train_iter'] = _train_iter
     model_info[dataset_name]['train_batch'] = _train_batch
 
     # Held-out test data, iterator, batch, and prediction operation
     _test_dataset = dataset_info[dataset_name]['test_dataset']
     _test_iter = _test_dataset.iterator
-    _test_batch = _test_iter.get_next()
+    #_test_batch = _test_iter.get_next()
+    _test_batch = _test_dataset.batch
     _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
     model_info[dataset_name]['test_iter'] = _test_iter
     model_info[dataset_name]['test_batch'] = _test_batch
@@ -513,13 +522,13 @@ def fill_info_dicts(dataset_info, args):
   return dataset_info, model_info
 
 
-def build_input_dataset(tfrecord_path, batch_size, is_training=True):
+def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=True):
   if is_training:
-    ds = Pipeline(tfrecord_path, FEATURES, batch_size,
+    ds = Pipeline(tfrecord_path, batch_features, batch_size,
                   num_epochs=None,  # repeat indefinitely
     )
   else:
-    ds = Pipeline(tfrecord_path, FEATURES, batch_size,
+    ds = Pipeline(tfrecord_path, batch_features, batch_size,
                   num_epochs=1)
 
   # We return the class because we might need to access the

@@ -15,6 +15,8 @@
 
 import tensorflow as tf
 
+xrange=range
+
 def conv_and_pool(inputs,
                   num_filter=64,
                   max_width=5,
@@ -35,6 +37,7 @@ def conv_and_pool(inputs,
     [batch_size, num_filter * K].
   """
 
+  print('cnn: {}'.format(inputs.graph))
   filter_sizes = []
   for i in xrange(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
