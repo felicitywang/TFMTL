@@ -14,8 +14,7 @@
 # ============================================================================
 
 import tensorflow as tf
-
-xrange=range
+from six.moves import xrange
 
 def conv_and_pool(inputs,
                   num_filter=64,
@@ -37,9 +36,8 @@ def conv_and_pool(inputs,
     [batch_size, num_filter * K].
   """
 
-  print('cnn: {}'.format(inputs.graph))
   filter_sizes = []
-  for i in xrange(2, max_width+1):
+  for i in range(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
 
   # Convolutional layers
@@ -56,7 +54,7 @@ def conv_and_pool(inputs,
       name='conv_{}'.format(width))
 
     # Max pooling
-    pool_i = tf.reduce_max(conv_i, axis=1, keepdims=False)
+    pool_i = tf.reduce_max(conv_i, axis=1, keep_dims=False)
 
     # Append the filter
     filters.append(pool_i)

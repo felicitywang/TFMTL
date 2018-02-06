@@ -30,6 +30,8 @@ from mlvae.vae import log_normal
 from mlvae.vae import gaussian_sample
 from mlvae.vae import get_tau
 
+logging = tf.logging
+
 Categorical = tf.contrib.distributions.Categorical
 ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategorical
 kl_divergence = tf.contrib.distributions.kl_divergence
@@ -47,9 +49,9 @@ def default_hparams():
                  num_z_samples=1,
                  num_y_samples=1,
                  min_var=0.0001,
-                 labels_key="LABELS",
+                 labels_key="label",
                  inputs_key="word_id",
-                 targets_key="TARGETS",
+                 targets_key="bow",
                  loss_type="discriminative",
                  loss_combination="even",
                  dtype='float32')
@@ -72,7 +74,10 @@ def maybe_concat(x):
 
 def validate_labels(feature_dict, class_sizes):
   for k in feature_dict:
-    with tf.control_dependencies([tf.assert_greater(class_sizes[k], tf.reduce_max(feature_dict[k]))]):
+    with tf.control_dependencies([
+        tf.assert_greater(tf.cast(class_sizes[k], dtype=tf.int64),
+                          tf.cast(tf.reduce_max(feature_dict[k]), dtype=tf.int64)
+                        )]):
       pass
 
 # Distributions
@@ -197,7 +202,6 @@ class MultiLabel(object):
 
   def get_predictions(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
-    print(batch.items())
     inputs = batch[self._hp.inputs_key]
     if features is None:
       features = self.encode(inputs, feature_name)
@@ -218,13 +222,18 @@ class MultiLabel(object):
     log_dist = tf.nn.log_softmax(logits)
     log_dist = tf.reshape(log_dist, [self._batch_size, self._class_sizes[feature_name]])  # reshape to ignore first dimension
 
-    r = tf.range(0, self._batch_size, 1)
-    r = tf.expand_dims(r, axis=0)
+    # r = [[0], [1], ..., [batch_size-1]] <batch_size, 1>
+    #   used as row indices for tf.gather_nd()
+    r = tf.range(0, self._batch_size, delta=1)
+    r = tf.expand_dims(r, axis=1)
+    r = tf.cast(r, dtype=tf.int64)
 
-    label_idx = tf.expand_dims(label_idx, axis=0)
-    label_idx = tf.concat([tf.transpose(r), tf.transpose(label_idx)], axis=1)
+    label_idx = tf.reshape(label_idx, [self._batch_size])
+    label_idx = tf.expand_dims(label_idx, axis=1)  # <batch_size, 1>
+    indices = tf.concat([r, label_idx], axis=1)  # indices used to query tf.gather_nd()
 
-    log_probs = tf.gather_nd(log_dist, label_idx)  # get the feature_dict[feature_name][i]'th element from log_dist[i] (in batch mode)
+    log_probs = tf.gather_nd(log_dist, indices)  # get the feature_dict[feature_name][i]'th element from log_dist[i] (in batch mode)
+    log_probs = tf.reshape(log_probs, [self._batch_size])
     return log_probs
 
   def get_label_instantiation(self, features, z, feature_dict, observed_dict):
@@ -365,6 +374,7 @@ class MultiLabel(object):
       #Discriminative loss not defined for unobserved examples
       pass
 
+    #logging.info("disc_loss shape: {}".format(disc_loss.get_shape().as_list()))
     return disc_loss
 
   def get_multi_task_loss(self, dataset_batches):
@@ -469,12 +479,16 @@ class MultiLabel(object):
       z_samples = None
 
     if loss_type == 'discriminative':
+      logging.info("MODE: discriminative loss")
       # Discriminative loss
       d_loss = self.get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
+      #logging.info("d_loss shape: {}".format(d_loss.get_shape().as_list()))
+      #logging.info(self._batch_size)
       assert len(d_loss.get_shape()) == 1, "expected dim(d_loss) == 1"
       loss = tf.reduce_mean(d_loss, axis=0)  # average across batch
 
     elif loss_type == 'gen+disc':
+      logging.info("MODE: generative + discriminative loss")
       # Generative loss
       g_loss = self.get_total_generative_loss(features, feature_dict, observed_dict, targets, zm, zv, z_samples=z_samples)
 

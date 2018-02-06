@@ -82,51 +82,15 @@ def parse_args():
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
-  #p.add_argument('--alpha', default=10.0, type=float,
-  #               help='Weight assigned to discriminative term in the objective')
-  #p.add_argument('--beta', choices=['empirical', 'even'], default='even',
-  #               help='How the unsupervised and supervised batches are weighted')
   p.add_argument('--lr0', default=0.0002, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
-  # p.add_argument('--setting', choices=['sup', 'unsup', 'semisup'],
-  #                default='semisup',
-  #                help='Training regime')
-  #p.add_argument('--optim_style', choices=['combined', 'alternating'],
-  #               default='combined',
-  #               help='Semi-sup opt style (combined or alternating updates)')
-  # p.add_argument('--warmup_iter', default=500, type=int,
-  #                help='[semisup] Pre-train q(y | x) for this many iter.')
-  #p.add_argument('--supervised_loss', choices=['hybrid', 'discriminative'],
-  #               default='discriminative',
-  #               help='Loss function for supervised training.')
-  #p.add_argument('--gauss_kl', choices=['exact', 'approx'], default='approx',
-  #               help='MCMC estimate of Gaussian KL or analytic computation')
-  # p.add_argument('--mlp_activation', type=check_activation, default='selu',
-  #                help='Activation to use for intermediate MLP layers')
-  # p.add_argument('--encoder_keep_prob', default=1.0, type=float,
-  #                help='Encoder dropout probability (only used during training)')
-  # p.add_argument('--latent_dim', default=64, type=int,
-  #                help='Latent embedding dimensionality')
-  # p.add_argument('--encoder_hidden_dim', default=512, type=int,
-  #                help='Dimensionality of the hidden layers of the encoder MLP')
-  # p.add_argument('--encoder_output_dim', default=512, type=int,
-  #                help='Dimensionality of the output layer of the encoder MLP')
-  # p.add_argument('--decoder_hidden_dim', default=512, type=int,
-  #                help='Dimensionality of the hidden layers of the decoder MLP')
   p.add_argument('--num_train_epochs', default=100, type=int,
                  help='Number of training epochs.')
-  # p.add_argument('--q_z_min_var', default=0.0001, type=float,
-  #                help='Minimum value of the Gaussian variances')
-  # p.add_argument('--percent_supervised', default=1, type=float,
-  #                help=('Fraction of supervised data. If 0, an alignment',
-  #                      'will be used to compute held-out accuracy'))
   p.add_argument('--print_trainable_variables', action='store_true',
                  default=False,
                  help='Diagnostic: print trainable variables')
-  # p.add_argument('--num_parallel_calls', default=4, type=int,
-  #                help='Number of threads used to preprocess the data')
   p.add_argument('--seed', default=42, type=int,
                  help='RNG seed')
   p.add_argument('--check_numerics', action='store_true', default=False,
@@ -145,7 +109,7 @@ def parse_args():
                  help='Throw error if any operations are not GPU-compatible')
   p.add_argument('--tau0', default=0.5, type=float,
                  help='Annealing parameter for Concrete/Gumbal-Softmax')
-  p.add_argument('--label_key', default="LABELS", type=str,
+  p.add_argument('--label_key', default="label", type=str,
                  help='Key for label field in the batches')
   p.add_argument('--datasets', nargs='+', type=str,
                  help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
@@ -158,7 +122,6 @@ def parse_args():
 
 def encoder_graph(inputs, embed_fn):
   embed = embed_fn(inputs)
-  print('encoder_graph: {}'.format(embed.graph))
   return conv_and_pool(embed)
 
 def decoder_graph(x, z, vocab_size):
@@ -218,9 +181,6 @@ def get_vocab_size(vocab_file_path):
 def train_model(model, dataset_info, steps_per_epoch, args):
   dataset_info, model_info = fill_info_dicts(dataset_info, model, args)
 
-  # Build compute graph
-  logging.info("Creating computation graph.")
-
   # Get training objective. The inputs are:
   #   1. A dict of { dataset_key: dataset_iterator }
   #
@@ -243,12 +203,19 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Initialize model parameters
     sess.run(init_ops)
 
+
+    for dataset_name in model_info:
+      _train_init_op = model_info[dataset_name]['train_init_op']
+      sess.run(_train_init_op)
+
     # Do training
     for epoch in xrange(args.num_train_epochs):
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      for _ in xrange(steps_per_epoch):
+      for i in xrange(steps_per_epoch):
+        if i % 10 == 0:
+          logging.info("Step %d/%d" % (i+1, steps_per_epoch))
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v  # loss_v is sum over a batch from each dataset of the average loss *per training example*
@@ -261,6 +228,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       if not args.test:  # Validation mode
         # Get performance metrics on each dataset
         for dataset_name in dataset_info:
+          print(dataset_name)
           _pred_op = model_info[dataset_name]['test_pred_op']
           _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
           _eval_iter = dataset_info[dataset_name]['test_iter']
@@ -270,7 +238,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           model_info[dataset_name]['test_metrics'] = _metrics
 
         # Log performance(s)
-        str_ = '[epoch=%d step=%d] train_loss=%s' % (epoch, np.asscalar(step), train_loss)
+        str_ = '[epoch=%d/%d step=%d] train_loss=%s' % (epoch+1, args.num_train_epochs, np.asscalar(step), train_loss)
         for dataset_name in model_info:
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
@@ -371,31 +339,31 @@ def main():
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
 
-  encoders = build_encoders(vocab_size, args)
-  decoders = build_decoders(vocab_size, args)
-
-
-  # Creating the batch input pipelines.  These will load & batch
-  # examples from serialized TF record files.
-  for dataset_name in dataset_info:
-    _train_path = dataset_info[dataset_name]['train_path']
-    ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
-    dataset_info[dataset_name]['train_dataset'] = ds
-
-    # Validation or test dataset
-    _test_path = dataset_info[dataset_name]['test_path']
-    ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
-    dataset_info[dataset_name]['test_dataset'] = ds
-
-
-  # This finds the size of the largest training dataset.
-  training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
-  max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in training_files])
-
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
+
+    # Creating the batch input pipelines.  These will load & batch
+    # examples from serialized TF record files.
+    for dataset_name in dataset_info:
+      _train_path = dataset_info[dataset_name]['train_path']
+      ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
+      dataset_info[dataset_name]['train_dataset'] = ds
+
+      # Validation or test dataset
+      _test_path = dataset_info[dataset_name]['test_path']
+      ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
+      dataset_info[dataset_name]['test_dataset'] = ds
+
+
+    # This finds the size of the largest training dataset.
+    training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
+    max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in training_files])
+
     # Seed TensorFlow RNG
     tf.set_random_seed(args.seed)
+
+    encoders = build_encoders(vocab_size, args)
+    decoders = build_decoders(vocab_size, args)
 
     # Maybe check for NaNs
     if args.check_numerics:
@@ -484,15 +452,15 @@ def fill_info_dicts(dataset_info, model, args):
     # Training data, iterator, and batch
     _train_dataset = dataset_info[dataset_name]['train_dataset']
     _train_iter = _train_dataset.iterator
-    #_train_batch = _train_iter.get_next()
+    _train_init_op = _train_dataset.init_op
     _train_batch = _train_dataset.batch
     model_info[dataset_name]['train_iter'] = _train_iter
+    model_info[dataset_name]['train_init_op'] = _train_init_op
     model_info[dataset_name]['train_batch'] = _train_batch
 
     # Held-out test data, iterator, batch, and prediction operation
     _test_dataset = dataset_info[dataset_name]['test_dataset']
     _test_iter = _test_dataset.iterator
-    #_test_batch = _test_iter.get_next()
     _test_batch = _test_dataset.batch
     _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
     model_info[dataset_name]['test_iter'] = _test_iter
