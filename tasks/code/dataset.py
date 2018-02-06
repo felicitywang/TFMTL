@@ -107,7 +107,7 @@ class Dataset():
 
         with gzip.open(os.path.join(data_dir, "data.json.gz"), "rt") as file:
             data = json.load(file)
-            self._label_list = [item[label_field_name] for item in data]
+            self._label_list = [int(item[label_field_name]) for item in data]
             self._num_classes = len(set(self._label_list))
 
         # if sys.version_info[0] < 3:
@@ -468,7 +468,8 @@ def combine_dicts(x, y):
 def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                               max_document_length=None, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO, write_bow=True):
+                              valid_ratio=VALID_RATIO, write_bow=True,
+                              scale_ratio=None):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -484,7 +485,8 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     max_document_lengths = []
     for data_dir in data_dirs:
         dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False, write_bow=write_bow)
+                          generate_tf_record=False, write_bow=write_bow,
+                          scale_ratio=scale_ratio)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names
@@ -530,7 +532,8 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           generate_tf_record=True,
                           train_ratio=train_ratio,
                           valid_ratio=valid_ratio,
-                          write_bow=write_bow)
+                          write_bow=write_bow,
+                          scale_ratio=scale_ratio)
         vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
         vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
         vocab_sizes.append(dataset.vocab_size)
