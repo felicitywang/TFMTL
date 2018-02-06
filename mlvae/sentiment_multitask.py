@@ -28,13 +28,13 @@ from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 
-from mlvae.data import Pipeline
+from mlvae.pipeline import Pipeline
 from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 from mlvae.vae import dense_layer
 from mlvae.decoders import unigram
 
-from mlvae import MultiLabel
+from mlvae.mlvae_model import MultiLabel
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -269,7 +269,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
           _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
           str_ += ' num_eval_total (%s)=%d eval_acc (%s)=%f eval_align_acc (%s)=%f' % (dataset_name, _num_eval_total, dataset_name, _eval_acc, dataset_name, _eval_align_acc)
-      logging.info(str_)
+        logging.info(str_)
       else:
         raise "final evaluation mode not implemented"
 
