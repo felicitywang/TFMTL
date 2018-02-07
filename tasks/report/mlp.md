@@ -10,7 +10,7 @@ emotion|Crowdflower_Emotion_in_Text|34.8250%|10
 domain|MATERIAL|57.1429%|0
 
 ### hyperparameters:
-- learning rate: 0.00005
+- learning rate: 0.0001
 - dropout rate:0.5
 - batch size: 32
 - seed: 42

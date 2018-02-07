@@ -23,6 +23,7 @@ import re
 
 import numpy as np
 import six
+from tqdm import tqdm
 from tensorflow.python.platform import gfile
 
 # from .categorical_vocabulary import \
@@ -153,7 +154,8 @@ class VocabularyProcessor(object):
         Returns:
           self
         """
-        for tokens in self._tokenizer(raw_documents):
+        print("Fitting the vocabulary...")
+        for tokens in tqdm(self._tokenizer(raw_documents)):
             for token in tokens:
                 self.vocabulary_.add(token)
         # if self.min_frequency > 0:
@@ -162,18 +164,18 @@ class VocabularyProcessor(object):
         self.vocabulary_.freeze()
         return self
 
-    def fit_transform(self, raw_documents, unused_y=None):
-        """Learn the vocabulary dictionary and return indexies of words.
-
-        Args:
-          raw_documents: An iterable which yield either str or unicode.
-          unused_y: to match fit_transform signature of estimators.
-
-        Returns:
-          x: iterable, [n_samples, max_document_length]. Word-id matrix.
-        """
-        self.fit(raw_documents)
-        return self.transform(raw_documents)
+    # def fit_transform(self, raw_documents, unused_y=None):
+    #     """Learn the vocabulary dictionary and return indexies of words.
+    #
+    #     Args:
+    #       raw_documents: An iterable which yield either str or unicode.
+    #       unused_y: to match fit_transform signature of estimators.
+    #
+    #     Returns:
+    #       x: iterable, [n_samples, max_document_length]. Word-id matrix.
+    #     """
+    #     self.fit(raw_documents)
+    #     return self.transform(raw_documents)
 
     def transform(self, raw_documents):
         """Transform documents to word-id matrix.
@@ -188,7 +190,8 @@ class VocabularyProcessor(object):
           x: iterable, [n_samples, variable length]. Word-id matrix.
           (No padding)
         """
-        for tokens in self._tokenizer(raw_documents):
+        print("Transforming the texts into word ids without padding...")
+        for tokens in tqdm(self._tokenizer(raw_documents)):
             # word_ids = np.zeros(self.max_document_length, np.int64)
             word_ids = np.zeros(
                 min(len(tokens), self.max_document_length), np.int64)
@@ -211,7 +214,8 @@ class VocabularyProcessor(object):
           x: iterable, [n_samples, max_document_length]. Word-id matrix.
           (With padding.) (Original tensorflow function.)
         """
-        for tokens in self._tokenizer(raw_documents):
+        print("Transforming the texts into word ids with padding...")
+        for tokens in tqdm(self._tokenizer(raw_documents)):
             word_ids = np.zeros(self.max_document_length, np.int64)
             for idx, token in enumerate(tokens):
                 if idx >= self.max_document_length:
