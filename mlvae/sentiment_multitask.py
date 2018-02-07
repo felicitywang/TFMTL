@@ -67,18 +67,10 @@ def parse_args():
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
-  # p.add_argument('--labeled_batch_size', default=128, type=int,
-  #                help='Size of labeled batch.')
-  # p.add_argument('--unlabeled_batch_size', default=128, type=int,
-  #                help='Size of unlabeled batch.')
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
-  #p.add_argument('--max_N_train', type=int,
-  #               help='Size of largest training split among all datasets.')
   p.add_argument('--embed_dim', default=128, type=int,
                  help='Word embedding size')
-  p.add_argument('--encode_dim', default=128, type=int,
-                 help='Encoder embedding size')
   p.add_argument('--share_embed', action='store_true', default=False,
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
@@ -108,8 +100,6 @@ def parse_args():
                  help='Log where compute graph is placed.')
   p.add_argument('--force_gpu_compatible', action='store_true', default=False,
                  help='Throw error if any operations are not GPU-compatible')
-  p.add_argument('--tau0', default=0.5, type=float,
-                 help='Annealing parameter for Concrete/Gumbal-Softmax')
   p.add_argument('--label_key', default="label", type=str,
                  help='Key for label field in the batches')
   p.add_argument('--datasets', nargs='+', type=str,

@@ -37,16 +37,16 @@ ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategoric
 kl_divergence = tf.contrib.distributions.kl_divergence
 
 def default_hparams():
-  return HParams(embed_dim=256,
-                 latent_dim=256,
-                 encode_dim=256,
+  return HParams(embed_dim=128,
+                 latent_dim=128,
+                # encode_dim=128,
                  reuse_z=False,
                  word_embed_dim=256,
                  tau0=0.5,  # temperature
                  decay_tau=False,
                  alpha=0.1,
                  expectation='exact',
-                 num_z_samples=1,
+                 num_z_samples=5,
                  num_y_samples=1,
                  min_var=0.0001,
                  labels_key="label",
@@ -382,7 +382,8 @@ class MultiLabel(object):
       if z_samples is None:
         z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
       for z in z_samples:
-        res += self.get_label_log_probability(feature_dict, features, z, feature_name, feature_dict[feature_name], distribution_type='q')
+        # We want to maximize the log probability, which means minimize its negative
+        res += -1.0 * self.get_label_log_probability(feature_dict, features, z, feature_name, feature_dict[feature_name], distribution_type='q')
       disc_loss = res / len(z_samples)
     else:
       #Discriminative loss not defined for unobserved examples
