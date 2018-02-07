@@ -22,8 +22,7 @@ from __future__ import print_function
 import os
 import argparse as ap
 from six.moves import xrange
-from collections import namedtuple
-from collections import defaultdict
+from time import time
 
 import numpy as np
 import tensorflow as tf
@@ -201,6 +200,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     # Do training
     for epoch in xrange(args.num_train_epochs):
+      start_time = time()
+
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
@@ -229,8 +230,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                   _eval_iter, args)
           model_info[dataset_name]['test_metrics'] = _metrics
 
+        end_time = time()
+        elapsed = end_time - start_time
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d] train_loss=%s' % (epoch+1, args.num_train_epochs, np.asscalar(step), train_loss)
+        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s' % (epoch+1, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
         for dataset_name in model_info:
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
