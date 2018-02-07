@@ -83,9 +83,11 @@ def validate_labels(feature_dict, class_sizes):
 # Distributions
 def preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu):
   # Returns output of last layer of N-layer dense MLP that can then be passed to an output layer
+  #print('preoutput MLP inputs shape: {}'.format(inputs.get_shape().as_list()))
   x = maybe_concat(inputs)
   for i in range(num_layers):
     x = dense_layer(x, embed_dim, 'l{}'.format(i+1), activation=activation)
+  #print('preoutput MLP output shape: {}'.format(x.get_shape().as_list()))
   return x
 
 def MLP_gaussian_posterior(inputs, embed_dim, latent_dim, min_var=0.0):
@@ -99,8 +101,10 @@ def MLP_gaussian_posterior(inputs, embed_dim, latent_dim, min_var=0.0):
 
 def MLP_unnormalized_log_categorical(inputs, output_size, embed_dim):
   # Returns logits (unnormalized log probabilities)
+  #print('MLP inputs shape: {}'.format(inputs.get_shape().as_list()))
   x = preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu)
   x = dense_layer(x, output_size, 'logit', activation=None)
+  #print('MLP output shape: {}'.format(x.get_shape().as_list()))
   return x
 
 def MLP_ordinal(inputs, embed_dim):
@@ -203,12 +207,22 @@ class MultiLabel(object):
   def get_predictions(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
     inputs = batch[self._hp.inputs_key]
+
+    #print('inputs shape: {}'.format(inputs.get_shape().as_list()))
     if features is None:
       features = self.encode(inputs, feature_name)
+    #print('features shape: {}'.format(features.get_shape().as_list()))
     zm, zv = self._qz_template(features)
     z = gaussian_sample(zm, zv)
-    logits = self._qy_templates[feature_name](features + [z])
-    return tf.argmax(logits, axis=1)
+    #print('z shape: {}'.format(z.get_shape().as_list()))
+    logits = self._qy_templates[feature_name]([features, z])
+    #logits = tf.squeeze(logits, axis=0)
+    #print('logits shape: {}'.format(logits.get_shape().as_list()))
+
+    res = tf.argmax(logits, axis=1)
+    res = tf.expand_dims(res, axis=1)
+    #print('predicted labels shape: {}'.format(res.get_shape().as_list()))
+    return res
 
   def get_label_log_probability(self, feature_dict, features, z, feature_name, label_idx, distribution_type=None):
     # Returns the log probability (log p(y|z) or log q(y|x, z)) of a given label y
@@ -216,7 +230,7 @@ class MultiLabel(object):
     if distribution_type == 'p':
       logits = self._py_templates[feature_name](z)
     elif distribution_type == 'q':
-      logits = self._qy_templates[feature_name](features + [z])
+      logits = self._qy_templates[feature_name]([features, z])
     else:
       raise ValueError('unrecognized distribution type: %s' % (distribution_type))
     log_dist = tf.nn.log_softmax(logits)
@@ -247,7 +261,7 @@ class MultiLabel(object):
         instantiation[k] = tf.one_hot(feature_dict[k], self._class_sizes[k])  # one-hot
       else:
         # sample a value of y_k
-        qy_logits = self._qy_templates[k](features + [z])
+        qy_logits = self._qy_templates[k]([features, z])
         instantiation[k] = self.sample_y(qy_logits, k, argmax=False)  # approx one-hot
     return instantiation
 
@@ -282,7 +296,7 @@ class MultiLabel(object):
         if z_samples is None:
           z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
         for z in z_samples:          
-          qy_logits = self._qy_templates[feature_name](features + [z])
+          qy_logits = self._qy_templates[feature_name]([features, z])
           qcat = Categorical(logits=qy_logits, name='qy_{}_{}_cat'.format(feature_name, i))
           
           py_logits = self._py_templates[feature_name](z)
@@ -332,7 +346,7 @@ class MultiLabel(object):
         if z_samples is None:
           z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
         for z in z_samples:
-          qy_logits = self._qy_templates[feature_name](features + [z])
+          qy_logits = self._qy_templates[feature_name]([features, z])
           qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
                                                     logits=qy_logits,  # logits do *not* need to be manually exp-normalized for this distribution (the distribution automatically exp-normalizes)
                                                     name='qy_{}_{}_concrete'.format(feature_name, i))

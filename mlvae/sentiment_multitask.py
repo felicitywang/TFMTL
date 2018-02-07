@@ -33,6 +33,7 @@ from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 from mlvae.vae import dense_layer
 from mlvae.decoders import unigram
+from mlvae.clustering import accuracy
 
 from mlvae.mlvae_model import MultiLabel
 
@@ -227,11 +228,12 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       # Evaluate held-out accuracy
       if not args.test:  # Validation mode
         # Get performance metrics on each dataset
-        for dataset_name in dataset_info:
-          print(dataset_name)
+        for dataset_name in model_info:
+          #_test_batch = dataset_info[dataset_name]['test_dataset'].batch
+          #_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
           _pred_op = model_info[dataset_name]['test_pred_op']
           _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
-          _eval_iter = dataset_info[dataset_name]['test_iter']
+          _eval_iter = model_info[dataset_name]['test_iter']
           _metrics = compute_held_out_performance(sess, _pred_op,
                                                   _eval_labels,
                                                   _eval_iter, args)
@@ -265,8 +267,12 @@ def compute_held_out_performance(session, pred_op, eval_label,
     try:
       y, y_hat = session.run([eval_label, pred_op])
       assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
-      ys += y.tolist()
-      y_hats += y_hat.tolist()
+      y_list = y.tolist()
+      y_list = [item for sublist in y_list for item in sublist]
+      y_hat_list = y_hat.tolist()
+      y_hat_list = [item for sublist in y_hat_list for item in sublist]
+      ys += y_list
+      y_hats += y_hat_list
     except tf.errors.OutOfRangeError:
       break
 
