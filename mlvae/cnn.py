@@ -37,7 +37,7 @@ def conv_and_pool(inputs,
   """
 
   filter_sizes = []
-  for i in range(2, max_width+1):
+  for i in xrange(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
 
   # Convolutional layers

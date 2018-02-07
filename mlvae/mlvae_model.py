@@ -84,7 +84,7 @@ def validate_labels(feature_dict, class_sizes):
 def preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu):
   # Returns output of last layer of N-layer dense MLP that can then be passed to an output layer
   x = maybe_concat(inputs)
-  for i in range(num_layers):
+  for i in xrange(num_layers):
     x = dense_layer(x, embed_dim, 'l{}'.format(i+1), activation=activation)
   return x
 
@@ -261,7 +261,7 @@ class MultiLabel(object):
   def get_Eq_log_pz(self, zm, zv, zm_prior, zv_prior, z_samples=None):
     res = 0
     if z_samples is None:
-      z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+      z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
     for z in z_samples:
       res += log_normal(z, zm_prior, zv_prior)
     Eq_log_pz = res / len(z_samples)
@@ -270,7 +270,7 @@ class MultiLabel(object):
   def get_Eq_log_qz(self, zm, zv, z_samples=None):
     res = 0
     if z_samples is None:
-      z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+      z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
     for z in z_samples:
       res += log_normal(z, zm, zv)
     Eq_log_qz = res / len(z_samples)
@@ -287,7 +287,7 @@ class MultiLabel(object):
         # Does not easily decouple into q and p terms, so we calculate kl as a whole here
         res = 0
         if z_samples is None:
-          z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+          z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
         for z in z_samples:          
           qy_logits = self._qy_templates[feature_name]([features, z])
           qcat = Categorical(logits=qy_logits, name='qy_{}_{}_cat'.format(feature_name, i))
@@ -312,7 +312,7 @@ class MultiLabel(object):
       # feature is observed (in all examples in this batch)
       res_p = 0
       if z_samples is None:
-        z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+        z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
       for z in z_samples:
         log_probs = self.get_label_log_probability(features, z, feature_name, feature_dict[feature_name], distribution_type='p')
         res_p += log_probs
@@ -337,13 +337,13 @@ class MultiLabel(object):
       elif self._hp.expectation == 'sample':
         res = 0
         if z_samples is None:
-          z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+          z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
         for z in z_samples:
           qy_logits = self._qy_templates[feature_name]([features, z])
           qy_concrete = ExpRelaxedOneHotCategorical(self._tau,
                                                     logits=qy_logits,  # logits do *not* need to be manually exp-normalized for this distribution (the distribution automatically exp-normalizes)
                                                     name='qy_{}_{}_concrete'.format(feature_name, i))
-          for _ in range(self._hp.num_y_samples):
+          for _ in xrange(self._hp.num_y_samples):
             y_sample = tf.exp(qy_concrete.sample())  # each row is a continuous approximation to a categorical one-hot vector over label values
             # TODO: do we need to create a qcat here and find the (log) probability of the y_pred according to qcat (like we do to calculate Eq_log_py)?
             res += qy_concrete.log_prob(y_sample)  # log q(y_sample)
@@ -355,9 +355,9 @@ class MultiLabel(object):
   def get_Eq_log_px(self, targets, features, feature_dict, observed_dict, zm, zv, z_samples=None):
     res = 0
     if z_samples is None:
-      z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+      z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
     for z in z_samples:
-      for _ in range(self._hp.num_y_samples):
+      for _ in xrange(self._hp.num_y_samples):
         instantiation = self.get_label_instantiation(features, z, feature_dict, observed_dict)
         # instantiation dict to list with canonical ordering
         instantiation_list = [instantiation[k] for k in self._dataset_order]  # dataset_order: consistent ordering of tasks/datasets
@@ -373,7 +373,7 @@ class MultiLabel(object):
     if observed_dict[feature_name] is True:
       res = 0
       if z_samples is None:
-        z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+        z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
       for z in z_samples:
         # We want to maximize the log probability, which means minimize its negative
         res += -1.0 * self.get_label_log_probability(feature_dict, features, z, feature_name, feature_dict[feature_name], distribution_type='q')
@@ -382,7 +382,6 @@ class MultiLabel(object):
       #Discriminative loss not defined for unobserved examples
       pass
 
-    #logging.info("disc_loss shape: {}".format(disc_loss.get_shape().as_list()))
     return disc_loss
 
   def get_multi_task_loss(self, dataset_batches):
@@ -482,7 +481,7 @@ class MultiLabel(object):
     zm, zv = self._qz_template(features)
 
     if self._hp.reuse_z is True:
-      z_samples = [gaussian_sample(zm, zv) for _ in range(self._hp.num_z_samples)]
+      z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
     else:
       z_samples = None
 
@@ -490,8 +489,6 @@ class MultiLabel(object):
       logging.info("MODE: discriminative loss")
       # Discriminative loss
       d_loss = self.get_total_discriminative_loss(features, feature_dict, observed_dict, zm, zv, z_samples=z_samples)
-      #logging.info("d_loss shape: {}".format(d_loss.get_shape().as_list()))
-      #logging.info(self._batch_size)
       assert len(d_loss.get_shape()) == 1, "expected dim(d_loss) == 1"
       loss = tf.reduce_mean(d_loss, axis=0)  # average across batch
 
