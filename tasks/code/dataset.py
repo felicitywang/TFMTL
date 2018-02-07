@@ -29,6 +29,7 @@ import tensorflow as tf
 from pathlib import Path
 from tensorflow.contrib.learn.python.learn.preprocessing import \
     CategoricalVocabulary
+from tqdm import tqdm
 
 from tasks.code.data_prep import *
 from tasks.code.text import VocabularyProcessor
@@ -116,38 +117,30 @@ class Dataset():
         # else:
         #     self.text_list = df[text_field_names].astype(str).sum(
         #         axis=1).tolist()
+
         self.text_list = [' '.join([item[text_field_name]])
                           for text_field_name in text_field_names for
                           item in data]
-        # self.text_list = [' '.join(
-        #     [item[text_field_name]] for text_field_name in text_field_names)
-        #                   for item in data]
+        self.length_list = [len(text) for text in self.text_list]
 
-        # print(self.text_list)
+        self.text_list = [tweet_tokenizer.tokenize(text) + [' EOS'] for text in
+                          self.text_list]
 
         self.padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
         # takes as input)
-        # TODO more on tokenizer
-        self.old_length_list = [len(text) for text in self.text_list]
-        self.text_list = [tweet_clean(text) for text in
-                          self.text_list]
-        # self.text_list = [clean_str(text) for text in self.text_list]
-        # self.text_list = [' '.join([i.lower() for i in text.split()]) for
-        #                   text in self.text_list]
-        self.text_list = [text + " EOS" for text in self.text_list]
-        # print(self.text_list)
-        self.new_length_list = [len(text) for text in self.text_list]
 
         # get index
+        print("Generating train/valid/test splits...")
         index_path = os.path.join(data_dir, "index.json.gz")
         self.train_index, self.valid_index, self.test_index = self.split(
             index_path, train_ratio, valid_ratio, random_seed, scale_ratio)
 
+        # only compute from training data
         if max_document_length is None:
-            self.max_document_length = max(
-                [len(x.split()) for x in self.text_list])
+            self.max_document_length = max(len(self.text_list[i]) for i in
+                                           self.train_index)
             print("max document length (computed) =",
                   self.max_document_length)
         else:
@@ -202,8 +195,11 @@ class Dataset():
         self.valid_path = os.path.join(tfrecord_dir, 'valid.tf')
         self.test_path = os.path.join(tfrecord_dir, 'test.tf')
 
+        print("Writing TFRecord files for the training data...")
         self.write_examples(self.train_path, self.train_index, write_bow)
+        print("Writing TFRecord files for the validation data...")
         self.write_examples(self.valid_path, self.valid_index, write_bow)
+        print("Writing TFRecord files for the test data...")
         self.write_examples(self.test_path, self.test_index, write_bow)
 
         # save dataset arguments
@@ -236,12 +232,11 @@ class Dataset():
         vocab_processor = VocabularyProcessor(
             max_document_length=self.max_document_length,
             min_frequency=min_frequency,
-            max_frequency=max_frequency)
+            max_frequency=max_frequency,
+            tokenizer_fn=tokenizer)
 
         # build vocabulary only according to training data
-        train_list = [self.text_list[i] for i in self.train_index]
-
-        vocab_processor.fit(train_list)
+        vocab_processor.fit([self.text_list[i] for i in self.train_index])
 
         if self.padding is True:
             self.word_id_list = list(
@@ -280,33 +275,26 @@ class Dataset():
     def build_save_basic_vocab(self, vocab_dir):
         """Bulid vocabulary with min_frequency=0 for this dataset'
 
-
         training data only and save to the directory
         minimum frequency is always 0 so that all the words of this dataset(
         's training data) are taken into account when merging with other
         vocabularies"""
 
-        vocab_path = os.path.join(vocab_dir, "vocab_freq_dict.pickle")
-
-        # if Path(vocab_path).exists():
-        #     print("vocabulary file already exists!")
-        #     return
-        # print("vocabulary file doesn't exits. Generate.")
-
         vocab_processor = VocabularyProcessor(
-            max_document_length=self.max_document_length)
+            max_document_length=self.max_document_length,
+            tokenizer_fn=tokenizer)
 
         # build vocabulary only according to training data
-        train_list = [self.text_list[i] for i in self.train_index][:]
+        vocab_processor.fit([self.text_list[i] for i in self.train_index])
 
-        vocab_processor.fit(train_list)
         vocab_freq_dict = vocab_processor.vocabulary_._freq
         print("total word size =", len(vocab_freq_dict))
         try:
             os.stat(vocab_dir)
         except:
             os.mkdir(vocab_dir)
-        with open(vocab_dir + "vocab_freq_dict.pickle", "wb") as file:
+        with open(os.path.join(vocab_dir, "vocab_freq_dict.pickle"),
+                  "wb") as file:
             pickle.dump(vocab_freq_dict, file)
             file.close()
 
@@ -322,10 +310,10 @@ class Dataset():
         categorical_vocab.freeze()
 
         vocab_processor = VocabularyProcessor(
-
             vocabulary=categorical_vocab,
             max_document_length=self.max_document_length,
-            min_frequency=min_frequency)
+            min_frequency=min_frequency,
+            tokenizer_fn=tokenizer)
 
         if self.padding is True:
             self.word_id_list = list(
@@ -340,7 +328,7 @@ class Dataset():
         # write to TFRecord data file
         tf.logging.info("Writing to: %s", file_name)
         with tf.python_io.TFRecordWriter(file_name) as writer:
-            for index in split_index:
+            for index in tqdm(split_index):
                 feature = {
                     'label': tf.train.Feature(
                         int64_list=tf.train.Int64List(
@@ -350,10 +338,7 @@ class Dataset():
                             value=self.word_id_list[index])),
                     'old_length': tf.train.Feature(
                         int64_list=tf.train.Int64List(
-                            value=[self.old_length_list[index]])),
-                    'new_length': tf.train.Feature(
-                        int64_list=tf.train.Int64List(
-                            value=[self.new_length_list[index]])),
+                            value=[self.length_list[index]]))
                 }
 
                 if write_bow is True:
@@ -436,18 +421,6 @@ class Dataset():
         return np.split(index, [int((1.0 - valid_ratio) * len(index))])
 
 
-# add the frequencies of each in two vocabulary dictionary
-def merge_vocab_dict(vocab_dir_1, vocab_dir_2):
-    with open(vocab_dir_1 + "vocab_freq_dict.pickle", "rb") as file:
-        vocab_freq_dict_1 = pickle.load(file)
-        file.close()
-    with open(vocab_dir_2 + "vocab_freq_dict.pickle", "rb") as file:
-        vocab_freq_dict_2 = pickle.load(file)
-        file.close()
-    vocab_freq_dict = combine_dicts(vocab_freq_dict_1, vocab_freq_dict_2)
-    return vocab_freq_dict
-
-
 def merge_save_vocab_dicts(vocab_paths, save_path):
     """
     :param vocab_paths: list of vocabulary paths
@@ -458,6 +431,9 @@ def merge_save_vocab_dicts(vocab_paths, save_path):
         vocab_dict = pickle.load(open(path, "rb"))
         merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
     pickle.dump(merged_vocab_dict, open(save_path, 'wb'))
+
+    for key, value in merged_vocab_dict.items():
+        print(key, value)
 
 
 def combine_dicts(x, y):
@@ -519,6 +495,10 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
     vocab_v2i_dict = []
     vocab_sizes = []
     args_list = []
+
+    # max_document_length is only useful when padding is True
+    if max_document_length is None:
+        max_document_length = max(max_document_lengths)
     for data_dir in data_dirs:
         tfrecord_dir = os.path.join(new_data_dir, os.path.basename(
             os.path.normpath(data_dir)))
@@ -527,7 +507,7 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
                           tfrecord_dir=tfrecord_dir,
                           min_frequency=min_frequency,
                           max_frequency=max_frequency,
-                          max_document_length=max(max_document_lengths),
+                          max_document_length=max_document_length,
                           generate_basic_vocab=False,
                           generate_tf_record=True,
                           train_ratio=train_ratio,
@@ -539,9 +519,10 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
         vocab_sizes.append(dataset.vocab_size)
         args_list.append(dataset.args)
 
-    assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
-    assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
-    assert all(x == vocab_sizes[0] for x in vocab_sizes)
+    # tested
+    # assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
+    # assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
+    # assert all(x == vocab_sizes[0] for x in vocab_sizes)
 
     with open(new_data_dir + "vocab_v2i_dict.pickle", 'wb') as file:
         pickle.dump(vocab_v2i_dict[0], file)
@@ -554,6 +535,27 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
         file.close()
 
     return args_list
+
+
+# update_progress() : Displays or updates a console progress bar
+# Accepts a float between 0 and 1. Any int will be converted to a float.
+# A value under 0 represents a 'halt'.
+# A value at 1 or bigger represents 100%
+
+def tokenizer(iterator):
+    """Tokenizer generator.
+
+    Tokenize each string with nltk's tweet_tokenizer, and add an 'EOS' at
+    the end.
+
+    Args:
+      iterator: Input iterator with strings.
+
+    Yields:
+      array of tokens per each value in the input.
+    """
+    for value in iterator:
+        yield value
 
 
 def main():
