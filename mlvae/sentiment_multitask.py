@@ -104,7 +104,8 @@ def parse_args():
   p.add_argument('--datasets', nargs='+', type=str,
                  help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
   p.add_argument('--dataset_paths', nargs='+', type=str,
-                 help='Paths to the dataset(s) given by the --datasets flag (in the same order)')
+                 help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, test.tf)
+                 for the dataset(s) given by the --datasets flag (in the same order)""")
   p.add_argument('--vocab_path', type=str,
                  help='Path to the shared vocabulary for the datasets')
   return p.parse_args()
@@ -158,9 +159,6 @@ def get_num_records(tf_record_filename):
   for record in tf.python_io.tf_record_iterator(tf_record_filename):
       c += 1
   return c
-
-def get_data_split_path(dataset_name, split):
-  return "data/tf/{}/{}.tf".format(dataset_name, split)
 
 def get_vocab_size(vocab_file_path):
   with open(vocab_file_path, "r") as f:
@@ -323,11 +321,11 @@ def main():
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     _dir = dataset_info[dataset_name]['dir']
     # Set paths to TFRecord files
-    _dataset_train_path = os.path.join(_dir, get_data_split_path(dataset_name, "train"))
+    _dataset_train_path = os.path.join(_dir, "train.tf")
     if args.test:
-      _dataset_test_path = os.path.join(_dir, get_data_split_path(dataset_name, "test"))
+      _dataset_test_path = os.path.join(_dir, "test.tf")
     else:
-      _dataset_test_path = os.path.join(_dir, get_data_split_path(dataset_name, "valid"))
+      _dataset_test_path = os.path.join(_dir, "valid.tf")
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
     dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
