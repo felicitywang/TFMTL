@@ -14,14 +14,13 @@
 # ==============================================================================
 """Transform original LMRD files into json format"""
 
-
 # -*- coding: utf-8 -*-
 
 import gzip
 import json
 import re
-from os import listdir
 import sys
+from os import listdir
 
 dir = sys.argv[1]
 
@@ -35,7 +34,7 @@ path = dir + 'aclImdb/train/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
-    with open(path + file_name, "r") as file:
+    with open(path + file_name, "r", encoding='utf-8') as file:
         train_list.append({
             'index': index,
             'id': file_name_split[0],
@@ -49,7 +48,7 @@ path = dir + 'aclImdb/train/neg/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
-    with open(path + file_name, "r") as file:
+    with open(path + file_name, "r", encoding='utf-8') as file:
         train_list.append({
             'index': index,
             'id': file_name_split[0],
@@ -63,7 +62,7 @@ path = dir + 'aclImdb/test/pos/'
 file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
-    with open(path + file_name, "r") as file:
+    with open(path + file_name, "r", encoding='utf-8') as file:
         test_list.append({
             'index': index,
             'id': file_name_split[0],
@@ -78,7 +77,7 @@ file_names = listdir(path)
 for file_name in file_names:
     file_name_split = re.split("_|\.", file_name)
     (file_name_split)
-    with open(path + file_name, "r") as file:
+    with open(path + file_name, "r", encoding='utf-8') as file:
         test_list.append({
             'index': index,
             'id': file_name_split[0],
@@ -87,13 +86,12 @@ for file_name in file_names:
             'label': "0"})
     index += 1
 
-
 all_list = []
 all_list.extend(train_list)
 all_list.extend(test_list)
 
-with gzip.open(dir+'data.json.gz', mode='wt') as file:
-    json.dump(all_list, file)
+with gzip.open(dir + 'data.json.gz', mode='wt') as file:
+    json.dump(all_list, file, ensure_ascii=False)
 
 # indices
 train_index = list(range(len(train_list)))
@@ -105,4 +103,4 @@ index = {
 assert len(set(index['train']).intersection(index['test'])) == 0
 
 with gzip.open(dir + 'index.json.gz', mode='wt') as file:
-    json.dump(index, file)
+    json.dump(index, file, ensure_ascii=False)

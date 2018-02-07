@@ -7,19 +7,19 @@ In a variation on the popular task of sentiment analysis, this dataset contains 
 **Basic stats:**
 + \# items = 40,000
 + \# labels = 13
-	- anger
-	- boredom
-	- empty
-	- enthusiasm
-	- fun
-	- happiness
-	- hate
-	- love
-	- neutral
-	- relief
-	- sadness
-	- surprise
-	- worry
+	- 0: anger
+	- 1: boredom
+	- 2: empty
+	- 3: enthusiasm
+	- 4: fun
+	- 5: happiness
+	- 6: hate
+	- 7: love
+	- 8: neutral
+	- 9: relief
+	- 10: sadness
+	- 11: surprise
+	- 12: worry
 
 
 **Basic Unit**: paragraph

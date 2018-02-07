@@ -5,9 +5,14 @@ type|name|#items|#labels|unit|summary|split
 sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210
 sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000
 
+## requirements
+- pathlib==1.0.1 or pathlib2==2.3.0
+- nltk==3.2.5
+- pytreebank==0.2.4
+- tqdm
+
 ## steps
 
-install python package `pytreebank`
 run `setup.sh`
 
 ## MLP baseline

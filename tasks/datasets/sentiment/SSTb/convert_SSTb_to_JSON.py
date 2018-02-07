@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 """Transform original SSTb file into json format using pytreebank parser"""
+
+# -*- coding: utf-8 -*-
 
 import gzip
 import json
@@ -22,7 +25,7 @@ import sys
 import pytreebank
 
 path = sys.argv[1]
-dataset = pytreebank.load_sst(path+"trees/")
+dataset = pytreebank.load_sst(path + "trees/")
 
 train_data = dataset['train']
 dev_data = dataset['dev']
@@ -69,7 +72,7 @@ index_dict['train'] = train_index
 index_dict['valid'] = dev_index
 index_dict['test'] = test_index
 with gzip.open(path + 'index.json.gz', mode='wt') as file:
-    json.dump(index_dict, file)
+    json.dump(index_dict, file, ensure_ascii=False)
 
 with gzip.open(path + 'data.json.gz', mode='wt') as file:
-    json.dump(all_list, file)
+    json.dump(all_list, file, ensure_ascii=False)

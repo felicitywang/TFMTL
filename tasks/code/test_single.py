@@ -1,6 +1,4 @@
-#! /usr/bin/env python
-
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +13,18 @@
 # limitations under the License.
 # =============================================================================
 
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import os
+import pickle
 import random
 from time import time
 
+from tasks.code.cnn import CNN
 from tasks.code.dataset import Dataset
 from tasks.code.input_dataset import InputDataset
 from tasks.code.mlp import MLP
@@ -34,12 +36,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 flags = tf.flags
 logging = tf.logging
 
+flags.DEFINE_string("data_type", "json",
+                    "json/tf: json data and tf records data")
 flags.DEFINE_string("data_dir", "../datasets/sentiment/SSTb/",
-                    "Where data.json.gz is loaded.")
-flags.DEFINE_string("model_path", "./cache/best_model/model.ckpt",
+                    "Where data.json.gz or train/valid/test.tf are loaded.")
+flags.DEFINE_string("model_path", "./best_model/model.ckpt",
                     "Directory to save the best model checkpoint.")
 flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
-flags.DEFINE_string('encoding', 'bow', "Encoding method of word ids.")
+flags.DEFINE_boolean('write_bow', True, 'Whether to generate bag of words '
+                                        'feature in the TFRecord files.')
 # flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
 #                                                 "fields, separated by ' '")
 # flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
@@ -55,7 +60,7 @@ flags.DEFINE_integer("embed_dim", 128, "embedding dimension (VAE)")
 flags.DEFINE_integer("latent_dim", 128, "latent dimension (VAE)")
 flags.DEFINE_integer("seed", 42, "RNG seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size.")
-flags.DEFINE_integer("num_epoch", 20, "Total number of training epochs.")
+flags.DEFINE_integer("num_epoch", 40, "Total number of training epochs.")
 flags.DEFINE_integer('num_intra_threads', 0,
                      """Number of threads to use for intra-op
                      parallelism. If set to 0, the system will pick
@@ -69,21 +74,26 @@ flags.DEFINE_boolean('force_gpu_compatible', True,
                      GPU_Options""")
 flags.DEFINE_integer("min_freq", 10, 'minimum frequency to build the '
                                      'vocabulary.')
+flags.DEFINE_string("model", "mlp", "Which model to use: mlp/cnn")
 FLAGS = flags.FLAGS
 
 
-def make_model(batch, num_classes, is_training):
-    model = MLP(batch[FLAGS.encoding], batch['label'], num_classes=num_classes,
-                dropout_rate=0.5, layers=[100, 100], is_training=is_training)
+def make_model(batch, num_classes, vocab_size, is_training):
+    if FLAGS.model == 'mlp':
+        model = MLP(batch['bow'], batch['label'],
+                    num_classes=num_classes,
+                    dropout_rate=0.5,
+                    layers=[100, 100],
+                    is_training=is_training)
+    elif FLAGS.model == 'cnn':
+        model = CNN(batch['word_id'], batch['label'],
+                    num_classes=num_classes,
+                    input_size=vocab_size,
+                    # num_filter=128,
+                    is_training=is_training)
+    else:
+        raise ValueError("No such model!")
     return model
-
-
-#
-# def make_loss(batch):
-#     x = tf.embed_sequence(batch)
-#     x = cnn(x, ...)
-#     x = tf.layers.dense(x, output_size=NUMBER_OF_CLASSES)
-#     predicted_classes = tf.argmax(input=logits, axis=1)
 
 
 def run_epoch(sess, model, init_op=None, train_op=None):
@@ -133,32 +143,38 @@ def main(_):
     np.random.seed(FLAGS.seed)
     tf.set_random_seed(FLAGS.seed)
 
-    dataset = Dataset(data_dir=FLAGS.data_dir, encoding=FLAGS.encoding,
-                      # text_field_names=FLAGS.text_field_names,
-                      # label_field_name=FLAGS.text_field_name,
-                      min_frequency=FLAGS.min_freq,
-                      valid_ratio=0.1, train_ratio=0.8, random_seed=42,
-                      scale_ratio=FLAGS.scale_ratio, padding=True)
+    if FLAGS.data_type == 'json':
 
-    num_classes = dataset.num_classes
-    max_document_length = dataset.max_document_length
-    vocab_size = dataset.vocab_size
+        dataset = Dataset(data_dir=FLAGS.data_dir,
+                          write_bow=FLAGS.write_bow,
+                          # text_field_names=FLAGS.text_field_names,
+                          # label_field_name=FLAGS.text_field_name,
+                          min_frequency=FLAGS.min_freq,
+                          valid_ratio=0.1,
+                          train_ratio=0.8,
+                          random_seed=42,
+                          scale_ratio=FLAGS.scale_ratio)
+        args = dataset.args
 
-    train_path, valid_path, test_path = dataset.train_path, \
-                                        dataset.valid_path, \
-                                        dataset.test_path
-
-    features = {
-        'label': tf.FixedLenFeature([], dtype=tf.int64)
-    }
-    padding = True
-    if padding is True:
-        features['word_id'] = tf.FixedLenFeature([max_document_length],
-                                                 dtype=tf.int64)
+    elif FLAGS.data_type == 'tf':
+        args_path = os.path.join(FLAGS.data_dir, "args_dict.pickle")
+        with open(args_path, 'rb') as file:
+            args = pickle.load(file)
     else:
-        features['word_id'] = tf.VarLenFeature(dtype=tf.int64)
+        raise ValueError("data_type must be 'json' or 'tf'!")
 
-    if FLAGS.encoding == 'bow':
+    print("arguments of the dataset:", args)
+    num_classes = args['num_classes']
+    max_document_length = args['max_document_length']
+    vocab_size = args['vocab_size']
+    train_path = args['train_path']
+    valid_path = args['valid_path']
+    test_path = args['test_path']
+
+    features = {'label': tf.FixedLenFeature([], dtype=tf.int64),
+                'word_id': tf.VarLenFeature(dtype=tf.int64)}
+
+    if FLAGS.write_bow is True:
         features['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
 
     with tf.Graph().as_default():
@@ -167,7 +183,8 @@ def main(_):
             train_batch = dataset.batch
             train_init = dataset.init_op
             with tf.variable_scope("Model", reuse=None):
-                mtrain = make_model(train_batch, num_classes, is_training=True)
+                mtrain = make_model(train_batch, num_classes, vocab_size,
+                                    is_training=True)
                 opt = Optimizer()
                 train_op = opt.optimize(mtrain.loss)
         with tf.name_scope("Valid"):
@@ -175,14 +192,15 @@ def main(_):
             valid_batch = dataset.batch
             valid_init = dataset.init_op
             with tf.variable_scope("Model", reuse=True):
-                mvalid = make_model(valid_batch, num_classes,
+                mvalid = make_model(valid_batch, num_classes, vocab_size,
                                     is_training=False)
         with tf.name_scope("Test"):
             dataset = InputDataset(test_path, features, FLAGS.batch_size)
             test_batch = dataset.batch
             test_init = dataset.init_op
             with tf.variable_scope("Model", reuse=True):
-                mtest = make_model(test_batch, num_classes, is_training=False)
+                mtest = make_model(test_batch, num_classes,
+                                   vocab_size, is_training=False)
 
         saver = tf.train.Saver(var_list=tf.global_variables())
         with tf.train.SingularMonitoredSession() as session:
