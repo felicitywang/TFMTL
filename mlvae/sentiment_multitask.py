@@ -68,17 +68,17 @@ def parse_args():
                  help='Size of batch.')
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--embed_dim', default=128, type=int,
+  p.add_argument('--embed_dim', default=256, type=int,
                  help='Word embedding size')
   p.add_argument('--share_embed', action='store_true', default=False,
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
-  p.add_argument('--lr0', default=0.0002, type=float,
+  p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
-  p.add_argument('--num_train_epochs', default=100, type=int,
+  p.add_argument('--num_train_epochs', default=50, type=int,
                  help='Number of training epochs.')
   p.add_argument('--print_trainable_variables', action='store_true',
                  default=False,

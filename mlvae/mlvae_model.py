@@ -37,16 +37,16 @@ ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategoric
 kl_divergence = tf.contrib.distributions.kl_divergence
 
 def default_hparams():
-  return HParams(embed_dim=128,
-                 latent_dim=128,
+  return HParams(embed_dim=256,
+                 latent_dim=256,
                 # encode_dim=128,
-                 reuse_z=False,
+                 reuse_z=True,
                  word_embed_dim=256,
                  tau0=0.5,  # temperature
                  decay_tau=False,
                  alpha=0.1,
                  expectation='exact',
-                 num_z_samples=5,
+                 num_z_samples=20,
                  num_y_samples=1,
                  min_var=0.0001,
                  labels_key="label",
