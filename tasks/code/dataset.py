@@ -64,7 +64,7 @@ class Dataset():
                  random_seed=RANDOM_SEED,
                  subsample_ratio=1,
                  padding=False,
-                 write_bow=True
+                 write_bow=False
                  ):
         """
         :param data_type: whether the data is json data or tf records

@@ -63,7 +63,7 @@ args_merged.json) on my laptop(16G RAM, 500G SSD)
 - 5 minutes for `setup.sh` with `min_freq=0` and `write_bow=true` on my laptop
 - 18 minutes for `setup.sh` `with min_freq=50` and `write_bow=true`(grid b02)
 
-## memory
+## file size
 - raw(original):
     - SSTb: 3.8M
     - LMRD: 308.3M(zipped: 84M)
