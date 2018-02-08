@@ -9,23 +9,13 @@ with open('args_' + sys.argv[1] + '.json', 'rt') as file:
 json_dir = "data/json/" + sys.argv[1]
 
 tfrecord_dir = "data/tf/single/"
-try:
-    os.stat(tfrecord_dir)
-except:
-    os.mkdir(tfrecord_dir)
-
 tfrecord_dir += sys.argv[1] + "/"
-try:
-    os.stat(tfrecord_dir)
-except:
-    os.mkdir(tfrecord_dir)
-
 tfrecord_dir += "min_" + str(args_single['min_frequency']) + \
                 "_max_" + str(args_single['max_frequency']) + "/"
 try:
     os.stat(tfrecord_dir)
 except:
-    os.mkdir(tfrecord_dir)
+    os.makedirs(tfrecord_dir)
 
 dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,

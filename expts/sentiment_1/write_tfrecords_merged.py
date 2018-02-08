@@ -7,8 +7,7 @@ with open('args_merged.json', 'rt') as file:
 json_dirs = ["data/json/SSTb/", "data/json/LMRD/"]
 tfrecord_dir = "data/tf/merged/"
 tfrecord_dir += "min_" + str(args_merged['min_frequency']) + \
-                "_max_" + str(args_merged['max_frequency']) + "/    "
-merged_dir = "data/tf/"
+                "_max_" + str(args_merged['max_frequency'])
 tfrecord_dirs = [tfrecord_dir + '/SSTb/', tfrecord_dir + '/LMRD/']
 
 merge_dict_write_tfrecord(json_dirs=json_dirs,
