@@ -19,8 +19,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import codecs
+import json
 import os
-import pickle
 import random
 from time import time
 
@@ -40,7 +41,7 @@ logging = tf.logging
 
 flags.DEFINE_string("data_type", "json",
                     "json/tf: json data and tf records data")
-flags.DEFINE_string("json_dir", "../datasets/sentiment/SSTb/",
+flags.DEFINE_string("data_dir", "../datasets/sentiment/SSTb/",
                     "Where data.json.gz or train/valid/test.tf are loaded.")
 flags.DEFINE_string("model_path", "./best_model/model.ckpt",
                     "Directory to save the best model checkpoint.")
@@ -152,27 +153,27 @@ def main(_):
 
     if FLAGS.data_type == 'json':
 
-        json_dir = FLAGS.json_dir
+        data_dir = FLAGS.data_dir
 
-        if Path(os.path.join(json_dir, "label_field_name")).exists():
-            file = open(os.path.join(json_dir, "label_field_name"))
+        if Path(os.path.join(data_dir, "label_field_name")).exists():
+            file = open(os.path.join(data_dir, "label_field_name"))
             label_field_name = file.readline().strip()[0]
         else:
             label_field_name = 'label'
         print("label:", label_field_name)
 
-        if Path(os.path.join(json_dir, "text_field_names")).exists():
-            file = open(os.path.join(json_dir, "text_field_names"))
+        if Path(os.path.join(data_dir, "text_field_names")).exists():
+            file = open(os.path.join(data_dir, "text_field_names"))
             text_field_names = file.readline().strip()
         else:
             text_field_names = ['text']
         print("texts:", text_field_names)
 
-        tfrecord_dir = FLAGS.json_dir + "single/"
+        tfrecord_dir = FLAGS.data_dir + "single/"
         tfrecord_dir += "min" + str(FLAGS.min_freq) + "_max_" + str(
             FLAGS.max_freq)
 
-        dataset = Dataset(json_dir=FLAGS.json_dir,
+        dataset = Dataset(data_dir=FLAGS.data_dir,
                           load_vocab=False,
                           generate_basic_vocab=False,
                           generate_tf_record=True,
@@ -191,9 +192,10 @@ def main(_):
         args = dataset.args
 
     elif FLAGS.data_type == 'tf':
-        args_path = os.path.join(FLAGS.json_dir, "args_dict.pickle")
-        with open(args_path, 'rb') as file:
-            args = pickle.load(file)
+        args_path = os.path.join(FLAGS.data_dir, "args.json")
+        with codecs.open(args_path, 'r', encoding='utf-8') as file:
+            args = json.load(file)
+            file.close()
     else:
         raise ValueError("data_type must be 'json' or 'tf'!")
 

@@ -59,8 +59,8 @@ class Dataset():
                  max_frequency=-1,
                  text_field_names=['text'],
                  label_field_name='label',
-                 valid_ratio=VALID_RATIO,
                  train_ratio=TRAIN_RATIO,
+                 valid_ratio=VALID_RATIO,
                  random_seed=RANDOM_SEED,
                  subsample_ratio=1,
                  padding=False,
@@ -299,7 +299,7 @@ class Dataset():
 
     def load_vocab(self, vocab_dir, min_frequency, max_frequency):
         with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
-                         mode="rt", encoding='utf-8') as file:
+                         mode='r', encoding='utf-8') as file:
             self.vocab_freq_dict = json.load(file)
             file.close()
         categorical_vocab = CategoricalVocabulary()
@@ -436,7 +436,7 @@ def merge_save_vocab_dicts(vocab_paths, save_path):
         vocab_dict = json.load(open(path, "rt"))
         merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
 
-    print(merged_vocab_dict)
+    # print(merged_vocab_dict)
 
     with codecs.open(save_path, mode='w', encoding='utf-8') as file:
         json.dump(merged_vocab_dict, file, ensure_ascii=False, indent=4)
@@ -451,8 +451,8 @@ def combine_dicts(x, y):
 def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
                               max_document_length=-1, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO, write_bow=True,
-                              subsample_ratio=1):
+                              valid_ratio=VALID_RATIO, subsample_ratio=1,
+                              padding=False, write_bow=False):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -517,16 +517,17 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
         dataset = Dataset(json_dir,
                           tfrecord_dir=tfrecord_dir,
                           vocab_dir=merged_dir,
+                          generate_basic_vocab=False,
+                          load_vocab=True,
+                          generate_tf_record=True,
                           max_document_length=max_document_length,
                           min_frequency=min_frequency,
                           max_frequency=max_frequency,
                           train_ratio=train_ratio,
                           valid_ratio=valid_ratio,
-                          write_bow=write_bow,
                           subsample_ratio=subsample_ratio,
-                          generate_basic_vocab=False,
-                          load_vocab=True,
-                          generate_tf_record=True
+                          padding=padding,
+                          write_bow=write_bow
                           )
         vocab_v2i_dicts.append(dataset.categorical_vocab._mapping)
         vocab_i2v_lists.append(dataset.categorical_vocab._reverse_mapping)
@@ -538,20 +539,20 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
     # assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
     # assert all(x == vocab_sizes[0] for x in vocab_sizes)
 
-    with open(os.path.join(merged_dir, 'vocab_v2i.json'),
-              mode='w') as file:
+    with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
+                     mode='w', encoding='utf-8') as file:
         json.dump(vocab_v2i_dicts[0], file, ensure_ascii=False, indent=4)
         file.close()
 
     vocab_i2v_dict = dict()
     for i in range(len(vocab_i2v_lists[0])):
         vocab_i2v_dict[i] = vocab_i2v_lists[0][i]
-    with open(os.path.join(merged_dir, 'vocab_i2v.json'),
-              mode='w') as file:
+    with codecs.open(os.path.join(merged_dir, 'vocab_i2v.json'),
+                     mode='w', encoding='utf-8') as file:
         json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
         file.close()
 
-    with open(merged_dir + "vocab_size.txt", "w") as file:
+    with open(os.path.join(merged_dir, "vocab_size.txt"), "w") as file:
         file.write(str(vocab_sizes[0]))
         file.close()
 

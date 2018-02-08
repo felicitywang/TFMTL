@@ -30,7 +30,7 @@ python test_single.py --data_type=json --data_dir=../tasks/datasets/sentiment/SS
 ```
 
 ```
-python test_single.py --data_type=tf --data_dir=../../expts/sentiment_1/data/tf/SSTb --min_freq=1  --model=mlp --bow=True
+python test_single.py --data_type=tf --data_dir=../../expts/sentiment_1/data/tf/SSTb --model=mlp --bow=True
 ```
 
 - an example testing CNN:
