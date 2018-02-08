@@ -48,13 +48,12 @@ def reduce_var_over_time(x, lengths=None, avg=None, time_axis=1):
   avg = tf.tile(avg, [1, time_dim])
   sd = tf.squared_difference(x, avg)
   if lengths is None:
-    totals = tf.reduce_sum(sd, keepdims=False, axis=time_axis)
-    return totals / (x.get_shape().as_list()[time_axis])
+    return reduce_avg_over_time(sd, lengths=None, time_axis=time_axis)
   else:
     mask = tf.to_float(tf.sequence_mask(lengths))
     masked_sd = tf.multiply(sd, mask)
-    totals = tf.reduce_sum(masked_sd, keepdims=False, axis=time_axis)
-    return totals / lengths
+    return reduce_avg_over_time(masked_sd, lengths=lengths,
+                                time_axis=time_axis)
 
 
 def reduce_over_time(x, lengths=None, max=True, min=False, avg=False,
