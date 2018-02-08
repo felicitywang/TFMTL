@@ -19,10 +19,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import codecs
 import gzip
 import json
 import os
-import pickle
 
 import numpy as np
 import tensorflow as tf
@@ -41,28 +41,39 @@ logging = tf.logging
 FLAGS = flags.FLAGS
 from six.moves import xrange
 
-TRAIN_RATIO = 0.8
-VALID_RATIO = 0.1
+TRAIN_RATIO = 0.8  # train out of all
+VALID_RATIO = 0.1  # valid out of all / valid out of train
 RANDOM_SEED = 42
 
 
 class Dataset():
-    def __init__(self, data_dir, vocab_dir=None, tfrecord_dir=None,
-                 max_document_length=None,
-                 min_frequency=0, max_frequency=-1, write_bow=True,
-                 text_field_names=None,
-                 label_field_name=None,
-                 valid_ratio=VALID_RATIO, train_ratio=TRAIN_RATIO,
+    def __init__(self,
+                 json_dir,
+                 load_vocab,
+                 generate_basic_vocab,
+                 generate_tf_record,
+                 vocab_dir,
+                 tfrecord_dir,
+                 max_document_length=-1,
+                 min_frequency=0,
+                 max_frequency=-1,
+                 text_field_names=['text'],
+                 label_field_name='label',
+                 valid_ratio=VALID_RATIO,
+                 train_ratio=TRAIN_RATIO,
                  random_seed=RANDOM_SEED,
-                 scale_ratio=None, generate_basic_vocab=False,
-                 generate_tf_record=True, padding=False):
+                 subsample_ratio=1,
+                 padding=False,
+                 write_bow=True
+                 ):
         """
         :param data_type: whether the data is json data or tf records
-        :param data_dir: where data.json.gz and index.json.gz are
+        :param json_dir: where data.json.gz and index.json.gz are
         located, and vocabulary/tf records built from the single datasets
         are to be saved
-        :param vocab_dir: directory of the public vocabulary frequency dict
-        pickle file, None if building its own vocabulary
+        :param load_vocab: True if to use the given vocabulary
+        :param vocab_dir: directory to load the given (e.g. merged) vocabulary
+        frequency dict json file or to save the self-generated vocabulary
         :param tfrecord_dir: directory to save generated TFRecord files
         :param max_document_length: maximum document length for the mapped
         word ids, computed as the maximum document length of all the
@@ -73,16 +84,17 @@ class Dataset():
         words that appear more than or equal to this number would be discarded
         :param bow: True if to write bag of words as a feature in the tf record
         :param text_field_names: string of a list of text field names joined
-        with spaces, read from data_dir if None
+        with spaces, read from json_dir if None
         :param label_field_name: label field name(only 1), read from
-        data_dir if None
-        :param valid_ratio: how many data to use as valid data if valid
-        split not given
+        json_dir if None
+        :param valid_ratio: how many data out of all data to use as valid
+        data if not splits are given, or how many data out of train data to
+        use as valid if train/test splits are given
         :param train_ratio: how many data to use as train data if train
         split not given
         :param random_seed: random seed used in random spliting, makeing
         sure the same random split is used when given the same random seed
-        :param scale_ratio: randomly takes part of the datasets when it's
+        :param subsample_ratio: randomly takes part of the datasets when it's
         too large
         :param generate_basic_vocab: True if the basic vocabulary(which
         shall be used to merge the public vocabulary) needs to be generated
@@ -90,26 +102,13 @@ class Dataset():
         :param padding: True if word_id needs padding to max_document_length
         """
 
-        print("data in", data_dir)
+        print("data in", json_dir)
 
-        if label_field_name is None:
-            label_field_name = 'label'
-            if Path(os.path.join(data_dir, "label_field_name")).exists():
-                file = open(os.path.join(data_dir, "label_field_name"))
-                label_field_name = file.readline().strip()
-            print("labels:", label_field_name)
-
-        if text_field_names is None:
-            text_field_names = ['text']
-            if Path(os.path.join(data_dir, "text_field_names")).exists():
-                file = open(os.path.join(data_dir, "text_field_names"))
-                text_field_names = file.readline().split()
-            print("text:", text_field_names)
-
-        with gzip.open(os.path.join(data_dir, "data.json.gz"), "rt") as file:
+        with gzip.open(os.path.join(json_dir, "data.json.gz"), "rt") as file:
             data = json.load(file)
-            self._label_list = [int(item[label_field_name]) for item in data]
-            self._num_classes = len(set(self._label_list))
+            file.close()
+        self._label_list = [int(item[label_field_name]) for item in data]
+        self._num_classes = len(set(self._label_list))
 
         # if sys.version_info[0] < 3:
         #     self.text_list = df[text_field_names].astype(unicode).sum(
@@ -123,7 +122,7 @@ class Dataset():
                           item in data]
         self.length_list = [len(text) for text in self.text_list]
 
-        self.text_list = [tweet_tokenizer.tokenize(text) + [' EOS'] for text in
+        self.text_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text in
                           self.text_list]
 
         self.padding = padding
@@ -133,12 +132,12 @@ class Dataset():
 
         # get index
         print("Generating train/valid/test splits...")
-        index_path = os.path.join(data_dir, "index.json.gz")
+        index_path = os.path.join(json_dir, "index.json.gz")
         self.train_index, self.valid_index, self.test_index = self.split(
-            index_path, train_ratio, valid_ratio, random_seed, scale_ratio)
+            index_path, train_ratio, valid_ratio, random_seed, subsample_ratio)
 
         # only compute from training data
-        if max_document_length is None:
+        if max_document_length == -1:
             self.max_document_length = max(len(self.text_list[i]) for i in
                                            self.train_index)
             print("max document length (computed) =",
@@ -146,6 +145,7 @@ class Dataset():
         else:
             self.max_document_length = max_document_length
             print("max document length (given) =", self.max_document_length)
+        print(self.max_document_length)
 
         self.vocab_dict = None
         self.categorical_vocab = None
@@ -153,21 +153,18 @@ class Dataset():
         # generate and save the vocabulary which contains all the words
         if generate_basic_vocab:
             print("Generating the basic vocabulary.")
-            self.build_save_basic_vocab(
-                vocab_dir=os.path.join(data_dir, "single/"))
+            self.build_save_basic_vocab(vocab_dir=json_dir)
 
         if generate_tf_record is False:
             print("No need to generate tf records. Done. ")
             return
 
-        if vocab_dir is None:
+        if load_vocab is False:
             print("No vocabulary given. Generate a new one.")
-            vocab_dir = os.path.join(data_dir, "single/")
             self.categorical_vocab = self.build_vocab(
                 min_frequency=min_frequency,
                 max_frequency=max_frequency, vocab_dir=vocab_dir)
-            # save
-            self.save_vocab(vocab_dir, min_frequency)
+            self.save_vocab(tfrecord_dir)
 
         else:
             print("Public vocabulary given. Use that to build vocabulary "
@@ -176,17 +173,14 @@ class Dataset():
                                                      min_frequency=min_frequency,
                                                      max_frequency=max_frequency)
         # save mapping/reverse mapping to the disk
-        # vocab_dir/vocab_freq_dict_(min_freq).pickle
-        # vocab_i2v_list_(min_freq).pickle
-        # vocab_v2i_dict_(min_freq).pickle
-        # save
+        # freq:            vocab_dir/vocab_freq.json
+        # mapping:         vocab_dir/vocab_v2i.json
+        # reverse mapping: vocab_dir/vocab_i2v.json(sorted according to freq)
 
         self.vocab_size = len(self.categorical_vocab._mapping)
         print("used vocab size =", self.vocab_size)
 
         # write to tf records
-        if tfrecord_dir is None:
-            tfrecord_dir = data_dir + 'single/'
         try:
             os.stat(tfrecord_dir)
         except:
@@ -218,10 +212,10 @@ class Dataset():
             'test_size': len(self.test_index)
         }
         print(self.args)
-        args_path = os.path.join(tfrecord_dir, "args_dict.pickle")
-        with open(args_path, "wb") as file:
-            pickle.dump(self.args, file)
-            print("data arguments saved to", args_path)
+        args_path = os.path.join(tfrecord_dir, "args.json")
+        with codecs.open(args_path, mode='w', encoding='utf-8') as file:
+            json.dump(self.args, file, ensure_ascii=False, indent=4)
+            file.close()
 
     def build_vocab(self, min_frequency, max_frequency, vocab_dir):
         """Builds vocabulary for this dataset only using tensorflow's
@@ -249,27 +243,31 @@ class Dataset():
 
         return vocab_processor.vocabulary_
 
-    def save_vocab(self, vocab_dir, min_frequency):
+    def save_vocab(self, vocab_dir):
 
         # save the built vocab to the disk for future use
         try:
             os.stat(vocab_dir)
         except:
             os.mkdir(vocab_dir)
-        with open(vocab_dir + "vocab_freq_dict_" + str(
-                min_frequency) + ".pickle",
-                  "wb") as file:
-            pickle.dump(self.vocab_freq_dict, file)
+
+        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+                         mode='w', encoding='utf-8')as file:
+            json.dump(self.vocab_freq_dict, file, ensure_ascii=False, indent=4)
             file.close()
-        with open(vocab_dir + "vocab_v2i_dict_" + str(
-                min_frequency) + ".pickle",
-                  "wb") as file:
-            pickle.dump(self.categorical_vocab._mapping, file)
+
+        with codecs.open(os.path.join(vocab_dir, "vocab_v2i.json"),
+                         mode='w', encoding='utf-8')as file:
+            json.dump(self.categorical_vocab._mapping, file,
+                      ensure_ascii=False, indent=4)
             file.close()
-        with open(vocab_dir + "vocab_i2v_list_" + str(
-                min_frequency) + ".pickle",
-                  "wb") as file:
-            pickle.dump(self.categorical_vocab._reverse_mapping, file)
+
+        vocab_i2v_dict = dict()
+        for i in range(len(self.categorical_vocab._reverse_mapping)):
+            vocab_i2v_dict[i] = self.categorical_vocab._reverse_mapping[i]
+        with codecs.open(os.path.join(vocab_dir, "vocab_i2v.json"),
+                         mode='w', encoding='utf-8')as file:
+            json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
             file.close()
 
     def build_save_basic_vocab(self, vocab_dir):
@@ -293,14 +291,16 @@ class Dataset():
             os.stat(vocab_dir)
         except:
             os.mkdir(vocab_dir)
-        with open(os.path.join(vocab_dir, "vocab_freq_dict.pickle"),
-                  "wb") as file:
-            pickle.dump(vocab_freq_dict, file)
+
+        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+                         mode='w', encoding='utf-8') as file:
+            json.dump(vocab_freq_dict, file, ensure_ascii=False, indent=4)
             file.close()
 
     def load_vocab(self, vocab_dir, min_frequency, max_frequency):
-        with open(vocab_dir + "vocab_freq_dict.pickle", "rb") as file:
-            self.vocab_freq_dict = pickle.load(file)
+        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+                         mode="rt", encoding='utf-8') as file:
+            self.vocab_freq_dict = json.load(file)
             file.close()
         categorical_vocab = CategoricalVocabulary()
         for word in self.vocab_freq_dict:
@@ -354,7 +354,7 @@ class Dataset():
                 writer.write(example.SerializeToString())
 
     def split(self, index_path, train_ratio, valid_ratio, random_seed,
-              scale_ratio):
+              subsample_ratio):
         if not Path(index_path).exists():
             # no split given
             print("no split given")
@@ -364,7 +364,9 @@ class Dataset():
                                                      random_seed)
 
         else:
-            index = json.load(gzip.open(index_path, mode='rt'))
+            with gzip.open(index_path, mode='rt') as file:
+                index = json.load(file)
+                file.close()
             assert 'train' in index and 'test' in index
             train_index = index['train']
             test_index = index['test']
@@ -388,20 +390,23 @@ class Dataset():
                                                        len(valid_index),
                                                        len(test_index)))
 
-        if scale_ratio is not None and scale_ratio < 1.0:
-            train_index = self.scale(train_index, random_seed, scale_ratio)
-            valid_index = self.scale(valid_index, random_seed, scale_ratio)
-            test_index = self.scale(test_index, random_seed, scale_ratio)
+        if subsample_ratio is not None and subsample_ratio < 1.0:
+            train_index = self.subsample(train_index, random_seed,
+                                         subsample_ratio)
+            valid_index = self.subsample(valid_index, random_seed,
+                                         subsample_ratio)
+            test_index = self.subsample(test_index, random_seed,
+                                        subsample_ratio)
             print("train : valid : test = %d : %d : %d" % (len(train_index),
                                                            len(valid_index),
                                                            len(test_index)))
 
         return train_index, valid_index, test_index
 
-    def scale(self, index, random_seed, scale_ratio=0.1):
+    def subsample(self, index, random_seed, subsample_ratio=0.1):
         np.random.seed(random_seed)
         index = np.random.permutation(index)
-        return np.split(index, [int(scale_ratio * len(index))])[0]
+        return np.split(index, [int(subsample_ratio * len(index))])[0]
 
     def random_split_train_valid_test(self, length, train_ratio, valid_ratio,
                                       random_seed):
@@ -428,12 +433,14 @@ def merge_save_vocab_dicts(vocab_paths, save_path):
     """
     merged_vocab_dict = dict()
     for path in vocab_paths:
-        vocab_dict = pickle.load(open(path, "rb"))
+        vocab_dict = json.load(open(path, "rt"))
         merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
-    pickle.dump(merged_vocab_dict, open(save_path, 'wb'))
 
-    for key, value in merged_vocab_dict.items():
-        print(key, value)
+    print(merged_vocab_dict)
+
+    with codecs.open(save_path, mode='w', encoding='utf-8') as file:
+        json.dump(merged_vocab_dict, file, ensure_ascii=False, indent=4)
+        file.close()
 
 
 def combine_dicts(x, y):
@@ -441,38 +448,43 @@ def combine_dicts(x, y):
             set(itertools.chain(x, y))}
 
 
-def merge_dict_write_tfrecord(data_dirs, new_data_dir,
-                              max_document_length=None, min_frequency=0,
+def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
+                              max_document_length=-1, min_frequency=0,
                               max_frequency=-1, train_ratio=TRAIN_RATIO,
                               valid_ratio=VALID_RATIO, write_bow=True,
-                              scale_ratio=None):
+                              subsample_ratio=1):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
     2. merge the vocabulary
     3. generate and save TFRecord files for each dataset using the merged vocab
-    :param data_dirs: list of dataset directories
-    :param data_dirs: new directory to save all the data
+    :param json_dirs: list of dataset directories
+    :param json_dirs: new directory to save all the data
     :return:
     """
     # generate vocab for every dataset without writing their own TFRecord files
     # the generated vocab freq dicts shall be saved at
-    # data_dir/single/vocab_freq_dict.pickle
+    # json_dir/vocab_freq_dict.json
     max_document_lengths = []
-    for data_dir in data_dirs:
-        dataset = Dataset(data_dir, generate_basic_vocab=True,
-                          generate_tf_record=False, write_bow=write_bow,
-                          scale_ratio=scale_ratio)
+    for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
+        dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
+                          vocab_dir=merged_dir,
+                          max_document_length=-1,
+                          min_frequency=0,
+                          max_frequency=-1,
+                          generate_basic_vocab=True,
+                          load_vocab=False,
+                          generate_tf_record=False)
         max_document_lengths.append(dataset.max_document_length)
 
     # new data dir based all the datasets' names
-    data_names = [os.path.basename(os.path.normpath(data_dir)) for data_dir
-                  in data_dirs]
+    data_names = [os.path.basename(os.path.normpath(json_dir)) for json_dir
+                  in json_dirs]
     data_names.sort()
     try:
-        os.stat(new_data_dir)
+        os.stat(merged_dir)
     except:
-        os.mkdir(new_data_dir)
+        os.mkdir(merged_dir)
     # new_data_dir = new_data_dir + '_'.join(data_names) + '/'
     # try:
     #     os.stat(new_data_dir)
@@ -481,60 +493,69 @@ def merge_dict_write_tfrecord(data_dirs, new_data_dir,
 
     # merge all the vocabularies
     vocab_paths = []
-    for data_dir in data_dirs:
-        vocab_path = os.path.join(data_dir, "single/vocab_freq_dict.pickle")
+    for json_dir in json_dirs:
+        vocab_path = os.path.join(json_dir, "vocab_freq.json")
         vocab_paths.append(vocab_path)
-    merge_save_vocab_dicts(vocab_paths, os.path.join(new_data_dir,
-                                                     "vocab_freq_dict.pickle"))
+    merge_save_vocab_dicts(vocab_paths, os.path.join(merged_dir,
+                                                     "vocab_freq.json"))
 
-    print("merged public vocabulary saved to path", os.path.join(new_data_dir,
-                                                                 "vocab_freq_dict.pickle"))
+    print("merged public vocabulary saved to path", os.path.join(merged_dir,
+                                                                 "vocab_freq.json"))
 
     # write tf records
-    vocab_i2v_list = []
-    vocab_v2i_dict = []
+    vocab_i2v_lists = []
+    vocab_v2i_dicts = []
     vocab_sizes = []
-    args_list = []
+    args_lists = []
 
     # max_document_length is only useful when padding is True
     if max_document_length is None:
         max_document_length = max(max_document_lengths)
-    for data_dir in data_dirs:
-        tfrecord_dir = os.path.join(new_data_dir, os.path.basename(
-            os.path.normpath(data_dir)))
-        dataset = Dataset(data_dir,
-                          vocab_dir=new_data_dir,
+    for json_dir in json_dirs:
+        tfrecord_dir = os.path.join(merged_dir, os.path.basename(
+            os.path.normpath(json_dir)))
+        dataset = Dataset(json_dir,
                           tfrecord_dir=tfrecord_dir,
+                          vocab_dir=merged_dir,
+                          max_document_length=max_document_length,
                           min_frequency=min_frequency,
                           max_frequency=max_frequency,
-                          max_document_length=max_document_length,
-                          generate_basic_vocab=False,
-                          generate_tf_record=True,
                           train_ratio=train_ratio,
                           valid_ratio=valid_ratio,
                           write_bow=write_bow,
-                          scale_ratio=scale_ratio)
-        vocab_v2i_dict.append(dataset.categorical_vocab._mapping)
-        vocab_i2v_list.append(dataset.categorical_vocab._reverse_mapping)
+                          subsample_ratio=subsample_ratio,
+                          generate_basic_vocab=False,
+                          load_vocab=True,
+                          generate_tf_record=True
+                          )
+        vocab_v2i_dicts.append(dataset.categorical_vocab._mapping)
+        vocab_i2v_lists.append(dataset.categorical_vocab._reverse_mapping)
         vocab_sizes.append(dataset.vocab_size)
-        args_list.append(dataset.args)
+        args_lists.append(dataset.args)
 
     # tested
     # assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
     # assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
     # assert all(x == vocab_sizes[0] for x in vocab_sizes)
 
-    with open(new_data_dir + "vocab_v2i_dict.pickle", 'wb') as file:
-        pickle.dump(vocab_v2i_dict[0], file)
+    with open(os.path.join(merged_dir, 'vocab_v2i.json'),
+              mode='w') as file:
+        json.dump(vocab_v2i_dicts[0], file, ensure_ascii=False, indent=4)
         file.close()
-    with open(new_data_dir + "vocab_i2v_list.pickle", 'wb') as file:
-        pickle.dump(vocab_i2v_list[0], file)
+
+    vocab_i2v_dict = dict()
+    for i in range(len(vocab_i2v_lists[0])):
+        vocab_i2v_dict[i] = vocab_i2v_lists[0][i]
+    with open(os.path.join(merged_dir, 'vocab_i2v.json'),
+              mode='w') as file:
+        json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
         file.close()
-    with open(new_data_dir + "vocab_size.txt", "w") as file:
+
+    with open(merged_dir + "vocab_size.txt", "w") as file:
         file.write(str(vocab_sizes[0]))
         file.close()
 
-    return args_list
+    return args_lists
 
 
 # update_progress() : Displays or updates a console progress bar
@@ -560,8 +581,12 @@ def tokenizer(iterator):
 
 def main():
     # test
-    data_dirs = ["./vocab_test/1/", "./vocab_test/2/", "./vocab_test/3/"]
-    merge_dict_write_tfrecord(data_dirs, new_data_dir="./public/")
+    json_dirs = ["./vocab_test/1/", "./vocab_test/2/", "./vocab_test/3/"]
+    tfrecord_dirs = ['./vocab_test/1/min_0_max_0/',
+                     './vocab_test/2/min_0_max_0/',
+                     './vocab_test/3/min_0_max_0/']
+    merge_dict_write_tfrecord(json_dirs, tfrecord_dirs,
+                              merged_dir="./vocab_test/merged/")
 
 
 if __name__ == '__main__':
