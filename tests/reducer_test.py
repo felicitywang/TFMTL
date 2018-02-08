@@ -36,7 +36,6 @@ class ReducerTests(tf.test.TestCase):
     op = min_over_time(x)
     with self.test_session() as sess:
       val = sess.run(op)
-      print(val)
       self.assertEqual(val[0], min(X[0]))
       self.assertEqual(val[1], min(X[1]))
 
@@ -55,7 +54,6 @@ class ReducerTests(tf.test.TestCase):
     x_avg = avg_over_time(x)
     with self.test_session() as sess:
       x_avg_val = sess.run(x_avg)
-      print(x_avg_val)
       self.assertAlmostEqual(x_avg_val[0], sum(X[0])/len(X[0]), places=4)
       self.assertAlmostEqual(x_avg_val[1], sum(X[1])/len(X[1]), places=4)
 
