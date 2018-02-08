@@ -54,7 +54,7 @@ def reduce_var_over_time(x, lengths=None, avg=None, time_axis=1):
     mask = tf.to_float(tf.sequence_mask(lengths))
     masked_sd = tf.multiply(sd, mask)
     totals = tf.reduce_sum(masked_sd, keepdims=False, axis=time_axis)
-    return tf.multiply(totals, 1./tf.to_float(lengths))
+    return totals / lengths
 
 
 def reduce_over_time(x, lengths=None, max=True, min=False, avg=False,
