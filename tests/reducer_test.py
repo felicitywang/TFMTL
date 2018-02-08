@@ -26,7 +26,6 @@ from mlvae.reducers import reduce_min_over_time as min_over_time
 from mlvae.reducers import reduce_max_over_time as max_over_time
 from mlvae.reducers import reduce_avg_over_time as avg_over_time
 from mlvae.reducers import reduce_var_over_time as var_over_time
-from mlvae.reducers import reduce_over_time
 
 
 class ReducerTests(tf.test.TestCase):
