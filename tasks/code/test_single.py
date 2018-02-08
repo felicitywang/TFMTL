@@ -173,7 +173,7 @@ def main(_):
         tfrecord_dir += "min" + str(FLAGS.min_freq) + "_max_" + str(
             FLAGS.max_freq)
 
-        dataset = Dataset(data_dir=FLAGS.data_dir,
+        dataset = Dataset(json_dir=FLAGS.data_dir,
                           load_vocab=False,
                           generate_basic_vocab=False,
                           generate_tf_record=True,
