@@ -9,7 +9,6 @@ mkdir data/json/SSTb
 mkdir data/raw/LMRD
 mkdir data/json/LMRD
 
-
 echo "Downloading the SSTb data..."
 wget -nc https://nlp.stanford.edu/sentiment/trainDevTestTrees_PTB.zip
 
@@ -36,5 +35,7 @@ mv -f aclImdb data/raw/LMRD/
 mv -f data.json.gz data/json/LMRD/
 mv -f index.json.gz data/json/LMRD/
 
-
-python write_tfrecords.py
+mkdir data/tf
+mkdir data/tf/merged
+echo "Generating TFRecord files..."
+python write_tfrecords_merged.py
