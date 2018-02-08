@@ -104,8 +104,8 @@ class Dataset():
 
         print("data in", json_dir)
 
-        with gzip.open(os.path.join(json_dir, "data.json.gz"), "rt") as file:
-            data = json.load(file)
+        with gzip.open(os.path.join(json_dir, "data.json.gz"), 'rt') as file:
+            data = json.load(file, encoding='utf-8')
             file.close()
         self._label_list = [int(item[label_field_name]) for item in data]
         self._num_classes = len(set(self._label_list))
@@ -365,7 +365,7 @@ class Dataset():
 
         else:
             with gzip.open(index_path, mode='rt') as file:
-                index = json.load(file)
+                index = json.load(file, encoding='utf-8')
                 file.close()
             assert 'train' in index and 'test' in index
             train_index = index['train']
@@ -433,8 +433,10 @@ def merge_save_vocab_dicts(vocab_paths, save_path):
     """
     merged_vocab_dict = dict()
     for path in vocab_paths:
-        vocab_dict = json.load(open(path, "rt"))
-        merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
+        with codecs.open(path, mode='r', encoding='utf-8') as file:
+            vocab_dict = json.load(file)
+            file.close()
+            merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
 
     # print(merged_vocab_dict)
 
