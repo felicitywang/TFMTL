@@ -121,10 +121,11 @@ class Dataset():
         self.text_list = [' '.join([item[text_field_name]])
                           for text_field_name in text_field_names for
                           item in data]
-        self.length_list = [len(text) for text in self.text_list]
 
         self.text_list = [tweet_tokenizer.tokenize(text) + [' EOS'] for text in
                           self.text_list]
+
+        self.length_list = [len(text) for text in self.text_list]  # length of cleaned text (including EOS)
 
         self.padding = padding
 
@@ -324,6 +325,10 @@ class Dataset():
         self.word_id_list = [list(i) for i in self.word_id_list]
         return vocab_processor.vocabulary_
 
+    def get_types_and_counts(token_list):
+      counts = {x: token_list.count(x) for x in token_list}
+      return counts.keys(), counts.values()
+
     def write_examples(self, file_name, split_index, write_bow):
         # write to TFRecord data file
         tf.logging.info("Writing to: %s", file_name)
@@ -333,13 +338,30 @@ class Dataset():
                     'label': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=[self._label_list[index]])),
-                    'word_id': tf.train.Feature(
+                    'word_ids': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=self.word_id_list[index])),
-                    'old_length': tf.train.Feature(
+                    'length': tf.train.Feature(
                         int64_list=tf.train.Int64List(
                             value=[self.length_list[index]]))
                 }
+
+                types, counts = get_types_and_counts(word_id_list[index])  # including EOS
+                assert len(types) == len(counts)
+                assert len(types) > 0
+                assert len(body) > 0, "empty example"
+
+                for t in types:
+                  assert t >= 0
+                  assert t < self.vocab_size
+                for c in counts:
+                  assert c > 0
+                  assert c <= len(index)
+
+                feature['types'] = tf.train.Feature(
+                  int64_list=tf.train.Int64List(value=types))
+                feature['type_counts'] = tf.train.Feature(
+                  int64_list=tf.train.Int64List(value=counts))
 
                 if write_bow is True:
                     feature['bow'] = tf.train.Feature(
