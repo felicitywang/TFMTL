@@ -325,7 +325,7 @@ class Dataset():
         self.word_id_list = [list(i) for i in self.word_id_list]
         return vocab_processor.vocabulary_
 
-    def get_types_and_counts(token_list):
+    def get_types_and_counts(self, token_list):
       counts = {x: token_list.count(x) for x in token_list}
       return counts.keys(), counts.values()
 
@@ -346,17 +346,17 @@ class Dataset():
                             value=[self.length_list[index]]))
                 }
 
-                types, counts = get_types_and_counts(word_id_list[index])  # including EOS
+                types, counts = self.get_types_and_counts(self.word_id_list[index])  # including EOS
                 assert len(types) == len(counts)
                 assert len(types) > 0
-                assert len(body) > 0, "empty example"
+                assert len(self.word_id_list[index]) > 0, "empty example"
 
                 for t in types:
                   assert t >= 0
                   assert t < self.vocab_size
                 for c in counts:
                   assert c > 0
-                  assert c <= len(index)
+                  assert c <= len(self.word_id_list[index])
 
                 feature['types'] = tf.train.Feature(
                   int64_list=tf.train.Int64List(value=types))
