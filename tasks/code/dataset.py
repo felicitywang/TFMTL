@@ -585,7 +585,7 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
 
 def get_types_and_counts(token_list):
   counts = {x: token_list.count(x) for x in token_list}
-  return list(counts.keys()), list(counts.values())
+  return counts.keys(), counts.values()
 
 
 def tokenizer(iterator):
