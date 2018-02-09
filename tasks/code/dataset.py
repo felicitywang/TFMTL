@@ -343,6 +343,7 @@ class Dataset():
         }
         types, counts = get_types_and_counts(self.word_id_list[
                                                index])  # including EOS
+
         assert len(types) == len(counts)
         assert len(types) > 0
 
@@ -351,7 +352,7 @@ class Dataset():
           assert t < self.vocab_size
         for c in counts:
           assert c > 0
-          assert c <= len(self.text_list)
+          assert c <= len(self.word_id_list[index])
 
         feature['types'] = tf.train.Feature(
           int64_list=tf.train.Int64List(value=types))
