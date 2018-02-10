@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 set -e
-mkdir data
-mkdir data/raw
-mkdir data/json
 
-mkdir data/raw/SSTb
-mkdir data/json/SSTb
-mkdir data/raw/LMRD
-mkdir data/json/LMRD
-
+mkdir -p data/raw/SSTb
+mkdir -p data/json/SSTb
+mkdir -p data/raw/LMRD
+mkdir -p data/json/LMRD
 
 echo "Downloading the SSTb data..."
 wget -nc https://nlp.stanford.edu/sentiment/trainDevTestTrees_PTB.zip
@@ -28,6 +24,7 @@ wget -nc http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 echo "Untarring the LMRD data..."
 tar zxvf aclImdb_v1.tar.gz
 mv -f aclImdb_v1.tar.gz data/raw/LMRD/
+#rm -fr aclImdb_v1.tar.gz
 
 echo "Converting the LMRD data to json..."
 python3 ../../tasks/datasets/sentiment/LMRD/convert_LMRD_to_JSON.py ./
@@ -36,5 +33,6 @@ mv -f aclImdb data/raw/LMRD/
 mv -f data.json.gz data/json/LMRD/
 mv -f index.json.gz data/json/LMRD/
 
-
-python write_tfrecords.py
+mkdir -p data/tf/merged
+echo "Generating TFRecord files..."
+python write_tfrecords_merged.py

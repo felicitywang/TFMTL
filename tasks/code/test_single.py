@@ -19,10 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import codecs
+import json
 import os
-import pickle
 import random
 from time import time
+
+from pathlib import Path
 
 from tasks.code.cnn import CNN
 from tasks.code.dataset import Dataset
@@ -43,22 +46,14 @@ flags.DEFINE_string("data_dir", "../datasets/sentiment/SSTb/",
 flags.DEFINE_string("model_path", "./best_model/model.ckpt",
                     "Directory to save the best model checkpoint.")
 flags.DEFINE_string('optimizer', 'adam', "Optimizer.")
-flags.DEFINE_boolean('write_bow', True, 'Whether to generate bag of words '
-                                        'feature in the TFRecord files.')
-# flags.DEFINE_string('text_field_names', 'text', "Names of multiple text "
-#                                                 "fields, separated by ' '")
-# flags.DEFINE_string('label_field_name', 'label', "Names of the target column")
 flags.DEFINE_float('dropout_rate', 0.5, "Dropout rate (1.0 - keep "
                                         "probability)")
-flags.DEFINE_float('scale_ratio', 1.0, "Dropout rate (1.0 - keep "
-                                       "probability)")
 flags.DEFINE_float('lr', 0.0001, "Learning rate")
 flags.DEFINE_float('l2_weight', 0.0001, "L2 regularization weight")
 flags.DEFINE_integer("num_components", 64,
                      "Number of mixture components for p(z)")
 flags.DEFINE_integer("embed_dim", 128, "embedding dimension (VAE)")
 flags.DEFINE_integer("latent_dim", 128, "latent dimension (VAE)")
-flags.DEFINE_integer("seed", 42, "RNG seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size.")
 flags.DEFINE_integer("num_epoch", 40, "Total number of training epochs.")
 flags.DEFINE_integer('num_intra_threads', 0,
@@ -72,8 +67,21 @@ flags.DEFINE_integer('num_inter_threads', 0,
 flags.DEFINE_boolean('force_gpu_compatible', True,
                      """whether to enable force_gpu_compatible in
                      GPU_Options""")
+flags.DEFINE_integer('max_document_length', '-1',
+                     "Max document length for the "
+                     "vocab processor if padding "
+                     "is True.")
 flags.DEFINE_integer("min_freq", 10, 'minimum frequency to build the '
                                      'vocabulary.')
+flags.DEFINE_integer("max_freq", -1, 'maximum frequency to build the '
+                                     'vocabulary.')
+flags.DEFINE_integer("seed", 42, "RNG seed")
+flags.DEFINE_float('subsample_ratio', 1.0, "Dropout rate (1.0 - keep "
+                                           "probability)")
+flags.DEFINE_boolean('write_bow', True, 'Whether to generate bag of words '
+                                        'feature in the TFRecord files.')
+flags.DEFINE_boolean('padding', False, 'Whether to pad the word ids.')
+
 flags.DEFINE_string("model", "mlp", "Which model to use: mlp/cnn")
 FLAGS = flags.FLAGS
 
@@ -145,21 +153,49 @@ def main(_):
 
     if FLAGS.data_type == 'json':
 
-        dataset = Dataset(data_dir=FLAGS.data_dir,
-                          write_bow=FLAGS.write_bow,
-                          # text_field_names=FLAGS.text_field_names,
-                          # label_field_name=FLAGS.text_field_name,
+        data_dir = FLAGS.data_dir
+
+        if Path(os.path.join(data_dir, "label_field_name")).exists():
+            file = open(os.path.join(data_dir, "label_field_name"))
+            label_field_name = file.readline().strip()[0]
+        else:
+            label_field_name = 'label'
+        print("label:", label_field_name)
+
+        if Path(os.path.join(data_dir, "text_field_names")).exists():
+            file = open(os.path.join(data_dir, "text_field_names"))
+            text_field_names = file.readline().strip()
+        else:
+            text_field_names = ['text']
+        print("texts:", text_field_names)
+
+        tfrecord_dir = FLAGS.data_dir + "single/"
+        tfrecord_dir += "min" + str(FLAGS.min_freq) + "_max_" + str(
+            FLAGS.max_freq)
+
+        dataset = Dataset(json_dir=FLAGS.data_dir,
+                          load_vocab=False,
+                          generate_basic_vocab=False,
+                          generate_tf_record=True,
+                          vocab_dir=tfrecord_dir,
+                          tfrecord_dir=tfrecord_dir,
+                          text_field_names=text_field_names,
+                          label_field_name=label_field_name,
                           min_frequency=FLAGS.min_freq,
+                          max_frequency=FLAGS.max_freq,
                           valid_ratio=0.1,
                           train_ratio=0.8,
-                          random_seed=42,
-                          scale_ratio=FLAGS.scale_ratio)
+                          random_seed=FLAGS.seed,
+                          subsample_ratio=FLAGS.subsample_ratio,
+                          padding=FLAGS.padding,
+                          write_bow=FLAGS.write_bow, )
         args = dataset.args
 
     elif FLAGS.data_type == 'tf':
-        args_path = os.path.join(FLAGS.data_dir, "args_dict.pickle")
-        with open(args_path, 'rb') as file:
-            args = pickle.load(file)
+        args_path = os.path.join(FLAGS.data_dir, "args.json")
+        with codecs.open(args_path, 'r', encoding='utf-8') as file:
+            args = json.load(file)
+            file.close()
     else:
         raise ValueError("data_type must be 'json' or 'tf'!")
 
