@@ -19,13 +19,13 @@ from __future__ import print_function
 
 from six.moves import xrange
 
+import numpy as np
 import tensorflow as tf
 
 from tensorflow.contrib.training import HParams
 
-from mlvae.common import MLP_gaussian_posterior
-from mlvae.common import MLP_unnormalized_log_categorical
-
+from mlvae.vae import dense_layer
+from mlvae.vae import cross_entropy_with_logits
 from mlvae.vae import log_normal
 from mlvae.vae import gaussian_sample
 from mlvae.vae import get_tau
@@ -56,7 +56,21 @@ def default_hparams():
                  loss_combination="even",
                  dtype='float32')
 
+# General helpers
+def listify(x):
+  # Convert inputs into a list if it is not a list already
+  if type(x) is not list:
+    return [x]
+  else:
+    return x
 
+def maybe_concat(x):
+  # Concatenate inputs if it is a list (of Tensors)
+  # Provides a uniform way of conditioning on one variable vs multiple variables
+  if type(x) is list:
+    return tf.concat(x, axis=1)
+  else:
+    return x
 
 def validate_labels(feature_dict, class_sizes):
   for k in feature_dict:
@@ -66,6 +80,34 @@ def validate_labels(feature_dict, class_sizes):
                         )]):
       pass
 
+# Distributions
+def preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu):
+  # Returns output of last layer of N-layer dense MLP that can then be passed to an output layer
+  x = maybe_concat(inputs)
+  for i in xrange(num_layers):
+    x = dense_layer(x, embed_dim, 'l{}'.format(i+1), activation=activation)
+  return x
+
+def MLP_gaussian_posterior(inputs, embed_dim, latent_dim, min_var=0.0):
+  # Returns mean and variance parametrizing a (multivariate) Gaussian
+  x = preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu)
+  zm = dense_layer(x, latent_dim, 'zm', activation=None)
+  zv = dense_layer(x, latent_dim, 'zv', tf.nn.softplus)  # variance must be positive
+  if min_var > 0.0:
+    zv = tf.maximum(min_var, zv)  # ensure zv is *no smaller* than min_var
+  return zm, zv
+
+def MLP_unnormalized_log_categorical(inputs, output_size, embed_dim):
+  # Returns logits (unnormalized log probabilities)
+  x = preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu)
+  x = dense_layer(x, output_size, 'logit', activation=None)
+  return x
+
+def MLP_ordinal(inputs, embed_dim):
+  # Returns scalar output
+  x = preoutput_MLP(inputs, embed_dim, num_layers=2, activation=tf.nn.elu)
+  x = dense_layer(x, 1, 'val', activation=None)
+  return x
 
 class MultiLabel(object):
   def __init__(self,
@@ -105,7 +147,7 @@ class MultiLabel(object):
     self._encoders = encoders
 
     ####################################
-
+    
     # Make sub-graph templates. Note that internal scopes and variable
     # names should not depend on any arguments that are not supplied
     # to make_template. In general you will get a ValueError telling
@@ -115,7 +157,7 @@ class MultiLabel(object):
 
     # Create templates for the parametrized parts of the computation
     # graph that are re-used in different places.
-
+    
     # Generative networks
     self._py_templates = dict()
     for k, v in class_sizes.items():
@@ -246,13 +288,13 @@ class MultiLabel(object):
         res = 0
         if z_samples is None:
           z_samples = [gaussian_sample(zm, zv) for _ in xrange(self._hp.num_z_samples)]
-        for z in z_samples:
+        for z in z_samples:          
           qy_logits = self._qy_templates[feature_name]([features, z])
           qcat = Categorical(logits=qy_logits, name='qy_{}_{}_cat'.format(feature_name, i))
-
+          
           py_logits = self._py_templates[feature_name](z)
           pcat = Categorical(logits=py_logits, name='py_{}_{}_cat'.format(feature_name, i))
-
+          
           kl = kl_divergence(qcat, pcat)
           res += kl
         kl_qp += res / len(z_samples)  # average KL divergence between q and p for feature k
@@ -392,7 +434,7 @@ class MultiLabel(object):
     # This entire negated term is the cost (loss) to minimize
 
     return -(Eq_log_pz - total_kl_qp + Eq_log_px - Eq_log_qz)
-
+  
   def get_loss(self,
                feature_dict,
                inputs=None,
