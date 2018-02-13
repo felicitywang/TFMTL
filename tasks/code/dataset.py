@@ -123,8 +123,8 @@ class Dataset():
 
     self.text_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text in
                       self.text_list]
-    self.length_list = [len(text) for text in
-                        self.text_list]  # length of cleaned text (including EOS)
+    self.token_length_list = [len(text) for text in
+                              self.text_list]  # length of cleaned text (including EOS)
 
     self.padding = padding
 
@@ -334,12 +334,12 @@ class Dataset():
           'label': tf.train.Feature(
             int64_list=tf.train.Int64List(
               value=[self._label_list[index]])),
-          'word_ids': tf.train.Feature(
+          'tokens': tf.train.Feature(
             int64_list=tf.train.Int64List(
               value=self.word_id_list[index])),
-          'length': tf.train.Feature(
+          'tokens_length': tf.train.Feature(
             int64_list=tf.train.Int64List(
-              value=[self.length_list[index]]))
+              value=[self.token_length_list[index]]))
         }
         types, counts = get_types_and_counts(self.word_id_list[
                                                index])  # including EOS
@@ -356,7 +356,7 @@ class Dataset():
 
         feature['types'] = tf.train.Feature(
           int64_list=tf.train.Int64List(value=types))
-        feature['type_counts'] = tf.train.Feature(
+        feature['types_length'] = tf.train.Feature(
           int64_list=tf.train.Int64List(value=counts))
 
         if write_bow is True:
@@ -578,11 +578,6 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
 
   return args_lists
 
-
-# update_progress() : Displays or updates a console progress bar
-# Accepts a float between 0 and 1. Any int will be converted to a float.
-# A value under 0 represents a 'halt'.
-# A value at 1 or bigger represents 100%
 
 def get_types_and_counts(token_list):
   counts = {x: token_list.count(x) for x in token_list}
