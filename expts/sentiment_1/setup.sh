@@ -32,6 +32,7 @@ python3 ../../tasks/datasets/sentiment/LMRD/convert_LMRD_to_JSON.py ./
 mv -f aclImdb data/raw/LMRD/
 mv -f data.json.gz data/json/LMRD/
 mv -f index.json.gz data/json/LMRD/
+mv -f unlabeled_data.json.gz data/json/LMRD/
 
 mkdir -p data/tf/merged
 echo "Generating TFRecord files..."
