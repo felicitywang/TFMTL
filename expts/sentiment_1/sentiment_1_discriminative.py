@@ -27,7 +27,6 @@ import numpy as np
 import tensorflow as tf
 from six.moves import xrange
 from tensorflow.contrib.training import HParams
-from time import time
 from tqdm import tqdm
 
 from mlvae.clustering import accuracy
@@ -163,9 +162,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      for i in xrange(steps_per_epoch):
-        if i % 10 == 0:
-          logging.info("Step %d/%d" % (i + 1, steps_per_epoch))
+      for i in tqdm(xrange(steps_per_epoch)):
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v  # loss_v is sum over a batch from each dataset of the average loss *per training example*
@@ -191,7 +188,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         end_time = time()
         elapsed = end_time - start_time
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s' % (
+        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
           epoch + 1, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
         for dataset_name in model_info:
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
@@ -221,10 +218,10 @@ def compute_held_out_performance(session, pred_op, eval_label,
       assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
       y_list = y.tolist()
       # print("y list type: ", type(y_list))
-      # print("y list: ", y_list)
-      # y_list = [item for sublist in y_list for item in sublist]
+      print("y list: ", y_list)
+      y_list = [item for sublist in y_list for item in sublist]
       y_hat_list = y_hat.tolist()
-      # y_hat_list = [item for sublist in y_hat_list for item in sublist]
+      y_hat_list = [item for sublist in y_hat_list for item in sublist]
       ys += y_list
       y_hats += y_hat_list
     except tf.errors.OutOfRangeError:
@@ -389,7 +386,7 @@ def set_hp(args):
                  word_embed_dim=args.word_embed_dim,
                  alphas=args.alphas,
                  labels_key="label",
-                 inputs_key="word_ids",
+                 inputs_key="tokens",
                  l2_weight=0.0,
                  dropout_rate=0.5,
                  num_layers=args.num_layers)
