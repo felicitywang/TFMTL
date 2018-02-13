@@ -99,7 +99,7 @@ class Dataset():
     :param generate_basic_vocab: True if the basic vocabulary(which
     shall be used to merge the public vocabulary) needs to be generated
     :param generate_tf_record: True if tf record files need generating
-    :param padding: True if word_id needs padding to max_document_length
+    :param padding: True if token(word id) list needs padding to max_document_length
     """
 
     print("data in", json_dir)
@@ -123,8 +123,8 @@ class Dataset():
 
     self.text_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text in
                       self.text_list]
-    self.length_list = [len(text) for text in
-                        self.text_list]  # length of cleaned text (including EOS)
+    self.token_length_list = [len(text) for text in
+                              self.text_list]  # length of cleaned text (including EOS)
 
     self.padding = padding
 
@@ -234,12 +234,12 @@ class Dataset():
     vocab_processor.fit([self.text_list[i] for i in self.train_index])
 
     if self.padding is True:
-      self.word_id_list = list(
+      self.token_list = list(
         vocab_processor.transform_pad(self.text_list))
     else:
-      self.word_id_list = list(
+      self.token_list = list(
         vocab_processor.transform(self.text_list))
-    self.word_id_list = [list(i) for i in self.word_id_list]
+    self.token_list = [list(i) for i in self.token_list]
     self.vocab_freq_dict = vocab_processor.vocabulary_._freq
 
     return vocab_processor.vocabulary_
@@ -317,12 +317,12 @@ class Dataset():
       tokenizer_fn=tokenizer)
 
     if self.padding is True:
-      self.word_id_list = list(
+      self.token_list = list(
         vocab_processor.transform_pad(self.text_list))
     else:
-      self.word_id_list = list(
+      self.token_list = list(
         vocab_processor.transform(self.text_list))
-    self.word_id_list = [list(i) for i in self.word_id_list]
+    self.token_list = [list(i) for i in self.token_list]
     return vocab_processor.vocabulary_
 
   def write_examples(self, file_name, split_index, write_bow):
@@ -334,14 +334,14 @@ class Dataset():
           'label': tf.train.Feature(
             int64_list=tf.train.Int64List(
               value=[self._label_list[index]])),
-          'word_ids': tf.train.Feature(
+          'tokens': tf.train.Feature(
             int64_list=tf.train.Int64List(
-              value=self.word_id_list[index])),
-          'length': tf.train.Feature(
+              value=self.token_list[index])),
+          'tokens_length': tf.train.Feature(
             int64_list=tf.train.Int64List(
-              value=[self.length_list[index]]))
+              value=[self.token_length_list[index]]))
         }
-        types, counts = get_types_and_counts(self.word_id_list[
+        types, counts = get_types_and_counts(self.token_list[
                                                index])  # including EOS
 
         assert len(types) == len(counts)
@@ -352,18 +352,20 @@ class Dataset():
           assert t < self.vocab_size
         for c in counts:
           assert c > 0
-          assert c <= len(self.word_id_list[index])
+          assert c <= len(self.token_list[index])
 
         feature['types'] = tf.train.Feature(
           int64_list=tf.train.Int64List(value=types))
         feature['type_counts'] = tf.train.Feature(
           int64_list=tf.train.Int64List(value=counts))
+        feature['types_length'] = tf.train.Feature(
+          int64_list=tf.train.Int64List(value=[len(types)]))
 
         if write_bow is True:
           feature['bow'] = tf.train.Feature(
             float_list=tf.train.FloatList(
               value=bag_of_words(
-                self.word_id_list[index],
+                self.token_list[index],
                 self.vocab_size).tolist()))
 
         example = tf.train.Example(
@@ -578,11 +580,6 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
 
   return args_lists
 
-
-# update_progress() : Displays or updates a console progress bar
-# Accepts a float between 0 and 1. Any int will be converted to a float.
-# A value under 0 represents a 'halt'.
-# A value at 1 or bigger represents 100%
 
 def get_types_and_counts(token_list):
   counts = {x: token_list.count(x) for x in token_list}
