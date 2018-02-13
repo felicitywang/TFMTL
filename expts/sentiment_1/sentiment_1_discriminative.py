@@ -219,9 +219,9 @@ def compute_held_out_performance(session, pred_op, eval_label,
       y_list = y.tolist()
       # print("y list type: ", type(y_list))
       print("y list: ", y_list)
-      y_list = [item for sublist in y_list for item in sublist]
+      # y_list = [item for sublist in y_list for item in sublist]
       y_hat_list = y_hat.tolist()
-      y_hat_list = [item for sublist in y_hat_list for item in sublist]
+      # y_hat_list = [item for sublist in y_hat_list for item in sublist]
       ys += y_list
       y_hats += y_hat_list
     except tf.errors.OutOfRangeError:
