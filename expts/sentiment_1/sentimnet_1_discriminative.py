@@ -19,23 +19,22 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import argparse as ap
-from six.moves import xrange
+import os
 from time import time
-from tqdm import tqdm
 
 import numpy as np
 import tensorflow as tf
+from six.moves import xrange
+from tensorflow.contrib.training import HParams
+from time import time
+from tqdm import tqdm
 
-from mlvae.pipeline import Pipeline
-from mlvae.embed import embed_sequence
-from mlvae.cnn import conv_and_pool
-from mlvae.layers import dense_layer
-from mlvae.decoders.unigram import unigram
 from mlvae.clustering import accuracy
-
-from mlvae.mlvae_model import MultiLabel
+from mlvae.cnn import conv_and_pool
+from mlvae.embed import embed_sequence
+from mlvae.pipeline import Pipeline
+from tasks.code.mult import Mult
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -44,20 +43,11 @@ logging = tf.logging
 
 # This defines ALL the features that ANY model possibly needs access
 # to. That is, some models will only need a subset of these features.
-#FEATURES = {
+# FEATURES = {
 #  'targets': tf.VarLenFeature(dtype=tf.int64),
 #  'length': tf.FixedLenFeature([], dtype=tf.int64),
 #  'label': tf.FixedLenFeature([], dtype=tf.int64)
-#}
-
-FEATURES = {
-  'label': tf.VarLenFeature(dtype=tf.int64),
-  'word_ids': tf.VarLenFeature(dtype=tf.int64),
-  'length': tf.VarLenFeature(dtype=tf.int64),
-  'types': tf.VarLenFeature(dtype=tf.int64),
-  'type_counts': tf.VarLenFeature(dtype=tf.int64),
-  'bow': tf.VarLenFeature(dtype=tf.float32),
-  }
+# }
 
 
 def parse_args():
@@ -70,7 +60,7 @@ def parse_args():
                  help='Size of batch.')
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--embed_dim', default=256, type=int,
+  p.add_argument('--word_embed_dim', default=256, type=int,
                  help='Word embedding size')
   p.add_argument('--share_embed', action='store_true', default=False,
                  help='Whether datasets share word embeddings')
@@ -104,72 +94,38 @@ def parse_args():
   p.add_argument('--label_key', default="label", type=str,
                  help='Key for label field in the batches')
   p.add_argument('--datasets', nargs='+', type=str,
-                 help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
+                 help='Key of the dataset(s) to train and evaluate on [LMRD|SSTb]')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, test.tf)
                  for the dataset(s) given by the --datasets flag (in the same order)""")
   p.add_argument('--vocab_path', type=str,
                  help='Path to the shared vocabulary for the datasets')
+  p.add_argument('--encoder_type', default='cnn', type=str,
+                 help='Encoder type, e.g. cnn')
+  p.add_argument('--embed_dim', default=128, type=int, help='Dense(hidden) layer size.')
+  p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
+  p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
+  p.add_argument('--alphas', nargs='+', type=float, default=[0.5, 0.5],
+                 help='alpha for each dataset in the MULT model')
+  p.add_argument('--num_layers', type=int, default=2,
+                 help='Number off hidden layers of the MLP model.')
+
   return p.parse_args()
 
-
-def encoder_graph(inputs, embed_fn):
-  embed = embed_fn(inputs)
-  return conv_and_pool(embed)
-
-def decoder_graph(x, z, vocab_size, targets_key, counts_key, lens_key):
-  return unigram(x, z,
-                 vocab_size=vocab_size,
-                 targets_key=targets_key,
-                 counts_key=counts_key,
-                 lens_key=lens_key)
-
-def build_encoders(vocab_size, args):
-  encoders = dict()
-  if args.share_embed:
-    # One shared word embedding matrix for all datasets
-    embed_temp = tf.make_template('embedding', embed_sequence,
-                                  vocab_size=vocab_size,
-                                  embed_dim=args.embed_dim)
-    for ds in args.datasets:
-      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp)
-  else:
-    # A unique word embedding matrix for each dataset
-    for ds in args.datasets:
-      embed_temp = tf.make_template('embedding_{}'.format(ds), tf.contrib.layers.embed_sequence,
-                                    vocab_size=vocab_size,
-                                    embed_dim=args.embed_dim)
-      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp)
-
-  return encoders
-
-def build_decoders(vocab_size, args):
-  decoders = dict()
-  if args.share_decoders:
-    decoder = tf.make_template('decoder', decoder_graph,
-                               vocab_size=vocab_size)
-    for ds in args.datasets:
-      decoders[ds] = decoder
-  else:
-    for ds in args.datasets:
-      decoders[ds] = tf.make_template('decoder_{}'.format(ds), decoder_graph,
-                                      vocab_size=vocab_size)
-
-  return decoders
 
 def get_num_records(tf_record_filename):
   c = 0
   for record in tf.python_io.tf_record_iterator(tf_record_filename):
-      c += 1
+    c += 1
   return c
+
 
 def get_vocab_size(vocab_file_path):
   with open(vocab_file_path, "r") as f:
     line = f.readline().strip()
     vocab_size = int(line)
   return vocab_size
+
 
 def train_model(model, dataset_info, steps_per_epoch, args):
   dataset_info, model_info = fill_info_dicts(dataset_info, model, args)
@@ -181,7 +137,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   loss = model.get_multi_task_loss(train_batches)
 
   # Done building compute graph; set up training ops.
-  
+
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
   zero_global_step_op = global_step_tensor.assign(0)
@@ -196,7 +152,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Initialize model parameters
     sess.run(init_ops)
 
-
     for dataset_name in model_info:
       _train_init_op = model_info[dataset_name]['train_init_op']
       sess.run(_train_init_op)
@@ -208,7 +163,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      for i in tqdm(xrange(steps_per_epoch)):
+      for i in xrange(steps_per_epoch):
+        if i % 10 == 0:
+          logging.info("Step %d/%d" % (i + 1, steps_per_epoch))
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v  # loss_v is sum over a batch from each dataset of the average loss *per training example*
@@ -221,8 +178,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       if not args.test:  # Validation mode
         # Get performance metrics on each dataset
         for dataset_name in model_info:
-          #_test_batch = dataset_info[dataset_name]['test_dataset'].batch
-          #_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
+          # _test_batch = dataset_info[dataset_name]['test_dataset'].batch
+          # _pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
           _pred_op = model_info[dataset_name]['test_pred_op']
           _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
           _eval_iter = model_info[dataset_name]['test_iter']
@@ -234,12 +191,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         end_time = time()
         elapsed = end_time - start_time
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (epoch+1, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
+        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s' % (
+          epoch + 1, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
         for dataset_name in model_info:
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
           _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name, _num_eval_total, _eval_acc, _eval_align_acc)
+          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
+            dataset_name, _num_eval_total, _eval_acc, _eval_align_acc)
         logging.info(str_)
       else:
         raise "final evaluation mode not implemented"
@@ -247,7 +206,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
 def compute_held_out_performance(session, pred_op, eval_label,
                                  eval_iterator, args):
-
   # pred_op: predicted labels
   # eval_label: gold labels
 
@@ -262,9 +220,11 @@ def compute_held_out_performance(session, pred_op, eval_label,
       y, y_hat = session.run([eval_label, pred_op])
       assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
       y_list = y.tolist()
-      y_list = [item for sublist in y_list for item in sublist]
+      # print("y list type: ", type(y_list))
+      # print("y list: ", y_list)
+      # y_list = [item for sublist in y_list for item in sublist]
       y_hat_list = y_hat.tolist()
-      y_hat_list = [item for sublist in y_hat_list for item in sublist]
+      # y_hat_list = [item for sublist in y_hat_list for item in sublist]
       ys += y_list
       y_hats += y_hat_list
     except tf.errors.OutOfRangeError:
@@ -305,12 +265,12 @@ def main():
 
   # Number of label types in each dataset
   class_sizes = dict()
-  class_sizes['IMDB'] = 2
+  class_sizes['LMRD'] = 2
   class_sizes['SSTb'] = 5
 
   # Ordering of concatenation for input to decoder
   ordering = dict()
-  ordering['IMDB'] = 0
+  ordering['LMRD'] = 0
   ordering['SSTb'] = 1
 
   # Read data
@@ -333,11 +293,21 @@ def main():
     dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
   vocab_size = get_vocab_size(args.vocab_path)
-  
+
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
 
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
+
+  FEATURES = {
+    'label': tf.FixedLenFeature([], dtype=tf.int64),
+    'tokens': tf.VarLenFeature(dtype=tf.int64),
+    'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
+    'types': tf.VarLenFeature(dtype=tf.int64),
+    'type_counts': tf.VarLenFeature(dtype=tf.int64),
+    'types_length': tf.FixedLenFeature([], dtype=tf.int64),
+    'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+  }
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
@@ -354,16 +324,12 @@ def main():
       ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
       dataset_info[dataset_name]['test_dataset'] = ds
 
-
     # This finds the size of the largest training dataset.
     training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
     max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in training_files])
 
     # Seed TensorFlow RNG
     tf.set_random_seed(args.seed)
-
-    encoders = build_encoders(vocab_size, args)
-    decoders = build_decoders(vocab_size, args)
 
     # Maybe check for NaNs
     if args.check_numerics:
@@ -378,7 +344,7 @@ def main():
 
     # Steps per epoch.
     # One epoch: all datasets have been seen completely at least once
-    steps_per_epoch = int(max_N_train / args.batch_size)  
+    steps_per_epoch = int(max_N_train / args.batch_size)
 
     # Create model(s):
     # NOTE: models must support the following functions:
@@ -390,22 +356,43 @@ def main():
     #        returns: Tensor of size <batch_len> specifying the predicted label
     #                 for the specified feature for each of the examples in the batch
     # Seth's multi-task VAE model
-    if args.model == 'mlvae':
-      m = MultiLabel(class_sizes=class_sizes,
-                     dataset_order=dataset_order,
-                     encoders=encoders,
-                     decoders=decoders,
-                     hp=None)
+    # if args.model == 'mlvae':
+    #   m = MultiLabel(class_sizes=class_sizes,
+    #                  dataset_order=dataset_order,
+    #                  encoders=encoders,
+    #                  decoders=decoders,
+    #                  hp=None)
     # Felicity's discriminative baseline
-    elif args.model == 'mult':
-      # TODO: Felicity: please fill in your MULT baseline here
-      # m = MULT(...)
-      raise "TODO"
+
+
+    encoders = build_encoders(encoder_type=args.encoder_type, args=args, vocab_size=vocab_size)
+    hp = set_hp(args)
+
+    if args.model == 'mult':
+      m = Mult(class_sizes=class_sizes,
+               dataset_order=dataset_order,
+               encoders=encoders,
+               hp=hp,
+               is_training=True)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 
     # Do training
     train_model(m, dataset_info, steps_per_epoch, args)
+
+
+def set_hp(args):
+  # TODO get hyperparameters from arguments
+  return HParams(embed_dim=args.embed_dim,
+                 num_filter=args.num_filter,
+                 max_width=args.max_width,
+                 word_embed_dim=args.word_embed_dim,
+                 alphas=args.alphas,
+                 labels_key="label",
+                 inputs_key="word_ids",
+                 l2_weight=0.0,
+                 dropout_rate=0.5,
+                 num_layers=args.num_layers)
 
 
 def get_learning_rate(learning_rate):
@@ -446,7 +433,7 @@ def fill_info_dicts(dataset_info, model, args):
   model_info = dict()
   for dataset_name in dataset_info:
     model_info[dataset_name] = dict()
-  
+
   # Data iterators, etc.
   for dataset_name in dataset_info:
     # Training data, iterator, and batch
@@ -494,7 +481,7 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=T
   if is_training:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
                   num_epochs=None,  # repeat indefinitely
-    )
+                  )
   else:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
                   num_epochs=1)
@@ -511,6 +498,35 @@ def get_var_grads(loss):
   return (tvars, grads)
 
 
+def build_encoders(encoder_type, args, vocab_size):
+  encoders = dict()
+  if encoder_type == 'cnn':
+    # shared embedding and conv_and_pool
+    encoder = tf.make_template('cnn',
+                               cnn_graph,
+                               vocab_size=vocab_size,
+                               embed_dim=args.word_embed_dim,
+                               num_filter=args.num_filter,
+                               max_width=args.max_width,
+                               activation_fn=tf.nn.relu)
+
+    for ds in args.datasets:
+      encoders[ds] = encoder
+  else:
+    raise ValueError("No such encoder!")
+
+  return encoders
+
+
+def encoder_graph(inputs, embed_fn):
+  embed = embed_fn(inputs)
+  return conv_and_pool(embed)
+
+
+def cnn_graph(inputs, vocab_size, embed_dim, num_filter, max_width, activation_fn):
+  embed = embed_sequence(inputs, vocab_size, embed_dim)
+  return conv_and_pool(embed, num_filter, max_width, activation_fn)
+
+
 if __name__ == "__main__":
   main()
-                      
