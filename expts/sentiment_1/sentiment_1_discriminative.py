@@ -34,6 +34,7 @@ from mlvae.cnn import conv_and_pool
 from mlvae.embed import embed_sequence
 from mlvae.pipeline import Pipeline
 from tasks.code.mult import Mult
+from expts.sentiment_1.encoder_factory import build_encoders
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -99,8 +100,8 @@ def parse_args():
                  for the dataset(s) given by the --datasets flag (in the same order)""")
   p.add_argument('--vocab_path', type=str,
                  help='Path to the shared vocabulary for the datasets')
-  p.add_argument('--encoder_type', default='cnn', type=str,
-                 help='Encoder type, e.g. cnn')
+  p.add_argument('--encoder_architecture', type=str,
+                 help='Encoder architecture type (see encoder_factory.py for supported architectures)')
   p.add_argument('--embed_dim', default=128, type=int, help='Dense(hidden) layer size.')
   p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
   p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
@@ -362,7 +363,8 @@ def main():
     # Felicity's discriminative baseline
 
 
-    encoders = build_encoders(encoder_type=args.encoder_type, args=args, vocab_size=vocab_size)
+    encoder_hp = None
+    encoders = build_encoders(vocab_size, args, encoder_hp)
     hp = set_hp(args)
 
     if args.model == 'mult':
@@ -493,36 +495,6 @@ def get_var_grads(loss):
   tvars = tf.trainable_variables()
   grads = tf.gradients(loss, tvars)
   return (tvars, grads)
-
-
-def build_encoders(encoder_type, args, vocab_size):
-  encoders = dict()
-  if encoder_type == 'cnn':
-    # shared embedding and conv_and_pool
-    encoder = tf.make_template('cnn',
-                               cnn_graph,
-                               vocab_size=vocab_size,
-                               embed_dim=args.word_embed_dim,
-                               num_filter=args.num_filter,
-                               max_width=args.max_width,
-                               activation_fn=tf.nn.relu)
-
-    for ds in args.datasets:
-      encoders[ds] = encoder
-  else:
-    raise ValueError("No such encoder!")
-
-  return encoders
-
-
-def encoder_graph(inputs, embed_fn):
-  embed = embed_fn(inputs)
-  return conv_and_pool(embed)
-
-
-def cnn_graph(inputs, vocab_size, embed_dim, num_filter, max_width, activation_fn):
-  embed = embed_sequence(inputs, vocab_size, embed_dim)
-  return conv_and_pool(embed, num_filter, max_width, activation_fn)
 
 
 if __name__ == "__main__":

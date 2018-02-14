@@ -1,9 +1,9 @@
 ## datasets
 
-type|name|#items|#labels|unit|summary|split
----|---|---|---|---|---|---
-sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210
-sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000
+type|name|#items|#labels|unit|summary|split|unlabeled
+---|---|---|---|---|---|---|---
+sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210|none
+sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000|50,000
 
 ## requirements
 - pathlib==1.0.1
@@ -27,9 +27,11 @@ sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
     - `dataset_name`
         - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
+        - `unlabeled.tf`: unlabeled TFRecord files(if there is unlabeled data)
         - `args.json`: arguments of the dataset
 - `data/tf/single/dataset_name/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency for the single dataset
     - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
+    - `unlabeled.tf`: unlabeled TFRecord files(if there is unlabeled data)
     - `args.json`: arguments of the dataset
     - `vocab_freq.json`: frequency of all the words that appeared in the training data
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
@@ -42,7 +44,9 @@ sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000
 2. run `setup.sh` to generate TFRecord files with merged vocabulary
 3. (optional)
     - modify arguments in `args_SSTb.json` or `args_LMRD.json`
-    - run `python write_tfrecord.py SSTb` or `python write_tfrecord.py LMRD` to generate TFRecord files for the single dataset
+    - generate TFRecord files for the single datasetrun by
+        - `python write_tfrecords_single.py SSTb`
+        - `python write_tfrecords_single.py LMRD`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)
@@ -57,11 +61,6 @@ sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000
 - `padding`: whether to pad the word ids
 - `write_bow`: whether to write bag of words in the TFRecord file
 
-## running time
-- 17 minutes for `setup.sh` with `min_freq=50` and `write_bow=true`(given
-args_merged.json) on my laptop(16G RAM, 500G SSD)
-- 5 minutes for `setup.sh` with `min_freq=0` and `write_bow=true` on my laptop
-- 18 minutes for `setup.sh` `with min_freq=50` and `write_bow=true`(grid b02)
 
 ## file size
 - raw(original):
