@@ -100,8 +100,8 @@ def parse_args():
                  for the dataset(s) given by the --datasets flag (in the same order)""")
   p.add_argument('--vocab_path', type=str,
                  help='Path to the shared vocabulary for the datasets')
-  p.add_argument('--encoder_type', default='cnn', type=str,
-                 help='Encoder type, e.g. cnn')
+  p.add_argument('--encoder_architecture', type=str,
+                 help='Encoder architecture type (see encoder_factory.py for supported architectures)')
   p.add_argument('--embed_dim', default=128, type=int, help='Dense(hidden) layer size.')
   p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
   p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
