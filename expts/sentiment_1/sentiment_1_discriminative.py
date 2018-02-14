@@ -30,7 +30,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mlvae.clustering import accuracy
-from mlvae.cnn import conv_and_pool
+from mlvae.encoders.cnn import conv_and_pool
 from mlvae.embed import embed_sequence
 from mlvae.pipeline import Pipeline
 from tasks.code.mult import Mult
@@ -39,16 +39,6 @@ from expts.sentiment_1.encoder_factory import build_encoders
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logging = tf.logging
-
-
-# This defines ALL the features that ANY model possibly needs access
-# to. That is, some models will only need a subset of these features.
-# FEATURES = {
-#  'targets': tf.VarLenFeature(dtype=tf.int64),
-#  'length': tf.FixedLenFeature([], dtype=tf.int64),
-#  'label': tf.FixedLenFeature([], dtype=tf.int64)
-# }
-
 
 def parse_args():
   p = ap.ArgumentParser()
@@ -152,9 +142,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Initialize model parameters
     sess.run(init_ops)
 
+    best_eval_acc = dict()
     for dataset_name in model_info:
       _train_init_op = model_info[dataset_name]['train_init_op']
       sess.run(_train_init_op)
+      best_eval_acc[dataset_name] = {"epoch": -1,
+                                     "acc": float('-inf'),
+                                     }
 
     # Do training
     for epoch in xrange(args.num_train_epochs):
@@ -195,11 +189,22 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
           _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-            dataset_name, _num_eval_total, _eval_acc, _eval_align_acc)
+          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
+                                                                              _num_eval_total,
+                                                                              _eval_acc,
+                                                                              _eval_align_acc)
+
+          if _eval_acc > best_eval_acc[dataset_name]["acc"]:
+            best_eval_acc[dataset_name]["acc"] = _eval_acc
+            best_eval_acc[dataset_name]["epoch"] = epoch + 1
+
         logging.info(str_)
+
       else:
         raise "final evaluation mode not implemented"
+
+    print(best_eval_acc)
+
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
@@ -219,7 +224,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
       assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
       y_list = y.tolist()
       # print("y list type: ", type(y_list))
-      print("y list: ", y_list)
+      # print("y list: ", y_list)
       # y_list = [item for sublist in y_list for item in sublist]
       y_hat_list = y_hat.tolist()
       # y_hat_list = [item for sublist in y_hat_list for item in sublist]
@@ -297,6 +302,9 @@ def main():
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
 
+
+  # This defines ALL the features that ANY model possibly needs access
+  # to. That is, some models will only need a subset of these features.
   FEATURES = {
     'label': tf.FixedLenFeature([], dtype=tf.int64),
     'tokens': tf.VarLenFeature(dtype=tf.int64),
@@ -304,8 +312,8 @@ def main():
     'types': tf.VarLenFeature(dtype=tf.int64),
     'type_counts': tf.VarLenFeature(dtype=tf.int64),
     'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-    'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  }
+    #'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32),
+    }
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
@@ -389,6 +397,7 @@ def set_hp(args):
                  alphas=args.alphas,
                  labels_key="label",
                  inputs_key="tokens",
+                 token_lengths_key="tokens_length",
                  l2_weight=0.0,
                  dropout_rate=0.5,
                  num_layers=args.num_layers)

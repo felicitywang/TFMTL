@@ -89,15 +89,16 @@ class Mult(object):
                                                )
 
   # Encoding (feature extraction)
-  def encode(self, inputs, feature_name):
-    return self._encoders[feature_name](inputs)
+  def encode(self, inputs, feature_name, lengths=None):
+    return self._encoders[feature_name](inputs, lengths)
 
   def get_predictions(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
     inputs = batch[self._hp.inputs_key]
+    input_lengths = batch[self._hp.token_lengths_key]
 
     if features is None:
-      features = self.encode(inputs, feature_name)
+      features = self.encode(inputs, feature_name, lengths=input_lengths)
 
     logits = self._py_templates[feature_name](features)
 
@@ -109,10 +110,11 @@ class Mult(object):
   def get_loss(self, batch, feature_name, features=None):
     # Returns most likely label given conditioning variables (only run this on eval data)
     inputs = batch[self._hp.inputs_key]
+    input_lengths = batch[self._hp.token_lengths_key]
     labels = batch[self._hp.labels_key]
 
     if features is None:
-      features = self.encode(inputs, feature_name)
+      features = self.encode(inputs, feature_name, lengths=input_lengths)
 
     logits = self._py_templates[feature_name](features)
 
@@ -132,9 +134,6 @@ class Mult(object):
   def get_multi_task_loss(self, dataset_batches):
     # dataset_batches: map from dataset names to training batches (one batch per dataset)
     # we assume only one dataset's labels are observed; the rest are unobserved
-
-    # right now only support two datasets
-    assert len(dataset_batches) == 2
 
     losses = dict()
     total_loss = 0.0
