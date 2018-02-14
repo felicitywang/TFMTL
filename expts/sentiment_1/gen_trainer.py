@@ -191,8 +191,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       total_loss = 0
       num_iter = 0
       for i in xrange(steps_per_epoch):
-        if i % 10 == 0:
-          logging.info("Step %d/%d" % (i, steps_per_epoch))
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v
@@ -228,7 +226,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           tot_eval_acc += eval_acc
           str_ += '\n(%s) num_eval_total=%d eval_acc=%f' % (
             dataset_name, num_eval_total, eval_acc)
-        str_ += ' mean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
+        str_ += '\nmean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
         logging.info(str_)
       else:
         raise "final evaluation mode not implemented"
