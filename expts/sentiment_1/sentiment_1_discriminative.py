@@ -40,20 +40,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 logging = tf.logging
 
-
-# This defines ALL the features that ANY model possibly needs access
-# to. That is, some models will only need a subset of these features.
-FEATURES = {
-  'label': tf.FixedLenFeature([], dtype=tf.int64),
-  'tokens': tf.VarLenFeature(dtype=tf.int64),
-  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
-  'types': tf.VarLenFeature(dtype=tf.int64),
-  'type_counts': tf.VarLenFeature(dtype=tf.int64),
-  'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-  'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-}
-
-
 def parse_args():
   p = ap.ArgumentParser()
   p.add_argument('--model', type=str,
@@ -156,9 +142,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Initialize model parameters
     sess.run(init_ops)
 
+    best_eval_acc = dict()
     for dataset_name in model_info:
       _train_init_op = model_info[dataset_name]['train_init_op']
       sess.run(_train_init_op)
+      best_eval_acc[dataset_name] = {"epoch": -1,
+                                     "acc": float('-inf'),
+                                     }
 
     # Do training
     for epoch in xrange(args.num_train_epochs):
@@ -199,11 +189,22 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
           _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-            dataset_name, _num_eval_total, _eval_acc, _eval_align_acc)
+          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
+                                                                              _num_eval_total,
+                                                                              _eval_acc,
+                                                                              _eval_align_acc)
+
+          if _eval_acc > best_eval_acc[dataset_name]["acc"]:
+            best_eval_acc[dataset_name]["acc"] = _eval_acc
+            best_eval_acc[dataset_name]["epoch"] = epoch
+
         logging.info(str_)
+
       else:
         raise "final evaluation mode not implemented"
+
+    print(best_eval_acc)
+
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
@@ -300,6 +301,19 @@ def main():
 
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
+
+
+  # This defines ALL the features that ANY model possibly needs access
+  # to. That is, some models will only need a subset of these features.
+  FEATURES = {
+    'label': tf.FixedLenFeature([], dtype=tf.int64),
+    'tokens': tf.VarLenFeature(dtype=tf.int64),
+    'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
+    'types': tf.VarLenFeature(dtype=tf.int64),
+    'type_counts': tf.VarLenFeature(dtype=tf.int64),
+    'types_length': tf.FixedLenFeature([], dtype=tf.int64),
+    #'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32),
+    }
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
