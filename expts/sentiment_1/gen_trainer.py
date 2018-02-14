@@ -27,13 +27,13 @@ from time import time
 import numpy as np
 import tensorflow as tf
 
+from mlvae.hparams import update_hparams_from_args
 from mlvae.pipeline import Pipeline
 from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
-from mlvae.vae import dense_layer
 from mlvae.decoders import unigram
-from mlvae.clustering import accuracy
 
+from mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
 from mlvae.simple_mlvae_model import SimpleMultiLabel
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -43,16 +43,20 @@ logging = tf.logging
 FEATURES = {
   'label': tf.FixedLenFeature([], dtype=tf.int64),
   'types': tf.VarLenFeature(dtype=tf.int64),
+  'type_counts': tf.VarLenFeature(dtype=tf.int64),
   'types_lengths': tf.FixedLenFeature([], dtype=tf.int64),
   'tokens': tf.VarLenFeature(dtype=tf.int64),
-  'tokens_lengths': tf.VarLenFeature([], dtype=tf.int64),
+  'tokens_lengths': tf.FixedLenFeature([], dtype=tf.int64),
 }
+
+IMDB_NUM_LABEL = 2
+SSTb_NUM_LABEL = 5
 
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, choices=['simple_mlvae'],
-                 help='Model to use.')
+  p.add_argument('--model', type=str, default='simple_mlvae',
+                 choices=['simple_mlvae'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=128, type=int,
@@ -92,7 +96,7 @@ def parse_args():
                  help='Throw error if any operations are not GPU-compatible')
   p.add_argument('--label_key', default="label", type=str,
                  help='Key for label field in the batches')
-  p.add_argument('--datasets', nargs='+', type=str,
+  p.add_argument('--datasets', nargs='+', choices=["SSTb", "IMDB"], type=str,
                  help='Key of the dataset(s) to train and evaluate on [IMDB|SSTb]')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help="""Paths to the directory containing the TFRecord files (train.tf,
@@ -167,11 +171,10 @@ def get_vocab_size(vocab_file_path):
 def train_model(model, dataset_info, steps_per_epoch, args):
   dataset_info, model_info = fill_info_dicts(dataset_info, model, args)
 
-  # Get training objective. The inputs are:
-  #   1. A dict of { dataset_key: dataset_iterator }
-  #
+  # Get model loss
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
+  train_encoders = {name: model_info}
   loss = model.get_multi_task_loss(train_batches)
 
   # Done building compute graph; set up training ops.
@@ -186,7 +189,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
               tf.local_variables_initializer()]
   config = get_proto_config(args)
   with tf.train.SingularMonitoredSession(config=config) as sess:
-    # Initialize model parameters
+    tf.set_random_seed(args.seed)
+
+    # Initialize model parameters and optimizer operations
     sess.run(init_ops)
 
     for dataset_name in model_info:
@@ -215,13 +220,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       if not args.test:  # Validation mode
         # Get performance metrics on each dataset
         for dataset_name in model_info:
-          _pred_op = model_info[dataset_name]['test_pred_op']
-          _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
-          _eval_iter = model_info[dataset_name]['test_iter']
-          _metrics = compute_held_out_performance(sess, _pred_op,
-                                                  _eval_labels,
-                                                  _eval_iter, args)
-          model_info[dataset_name]['test_metrics'] = _metrics
+          pred_op = model_info[dataset_name]['test_pred_op']
+          eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
+          eval_iter = model_info[dataset_name]['test_iter']
+          metrics = compute_held_out_performance(sess, pred_op,
+                                                 eval_labels,
+                                                 eval_iter, args)
+          model_info[dataset_name]['test_metrics'] = metrics
 
         end_time = time()
         elapsed = end_time - start_time
@@ -231,12 +236,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           epoch+1, args.num_train_epochs, np.asscalar(step), elapsed,
           train_loss)
 
+        tot_eval_acc = 0.0
         for dataset_name in model_info:
-          _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
-          _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
-          _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-          str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-            dataset_name, _num_eval_total, _eval_acc, _eval_align_acc)
+          num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
+          eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
+          tot_eval_acc += eval_acc
+          str_ += '\n(%s) num_eval_total=%d eval_acc=%f' % (
+            dataset_name, num_eval_total, eval_acc)
+        str_ += ' mean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
         logging.info(str_)
       else:
         raise "final evaluation mode not implemented"
@@ -276,7 +283,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
     'ntotal': ntotal,
     'ncorrect': ncorrect,
     'accuracy': acc,
-    'aligned_accuracy': accuracy(ys, y_hats),
   }
 
 
@@ -301,11 +307,6 @@ def main():
   class_sizes['IMDB'] = 2
   class_sizes['SSTb'] = 5
 
-  # Ordering of concatenation for input to decoder
-  ordering = dict()
-  ordering['IMDB'] = 0
-  ordering['SSTb'] = 1
-
   # Read data
   dataset_info = dict()
   for dataset_name in args.datasets:
@@ -315,7 +316,6 @@ def main():
     dataset_info[dataset_name]['feature_name'] = dataset_name
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
-    dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     _dir = dataset_info[dataset_name]['dir']
 
     # Set paths to TFRecord files
@@ -328,14 +328,9 @@ def main():
     dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
   vocab_size = get_vocab_size(args.vocab_path)
-
+  tf.logging.info("vocab size: %d", vocab_size)
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size']
                  for dataset_name in dataset_info}
-
-  order_dict = {dataset_name: dataset_info[dataset_name]['ordering']
-                for dataset_name in dataset_info}
-
-  dataset_order = sorted(order_dict, key=order_dict.get)
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
@@ -359,10 +354,10 @@ def main():
     max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in
                        training_files])
 
-    # Seed TensorFlow RNG
-    tf.set_random_seed(args.seed)
-
+    # Representation learning
     encoders = build_encoders(vocab_size, args)
+
+    # Regularization
     decoders = build_decoders(vocab_size, args)
 
     # Maybe check for NaNs
@@ -376,29 +371,18 @@ def main():
         # TODO: also print and sum up all their sizes
         print(tvar)
 
-    # Steps per epoch.
-    # One epoch: all datasets have been seen completely at least once
-    steps_per_epoch = int(max_N_train / args.batch_size)
-
-    # Create model(s):
-    # NOTE: models must support the following functions:
-    #  * get_multi_task_loss()
-    #        args: dictionary that maps dataset -> training batch
-    #        returns: total loss accumulated over all batches in the dictionary
-    #  * get_predictions()
-    #        args: test batch (with <batch_len> examples), name of feature to predict
-    #        returns: Tensor of size <batch_len> specifying the predicted label
-    #                 for the specified feature for each of the examples in the batch
     if args.model == 'simple_mlvae':
-      m = SimpleMultiLabel(class_sizes=class_sizes,
-                           dataset_order=dataset_order,
-                           encoders=encoders,
-                           decoders=decoders,
-                           hp=None)
+      hp = simple_mlvae_hparams()
+      update_hparams_from_args(hp, args)
+      m = SimpleMultiLabel(class_sizes=class_sizes, encoders=encoders,
+                           decoders=decoders, hp=hp)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 
     # Do training
+    print('dataset info:')
+    print(dataset_info)
+    steps_per_epoch = int(max_N_train / args.batch_size)
     train_model(m, dataset_info, steps_per_epoch, args)
 
 
@@ -457,22 +441,6 @@ def fill_info_dicts(dataset_info, model, args):
       logging.info("Using test data for evaluation.")
     else:
       logging.info("Using validation data for evaluation.")
-
-  def _create_feature_dict(ds, dataset_info, model_info):
-    _feature_dict = dict()
-    for dataset_name in dataset_info:
-      if ds == dataset_name:
-        # Observe the labels (from batch)
-        _feature_dict[ds] = model_info[ds]['train_batch']
-      else:
-        # Don't observe the labels
-        _feature_dict[ds] = None
-    return _feature_dict
-
-  # Create feature_dicts for each dataset
-  for dataset_name in model_info:
-    model_info[dataset_name]['feature_dict'] = _create_feature_dict(
-      dataset_name, dataset_info, model_info)
 
   # Return dataset_info dict and model_info dict
   return dataset_info, model_info

@@ -42,7 +42,7 @@ def default_hparams():
                  latent_dim=256,
                  tau0=0.5,
                  decay_tau=False,
-                 alpha=0.75,
+                 alpha=10.0,
                  expectation="exact",
                  labels_key="label",
                  inputs_key="inputs",
@@ -79,6 +79,8 @@ def generative_loss(decoder, x, markov_blanket, ys, qy_logits,
 class SimpleMultiLabel(object):
   def __init__(self,
                class_sizes=None,
+               encoders=None,
+               decoders=None,
                hp=None):
     """
     class_sizes: map from feature names to cardinality of label sets
@@ -88,6 +90,10 @@ class SimpleMultiLabel(object):
     """
 
     assert class_sizes is not None
+    assert encoders.keys() == decoders.keys()
+
+    self._encoders = encoders
+    self._decoders = decoders
 
     if hp is None:
       tf.logging.info("Using default hyper-parameters; none provided.")
@@ -151,7 +157,8 @@ class SimpleMultiLabel(object):
     y = tf.exp(log_qy.sample())
     return y
 
-  def get_predictions(self, features, feature_name):
+  def get_predictions(self, inputs, feature_name):
+    features = self.encode(inputs, feature_name)
     logits = self.qy_logits(feature_name, features)
     probs = tf.nn.softmax(logits)
     return tf.argmax(probs, axis=1)
@@ -188,63 +195,51 @@ class SimpleMultiLabel(object):
                            qy_logits, py_logits, z, zm, zv, zm_prior,
                            zv_prior)
 
-  def get_multi_task_loss(self, task_batches, task_encoders, task_decoders):
-    """Get combined multi-task loss. We assume only one dataset's labels
-    are observed; the rest are unobserved.
-
-    task_batches: map from task names to training batches (one
-      batch per dataset)
-    task_encoders: map from task names to feature extractors
-    task_decoders: map from task names to decoders
-
-    """
+  def get_multi_task_loss(self, task_batches):
     losses = []
     for task_name, batch in task_batches.items():
       inputs = batch[self.hp.inputs_key]
-      targets = batch[self.hp.targets_key]
-      encoder = task_encoders[task_name]
-      decoder = task_decoders[task_name]
+      if self.hp.loss_type == 'd':
+        targets = None
+      else:
+        targets = batch[self.hp.targets_key]
       labels = {k: None for k in task_batches.keys()}
       labels[task_name] = batch[self.hp.labels_key]
       if self.hp.loss_reduce == "even":
-        losses += [self.get_loss(labels, inputs=inputs,
-                                 targets=targets, encoder=encoder,
-                                 decoder=decoder,
+        losses += [self.get_loss(task_name, labels, inputs,
+                                 targets=targets,
                                  loss_type=self.hp.loss_type)]
       else:
         raise ValueError("bad loss combination type: %s" %
                          (self.hp.loss_reduce))
     return tf.add_n(losses)
 
-  def get_loss(self,
-               labels,
-               encoder=None,
-               decoder=None,
-               inputs=None,
-               targets=None,
-               loss_type=None):
-
-    assert inputs is not None
-    assert targets is not None
-    assert loss_type is not None
-
+  def get_loss(self, task, labels, inputs, targets=None,
+               loss_type='gd'):
     # Keep track of batch length and size.
     self._batch_size = tf.shape(inputs)[0]
 
     # Encode the inputs using a task-specific encoder
-    features = encoder(inputs)
+    features = self.encode(inputs, task)
 
     disc = 'd' in loss_type
     gen = 'g' in loss_type
     if gen and disc:
       g_loss = self.get_total_generative_loss(labels, features, targets)
       d_loss = self.get_total_discriminative_loss(labels, features)
-      return tf.reduce_mean((1. - self.alpha) * g_loss + (self.alpha * d_loss))
+      a = self.hp.alpha
+      return tf.reduce_mean((1. - a) * g_loss + (a * d_loss))
     elif disc:
       d_loss = self.get_total_discriminative_loss(labels, features)
       return tf.reduce_mean(d_loss)
     else:
       raise ValueError("unrecognized loss type: %s" % (loss_type))
+
+  def encode(self, inputs, name):
+    return self._encoders[name](inputs)
+
+  def decode(self, targets, context, name):
+    return self._decoders[name](targets, context)
 
   @property
   def hp(self):
