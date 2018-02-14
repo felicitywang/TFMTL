@@ -16,10 +16,13 @@
 import tensorflow as tf
 from six.moves import xrange
 
+from mlvae.reducers import *
+
 def conv_and_pool(inputs,
                   num_filter=64,
                   max_width=5,
-                  activation_fn=tf.nn.relu):
+                  activation_fn=tf.nn.relu,
+                  reducer=reduce_avg_over_time):
   """Processes inputs using 1D convolutions of size [2, max_width] on
   the input followed by temporal max pooling.
 
@@ -53,8 +56,8 @@ def conv_and_pool(inputs,
       padding='SAME',  # zero padding (left and right)
       name='conv_{}'.format(width))
 
-    # Max pooling
-    pool_i = tf.reduce_max(conv_i, axis=1, keep_dims=False)
+    # Pooling
+    pool_i = reducer(conv_i, lengths=None, time_axis=1)
 
     # Append the filter
     filters.append(pool_i)
