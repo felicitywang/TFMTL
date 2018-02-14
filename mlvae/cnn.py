@@ -16,35 +16,18 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.reducers import reduce_avg_over_time
+from mlvae.reducers import reduce_max_over_time
 
 
 def conv_and_pool(inputs,
-                  num_filter=64,
-                  max_width=5,
+                  num_filter=128,
+                  max_width=7,
                   activation_fn=tf.nn.relu,
-                  reducer=reduce_avg_over_time):
-  """Processes inputs using 1D convolutions of size [2, max_width] on
-  the input followed by temporal max pooling.
-
-  Inputs
-  ------
-    inputs: batch of size [batch_size, batch_Len, embed_size]
-    num_filter: number of filters for each width
-    max_width: maximum filter width
-    activation_fn: non-linearity to apply after the convolutions. Can be None.
-
-  Outputs
-  -------
-    If K different width filters are applied, the output is a Tensor of size
-    [batch_size, num_filter * K].
-  """
-
+                  reducer=reduce_max_over_time):
   filter_sizes = []
   for i in xrange(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
 
-  # Convolutional layers
   filters = []
   for width, num_filter in filter_sizes:
     conv_i = tf.layers.conv1d(

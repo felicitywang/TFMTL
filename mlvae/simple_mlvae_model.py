@@ -38,11 +38,11 @@ kl_divergence = tf.contrib.distributions.kl_divergence
 
 
 def default_hparams():
-  return HParams(embed_dim=256,
+  return HParams(mlp_hidden_dim=512,
                  latent_dim=256,
                  tau0=0.5,
                  decay_tau=False,
-                 alpha=10.0,
+                 alpha=0.5,
                  label_prior_type="uniform",
                  expectation="exact",
                  labels_key="label",
@@ -108,6 +108,10 @@ class SimpleMultiLabel(object):
 
     self._class_sizes = class_sizes
 
+    # Intermediate loss values
+    self._task_nll_x = dict()
+    self._task_loss = dict()
+
     ########################### Generative Networks ###########################
 
     # p(y_1), ..., p(y_K)
@@ -135,7 +139,7 @@ class SimpleMultiLabel(object):
 
     # p(z | y_1, ..., y_K)
     self._pz_template = tf.make_template('pz', MLP_gaussian_posterior,
-                                         embed_dim=hp.embed_dim,
+                                         hidden_dim=hp.mlp_hidden_dim,
                                          latent_dim=hp.latent_dim)
 
     ########################### Inference Networks ############################
@@ -147,11 +151,11 @@ class SimpleMultiLabel(object):
         'qy_{}'.format(k),
         MLP_unnormalized_log_categorical,
         output_size=v,
-        embed_dim=hp.embed_dim)
+        hidden_dim=hp.mlp_hidden_dim)
 
     # q(z | y_1, ..., y_K)
     self._qz_template = tf.make_template('qz', MLP_gaussian_posterior,
-                                         embed_dim=hp.embed_dim,
+                                         hidden_dim=hp.mlp_hidden_dim,
                                          latent_dim=hp.latent_dim)
 
 
@@ -214,7 +218,7 @@ class SimpleMultiLabel(object):
     z = gaussian_sample(zm, zv)
     zm_prior, zv_prior = self.pz_mean_var(ys_list)
     markov_blanket = tf.concat([z], axis=1)
-    nll_x = self.decode(batch, markov_blanket, task)
+    self._task_nll_x[task] = nll_x = self.decode(batch, markov_blanket, task)
     return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
                            zm_prior, zv_prior)
 
@@ -223,15 +227,16 @@ class SimpleMultiLabel(object):
     for task_name, batch in task_batches.items():
       labels = {k: None for k in task_batches.keys()}
       labels[task_name] = batch[self.hp.labels_key]
-      print('labels:')
-      print(labels)
       if self.hp.loss_reduce == "even":
-        losses += [self.get_loss(task_name, labels, batch,
-                                 loss_type=self.hp.loss_type)]
+        with tf.name_scope(task_name):
+          loss = self.get_loss(task_name, labels, batch,
+                               loss_type=self.hp.loss_type)
+          losses.append(loss)
+          self._task_loss[task_name] = loss
       else:
         raise ValueError("bad loss combination type: %s" %
                          (self.hp.loss_reduce))
-    return tf.add_n(losses)
+    return tf.add_n(losses, name='combined_mt_loss')
 
   def get_loss(self, task_name, labels, batch, loss_type='gd'):
     # Encode the inputs using a task-specific encoder
@@ -243,6 +248,7 @@ class SimpleMultiLabel(object):
                                              features, batch)
       d_loss = self.get_task_discriminative_loss(task_name, labels, features)
       a = self.hp.alpha
+      assert a >= 0.0 and a <= 1.0, a
       return tf.reduce_mean((1. - a) * g_loss + (a * d_loss))
     elif disc and not gen:
       d_loss = self.get_task_discriminative_loss(labels, features)
@@ -258,6 +264,12 @@ class SimpleMultiLabel(object):
 
   def decode(self, targets, context, task_name):
     return self._decoders[task_name](targets, context)
+
+  def get_task_loss(self, task_name):
+    return self._task_loss[task_name]
+
+  def get_task_nll_x(self, task_name):
+    return self._task_nll_x[task_name]
 
   @property
   def hp(self):

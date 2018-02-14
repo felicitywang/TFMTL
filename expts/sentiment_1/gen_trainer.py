@@ -60,21 +60,30 @@ def parse_args():
                  choices=['simple_mlvae'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
-  p.add_argument('--batch_size', default=128, type=int,
+  p.add_argument('--batch_size', default=64, type=int,
                  help='Size of batch.')
-  p.add_argument('--encoder_arch', default="conv+max", choices=["conv+max"],
+  p.add_argument('--unlabeled', action='store_true', help="Use unlabeled data")
+  p.add_argument('--alpha', default=0.75, type=float,
+                 help='Weight placed on the discriminative terms')
+  p.add_argument('--encoder_arch', default="shared_conv_max",
+                 choices=["shared_conv_max"],
                  help="Type of encoder to use for each task.")
   p.add_argument('--decoder_arch', default="bow", choices=["bow"],
                  help="Type of decoder to use for each task.")
+  p.add_argument('--label_prior_type', default="learned",
+                 choices=["uniform", "learned"],
+                 help="What type of label prior to use")
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--embed_dim', default=256, type=int,
+  p.add_argument('--word_embed_dim', default=256, type=int,
                  help='Word embedding size')
+  p.add_argument('--mlp_hidden_dim', default=512, type=int,
+                 help='Size of the MLP hidden layers.')
   p.add_argument('--share_embed', action='store_true', default=False,
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
-  p.add_argument('--lr0', default=0.0001, type=float,
+  p.add_argument('--lr0', default=0.001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
@@ -120,25 +129,17 @@ def encoder_graph(batch, embed_fn, tokens_key='tokens'):
 
 def build_encoders(arch, vocab_size, args):
   encoders = dict()
-  if args.share_embed:
-    # One shared word embedding matrix for all datasets
-    tf.logging.info("Using shared word embeddings.")
-    embed_temp = tf.make_template('embedding', embed_sequence,
-                                  vocab_size=vocab_size,
-                                  embed_dim=args.embed_dim)
+
+  if arch == "shared_conv_max":
+    embedder = tf.make_template('embedding', embed_sequence,
+                                vocab_size=vocab_size,
+                                embed_dim=args.word_embed_dim)
+    feature_extractor = tf.make_template('encoder', encoder_graph,
+                                         embed_fn=embedder)
     for ds in args.datasets:
-      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp)
+      encoders[ds] = feature_extractor
   else:
-    # A unique word embedding matrix for each dataset
-    tf.logging.info("Using task-specific word embeddings.")
-    for ds in args.datasets:
-      embed_temp = tf.make_template('embedding_{}'.format(ds),
-                                    tf.contrib.layers.embed_sequence,
-                                    vocab_size=vocab_size,
-                                    embed_dim=args.embed_dim)
-      encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
-                                      embed_fn=embed_temp)
+    raise ValueError("unrecognized encoder architecture")
 
   return encoders
 
@@ -182,10 +183,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Initialize model parameters and optimizer operations
     sess.run(init_ops)
 
-    for dataset_name in model_info:
-      _train_init_op = model_info[dataset_name]['train_init_op']
-      sess.run(_train_init_op)
-
     # Do training
     for epoch in xrange(args.num_train_epochs):
       start_time = time()
@@ -195,7 +192,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       num_iter = 0
       for i in xrange(steps_per_epoch):
         if i % 10 == 0:
-          logging.info("Step %d/%d" % (i+1, steps_per_epoch))
+          logging.info("Step %d/%d" % (i, steps_per_epoch))
         step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v
@@ -243,27 +240,23 @@ def compute_held_out_performance(session, pred_op, eval_label,
   session.run(eval_iterator.initializer)
 
   # Accumulate predictions
-  ys = []
-  y_hats = []
+  gold_labels = []
+  pred_labels = []
   while True:
     try:
       y, y_hat = session.run([eval_label, pred_op])
-      assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
-      y_list = y.tolist()
-      y_list = [item for sublist in y_list for item in sublist]
-      y_hat_list = y_hat.tolist()
-      y_hat_list = [item for sublist in y_hat_list for item in sublist]
-      ys += y_list
-      y_hats += y_hat_list
+      assert y.shape == y_hat.shape
+      gold_labels += y.tolist()
+      pred_labels += y_hat.tolist()
     except tf.errors.OutOfRangeError:
       break
 
-  assert len(ys) == len(y_hats)
+  assert len(gold_labels) == len(pred_labels)
 
-  ntotal = len(ys)
+  ntotal = len(gold_labels)
   ncorrect = 0
-  for i in xrange(len(ys)):
-    if ys[i] == y_hats[i]:
+  for i in xrange(len(gold_labels)):
+    if gold_labels[i] == pred_labels[i]:
       ncorrect += 1
   acc = float(ncorrect) / float(ntotal)
 
@@ -410,10 +403,8 @@ def fill_info_dicts(dataset_info, model, args):
     # Training data, iterator, and batch
     _train_dataset = dataset_info[dataset_name]['train_dataset']
     _train_iter = _train_dataset.iterator
-    _train_init_op = _train_dataset.init_op
     _train_batch = _train_dataset.batch
     model_info[dataset_name]['train_iter'] = _train_iter
-    model_info[dataset_name]['train_init_op'] = _train_init_op
     model_info[dataset_name]['train_batch'] = _train_batch
 
     # Held-out test data, iterator, batch, and prediction operation
@@ -438,10 +429,10 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size,
                         is_training=True):
   if is_training:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
-                  num_epochs=None)  # repeat indefinitely
+                  one_shot=True, num_epochs=None)
   else:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
-                  num_epochs=1)
+                  num_epochs=1, one_shot=False)
   return ds
 
 
