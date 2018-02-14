@@ -133,9 +133,6 @@ class Mult(object):
     # dataset_batches: map from dataset names to training batches (one batch per dataset)
     # we assume only one dataset's labels are observed; the rest are unobserved
 
-    # right now only support two datasets
-    assert len(dataset_batches) == 2
-
     losses = dict()
     total_loss = 0.0
     assert len(dataset_batches) == len(self._hp.alphas)

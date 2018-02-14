@@ -43,11 +43,15 @@ logging = tf.logging
 
 # This defines ALL the features that ANY model possibly needs access
 # to. That is, some models will only need a subset of these features.
-# FEATURES = {
-#  'targets': tf.VarLenFeature(dtype=tf.int64),
-#  'length': tf.FixedLenFeature([], dtype=tf.int64),
-#  'label': tf.FixedLenFeature([], dtype=tf.int64)
-# }
+FEATURES = {
+  'label': tf.FixedLenFeature([], dtype=tf.int64),
+  'tokens': tf.VarLenFeature(dtype=tf.int64),
+  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
+  'types': tf.VarLenFeature(dtype=tf.int64),
+  'type_counts': tf.VarLenFeature(dtype=tf.int64),
+  'types_length': tf.FixedLenFeature([], dtype=tf.int64),
+  'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+}
 
 
 def parse_args():
@@ -219,7 +223,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
       assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
       y_list = y.tolist()
       # print("y list type: ", type(y_list))
-      print("y list: ", y_list)
+      # print("y list: ", y_list)
       # y_list = [item for sublist in y_list for item in sublist]
       y_hat_list = y_hat.tolist()
       # y_hat_list = [item for sublist in y_hat_list for item in sublist]
@@ -296,16 +300,6 @@ def main():
 
   order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
   dataset_order = sorted(order_dict, key=order_dict.get)
-
-  FEATURES = {
-    'label': tf.FixedLenFeature([], dtype=tf.int64),
-    'tokens': tf.VarLenFeature(dtype=tf.int64),
-    'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
-    'types': tf.VarLenFeature(dtype=tf.int64),
-    'type_counts': tf.VarLenFeature(dtype=tf.int64),
-    'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-    'bow': tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  }
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
