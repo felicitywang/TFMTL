@@ -26,15 +26,15 @@ from mlvae.reducers import *
 
 ARCHITECTURES = {
   "cnn_LARGE_tied_word_embeddings":
-  { "SSTb": {num_filter=64,
-             max_width=5,
-             activation_fn=tf.nn.relu,
-             reducer=reduce_max_over_time,
+  { "SSTb": {"num_filter": 64,
+             "max_width": 5,
+             "activation_fn": tf.nn.relu,
+             "reducer": reduce_max_over_time,
             },
-    "LMRD": {num_filter=64,
-             max_width=5,
-             activation_fn=tf.nn.relu,
-             reducer=reduce_max_over_time,
+    "LMRD": {"num_filter": 64,
+             "max_width": 5,
+             "activation_fn": tf.nn.relu,
+             "reducer": reduce_max_over_time,
            },
   },
 
@@ -44,10 +44,10 @@ ARCHITECTURES = {
   },
 
   "avg_cnn_and_cnn_fully_tied":
-  {num_filter=64,
-   max_width=5,
-   activation_fn=tf.nn.relu,
-   reducer=reduce_avg_over_time,
+  {"num_filter": 64,
+   "max_width": 5,
+   "activation_fn": tf.nn.relu,
+   "reducer": reduce_avg_over_time,
   },
 }
 
