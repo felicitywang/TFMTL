@@ -19,19 +19,22 @@ from six.moves import xrange
 from mlvae.reducers import *
 
 def conv_and_pool(inputs,
+                  lengths=None,
                   num_filter=64,
                   max_width=5,
                   activation_fn=tf.nn.relu,
                   reducer=reduce_avg_over_time):
   """Processes inputs using 1D convolutions of size [2, max_width] on
-  the input followed by temporal max pooling.
+  the input followed by temporal pooling.
 
   Inputs
   ------
     inputs: batch of size [batch_size, batch_Len, embed_size]
+    lengths: batch of size [batch_size] **ignored in this function**
     num_filter: number of filters for each width
     max_width: maximum filter width
     activation_fn: non-linearity to apply after the convolutions. Can be None.
+    reducer: pooling operation to apply to each convolved output
 
   Outputs
   -------

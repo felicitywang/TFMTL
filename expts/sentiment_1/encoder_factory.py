@@ -20,7 +20,8 @@ from __future__ import division
 from __future__ import print_function
 
 from mlvae.embed import embed_sequence
-from mlvae.cnn import conv_and_pool
+from mlvae.encoders.cnn import conv_and_pool
+from mlvae.encoders.paragram import paragram_phrase
 from mlvae.reducers import *
 
 
@@ -38,23 +39,35 @@ ARCHITECTURES = {
            },
   },
 
+  "paragram_phrase_tied_word_embeddings":
+  {
+    "SSTb": {"reducer": reduce_max_over_time,
+             "apply_activation": False,
+             "activation_fn": None,
+            },
+    "LMRD": {"reducer": reduce_avg_over_time,
+             "apply_activation": False,
+             "activation_fn": None,
+            },
+  },
+
   "rnn_rnn_untied":
   { "SSTb": {},
     "LMRD": {},
   },
 
   "avg_cnn_and_cnn_fully_tied":
-  {"num_filter": 64,
+  {"num_filter": 128,
    "max_width": 5,
    "activation_fn": tf.nn.relu,
-   "reducer": reduce_avg_over_time,
+   "reducer": reduce_max_over_time,
   },
 }
 
 
-def encoder_graph(inputs, embed_fn, encode_fn):
+def encoder_graph(inputs, lengths, embed_fn, encode_fn):
   embed = embed_fn(inputs)
-  return encode_fn(embed)
+  return encode_fn(embed, lengths)
 
 def build_prepared_encoders(vocab_size, args, encoder_hp=None):
   encoders = dict()
@@ -72,6 +85,28 @@ def build_prepared_encoders(vocab_size, args, encoder_hp=None):
         kwargs = ARCHITECTURES[args.encoder_architecture][ds]
       encode_temp = tf.make_template('encoding_{}'.format(ds),
                                      conv_and_pool,
+                                     kwargs)
+      encoder = tf.make_template('encoder_{}'.format(ds),
+                                 encoder_graph,
+                                 embed_fn=embed_temp,
+                                 encode_fn=encode_temp)
+      encoders[ds] = encoder
+
+    return encoders
+
+  elif args.encoder_architecture == "paragram_phrase_tied_word_embeddings":
+    # Shared word embedding matrix for all datasets
+    # Separate encoder for each dataset
+    embed_temp = tf.make_template('embedding', embed_sequence,
+                                  vocab_size=vocab_size,
+                                  embed_dim=args.embed_dim)
+    for ds in args.datasets:
+      if (encoder_hp is not None) and (ds in encoder_hp):
+        kwargs = encoder_hp[ds]
+      else:
+        kwargs = ARCHITECTURES[args.encoder_architecture][ds]
+      encode_temp = tf.make_template('encoding_{}'.format(ds),
+                                     paragram_phrase,
                                      kwargs)
       encoder = tf.make_template('encoder_{}'.format(ds),
                                  encoder_graph,

@@ -30,7 +30,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mlvae.clustering import accuracy
-from mlvae.cnn import conv_and_pool
+from mlvae.encoders.cnn import conv_and_pool
 from mlvae.embed import embed_sequence
 from mlvae.pipeline import Pipeline
 from tasks.code.mult import Mult
@@ -196,7 +196,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
           if _eval_acc > best_eval_acc[dataset_name]["acc"]:
             best_eval_acc[dataset_name]["acc"] = _eval_acc
-            best_eval_acc[dataset_name]["epoch"] = epoch
+            best_eval_acc[dataset_name]["epoch"] = epoch + 1
 
         logging.info(str_)
 
@@ -397,6 +397,7 @@ def set_hp(args):
                  alphas=args.alphas,
                  labels_key="label",
                  inputs_key="tokens",
+                 token_lengths_key="tokens_length",
                  l2_weight=0.0,
                  dropout_rate=0.5,
                  num_layers=args.num_layers)
