@@ -27,11 +27,12 @@ from time import time
 import numpy as np
 import tensorflow as tf
 
+from decoder_factory import build_decoders
+
 from mlvae.hparams import update_hparams_from_args
 from mlvae.pipeline import Pipeline
 from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
-from mlvae.decoders import unigram
 
 from mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
 from mlvae.simple_mlvae_model import SimpleMultiLabel
@@ -44,9 +45,9 @@ FEATURES = {
   'label': tf.FixedLenFeature([], dtype=tf.int64),
   'types': tf.VarLenFeature(dtype=tf.int64),
   'type_counts': tf.VarLenFeature(dtype=tf.int64),
-  'types_lengths': tf.FixedLenFeature([], dtype=tf.int64),
+  'types_length': tf.FixedLenFeature([], dtype=tf.int64),
   'tokens': tf.VarLenFeature(dtype=tf.int64),
-  'tokens_lengths': tf.FixedLenFeature([], dtype=tf.int64),
+  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
 }
 
 IMDB_NUM_LABEL = 2
@@ -61,6 +62,10 @@ def parse_args():
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
+  p.add_argument('--encoder_arch', default="conv+max", choices=["conv+max"],
+                 help="Type of encoder to use for each task.")
+  p.add_argument('--decoder_arch', default="bow", choices=["bow"],
+                 help="Type of decoder to use for each task.")
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
   p.add_argument('--embed_dim', default=256, type=int,
@@ -107,20 +112,17 @@ def parse_args():
   return p.parse_args()
 
 
-def encoder_graph(inputs, embed_fn):
-  embed = embed_fn(inputs)
+def encoder_graph(batch, embed_fn, tokens_key='tokens'):
+  tokens = batch[tokens_key]
+  embed = embed_fn(tokens)
   return conv_and_pool(embed)
 
 
-def decoder_graph(x, z, vocab_size):
-  return unigram(x, z,
-                 vocab_size=vocab_size)
-
-
-def build_encoders(vocab_size, args):
+def build_encoders(arch, vocab_size, args):
   encoders = dict()
   if args.share_embed:
     # One shared word embedding matrix for all datasets
+    tf.logging.info("Using shared word embeddings.")
     embed_temp = tf.make_template('embedding', embed_sequence,
                                   vocab_size=vocab_size,
                                   embed_dim=args.embed_dim)
@@ -129,29 +131,16 @@ def build_encoders(vocab_size, args):
                                       embed_fn=embed_temp)
   else:
     # A unique word embedding matrix for each dataset
+    tf.logging.info("Using task-specific word embeddings.")
     for ds in args.datasets:
-      embed_temp = tf.make_template('embedding_{}'.format(ds), tf.contrib.layers.embed_sequence,
+      embed_temp = tf.make_template('embedding_{}'.format(ds),
+                                    tf.contrib.layers.embed_sequence,
                                     vocab_size=vocab_size,
                                     embed_dim=args.embed_dim)
       encoders[ds] = tf.make_template('encoder_{}'.format(ds), encoder_graph,
                                       embed_fn=embed_temp)
 
   return encoders
-
-
-def build_decoders(vocab_size, args):
-  decoders = dict()
-  if args.share_decoders:
-    decoder = tf.make_template('decoder', decoder_graph,
-                               vocab_size=vocab_size)
-    for ds in args.datasets:
-      decoders[ds] = decoder
-  else:
-    for ds in args.datasets:
-      decoders[ds] = tf.make_template('decoder_{}'.format(ds), decoder_graph,
-                                      vocab_size=vocab_size)
-
-  return decoders
 
 
 def get_num_records(tf_record_filename):
@@ -174,7 +163,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   # Get model loss
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
-  train_encoders = {name: model_info}
   loss = model.get_multi_task_loss(train_batches)
 
   # Done building compute graph; set up training ops.
@@ -182,7 +170,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
   lr = get_learning_rate(args.lr0)
-  tvars, grads = get_var_grads(loss)
+  tvars, grads = get_var_grads(loss, args)
   train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
                           global_step_tensor, name='train_op')
   init_ops = [tf.global_variables_initializer(),
@@ -355,10 +343,10 @@ def main():
                        training_files])
 
     # Representation learning
-    encoders = build_encoders(vocab_size, args)
+    encoders = build_encoders(args.encoder_arch, vocab_size, args)
 
     # Regularization
-    decoders = build_decoders(vocab_size, args)
+    decoders = build_decoders(args.decoder_arch, vocab_size, args)
 
     # Maybe check for NaNs
     if args.check_numerics:

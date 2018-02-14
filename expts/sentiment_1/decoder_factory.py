@@ -21,35 +21,20 @@ import tensorflow as tf
 
 from mlvae.decoders import unigram
 
-ARCHITECTURES = {
-  "bow_1": {
-    "SSTb": {
-      "decoder": "unigram",
-    },
-    "LMRD": {
-      "decoder": "unigram",
-    }
-  }
-}
 
-
-def build_prepared_decoders(arch, vocab_size, args, hp=None):
-  ret = dict()
-  if arch == "bow_1":
-    for ds in args.datasets:
-      kwargs = ARCHITECTURES[arch][ds]
-      decoder = tf.make_template('decoder_{}'.format(ds), unigram,
-                                 vocab_size=vocab_size)
-      ret[ds] = decoder
+def build_template(name, decoder, vocab_size, kwargs=None):
+  if decoder == "unigram":
+    return tf.make_template('decoder_{}'.format(name), unigram,
+                            vocab_size=vocab_size)
   else:
-    raise ValueError("unknown architecture: %s" % (arch))
-  return ret
+    raise ValueError("unrecognized decoder: %s" % (decoder))
 
 
 def build_decoders(arch, vocab_size, args, hp=None):
   decoders = dict()
-  if arch in ARCHITECTURES:
-    decoders = build_prepared_decoders(arch, vocab_size, args, hp=hp)
+  if arch == "bow":
+    for ds in args.datasets:
+      decoders[ds] = build_template(ds, "unigram", vocab_size)
   else:
-    raise NotImplementedError("unknown architecture: %s" % (arch))
+    raise NotImplementedError("custom decoder combination not supported")
   return decoders

@@ -16,7 +16,8 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.reducers import *
+from mlvae.reducers import reduce_avg_over_time
+
 
 def conv_and_pool(inputs,
                   num_filter=64,
@@ -35,7 +36,7 @@ def conv_and_pool(inputs,
 
   Outputs
   -------
-    If K different width filters are applied, the output is a Tensor of size 
+    If K different width filters are applied, the output is a Tensor of size
     [batch_size, num_filter * K].
   """
 
