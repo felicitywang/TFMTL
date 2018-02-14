@@ -28,3 +28,6 @@ dataset = Dataset(json_dir=json_dir,
                   generate_basic_vocab=False,
                   load_vocab=False,
                   generate_tf_record=True)
+
+with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
+  f.write(str(dataset._vocab_size))
