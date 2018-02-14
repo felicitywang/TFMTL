@@ -90,26 +90,7 @@ for file_name in file_names:
   file.close()
   index += 1
 
-# indices
-train_index = list(range(len(train_list)))
-test_index = list(range(len(train_list), len(train_list) + len(test_list)))
-index = {
-  'train': train_index,
-  'test': test_index
-}
-assert len(set(index['train']).intersection(index['test'])) == 0
-
-with gzip.open(dir + 'index.json.gz', mode='wt') as file:
-  json.dump(index, file, ensure_ascii=False)
-
-# save json data
-train_list.extend(test_list)
-
-with gzip.open(dir + 'data.json.gz', mode='wt') as file:
-  json.dump(train_list, file, ensure_ascii=False)
-
 # unlabeled data
-index = 0
 unlabeled_list = []
 path = dir + 'aclImdb/train/unsup/'
 file_names = os.listdir(path)
@@ -122,5 +103,25 @@ for file_name in file_names:
       'text': file.readline()})
     file.close()
   index += 1
-with gzip.open(dir + 'unlabeled_data.json.gz', mode='wt') as file:
-  json.dump(unlabeled_list, file, ensure_ascii=False)
+
+# indices
+train_index = list(range(len(train_list)))
+test_index = list(range(len(train_list), len(train_list) + len(test_list)))
+unlabeled_index = list(range(len(train_list) + len(test_list), len(train_list) + len(test_list) + len(unlabeled_list)))
+index_dict = {
+  'train': train_index,
+  'test': test_index,
+  'unlabeled': unlabeled_index
+}
+assert len(set(index_dict['train']).intersection(index_dict['test'])) == 0
+assert len(set(index_dict['train']).intersection(index_dict['unlabeled'])) == 0
+assert len(set(index_dict['unlabeled']).intersection(index_dict['test'])) == 0
+
+with gzip.open(dir + 'index.json.gz', mode='wt') as file:
+  json.dump(index_dict, file, ensure_ascii=False)
+
+# save json data
+train_list.extend(test_list)
+train_list.extend(unlabeled_list)
+with gzip.open(dir + 'data.json.gz', mode='wt') as file:
+  json.dump(train_list, file, ensure_ascii=False)
