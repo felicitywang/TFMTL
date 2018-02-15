@@ -20,17 +20,21 @@ from __future__ import print_function
 import tensorflow as tf
 
 from mlvae.decoders import unigram
+from mlvae.decoders import cnn
 
 
-def build_template(name, decoder, vocab_size, kwargs=None):
+def build_template(name, decoder, vocab_size, **kwargs):
   if decoder == "unigram":
     return tf.make_template('decoder_{}'.format(name), unigram,
                             vocab_size=vocab_size)
+  elif decoder == "cnn":
+    return tf.make_template('decoder_{}'.format(name), cnn,
+                            vocab_size=vocab_size, **kwargs)
   else:
     raise ValueError("unrecognized decoder: %s" % (decoder))
 
 
-def build_decoders(arch, vocab_size, args, hp=None):
+def build_decoders(arch, vocab_size, args, embedder=None):
   decoders = dict()
   if arch == "bow_untied":
     for ds in args.datasets:
@@ -39,6 +43,13 @@ def build_decoders(arch, vocab_size, args, hp=None):
     decoder = build_template("tied_decoder", "unigram", vocab_size)
     for ds in args.datasets:
       decoders[ds] = decoder
+  elif arch == "cnn_unigram":
+    assert len(args.datasets) == 2
+    ds = 'SSTb'
+    decoders[ds] = build_template(ds, "cnn", vocab_size,
+                                  embedder=embedder)
+    ds = 'IMDB'
+    decoders[ds] = build_template(ds, "unigram", vocab_size)
   else:
     raise NotImplementedError("custom decoder combination not supported")
   return decoders

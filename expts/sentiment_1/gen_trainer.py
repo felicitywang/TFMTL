@@ -71,8 +71,8 @@ def parse_args():
   p.add_argument('--encoder_arch', default="conv_max_tied",
                  choices=["conv_max_tied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder_arch', default="bow_tied",
-                 choices=["bow_untied", "bow_tied"],
+  p.add_argument('--decoder_arch', default="cnn_unigram",
+                 choices=["bow_untied", "bow_tied", "cnn_unigram"],
                  help="Type of decoder to use for each task.")
   p.add_argument('--label_prior_type', default="learned",
                  choices=["uniform", "learned"],
@@ -81,6 +81,8 @@ def parse_args():
                  help='Size of evaluation batch.')
   p.add_argument('--word_embed_dim', default=256, type=int,
                  help='Word embedding size')
+  p.add_argument('--latent_dim', default=512, type=int,
+                 help='Latent embedding dimensionality')
   p.add_argument('--mlp_hidden_dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
   p.add_argument('--mlp_num_layers', default=2, type=int,
@@ -93,7 +95,7 @@ def parse_args():
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
-  p.add_argument('--num_train_epochs', default=50, type=int,
+  p.add_argument('--num_train_epochs', default=100, type=int,
                  help='Number of training epochs.')
   p.add_argument('--print_trainable_variables', action='store_true',
                  default=False,
@@ -133,13 +135,10 @@ def encoder_graph(batch, embed_fn, tokens_key='tokens'):
   return conv_and_pool(embed)
 
 
-def build_encoders(arch, vocab_size, args):
+def build_encoders(arch, vocab_size, args, embedder):
   encoders = dict()
 
   if arch == "conv_max_tied":
-    embedder = tf.make_template('embedding', embed_sequence,
-                                vocab_size=vocab_size,
-                                embed_dim=args.word_embed_dim)
     feature_extractor = tf.make_template('encoder', encoder_graph,
                                          embed_fn=embedder)
     for ds in args.datasets:
@@ -340,10 +339,15 @@ def main():
                        training_files])
 
     # Representation learning
-    encoders = build_encoders(args.encoder_arch, vocab_size, args)
+    embedder = tf.make_template('embedding', embed_sequence,
+                                vocab_size=vocab_size,
+                                embed_dim=args.word_embed_dim)
+    encoders = build_encoders(args.encoder_arch, vocab_size, args,
+                              embedder=embedder)
 
     # Regularization
-    decoders = build_decoders(args.decoder_arch, vocab_size, args)
+    decoders = build_decoders(args.decoder_arch, vocab_size, args,
+                              embedder=embedder)
 
     # Maybe check for NaNs
     if args.check_numerics:
