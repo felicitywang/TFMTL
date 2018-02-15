@@ -35,7 +35,10 @@ from mlvae.embed import embed_sequence
 from mlvae.cnn import conv_and_pool
 
 from mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
-from mlvae.simple_mlvae_model import SimpleMultiLabel
+from mlvae.simple_mlvae_model import SimpleMultiLabelVAE
+
+from mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
+from mlvae.mlvae_model import MultiLabelVAE
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -56,8 +59,8 @@ SSTb_NUM_LABEL = 5
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='simple_mlvae',
-                 choices=['simple_mlvae'], help='Model to use.')
+  p.add_argument('--model', type=str, default='normal',
+                 choices=['simple', 'normal', 'fancy'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=64, type=int,
@@ -83,7 +86,7 @@ def parse_args():
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
-  p.add_argument('--lr0', default=0.001, type=float,
+  p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
@@ -350,11 +353,16 @@ def main():
         # TODO: also print and sum up all their sizes
         print(tvar)
 
-    if args.model == 'simple_mlvae':
+    if args.model == 'simple':
       hp = simple_mlvae_hparams()
       update_hparams_from_args(hp, args)
-      m = SimpleMultiLabel(class_sizes=class_sizes, encoders=encoders,
-                           decoders=decoders, hp=hp)
+      m = SimpleMultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
+                              decoders=decoders, hp=hp)
+    elif args.model == 'normal':
+      hp = normal_mlvae_hparams()
+      update_hparams_from_args(hp, args)
+      m = MultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
+                        decoders=decoders, hp=hp)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 

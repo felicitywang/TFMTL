@@ -48,7 +48,6 @@ def default_hparams():
                  labels_key="label",
                  inputs_key="inputs",
                  targets_key="targets",
-                 loss_type="gd",
                  loss_reduce="even",
                  dtype='float32')
 
@@ -82,7 +81,7 @@ def tile_over_batch_dim(logits, batch_size):
   return tf.tile(logits, [batch_size, 1])
 
 
-class SimpleMultiLabel(object):
+class SimpleMultiLabelVAE(object):
   def __init__(self,
                class_sizes=None,
                encoders=None,
@@ -229,8 +228,7 @@ class SimpleMultiLabel(object):
       labels[task_name] = batch[self.hp.labels_key]
       if self.hp.loss_reduce == "even":
         with tf.name_scope(task_name):
-          loss = self.get_loss(task_name, labels, batch,
-                               loss_type=self.hp.loss_type)
+          loss = self.get_loss(task_name, labels, batch)
           losses.append(loss)
           self._task_loss[task_name] = loss
       else:
@@ -238,26 +236,17 @@ class SimpleMultiLabel(object):
                          (self.hp.loss_reduce))
     return tf.add_n(losses, name='combined_mt_loss')
 
-  def get_loss(self, task_name, labels, batch, loss_type='gd'):
+  def get_loss(self, task_name, labels, batch):
     # Encode the inputs using a task-specific encoder
     features = self.encode(batch, task_name)
-    disc = 'd' in loss_type.lower()
-    gen = 'g' in loss_type.lower()
-    if gen and disc:
-      g_loss = self.get_task_generative_loss(task_name, labels,
-                                             features, batch)
-      d_loss = self.get_task_discriminative_loss(task_name, labels, features)
-      a = self.hp.alpha
-      assert a >= 0.0 and a <= 1.0, a
-      return tf.reduce_mean((1. - a) * g_loss + (a * d_loss))
-    elif disc and not gen:
-      d_loss = self.get_task_discriminative_loss(labels, features)
-      return tf.reduce_mean(d_loss)
-    elif gen and not disc:
-      g_loss = self.get_task_generative_loss(task_name, labels,
-                                             features, batch)
-    else:
-      raise ValueError("unrecognized loss type: %s" % (loss_type))
+    g_loss = self.get_task_generative_loss(task_name, labels,
+                                           features, batch)
+    assert len(g_loss.get_shape().as_list()) == 1
+    d_loss = self.get_task_discriminative_loss(task_name, labels, features)
+    assert len(d_loss.get_shape().as_list()) == 1
+    a = self.hp.alpha
+    assert a >= 0.0 and a <= 1.0, a
+    return ((1. - a) * tf.reduce_mean(g_loss)) + (a * tf.reduce_mean(d_loss))
 
   def encode(self, inputs, task_name):
     return self._encoders[task_name](inputs)
