@@ -150,9 +150,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                      "acc": float('-inf'),
                                      }
 
+    best_total_acc = float('-inf')
+    best_total_acc_epoch = -1
+
     # Do training
-    for epoch in xrange(args.num_train_epochs):
+    for epoch in xrange(1, args.num_train_epochs + 1):
       start_time = time()
+
+      total_acc = 0.0
 
       # Take steps_per_epoch gradient steps
       total_loss = 0
@@ -184,7 +189,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         elapsed = end_time - start_time
         # Log performance(s)
         str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
-          epoch + 1, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
+          epoch, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
         for dataset_name in model_info:
           _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
           _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
@@ -194,9 +199,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                                               _eval_acc,
                                                                               _eval_align_acc)
 
+          total_acc += _eval_acc
           if _eval_acc > best_eval_acc[dataset_name]["acc"]:
             best_eval_acc[dataset_name]["acc"] = _eval_acc
-            best_eval_acc[dataset_name]["epoch"] = epoch + 1
+            best_eval_acc[dataset_name]["epoch"] = epoch
+
+        if total_acc > best_total_acc:
+          best_total_acc = total_acc
+          best_total_acc_epoch = epoch
 
         logging.info(str_)
 
@@ -204,7 +214,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         raise "final evaluation mode not implemented"
 
     print(best_eval_acc)
-
+    print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
