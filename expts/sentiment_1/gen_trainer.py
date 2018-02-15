@@ -132,7 +132,7 @@ def parse_args():
 def encoder_graph(batch, embed_fn, tokens_key='tokens'):
   tokens = batch[tokens_key]
   embed = embed_fn(tokens)
-  return conv_and_pool(embed)
+  return conv_and_pool(embed, num_filter=256, max_width=5)
 
 
 def build_encoders(arch, vocab_size, args, embedder):

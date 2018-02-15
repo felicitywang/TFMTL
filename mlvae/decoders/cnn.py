@@ -30,6 +30,8 @@ def default_hparams():
 
 
 def shift_right(x, pad_value=None):
+  # TODO(noa): test this
+
   """Shift the 2nd dimension of x right by one."""
   if pad_value is None:
     shifted_targets = tf.pad(x, [[0, 0], [1, 0], [0, 0]])[:, :-1, :]
@@ -47,9 +49,11 @@ def cnn(batch, z, vocab_size, embedder=None, hp=default_hparams(),
   targets_shape = tf.shape(targets)
   batch_len = targets_shape[1]
   if embedder is None:
+    tf.logging.info("[CNN decoder] Using new word embedding.")
     x = tf.contrib.layers.embed_sequence(targets, vocab_size=vocab_size,
                                          embed_dim=hp.embed_dim)
   else:
+    tf.logging.info("[CNN decoder] Using existing word embedder.")
     x = embedder(targets)
   x = shift_right(x)
   x = conv1d(x, hp.num_filters, hp.filter_width,
