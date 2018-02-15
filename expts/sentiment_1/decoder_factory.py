@@ -32,9 +32,13 @@ def build_template(name, decoder, vocab_size, kwargs=None):
 
 def build_decoders(arch, vocab_size, args, hp=None):
   decoders = dict()
-  if arch == "bow":
+  if arch == "bow_untied":
     for ds in args.datasets:
       decoders[ds] = build_template(ds, "unigram", vocab_size)
+  elif arch == "bow_tied":
+    decoder = build_template("tied_decoder", "unigram", vocab_size)
+    for ds in args.datasets:
+      decoders[ds] = decoder
   else:
     raise NotImplementedError("custom decoder combination not supported")
   return decoders

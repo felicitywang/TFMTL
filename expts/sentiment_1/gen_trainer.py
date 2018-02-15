@@ -63,25 +63,28 @@ def parse_args():
                  choices=['simple', 'normal', 'fancy'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
-  p.add_argument('--batch_size', default=64, type=int,
+  p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
   p.add_argument('--unlabeled', action='store_true', help="Use unlabeled data")
-  p.add_argument('--alpha', default=0.75, type=float,
+  p.add_argument('--alpha', default=0.5, type=float,
                  help='Weight placed on the discriminative terms')
-  p.add_argument('--encoder_arch', default="shared_conv_max",
-                 choices=["shared_conv_max"],
+  p.add_argument('--encoder_arch', default="conv_max_tied",
+                 choices=["conv_max_tied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder_arch', default="bow", choices=["bow"],
+  p.add_argument('--decoder_arch', default="bow_tied",
+                 choices=["bow_untied", "bow_tied"],
                  help="Type of decoder to use for each task.")
   p.add_argument('--label_prior_type', default="learned",
                  choices=["uniform", "learned"],
-                 help="What type of label prior to use")
+                 help="What type of label prior to use (SimpleMultiLabelVAE)")
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
   p.add_argument('--word_embed_dim', default=256, type=int,
                  help='Word embedding size')
   p.add_argument('--mlp_hidden_dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
+  p.add_argument('--mlp_num_layers', default=2, type=int,
+                 help='Number of MLP layers')
   p.add_argument('--share_embed', action='store_true', default=False,
                  help='Whether datasets share word embeddings')
   p.add_argument('--share_decoders', action='store_true', default=False,
@@ -133,7 +136,7 @@ def encoder_graph(batch, embed_fn, tokens_key='tokens'):
 def build_encoders(arch, vocab_size, args):
   encoders = dict()
 
-  if arch == "shared_conv_max":
+  if arch == "conv_max_tied":
     embedder = tf.make_template('embedding', embed_sequence,
                                 vocab_size=vocab_size,
                                 embed_dim=args.word_embed_dim)
@@ -367,8 +370,7 @@ def main():
       raise ValueError("unrecognized model: %s" % (args.model))
 
     # Do training
-    print('dataset info:')
-    print(dataset_info)
+    tf.logging.info("Batch size: %d", args.batch_size)
     steps_per_epoch = int(max_N_train / args.batch_size)
     train_model(m, dataset_info, steps_per_epoch, args)
 
@@ -423,9 +425,10 @@ def fill_info_dicts(dataset_info, model, args):
     model_info[dataset_name]['test_batch'] = _test_batch
     model_info[dataset_name]['test_pred_op'] = _test_pred_op
     if args.test:
-      logging.info("Using test data for evaluation.")
+      logging.info("[%s] WARNING: Using test data for evaluation.",
+                   dataset_name)
     else:
-      logging.info("Using validation data for evaluation.")
+      logging.info("[%s] Using validation data for evaluation.", dataset_name)
 
   # Return dataset_info dict and model_info dict
   return dataset_info, model_info
