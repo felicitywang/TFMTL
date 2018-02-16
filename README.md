@@ -1,4 +1,4 @@
-# Multi-Label VAE for Text
+# A TensorFlow Framework for Multi-Task Learning
 
 ## Attribution
 
@@ -33,7 +33,9 @@ pip install -r requirements.txt
 * Implement tests by subclassing `tf.test.TestCase`. Put tests in
   `tests` and affix `"test_*.py"` or `"*_test.py"`.
 * Follow the TensorFlow style guidelines.
-* Make sure `run_checks.sh` completes before pushing into
+* You must submit work via pull (merge) requests; do not push
+  to `master` directly.
+* Make sure `run_checks.sh` completes before merging into
   `origin/master`. You may need to run the following first:
 
   ``` bash
