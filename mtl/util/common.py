@@ -20,7 +20,7 @@ from __future__ import print_function
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.layers import dense_layer
+from mtl.util.layers import dense_layer
 
 
 # General helpers

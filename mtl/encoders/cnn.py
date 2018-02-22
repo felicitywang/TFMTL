@@ -16,7 +16,7 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.reducers import *
+from mtl.util.reducers import *
 
 def conv_and_pool(inputs,
                   lengths=None,
@@ -38,7 +38,7 @@ def conv_and_pool(inputs,
 
   Outputs
   -------
-    If K different width filters are applied, the output is a Tensor of size 
+    If K different width filters are applied, the output is a Tensor of size
     [batch_size, num_filter * K].
   """
 
@@ -65,7 +65,5 @@ def conv_and_pool(inputs,
     # Append the filter
     filters.append(pool_i)
 
-    # Increment filter index
-    i += 1
 
   return tf.concat(filters, 1)

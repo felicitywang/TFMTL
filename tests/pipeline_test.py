@@ -30,10 +30,10 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 
-from mlvae.pipeline import Pipeline
-from mlvae.pipeline import bucket_info
-from mlvae.pipeline import int64_feature
-from mlvae.pipeline import int64_list_feature
+from mtl.util.pipeline import Pipeline
+from mtl.util.pipeline import bucket_info
+from mtl.util.pipeline import int64_feature
+from mtl.util.pipeline import int64_list_feature
 
 
 def random_sequences(N, maxlen, maxint):

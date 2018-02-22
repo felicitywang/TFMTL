@@ -16,8 +16,8 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.reducers import *
-from mlvae.layers import dense_layer
+from mtl.util.reducers import *
+from mtl.util.layers import dense_layer
 
 
 def paragram_phrase(inputs,
@@ -38,7 +38,7 @@ def paragram_phrase(inputs,
 
   Outputs
   -------
-    If the input word vectors have dimension D, the output is a Tensor of size 
+    If the input word vectors have dimension D, the output is a Tensor of size
     [batch_size, D].
   """
 
