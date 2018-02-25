@@ -20,10 +20,28 @@ from mlvae.reducers import reduce_max_over_time
 
 
 def conv_and_pool(inputs,
+                  lengths=None,
                   num_filter=128,
                   max_width=7,
                   activation_fn=tf.nn.relu,
                   reducer=reduce_max_over_time):
+  """Processes inputs using 1D convolutions of size [2, max_width] on
+  the input followed by temporal pooling.
+
+  Inputs
+  ------
+    inputs: batch of size [batch_size, batch_Len, embed_size]
+    lengths: batch of size [batch_size] **ignored in this function**
+    num_filter: number of filters for each width
+    max_width: maximum filter width
+    activation_fn: non-linearity to apply after the convolutions. Can be None.
+    reducer: pooling operation to apply to each convolved output
+
+  Outputs
+  -------
+    If K different width filters are applied, the output is a Tensor of size 
+    [batch_size, num_filter * K].
+  """
   filter_sizes = []
   for i in xrange(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
@@ -41,7 +59,7 @@ def conv_and_pool(inputs,
       name='conv_{}'.format(width))
 
     # Pooling
-    pool_i = reducer(conv_i, lengths=None, time_axis=1)
+    pool_i = reducer(conv_i, lengths=lengths, time_axis=1)
 
     # Append the filter
     filters.append(pool_i)

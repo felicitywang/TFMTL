@@ -26,7 +26,7 @@ import tensorflow as tf
 
 from mlvae.mlvae_model import MultiLabel
 from mlvae.embed import embed_sequence
-from mlvae.cnn import conv_and_pool
+from mlvae.encoders.cnn import conv_and_pool
 from mlvae.vae import dense_layer
 from mlvae.decoders import unigram
 
