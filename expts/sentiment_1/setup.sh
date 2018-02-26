@@ -13,7 +13,7 @@ unzip trainDevTestTrees_PTB.zip
 mv -f trainDevTestTrees_PTB.zip data/raw/SSTb/
 
 echo "Converting the SSTb data to json..."
-python3 ../../tasks/datasets/sentiment/SSTb/convert_SSTb_to_JSON.py ./
+python3 ../../datasets/sentiment/SSTb/convert_SSTb_to_JSON.py ./
 mv -f trees data/raw/SSTb/
 mv -f data.json.gz data/json/SSTb/
 mv -f index.json.gz data/json/SSTb/
@@ -27,7 +27,7 @@ mv -f aclImdb_v1.tar.gz data/raw/LMRD/
 #rm -fr aclImdb_v1.tar.gz
 
 echo "Converting the LMRD data to json..."
-python3 ../../tasks/datasets/sentiment/LMRD/convert_LMRD_to_JSON.py ./
+python3 ../../datasets/sentiment/LMRD/convert_LMRD_to_JSON.py ./
 
 mv -f aclImdb data/raw/LMRD/
 mv -f data.json.gz data/json/LMRD/

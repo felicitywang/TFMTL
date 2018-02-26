@@ -6,11 +6,8 @@ sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=
 sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000|50,000
 
 ## requirements
-- pathlib==1.0.1
-- nltk==3.2.5
-- pytreebank==0.2.4
-- tqdm==4.19.5
 
+See `../../requirement.txt`
 
 ## file structure
 - `setup.sh`: shell(bash) script to download original data files, convert them to json format, generate their shared vocabulary, and generate TFRecord files according to that vocabulary

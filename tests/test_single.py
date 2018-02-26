@@ -15,6 +15,8 @@
 
 # -*- coding: utf-8 -*-
 
+# TODO replace with the discriminative driver
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -23,16 +25,15 @@ import codecs
 import json
 import os
 import random
+from pathlib import Path
 from time import time
 
-from pathlib import Path
-
-from tasks.code.cnn import CNN
-from tasks.code.dataset import Dataset
-from tasks.code.input_dataset import InputDataset
-from tasks.code.mlp import MLP
-from tasks.code.optimizer import Optimizer
-from tasks.code.util import *
+from mtl.models.cnn import CNN
+from mtl.models.mlp import MLP
+from mtl.util.dataset import Dataset
+from mtl.util.input_dataset import InputDataset
+from mtl.util.optimizer import Optimizer
+from mtl.util.util import *
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -94,7 +95,7 @@ def make_model(batch, num_classes, vocab_size, is_training):
                     layers=[100, 100],
                     is_training=is_training)
     elif FLAGS.model == 'cnn':
-        model = CNN(batch['word_id'], batch['label'],
+        model = CNN(batch['tokens'], batch['label'],
                     num_classes=num_classes,
                     input_size=vocab_size,
                     # num_filter=128,

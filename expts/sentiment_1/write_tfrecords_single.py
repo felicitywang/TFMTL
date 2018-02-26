@@ -1,6 +1,8 @@
+import json
+import os
 import sys
 
-from tasks.code.dataset import *
+from mtl.util.dataset import Dataset
 
 with open('args_' + sys.argv[1] + '.json', 'rt') as file:
     args_single = json.load(file)
@@ -14,7 +16,7 @@ tfrecord_dir += "min_" + str(args_single['min_frequency']) + \
                 "_max_" + str(args_single['max_frequency']) + "/"
 try:
     os.stat(tfrecord_dir)
-except:
+except OSError:
     os.makedirs(tfrecord_dir)
 
 dataset = Dataset(json_dir=json_dir,
@@ -30,4 +32,4 @@ dataset = Dataset(json_dir=json_dir,
                   generate_tf_record=True)
 
 with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-  f.write(str(dataset._vocab_size))
+    f.write(str(dataset.vocab_size))

@@ -100,16 +100,16 @@ ENV/
 # mypy
 .mypy_cache/
 
-tasks/datasets/
+datasets/
 !datasets/*/*/README.md
 !format_data.py
-tasks/report/
+report/
 
 # idea
 .idea/
 
 # data files
-expts/*/*/data/
-expts/*/*/log/
-tasks/code/vocab_test/
-tasks/code/best_model/
+data/
+log/
+vocab_test/
+best_model/

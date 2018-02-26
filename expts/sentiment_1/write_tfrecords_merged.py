@@ -1,4 +1,6 @@
-from tasks.code.dataset import *
+import json
+
+from mtl.util.dataset import merge_dict_write_tfrecord
 
 with open('args_merged.json', 'rt') as file:
     args_merged = json.load(file)

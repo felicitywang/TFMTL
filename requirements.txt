@@ -1,2 +1,9 @@
 six
 enum34
+nltk
+numpy
+pandas
+tensorflow
+tqdm
+pathlib
+pytreebank
