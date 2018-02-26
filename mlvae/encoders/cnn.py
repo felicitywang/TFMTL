@@ -16,14 +16,15 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mlvae.reducers import *
+from mlvae.reducers import reduce_max_over_time
+
 
 def conv_and_pool(inputs,
                   lengths=None,
-                  num_filter=64,
-                  max_width=5,
+                  num_filter=128,
+                  max_width=7,
                   activation_fn=tf.nn.relu,
-                  reducer=reduce_avg_over_time):
+                  reducer=reduce_max_over_time):
   """Processes inputs using 1D convolutions of size [2, max_width] on
   the input followed by temporal pooling.
 
@@ -41,12 +42,10 @@ def conv_and_pool(inputs,
     If K different width filters are applied, the output is a Tensor of size 
     [batch_size, num_filter * K].
   """
-
   filter_sizes = []
   for i in xrange(2, max_width+1):
     filter_sizes.append((i + 1, num_filter))
 
-  # Convolutional layers
   filters = []
   for width, num_filter in filter_sizes:
     conv_i = tf.layers.conv1d(
@@ -60,7 +59,7 @@ def conv_and_pool(inputs,
       name='conv_{}'.format(width))
 
     # Pooling
-    pool_i = reducer(conv_i, lengths=None, time_axis=1)
+    pool_i = reducer(conv_i, lengths=lengths, time_axis=1)
 
     # Append the filter
     filters.append(pool_i)

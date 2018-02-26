@@ -39,22 +39,17 @@ kl_divergence = tf.contrib.distributions.kl_divergence
 
 def default_hparams():
   return HParams(mlp_hidden_dim=512,
-                 mlp_num_layers=2,
                  latent_dim=256,
                  tau0=0.5,
                  decay_tau=False,
                  alpha=0.5,
+                 label_prior_type="uniform",
+                 expectation="exact",
                  labels_key="label",
                  inputs_key="inputs",
                  targets_key="targets",
                  loss_reduce="even",
                  dtype='float32')
-
-
-def tile_over_batch_dim(z, batch_size):
-  assert len(z.get_shape().as_list()) == 1
-  logits = tf.expand_dims(z, 0)  # add batch dim
-  return tf.tile(logits, [batch_size, 1])
 
 
 def generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
@@ -80,7 +75,13 @@ def generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
   return nll_x + nll_y + kl_y + kl_z
 
 
-class MultiLabelVAE(object):
+def tile_over_batch_dim(logits, batch_size):
+  assert len(logits.get_shape().as_list()) == 1
+  logits = tf.expand_dims(logits, 0)  # add batch dim
+  return tf.tile(logits, [batch_size, 1])
+
+
+class SimpleMultiLabelVAE(object):
   def __init__(self,
                class_sizes=None,
                encoders=None,
@@ -112,76 +113,65 @@ class MultiLabelVAE(object):
 
     ########################### Generative Networks ###########################
 
-    # p(z | task)
-    def gaussian_prior():
-      zm = tf.get_variable("mean", shape=[hp.latent_dim], trainable=True,
-                           initializer=tf.zeros_initializer())
-      zv_prm = tf.get_variable("var", shape=[hp.latent_dim], trainable=True,
-                               initializer=tf.ones_initializer())
-      zv = tf.nn.softplus(zv_prm)
-      return (zm, zv)
-
-    self._pz_template = dict()
-    self._task_index = dict()
-    i = 0
-    for label_key in class_sizes:
-      self._pz_template[label_key] = tf.make_template(
-        'pz_{}'.format(label_key),
-        gaussian_prior,
-      )
-      self._task_index[label_key] = i
-      i += 1
-
-    # p(y_1 | z), ..., p(y_K | z)
+    # p(y_1), ..., p(y_K)
     self._py_templates = dict()
+
+    def uniform_prior(output_size):
+      return tf.zeros([output_size])
+
+    def learned_prior(output_size):
+      return tf.get_variable('prior_weight', shape=[output_size],
+                             trainable=True)
+
+    if hp.label_prior_type == "uniform":
+      prior_fn = uniform_prior
+    elif hp.label_prior_type == "learned":
+      prior_fn = learned_prior
+    else:
+      raise ValueError("unrecognized exception")
+
     for label_key, label_size in class_sizes.items():
       self._py_templates[label_key] = tf.make_template(
         'py_{}'.format(label_key),
-        MLP_unnormalized_log_categorical,
-        output_size=label_size,
-        hidden_dim=hp.mlp_hidden_dim,
-        num_layers=hp.mlp_num_layers)
+        prior_fn,
+        output_size=label_size)
+
+    # p(z | y_1, ..., y_K)
+    self._pz_template = tf.make_template('pz', MLP_gaussian_posterior,
+                                         hidden_dim=hp.mlp_hidden_dim,
+                                         latent_dim=hp.latent_dim)
 
     ########################### Inference Networks ############################
 
-    # q(y_1 | x, z), ..., q(y_K | x, z)
+    # q(y_1 | x), ..., q(y_K | x)
     self._qy_templates = dict()
     for k, v in class_sizes.items():
       self._qy_templates[k] = tf.make_template(
         'qy_{}'.format(k),
         MLP_unnormalized_log_categorical,
         output_size=v,
-        hidden_dim=hp.mlp_hidden_dim,
-        num_layers=hp.mlp_num_layers)
+        hidden_dim=hp.mlp_hidden_dim)
 
-    # q(z | x, task)
+    # q(z | y_1, ..., y_K)
     self._qz_template = tf.make_template('qz', MLP_gaussian_posterior,
-                                         latent_dim=hp.latent_dim,
                                          hidden_dim=hp.mlp_hidden_dim,
-                                         num_layers=hp.mlp_num_layers)
+                                         latent_dim=hp.latent_dim)
+
 
     # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
-  def py_logits(self, label_key, z):
-    return self._py_templates[label_key](z)
+  def py_logits(self, label_key):
+    return self._py_templates[label_key]()
 
-  def qy_logits(self, label_key, features, z):
-    return self._qy_templates[label_key]([features, z])
+  def qy_logits(self, label_key, features):
+    return self._qy_templates[label_key](features)
 
-  def pz_mean_var(self, task):
-    return self._pz_template[task]()
+  def pz_mean_var(self, ys):
+    return self._pz_template(ys)
 
-  def task_vec(self, task):
-    num_tasks = len(self._task_index)
-    task_idx = self._task_index[task]
-    return tf.one_hot(task_idx, num_tasks)
-
-  def qz_mean_var(self, task, features):
-    batch_size = tf.shape(features)[0]
-    task_vec = self.task_vec(task)
-    tiled_task_vec = tile_over_batch_dim(task_vec, batch_size)
-    return self._qz_template([features, tiled_task_vec])
+  def qz_mean_var(self, features, ys):
+    return self._qz_template([features] + ys)
 
   def sample_y(self, logits, name):
     # TODO(noa): check parameter sharing between tasks
@@ -191,12 +181,45 @@ class MultiLabelVAE(object):
     y = tf.exp(log_qy.sample())
     return y
 
-  def get_predictions(self, inputs, task):
-    features = self.encode(inputs, task)
-    zm, _ = self.qz_mean_var(task, features)
-    logits = self.qy_logits(task, features, zm)
+  def get_predictions(self, inputs, feature_name):
+    features = self.encode(inputs, feature_name)
+    logits = self.qy_logits(feature_name, features)
     probs = tf.nn.softmax(logits)
     return tf.argmax(probs, axis=1)
+
+  def get_task_discriminative_loss(self, task, labels, features):
+    nll_ys = []
+    for label_key, label_val in labels.items():
+      if label_val is not None:
+        nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
+          labels=label_val,
+          logits=self.qy_logits(label_key, features),
+          name='d_loss_{}'.format(label_key))]
+    assert len(nll_ys)
+    return tf.add_n(nll_ys)
+
+  def get_task_generative_loss(self, task, labels, features, batch):
+    ys = {}
+    qy_logits = {}
+    py_logits = {}
+    batch_size = tf.shape(features)[0]
+    for label_key, label_val in labels.items():
+      py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
+                                                 batch_size)
+      if label_val is None:
+        qy_logits[label_key] = self.qy_logits(label_key, features)
+        ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
+      else:
+        qy_logits[label_key] = None
+        ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
+    ys_list = ys.values()
+    zm, zv = self.qz_mean_var(features, ys_list)
+    z = gaussian_sample(zm, zv)
+    zm_prior, zv_prior = self.pz_mean_var(ys_list)
+    markov_blanket = tf.concat([z], axis=1)
+    self._task_nll_x[task] = nll_x = self.decode(batch, markov_blanket, task)
+    return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
+                           zm_prior, zv_prior)
 
   def get_multi_task_loss(self, task_batches):
     losses = []
@@ -214,45 +237,16 @@ class MultiLabelVAE(object):
     return tf.add_n(losses, name='combined_mt_loss')
 
   def get_loss(self, task_name, labels, batch):
+    # Encode the inputs using a task-specific encoder
     features = self.encode(batch, task_name)
-    ys = {}
-    qy_logits = {}
-    py_logits = {}
-    batch_size = tf.shape(features)[0]
-    zm, zv = self.qz_mean_var(task_name, features)
-    z = gaussian_sample(zm, zv)
-    zm_prior, zv_prior = self.pz_mean_var(task_name)
-    zm_prior = tile_over_batch_dim(zm_prior, batch_size)
-    zv_prior = tile_over_batch_dim(zv_prior, batch_size)
-    for label_key, label_val in labels.items():
-      py_logits[label_key] = self.py_logits(label_key, z)
-      if label_val is None:
-        qy_logits[label_key] = self.qy_logits(label_key, features, z)
-        ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
-      else:
-        qy_logits[label_key] = None
-        ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
-    ys_list = ys.values()
-    markov_blanket = tf.concat(ys_list, axis=1)
-    self._task_nll_x[task_name] = nll_x = self.decode(batch, markov_blanket,
-                                                      task_name)
-    g_loss = generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
-                             zm_prior, zv_prior)
+    g_loss = self.get_task_generative_loss(task_name, labels,
+                                           features, batch)
     assert len(g_loss.get_shape().as_list()) == 1
-    g_loss = tf.reduce_mean(g_loss)
-    nll_ys = []
-    for label_key, label_val in labels.items():
-      if label_val is not None:
-        nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
-          labels=label_val,
-          logits=self.qy_logits(label_key, features, z),
-          name='d_loss_{}'.format(label_key))]
-    assert len(nll_ys)
-    d_loss = tf.add_n(nll_ys, name='sum_d_loss_{}'.format(task_name))
+    d_loss = self.get_task_discriminative_loss(task_name, labels, features)
     assert len(d_loss.get_shape().as_list()) == 1
     a = self.hp.alpha
     assert a >= 0.0 and a <= 1.0, a
-    return (1. - a) * tf.reduce_mean(g_loss) + (a * tf.reduce_mean(d_loss))
+    return ((1. - a) * tf.reduce_mean(g_loss)) + (a * tf.reduce_mean(d_loss))
 
   def encode(self, inputs, task_name):
     return self._encoders[task_name](inputs)

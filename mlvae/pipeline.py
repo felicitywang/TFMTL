@@ -29,26 +29,6 @@ class Pipeline(object):
                num_threads=4, prefetch_buffer_size=1,
                shuffle_buffer_size=10000, shuffle=True,
                num_epochs=None, one_shot=False, bucket_info=None):
-    """ 
-    Inputs
-    ------
-      tfrecord_file: path to TF protobuf records
-      feature_map: dict mapping feature keys to feature type, e.g.:
-
-        feature_map = {
-          'sequence': tf.VarLenFeature(tf.int64),
-          'length': tf.FixedLenFeature([1], tf.int64)
-        }
-      
-      batch_size: how many examples to batch together
-      num_threads: how many threads to keep the pipeline full
-      prefetch_buffer_size: how many batches to keep buffered
-      shuffle_buffer_size: how many examples to buffer for purposes of randomizing order
-      num_epochs: how many times to repeat over the data (None := indefinitely)
-      one_shot: if False, create a re-initializable iterator
-      bucket_info: if examples should be bucketed
-    """
-    
     self._feature_map = feature_map
     self._batch_size = batch_size
 
@@ -91,7 +71,7 @@ class Pipeline(object):
       dataset = dataset.padded_batch(batch_size,
                                      padded_shapes=bucket_info.pads)
 
-    # Prefetch a batch for faster processing
+    # Pre-fetch a batch for faster processing
     dataset = dataset.prefetch(prefetch_buffer_size)
 
     # Get the iterator
