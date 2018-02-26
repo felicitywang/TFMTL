@@ -22,68 +22,54 @@ from tensorflow.contrib.seq2seq import sequence_loss
 
 
 def unigram(batch, z, vocab_size=None,
-            targets_key="targets",
-            counts_key="counts",
-            lens_key="lens"):
-  """ This implements the unigram output projection from:
-
-    Neural Variational Inference for Text Processing
-    Yishu Miao, Lei Yu, Phil Blunsom
-    https://arxiv.org/abs/1511.06038
-
-  """
-
-  assert vocab_size is not None
-
-  # Unpack observations
-  try:
+            targets_key="types",
+            counts_key="type_counts",
+            lens_key="types_length"):
     targets = batch[targets_key]
     counts = batch[counts_key]
     lens = batch[lens_key]
-  except KeyError:
-    raise ValueError('expected batch to contain (targets, counts, lens)')
+    assert vocab_size is not None
+    targets_shape = targets.get_shape()
+    if len(targets_shape) != 2:
+        raise ValueError("expected 2D targets: got %d" % (len(targets_shape)))
+    counts_shape = counts.get_shape()
+    if len(counts_shape) != 2:
+        raise ValueError("expected 2D counts: got %d" % (len(counts_shape)))
 
-  targets_shape = targets.get_shape()
-  if len(targets_shape) != 2:
-    raise ValueError("expected 2D targets: got %d" % (len(targets_shape)))
-  counts_shape = counts.get_shape()
-  if len(counts_shape) != 2:
-    raise ValueError("expected 2D counts: got %d" % (len(counts_shape)))
+    input_dim = z.get_shape().as_list()[-1]
+    target_len = tf.shape(targets)[1]
+    with tf.variable_scope("output_projection"):
+        R = tf.get_variable(
+            "R",
+            [input_dim, vocab_size],
+            initializer=tf.contrib.layers.xavier_initializer())
+        b = tf.get_variable(
+            "b",
+            [vocab_size],
+            initializer=tf.zeros_initializer())
 
-  input_dim = z.get_shape().as_list()[-1]
-  target_len = tf.shape(targets)[1]
-  with tf.variable_scope("output_projection"):
-    R = tf.get_variable(
-      "R",
-      [input_dim, vocab_size],
-      initializer=tf.contrib.layers.xavier_initializer())
-    b = tf.get_variable(
-      "b",
-      [vocab_size],
-      initializer=tf.zeros_initializer())
+    # Compute logits & shape for sequence loss
+    with tf.name_scope("logits"):
+        logits = tf.nn.xw_plus_b(z, R, b)
+        logits = tf.expand_dims(logits, 1)
+        logits = tf.tile(logits, [1, target_len, 1])
 
-  # Compute logits & shape for sequence loss
-  with tf.name_scope("logits"):
-    logits = tf.nn.xw_plus_b(z, R, b)
-    logits = tf.expand_dims(logits, 1)
-    logits = tf.tile(logits, [1, target_len, 1])
+    # Get sequence mask as 0/1 weights
+    with tf.name_scope("weights"):
+        weights = tf.to_float(tf.sequence_mask(lens, maxlen=target_len))
 
-  # Get sequence mask as 0/1 weights
-  with tf.name_scope("weights"):
-    weights = tf.to_float(tf.sequence_mask(lens, maxlen=target_len))
+    # Compute reconstruction error (average over time).  Note that this
+    # masks by multiplying the crossent by the sequence mask as 0/1
+    # weights.
+    with tf.name_scope("sequence_loss"):
+        losses = sequence_loss(logits, targets, weights,
+                               average_across_batch=False,
+                               average_across_timesteps=False)
 
-  # Compute reconstruction error (average over time).  Note that this
-  # masks by multiplying the crossent by the sequence mask as 0/1
-  # weights.
-  with tf.name_scope("sequence_loss"):
-    losses = sequence_loss(logits, targets, weights,
-                           average_across_batch=False,
-                           average_across_timesteps=False)
+        # Scale the losses by the number of observations, then average
+        # across time steps. These are negative *log* probabilities, so we
+        # multiply by the count.
+        if counts is not None:
+            losses *= tf.to_float(counts)
 
-    # Scale the losses by the number of observations, then average
-    # across time steps. These are negative *log* probabilities, so we
-    # multiply by the count.
-    if counts is not None:
-      losses *= tf.to_float(counts)
-
-    return tf.reduce_sum(losses, axis=1)
+        return tf.reduce_sum(losses, axis=1)
