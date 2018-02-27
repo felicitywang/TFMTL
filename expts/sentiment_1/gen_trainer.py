@@ -29,16 +29,19 @@ import tensorflow as tf
 
 from decoder_factory import build_decoders
 
-from mlvae.hparams import update_hparams_from_args
-from mlvae.pipeline import Pipeline
-from mlvae.embed import embed_sequence
-from mlvae.cnn import conv_and_pool
+from mtl.mlvae.hparams import update_hparams_from_args
+from mtl.mlvae.pipeline import Pipeline
+from mtl.mlvae.embed import embed_sequence
+from mtl.mlvae.cnn import conv_and_pool
 
-from mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
-from mlvae.simple_mlvae_model import SimpleMultiLabelVAE
+from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
+from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
 
-from mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
-from mlvae.mlvae_model import MultiLabelVAE
+from mtl.mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
+from mtl.mlvae.mlvae_model import MultiLabelVAE
+
+from mtl.mlvae.joint_mlvae_model import default_hparams as joint_mlvae_hparams
+from mtl.mlvae.joint_mlvae_model import JointMultiLabelVAE
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 

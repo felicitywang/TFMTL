@@ -20,6 +20,24 @@ from __future__ import print_function
 import tensorflow as tf
 
 
+def get_activation_fn(s):
+  if s == 'elu':
+    act_fn = tf.nn.elu
+  elif s == 'selu':
+    act_fn = tf.nn.selu
+  elif s == 'relu':
+    act_fn = tf.nn.relu
+  elif s == 'none' or None:
+    act_fn = None
+  elif s == 'tanh':
+    act_fn = tf.nn.tanh
+  elif s == 'prelu':
+    act_fn = prelu
+  else:
+    raise ValueError("unsupported activation fn: %s" % s)
+  return act_fn
+
+
 def update_hparams_from_args(hps, args, log=True):
   """
   Updates hps with values of matching keys in args
