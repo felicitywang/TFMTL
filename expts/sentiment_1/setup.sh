@@ -39,4 +39,4 @@ mkdir -p data/tf/merged
 echo "Generating TFRecord files..."
 python write_tfrecords_merged.py
 
-cp ../../datasets/sentiment/SSTb/label.json ./label_LMRD.json -f
+cp ../../datasets/sentiment/LMRD/label.json ./label_LMRD.json -f
