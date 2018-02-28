@@ -23,3 +23,10 @@ import tensorflow as tf
 
 def embed_sequence(x, vocab_size=None, embed_dim=None):
   return tf.contrib.layers.embed_sequence(x, vocab_size=vocab_size, embed_dim=embed_dim)
+
+def no_op_embedding(x):
+  """For use when an embedding function is required but the inputs
+  do not need to be embedded, e.g., bag of words encoding.
+  """
+
+  return x
