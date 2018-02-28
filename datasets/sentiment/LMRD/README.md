@@ -8,7 +8,9 @@ Labeled and unlabeled IMDB movie reviews with sentiment polarities. There are no
 
 + \# items = 50,000(train 25,000, test 25,000) (unlabeled: 50,000)
 
-+ \# labels = 2(pos/neg)
++ \# labels = 2
+    - 0: neg
+    - 1: pos
 
 **Basic Unit**: document
 

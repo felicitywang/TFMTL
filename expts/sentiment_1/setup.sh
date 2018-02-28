@@ -18,6 +18,8 @@ mv -f trees data/raw/SSTb/
 mv -f data.json.gz data/json/SSTb/
 mv -f index.json.gz data/json/SSTb/
 
+cp ../../datasets/sentiment/SSTb/label.json ./label_SSTb.json -f
+
 echo "Downloading the LMRD data..."
 wget -nc http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 
@@ -36,3 +38,5 @@ mv -f index.json.gz data/json/LMRD/
 mkdir -p data/tf/merged
 echo "Generating TFRecord files..."
 python write_tfrecords_merged.py
+
+cp ../../datasets/sentiment/SSTb/label.json ./label_LMRD.json -f
