@@ -23,7 +23,7 @@ wget -nc http://ugrad.cs.jhu.edu/~fxwang/rtc.tar.gz
 
 echo "Untarring the RTC data..."
 tar -zxvf rtc.tar.gz
-mv -f sparser_dataset.zip data/raw/RTC/
+mv -f rtc.tar.gz data/raw/RTC/
 #rm -fr aclImdb_v1.tar.gz
 
 echo "Converting the RTC data to json..."
