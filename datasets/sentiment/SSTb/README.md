@@ -8,11 +8,11 @@ Rotten Tomatoes review sentences with positivity probabilities.
 
 + \# items = 11,855
 + \# labels = 5
-    - 1: very negative
-    - 2: negative
-    - 3: neutral
-    - 4: positive
-    - 5: very positive
+    - 0: very negative
+    - 1: negative
+    - 2: neutral
+    - 3: positive
+    - 4: very positive
 
 **Basic Unit**: sentence
 
