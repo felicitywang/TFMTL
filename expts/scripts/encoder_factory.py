@@ -36,61 +36,11 @@ ARCHITECTURES = {
                   "activation_fn": tf.nn.relu,
                   "reducer": reduce_max_over_time,
                   },
-         "LMRD": {"num_filter": 64,
-                  "max_width": 5,
-                  "activation_fn": tf.nn.relu,
-                  "reducer": reduce_max_over_time,
-                  },
-         "SWs": {"num_filter": 64,
+         "RTC": {"num_filter": 64,
                  "max_width": 5,
                  "activation_fn": tf.nn.relu,
                  "reducer": reduce_max_over_time,
                  },
-         "SWt": {"num_filter": 64,
-                 "max_width": 5,
-                 "activation_fn": tf.nn.relu,
-                 "reducer": reduce_max_over_time,
-                 },
-         "SWts": {"num_filter": 64,
-                 "max_width": 5,
-                 "activation_fn": tf.nn.relu,
-                 "reducer": reduce_max_over_time,
-                 },
-         "SWTGs": {"num_filter": 64,
-                   "max_width": 5,
-                   "activation_fn": tf.nn.relu,
-                   "reducer": reduce_max_over_time,
-                   },
-         "SWTGts": {"num_filter": 64,
-                    "max_width": 5,
-                    "activation_fn": tf.nn.relu,
-                    "reducer": reduce_max_over_time,
-                    },
-         "SWTGt": {"num_filter": 64,
-                   "max_width": 5,
-                   "activation_fn": tf.nn.relu,
-                   "reducer": reduce_max_over_time,
-                   },
-         "TGt": {"num_filter": 64,
-                 "max_width": 5,
-                 "activation_fn": tf.nn.relu,
-                 "reducer": reduce_max_over_time,
-                 },
-         "TGs": {"num_filter": 64,
-                 "max_width": 5,
-                 "activation_fn": tf.nn.relu,
-                 "reducer": reduce_max_over_time,
-                 },
-         "TGts": {"num_filter": 64,
-                  "max_width": 5,
-                  "activation_fn": tf.nn.relu,
-                  "reducer": reduce_max_over_time,
-                  },
-         "Wikipedia": {"num_filter": 64,
-                       "max_width": 5,
-                       "activation_fn": tf.nn.relu,
-                       "reducer": reduce_max_over_time,
-                       },
          },
 
     "paragram_phrase_tied_word_embeddings":
@@ -99,55 +49,15 @@ ARCHITECTURES = {
                      "apply_activation": False,
                      "activation_fn": None,
                      },
-            "LMRD": {"reducer": reduce_avg_over_time,
-                     "apply_activation": False,
-                     "activation_fn": None,
-                     },
-            "SWs": {"reducer": reduce_avg_over_time,
+            "RTC": {"reducer": reduce_avg_over_time,
                     "apply_activation": False,
                     "activation_fn": None,
                     },
-            "SWt": {"reducer": reduce_avg_over_time,
-                    "apply_activation": False,
-                    "activation_fn": None,
-                    },
-            "SWTGs": {"reducer": reduce_avg_over_time,
-                      "apply_activation": False,
-                      "activation_fn": None,
-                      },
-            "SWTGt": {"reducer": reduce_avg_over_time,
-                      "apply_activation": False,
-                      "activation_fn": None,
-                      },
-            "SWTGts": {"reducer": reduce_avg_over_time,
-                       "apply_activation": False,
-                       "activation_fn": None,
-                       },
-            "SWts": {"reducer": reduce_avg_over_time,
-                     "apply_activation": False,
-                     "activation_fn": None,
-                     },
-            "TGs": {"reducer": reduce_avg_over_time,
-                    "apply_activation": False,
-                    "activation_fn": None,
-                    },
-            "TGt": {"reducer": reduce_avg_over_time,
-                    "apply_activation": False,
-                    "activation_fn": None,
-                    },
-            "TGts": {"reducer": reduce_avg_over_time,
-                     "apply_activation": False,
-                     "activation_fn": None,
-                     },
-            "Wikipedia": {"reducer": reduce_avg_over_time,
-                          "apply_activation": False,
-                          "activation_fn": None,
-                          },
         },
 
     "rnn_rnn_untied":
         {"SSTb": {},
-         "LMRD": {},
+         "RTC": {},
          },
 
     "avg_cnn_and_cnn_fully_tied":
@@ -242,16 +152,19 @@ def build_prepared_encoders(vocab_size, args, encoder_hp=None):
         return encoders
 
     else:
-        raise ValueError("unrecognized encoder architecture: %s" % (args.encoder_architecture))
+        raise ValueError("unrecognized encoder architecture: %s" %
+                         (args.encoder_architecture))
 
 
 def build_encoders(vocab_size, args, encoder_hp=None):
     encoders = dict()
 
     if args.encoder_architecture in ARCHITECTURES:
-        encoders = build_prepared_encoders(vocab_size, args, encoder_hp=encoder_hp)
+        encoders = build_prepared_encoders(
+            vocab_size, args, encoder_hp=encoder_hp)
 
     else:
-        raise NotImplementedError("encoder architecture not supported: %s" % (args.encoder_architecture))
+        raise NotImplementedError(
+            "encoder architecture not supported: %s" % (args.encoder_architecture))
 
     return encoders
