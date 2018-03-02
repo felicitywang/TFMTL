@@ -29,8 +29,11 @@ import tensorflow as tf
 
 from decoder_factory import build_decoders
 
-from mtl.mlvae.hparams import update_hparams_from_args
-from mtl.mlvae.pipeline import Pipeline
+from mtl.io import get_num_records
+from mtl.io import get_empirical_label_prior
+from mtl.hparams import update_hparams_from_args
+from mtl.pipeline import Pipeline
+
 from mtl.mlvae.embed import embed_sequence
 from mtl.mlvae.cnn import conv_and_pool
 
@@ -78,7 +81,7 @@ def parse_args():
                  choices=["bow_untied", "bow_tied", "cnn_unigram"],
                  help="Type of decoder to use for each task.")
   p.add_argument('--label_prior_type', default="learned",
-                 choices=["uniform", "learned"],
+                 choices=["uniform", "learned", "fixed"],
                  help="What type of label prior to use (SimpleMultiLabelVAE)")
   p.add_argument('--eval_batch_size', default=256, type=int,
                  help='Size of evaluation batch.')
@@ -132,6 +135,18 @@ def parse_args():
   return p.parse_args()
 
 
+def get_fixed_log_prior(LMRD_labels, LMRD_path, SSTb_labels, SSTb_path):
+  LMRD_prior = get_empirical_label_prior(LMRD_path)
+  SSTb_prior = get_empirical_label_prior(SSTb_path)
+  joint_prior = np.zeros([len(LMRD_labels) * len(SSTb_labels)])
+  i = 0
+  for pair in product([LMRD_labels, SSTb_labels]):
+
+    i += 1
+  log_prior = np.log(prior)
+  return log_prior
+
+
 def encoder_graph(batch, embed_fn, tokens_key='tokens'):
   tokens = batch[tokens_key]
   embed = embed_fn(tokens)
@@ -150,13 +165,6 @@ def build_encoders(arch, vocab_size, args, embedder):
     raise ValueError("unrecognized encoder architecture")
 
   return encoders
-
-
-def get_num_records(tf_record_filename):
-  c = 0
-  for record in tf.python_io.tf_record_iterator(tf_record_filename):
-      c += 1
-  return c
 
 
 def get_vocab_size(vocab_file_path):
@@ -373,6 +381,11 @@ def main():
       update_hparams_from_args(hp, args)
       m = MultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
                         decoders=decoders, hp=hp)
+    elif args.model == 'joint':
+      hp = joint_mlvae_hparams()
+      update_hparams_from_args(hp, args)
+      m = JointMultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
+                             decoders=decoders, hp=hp)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 

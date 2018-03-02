@@ -123,19 +123,27 @@ class JointMultiLabelVAE(object):
 
     def fixed_prior():
       if len(prior.shape) == 1:
-        # Joint prior ln p(y_1, ..., y_K) as one vector
+        # Joint prior ln p(y_1, ..., y_K) as one vector where, for
+        # two labels Y1 and Y2 with values {a, b} and {1, 2}:
+        #
+        #  prior[0] = ln p(Y1 = a, Y2 = 1)
+        #  prior[1] = ln p(Y1 = a, Y2 = 2)
+        #  prior[2] = ln p(Y1 = b, Y2 = 1)
+        #  prior[4] = ln p(Y1 = b, Y2 = 2)
+        #
         assert prior.shape[0] == output_size
         return tf.constant(prior)
       elif len(prior.shape) == 2:
         # Independent priors: ln p(y_1), ..., ln p(y_K)
-        flat_prior = np.zeros([output_size])
-        sizes = class_sizes.values()
-        iters = [xrange(R) for R in sizes]
-        i = 0
-        for idx in product(iters):
-          flat_prior[i] = reduce(sum,
-                                 [np.log(x) for x in prior[idx]])
-          i += 1
+        raise ValueError("unimplemented")
+        # flat_prior = np.zeros([output_size])
+        # sizes = class_sizes.values()
+        # iters = [xrange(R) for R in sizes]
+        # i = 0
+        # for idx in product(iters):
+        #   flat_prior[i] = reduce(sum,
+        #                          [np.log(x) for x in prior[idx]])
+        #   i += 1
       else:
         raise ValueError("bad prior")
 
@@ -150,7 +158,7 @@ class JointMultiLabelVAE(object):
       prior_fn = uniform_prior
     elif hp.label_prior_type == "learned":
       prior_fn = learned_prior
-    elif hp.label_prior_type == "specified":
+    elif hp.label_prior_type == "fixed":
       if prior is None:
         raise ValueError("specified prior type but no prior given")
       prior_fn = fixed_prior
