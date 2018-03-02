@@ -20,6 +20,7 @@ from __future__ import print_function
 from six.moves import xrange
 from operator import mul
 from itertools import product
+from collections import OrderedDict
 
 import tensorflow as tf
 
@@ -43,7 +44,7 @@ def default_hparams():
                  decay_tau=False,
                  alpha=0.5,
                  label_prior_type="uniform",
-                 expectation="exact",
+                 y_inference="sum",
                  labels_key="label",
                  inputs_key="inputs",
                  targets_key="targets",
@@ -51,8 +52,8 @@ def default_hparams():
                  dtype='float32')
 
 
-def generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
-                    zm_prior, zv_prior):
+def sampled_generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
+                            zm_prior, zv_prior):
   nll_ys = []
   kl_ys = []
   for label_key, label_val in labels.items():
@@ -88,8 +89,15 @@ class JointMultiLabelVAE(object):
                encoders=None,
                decoders=None,
                hp=None):
-    assert class_sizes is not None
+
     assert encoders.keys() == decoders.keys()
+
+    if type(class_sizes) is dict:
+      self._class_sizes = OrderedDict(class_sizes)
+    elif type(class_sizes) is OrderedDict:
+      self._class_sizes = class_sizes
+    else:
+      raise ValueError("class_sizes must be of type dict")
 
     self._encoders = encoders
     self._decoders = decoders
@@ -108,8 +116,8 @@ class JointMultiLabelVAE(object):
     ########################### Generative Networks ###########################
 
     output_size = reduce(mul, class_sizes.values())
-    tf.logging.info("Size of output space of joint distribution: %d",
-                    output_space)
+    tf.logging.info("Full size of event space of joint distribution: %d",
+                    output_size)
 
     # ln p(y_1, ..., y_K)
 
@@ -182,11 +190,30 @@ class JointMultiLabelVAE(object):
     # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
+  def label_index(self, label):
+    index = 0
+    assert type(self.class_sizes) is OrderedDict
+    for k in self.class_sizes.keys():
+      if k == label:
+        return index
+      index += 1
+    raise ValueError("unknown label key: %s" % label)
+
   def py_logits(self):
     return self._py_template()
 
-  def qy_logits(self, features):
-    return self._qy_templates(features)
+  def qy_given_x_logits(self, target_label, cond_label, features):
+    logits = self._qy_templates(features)
+    target_index = self.label_index(target_label)
+    cond_index = self.label_index(cond_label)
+
+    # logits is [batch_size, event_space_size]
+
+    #    q(label | cond_label) =    q(label, cond_label) /    q(cond_label)
+    # ln q(label | cond_label) = ln q(label, cond_label) - ln q(cond_label)
+    logits = tf.reshape(logits, self.class_sizes.values())
+    Z = tf.logsumexp(logits[])
+
 
   def pz_mean_var(self, ys):
     return self._pz_template(ys)
@@ -220,7 +247,7 @@ class JointMultiLabelVAE(object):
     assert len(nll_ys)
     return tf.add_n(nll_ys)
 
-  def get_task_generative_loss(self, task, labels, features, batch):
+  def get_sample_task_generative_loss(self, task, labels, features, batch):
     ys = {}
     qy_logits = {}
     py_logits = {}
@@ -233,13 +260,12 @@ class JointMultiLabelVAE(object):
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
         qy_logits[label_key] = None
-        ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
+        ys[label_key] = tf.one_hot(label_val, self.class_size(label_key))
     ys_list = ys.values()
     zm, zv = self.qz_mean_var(features, ys_list)
     z = gaussian_sample(zm, zv)
     zm_prior, zv_prior = self.pz_mean_var(ys_list)
-    markov_blanket = tf.concat([z], axis=1)
-    self._task_nll_x[task] = nll_x = self.decode(batch, markov_blanket, task)
+    self._task_nll_x[task] = nll_x = self.decode(batch, z, task)
     return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
                            zm_prior, zv_prior)
 
@@ -261,8 +287,12 @@ class JointMultiLabelVAE(object):
   def get_loss(self, task_name, labels, batch):
     # Encode the inputs using a task-specific encoder
     features = self.encode(batch, task_name)
-    g_loss = self.get_task_generative_loss(task_name, labels,
-                                           features, batch)
+    if self.hp.y_inference == "sum":
+      g_loss = self.get_sum_task_generative_loss(task_name, labels,
+                                                 features, batch)
+    else:
+      g_loss = self.get_sample_task_generative_loss(task_name, labels,
+                                                    features, batch)
     assert len(g_loss.get_shape().as_list()) == 1
     d_loss = self.get_task_discriminative_loss(task_name, labels, features)
     assert len(d_loss.get_shape().as_list()) == 1
@@ -281,6 +311,10 @@ class JointMultiLabelVAE(object):
 
   def get_task_nll_x(self, task_name):
     return self._task_nll_x[task_name]
+
+  @property
+  def class_sizes(self):
+    return self._class_sizes
 
   @property
   def hp(self):

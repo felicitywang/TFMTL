@@ -160,7 +160,6 @@ def get_joint_log_prior(LMRD_path, SSTb_path):
     index += 1
 
   joint_dist = joint_dist / np.sum(joint_dist)
-
   return np.log(joint_dist)
 
 
