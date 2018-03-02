@@ -13,20 +13,24 @@
 # limitations under the License.
 # ============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-
 import tensorflow as tf
+from six.moves import xrange
+
+from mtl.util.reducers import *
+from mtl.util.layers import dense_layer
 
 
-def embed_sequence(x, vocab_size=None, embed_dim=None):
-  return tf.contrib.layers.embed_sequence(x, vocab_size=vocab_size, embed_dim=embed_dim)
+def no_op_encoding(inputs):
+  """A no-op encoder, e.g., for use with bag-of-words features
+  that have already been encoded.
 
-def no_op_embedding(x):
-  """For use when an embedding function is required but the inputs
-  do not need to be embedded, e.g., bag of words encoding.
+  Inputs
+  ------
+    inputs: batch of size [batch_size, D]
+
+  Outputs
+  -------
+    outputs: a Tensor of size [batch_size, D].
   """
 
-  return x
+  return inputs

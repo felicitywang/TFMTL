@@ -213,6 +213,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     best_total_acc = total_acc
                     best_total_acc_epoch = epoch
 
+                str_ += '\n total_acc=%f best_total_acc=%f best_total_acc_epoch=%d' % (total_acc,
+                                                                                       best_total_acc,
+                                                                                       best_total_acc_epoch)
                 logging.info(str_)
 
             else:
