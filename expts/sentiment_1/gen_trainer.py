@@ -23,7 +23,7 @@ import os
 import argparse as ap
 from six.moves import xrange
 from time import time
-
+from itertools import product
 import numpy as np
 import tensorflow as tf
 
@@ -32,10 +32,10 @@ from decoder_factory import build_decoders
 from mtl.io import get_num_records
 from mtl.io import get_empirical_label_prior
 from mtl.hparams import update_hparams_from_args
-from mtl.pipeline import Pipeline
+from mtl.util.pipeline import Pipeline
 
-from mtl.mlvae.embed import embed_sequence
-from mtl.mlvae.cnn import conv_and_pool
+from mtl.util.embed import embed_sequence
+from mtl.encoders.cnn import conv_and_pool
 
 from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
 from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
@@ -65,8 +65,8 @@ SSTb_NUM_LABEL = 5
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='normal',
-                 choices=['simple', 'normal', 'fancy'], help='Model to use.')
+  p.add_argument('--model', type=str, default='joint',
+                 choices=['simple', 'normal', 'joint'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch_size', default=128, type=int,
@@ -80,7 +80,7 @@ def parse_args():
   p.add_argument('--decoder_arch', default="cnn_unigram",
                  choices=["bow_untied", "bow_tied", "cnn_unigram"],
                  help="Type of decoder to use for each task.")
-  p.add_argument('--label_prior_type', default="learned",
+  p.add_argument('--label_prior_type', default="fixed",
                  choices=["uniform", "learned", "fixed"],
                  help="What type of label prior to use (SimpleMultiLabelVAE)")
   p.add_argument('--eval_batch_size', default=256, type=int,
@@ -135,16 +135,33 @@ def parse_args():
   return p.parse_args()
 
 
-def get_fixed_log_prior(LMRD_labels, LMRD_path, SSTb_labels, SSTb_path):
-  LMRD_prior = get_empirical_label_prior(LMRD_path)
-  SSTb_prior = get_empirical_label_prior(SSTb_path)
-  joint_prior = np.zeros([len(LMRD_labels) * len(SSTb_labels)])
-  i = 0
-  for pair in product([LMRD_labels, SSTb_labels]):
+def get_joint_log_prior(LMRD_path, SSTb_path):
+  LMRD_labels = [0, 1]
+  SSTb_labels = [0, 1, 2, 3, 4]
+  joint_dist = np.zeros([len(LMRD_labels) * len(SSTb_labels)])
+  index = 0
+  for e in product(LMRD_labels, SSTb_labels):
+    LMRD_label = e[0]
+    SSTb_label = e[1]
+    if SSTb_label > 2:
+      mapped_SSTb_label = 1
+    elif SSTb_label < 2:
+      mapped_SSTb_label = 0
+    else:
+      mapped_SSTb_label = 2
 
-    i += 1
-  log_prior = np.log(prior)
-  return log_prior
+    if mapped_SSTb_label == LMRD_label:
+      joint_dist[index] = 2.0
+    elif mapped_SSTb_label == 2:
+      joint_dist[index] = 1.0
+    else:
+      joint_dist[index] = 0.1
+
+    index += 1
+
+  joint_dist = joint_dist / np.sum(joint_dist)
+
+  return np.log(joint_dist)
 
 
 def encoder_graph(batch, embed_fn, tokens_key='tokens'):
@@ -384,8 +401,15 @@ def main():
     elif args.model == 'joint':
       hp = joint_mlvae_hparams()
       update_hparams_from_args(hp, args)
+
+      if args.label_prior_type == 'fixed':
+        prior = get_joint_log_prior(dataset_info['IMDB']['train_path'],
+                                    dataset_info['SSTb']['train_path'])
+      else:
+        prior = None
+
       m = JointMultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
-                             decoders=decoders, hp=hp)
+                             decoders=decoders, prior=prior, hp=hp)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 

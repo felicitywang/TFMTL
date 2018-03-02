@@ -88,14 +88,6 @@ class JointMultiLabelVAE(object):
                encoders=None,
                decoders=None,
                hp=None):
-    """
-    is_training: include regularization?
-    class_sizes: map from feature names to cardinality of label sets
-    dataset_order: *ordered* list of features
-    encoders: one per label (i.e. dataset)
-    decoders: one per label (i.e. dataset)
-    """
-
     assert class_sizes is not None
     assert encoders.keys() == decoders.keys()
 
@@ -186,7 +178,6 @@ class JointMultiLabelVAE(object):
                                              hidden_dim=hp.qz_mlp_hidden_dim,
                                              num_layer=hp.qz_mlp_num_layer,
                                              latent_dim=hp.latent_dim)
-
 
     # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)

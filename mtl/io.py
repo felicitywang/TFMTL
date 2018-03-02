@@ -22,7 +22,7 @@ import tensorflow as tf
 from six.moves import xrange
 from collections import defaultdict
 from google.protobuf.json_format import MessageToJson
-
+import json
 
 def get_num_records(tf_record_filename):
   c = 0
@@ -31,15 +31,15 @@ def get_num_records(tf_record_filename):
   return c
 
 
-def get_empirical_label_prior(tf_record_filename, label_key='label'):
+def get_empirical_label_prior(tf_record_filename, label_key="label"):
   freq = defaultdict(int)
   for record in tf.python_io.tf_record_iterator(tf_record_filename):
-    jsonMessage = MessageToJson(tf.train.Example.FromString(example))
+    jsonMessage = MessageToJson(tf.train.Example.FromString(record))
     d = json.loads(jsonMessage)
-    label = d[label_key]
+    label = int(d['features']['feature'][label_key]['int64List']['value'][0])
     freq[label] += 1
   N = float(sum(freq.values()))
-  lnp = np.zeros(len(freq))
-  for k, c in freq:
-    lnp[k] = np.log(freq[k] / N)
-  return lnp
+  p = np.zeros(len(freq))
+  for k, c in freq.items():
+    p[k] = freq[k] / N
+  return p
