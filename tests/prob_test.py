@@ -189,9 +189,13 @@ class ProbTests(tf.test.TestCase):
     px_y = tf.exp(conditional_log_prob(ln_joint, 0, 1))
     py_x = tf.exp(conditional_log_prob(ln_joint, 1, 0))
     pz_x = tf.exp(conditional_log_prob(ln_joint, 2, 0))
+    py_z = tf.exp(conditional_log_prob(ln_joint, 1, 2))
     with self.test_session() as sess:
-      ln_joint_val, px_y_val, py_x_val, pz_x_val = sess.run([ln_joint, px_y,
-                                                             py_x, pz_x])
+      ln_joint_val, px_y_val, py_x_val, pz_x_val, py_z_val = sess.run([ln_joint,
+                                                                       px_y,
+                                                                       py_x,
+                                                                       pz_x,
+                                                                       py_z])
       self.assertEqual(len(ln_joint_val.shape), 4)
       self.assertEqual(ln_joint_val.shape[0], batch_size)
       self.assertEqual(ln_joint_val.shape[1], dims[0])
@@ -200,6 +204,7 @@ class ProbTests(tf.test.TestCase):
       true_px_y = slow_conditional(ln_joint_val, 0, 1)
       true_py_x = slow_conditional(ln_joint_val, 1, 0)
       true_pz_x = slow_conditional(ln_joint_val, 2, 0)
+      true_py_z = slow_conditional(ln_joint_val, 1, 2)
       self.assertEqual(px_y_val.shape[0], batch_size)
       self.assertEqual(px_y_val.shape[1], dims[1])
       self.assertEqual(px_y_val.shape[2], dims[0])
@@ -209,6 +214,9 @@ class ProbTests(tf.test.TestCase):
       self.assertEqual(pz_x_val.shape[0], batch_size)
       self.assertEqual(pz_x_val.shape[1], dims[0])
       self.assertEqual(pz_x_val.shape[2], dims[2])
+      self.assertEqual(py_z_val.shape[0], batch_size)
+      self.assertEqual(py_z_val.shape[1], dims[2])
+      self.assertEqual(py_z_val.shape[2], dims[1])
       for i in xrange(batch_size):
         for j in xrange(dims[1]):
           for k in xrange(dims[0]):
@@ -225,6 +233,12 @@ class ProbTests(tf.test.TestCase):
         for j in xrange(dims[0]):
           for k in xrange(dims[2]):
             self.assertAlmostEqual(true_pz_x[i][j][k], pz_x_val[i][j][k],
+                                   places=3)
+
+      for i in xrange(batch_size):
+        for j in xrange(dims[2]):
+          for k in xrange(dims[1]):
+            self.assertAlmostEqual(true_py_z[i][j][k], py_z_val[i][j][k],
                                    places=3)
 
 if __name__ == "__main__":
