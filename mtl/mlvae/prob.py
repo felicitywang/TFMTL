@@ -22,7 +22,7 @@ import tensorflow as tf
 
 def normalize_logits(logits, dims=None):
   assert len(logits.get_shape()) == 2
-  logits = tf.add(logits, -tf.reduce_logsumexp(logits, axis=1, keepdims=True))
+  logits -= tf.reduce_logsumexp(logits, axis=1, keepdims=True)
   if dims is None:
     return logits
   else:
@@ -37,6 +37,22 @@ def marginal_log_prob(normalized_logits, target_index):
   del reduce_axis[0]
   return tf.reduce_logsumexp(normalized_logits, reduce_axis)
 
-# def conditional_log_prob(target_index, cond_index, logits=None,
-#                          normalize=False):
-#   # p(X | Y) = p(X, Y) / P(Y)
+
+def conditional_log_prob(normalized_logits, target_index, cond_index,
+                         logits=None, normalize=False):
+  assert target_index != cond_index
+  ndims = len(normalized_logits.get_shape())
+  ln_p_cond = marginal_log_prob(normalized_logits, cond_index)
+  reduce_axis = list(xrange(ndims))
+  reduce_axis.remove(target_index + 1)
+  reduce_axis.remove(cond_index + 1)
+  reduce_axis.remove(0)
+  marginal_ln_joint = tf.reduce_logsumexp(normalized_logits,
+                                          reduce_axis)
+  if cond_index > target_index:
+    marginal_ln_joint = tf.transpose(marginal_ln_joint,
+                                     perm=[0, 2, 1])
+  ln_p_cond = tf.expand_dims(ln_p_cond, axis=-1)
+  final_dim = tf.shape(marginal_ln_joint)[-1]
+  ln_p_cond = tf.tile(ln_p_cond, [1, 1, final_dim])
+  return marginal_ln_joint - ln_p_cond
