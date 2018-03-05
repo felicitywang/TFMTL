@@ -26,6 +26,9 @@ import tensorflow as tf
 
 from tensorflow.contrib.training import HParams
 
+from mtl.layers import dense_layer
+from mtl.layers import mlp
+
 from mtl.mlvae.prob import normalize_logits
 from mtl.mlvae.prob import marginal_log_prob
 from mtl.mlvae.prob import conditional_log_prob
@@ -43,12 +46,15 @@ def default_hparams():
                  qy_mlp_num_layer=2,
                  qz_mlp_hidden_dim=512,
                  qz_mlp_num_layer=2,
+                 pz_mlp_hidden_dim=512,
+                 pz_mlp_num_layer=2,
                  latent_dim=256,
                  tau0=0.5,
+                 layer_norm=True,
                  decay_tau=False,
                  alpha=0.5,
                  label_prior_type="uniform",
-                 y_inference="sum",
+                 y_inference="sample",
                  labels_key="label",
                  inputs_key="inputs",
                  targets_key="targets",
@@ -85,6 +91,20 @@ def tile_over_batch_dim(logits, batch_size):
   return tf.tile(logits, [batch_size, 1])
 
 
+def joint_posterior_logits(x, output_size, **kwargs):
+  x = mlp(x, **kwargs)
+  return dense_layer(x, output_size, 'logits', activation=None)
+
+
+def gaussian_posterior(x, ys, latent_dim, **kwargs):
+  assert type(ys) is list
+  xy = tf.concat([x] + ys, axis=1)
+  x = mlp(xy, **kwargs)
+  zm = dense_layer(x, latent_dim, 'zm', activation=None)
+  zv = dense_layer(x, latent_dim, 'zv', tf.nn.softplus)
+  return zm, zv
+
+
 class JointMultiLabelVAE(object):
   def __init__(self,
                is_training=True,
@@ -102,6 +122,10 @@ class JointMultiLabelVAE(object):
       self._class_sizes = class_sizes
     else:
       raise ValueError("class_sizes must be of type dict")
+
+    tf.logging.info("Class sizes:")
+    for k, v in self._class_sizes.items():
+      tf.logging.info("  %s: %d", k, v)
 
     self._encoders = encoders
     self._decoders = decoders
@@ -170,36 +194,36 @@ class JointMultiLabelVAE(object):
       raise ValueError("unrecognized exception")
 
     self._ln_py_template = tf.make_template('py', prior_fn,
-                                            output_size=label_size)
+                                            output_size=output_size)
 
     # p(z | y_1, ..., y_K)
     self._ln_pz_template = tf.make_template('pz',
-                                            MLP_gaussian_posterior,
-                                            hidden_dim=hp.mlp_hidden_dim,
-                                            latent_dim=hp.latent_dim)
+                                            gaussian_posterior,
+                                            latent_dim=hp.latent_dim,
+                                            hidden_dim=hp.pz_mlp_hidden_dim,
+                                            num_layer=hp.pz_mlp_num_layer)
 
     ########################### Inference Networks ############################
 
     # ln q(y_1, ..., y_K | x)
     self._log_qy_template = tf.make_template('qy',
-                                             MLP_unnormalized_log_categorical,
+                                             joint_posterior_logits,
                                              output_size=output_size,
                                              hidden_dim=hp.qy_mlp_hidden_dim,
                                              num_layer=hp.qy_mlp_num_layer)
 
     # ln q(z | x, y_1, ..., y_K)
     self._log_qz_template = tf.make_template('qz',
-                                             MLP_gaussian_posterior,
+                                             gaussian_posterior,
+                                             latent_dim=hp.latent_dim,
                                              hidden_dim=hp.qz_mlp_hidden_dim,
-                                             num_layer=hp.qz_mlp_num_layer,
-                                             latent_dim=hp.latent_dim)
+                                             num_layer=hp.qz_mlp_num_layer)
 
     # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
   def label_index(self, label):
     index = 0
-    assert type(self.class_sizes) is OrderedDict
     for k in self.class_sizes.keys():
       if k == label:
         return index
@@ -214,8 +238,12 @@ class JointMultiLabelVAE(object):
     class_dims = self.class_sizes.values()
     return normalize_logits(logits, dims=class_dims)
 
-  def py_logits(self):
-    return self._py_template()
+  def py_logits(self, label_key):
+    if self.hp.label_prior_type == "uniform":
+      label_dim = self.class_sizes[label_key]
+      return tf.log(tf.constant([1./label_dim] * label_dim))
+    else:
+      raise ValueError("unimplemented")
 
   def qy_given_x_logits(self, log_joint_normalized, target_index, cond_index,
                         cond_val=None):
@@ -300,8 +328,9 @@ class JointMultiLabelVAE(object):
     zm_prior, zv_prior = self.pz_mean_var(ys_list)
 
     self._task_nll_x[task] = nll_x = self.decode(batch, z, task)
-    return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
-                           zm_prior, zv_prior)
+    return sampled_generative_loss(nll_x, labels, qy_logits,
+                                   py_logits, z, zm, zv, zm_prior,
+                                   zv_prior)
 
   def get_multi_task_loss(self, task_batches):
     losses = []

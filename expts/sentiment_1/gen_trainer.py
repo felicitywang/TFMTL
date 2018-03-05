@@ -69,41 +69,55 @@ def parse_args():
                  choices=['simple', 'normal', 'joint'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
-  p.add_argument('--batch_size', default=128, type=int,
+  p.add_argument('--batch-size', default=128, type=int,
                  help='Size of batch.')
   p.add_argument('--unlabeled', action='store_true', help="Use unlabeled data")
   p.add_argument('--alpha', default=0.5, type=float,
                  help='Weight placed on the discriminative terms')
-  p.add_argument('--encoder_arch', default="conv_max_tied",
+  p.add_argument('--encoder-arch', default="conv_max_tied",
                  choices=["conv_max_tied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder_arch', default="cnn_unigram",
+  p.add_argument('--decoder-arch', default="cnn_unigram",
                  choices=["bow_untied", "bow_tied", "cnn_unigram"],
                  help="Type of decoder to use for each task.")
-  p.add_argument('--label_prior_type', default="fixed",
+  p.add_argument('--label-prior-type', default="uniform",
                  choices=["uniform", "learned", "fixed"],
-                 help="What type of label prior to use (SimpleMultiLabelVAE)")
-  p.add_argument('--eval_batch_size', default=256, type=int,
+                 help="What type of label prior to use")
+  p.add_argument('--eval-batch-size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--word_embed_dim', default=256, type=int,
+  p.add_argument('--word-embed-dim', default=256, type=int,
                  help='Word embedding size')
-  p.add_argument('--latent_dim', default=512, type=int,
+  p.add_argument('--latent-dim', default=512, type=int,
                  help='Latent embedding dimensionality')
-  p.add_argument('--mlp_hidden_dim', default=512, type=int,
+  p.add_argument('--mlp-hidden-dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
-  p.add_argument('--mlp_num_layers', default=2, type=int,
+  p.add_argument('--mlp-num-layers', default=2, type=int,
                  help='Number of MLP layers')
-  p.add_argument('--share_embed', action='store_true', default=False,
-                 help='Whether datasets share word embeddings')
-  p.add_argument('--share_decoders', action='store_true', default=False,
-                 help='Whether decoders are shared across datasets')
+  p.add_argument('--share-embed', action='store_true', dest='share-embed',
+                 help='Share word embeddings between tasks')
+  p.add_argument('--no-share-embed', action='store_false', dest='share-embed',
+                 help='Do not share word embeddings between tasks')
+  p.set_defaults(share_embed=True)
+  p.add_argument('--share-decoders', action='store_true', dest='share-decoder',
+                 help='Share decoders between tasks')
+  p.add_argument('--no-share-decoders', action='store_false',
+                 dest='share-decoder',
+                 help='Share decoders between tasks')
+  p.set_defaults(share_decoder=False)
+  p.add_argument('--layer-norm', action='store_true', dest='layer-norm',
+                 help='Use layer normalization')
+  p.add_argument('--no-layer-norm', action='store_false', dest='layer-norm',
+                 help='No layer normalization')
+  p.set_defaults(layer_norm=True)
+  p.add_argument('--y-inference', default='sample', choices=['sum', 'sample'],
+                 help='How to do inference about latent labels')
   p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
-  p.add_argument('--max_grad_norm', default=5.0, type=float,
+  p.add_argument('--max-grad-norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
-  p.add_argument('--num_train_epochs', default=100, type=int,
+  p.add_argument('--num-train-epochs', default=100, type=int,
                  help='Number of training epochs.')
-  p.add_argument('--print_trainable_variables', action='store_true',
+  p.add_argument('--print-trainable-variables', action='store_true',
                  default=False,
                  help='Diagnostic: print trainable variables')
   p.add_argument('--seed', default=42, type=int,
