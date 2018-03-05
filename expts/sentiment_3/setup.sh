@@ -18,6 +18,8 @@ mv -f trees data/raw/SSTb/
 mv -f data.json.gz data/json/SSTb/
 mv -f index.json.gz data/json/SSTb/
 
+cp ../../datasets/sentiment/SSTb/label.json ./label_SSTb.json -f
+
 echo "Downloading the RTU data..."
 wget -nc http://ugrad.cs.jhu.edu/~fxwang/rtu.tar.gz
 
@@ -28,6 +30,8 @@ mv -f rtu.tar.gz data/raw/RTU/
 
 echo "Converting the RTU data to json..."
 python3 ../../datasets/sentiment/RTU/convert_RTU_to_JSON.py ./
+
+cp ../../datasets/sentiment/RTU/label.json ./label_RTU.json -f
 
 mv -f rtu/ data/raw/RTU/
 mv -f data.json.gz data/json/RTU/
