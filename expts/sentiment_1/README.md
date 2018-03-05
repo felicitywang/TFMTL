@@ -18,7 +18,7 @@ See `../../requirement.txt`
 - `args_LMRD`: arguments for the dataset LMRD
 - `data/raw/`: downloaded/unzipped original data files
 - `data/json/`: converted json data and basic vocabulary of the dataset
-- `data/tf/merged/SSTb_LMRD/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
+- `data/tf/merged/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
