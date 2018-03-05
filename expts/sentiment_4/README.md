@@ -3,7 +3,7 @@
 type|name|#items|#labels|unit|summary|split|unlabeled
 ---|---|---|---|---|---|---|---
 sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210|none
-sentiment|RTU|739,903|2|sentence|Rotten Tomatoes user movie reviews|train:test=737,903:2000|none
+sentiment|SUBJ|10,000|2|sentence|Rotten Tomatoes and IMDB movie reviews|not given|none
 
 ## requirements
 
@@ -15,10 +15,10 @@ See `../../requirement.txt`
 - `args_merged`: arguments for the datasets that use the shared vocabulary
 - `write_tfrecord_single.py`: python script to generate TFRecord files for the single dataset(without share vocabulary)
 - `args_SSTb`: arguments for the dataset SSTb
-- `args_RTU`: arguments for the dataset RTU
+- `args_SUBJ`: arguments for the dataset SUBJ
 - `data/raw/`: downloaded/unzipped original data files
 - `data/json/`: converted json data and basic vocabulary of the dataset
-- `data/tf/merged/SSTb_RTU/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
+- `data/tf/merged/SSTb_SUBJ/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -40,10 +40,10 @@ See `../../requirement.txt`
 1. modify arguments in `args_merged.json`
 2. run `setup.sh` to generate TFRecord files with merged vocabulary
 3. (optional)
-    - modify arguments in `args_SSTb.json` or `args_RTU.json`
+    - modify arguments in `args_SSTb.json` or `args_SUBJ.json`
     - generate TFRecord files for the single datasetrun by
         - `python ../scripts/write_tfrecords_single.py SSTb`
-        - `python ../scripts/write_tfrecords_single.py RTU`
+        - `python ../scripts/write_tfrecords_single.py SUBJ`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)
@@ -63,7 +63,7 @@ See `../../requirement.txt`
 type|dataset|accuracy|min_freq
 ---|---|---|---
 sentiment|SSTb|40.7240%|1
-sentiment|RTU|?|100
+sentiment|SUBJ|?|100
 
 ### hyperparameters:
 - learning rate: 0.0001
@@ -88,5 +88,6 @@ https://nlp.stanford.edu/sentiment/code.html
 others:
 https://github.com/magizbox/underthesea/wiki/DATA-SST
 
-- RTU:
-?
+- SUBJ:
+
+Bag of Words SVM (Pang and Lee, 2004): 90.00%

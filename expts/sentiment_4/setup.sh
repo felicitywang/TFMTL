@@ -35,9 +35,8 @@ python3 ../../datasets/sentiment/SUBJ/convert_SUBJ_to_JSON.py ./
 
 mv -f rotten_imdb/ data/raw/SUBJ/
 mv -f data.json.gz data/json/SUBJ/
-mv -f index.json.gz data/json/SUBJ/
 
-cp ../../datasets/sentiment/SUBJ/label.json ./label_SSTb.json -f
+cp ../../datasets/sentiment/SUBJ/label.json ./label_SUBJ.json -f
 
 mkdir -p data/tf/merged
 python ../scripts/write_tfrecords_merged.py SSTb SUBJ
