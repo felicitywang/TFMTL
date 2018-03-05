@@ -1,0 +1,9 @@
+[
+    {
+        "-2": "very conservative/Republican",
+        "-1": "slightly conservative/Republican",
+        " 0": "neutral",
+        " 1": "slightly liberal/Democrat",
+        " 2": "very liberal/Democrat"
+    }
+]
