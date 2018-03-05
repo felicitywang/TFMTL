@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
@@ -25,6 +25,10 @@ from collections import OrderedDict
 import tensorflow as tf
 
 from tensorflow.contrib.training import HParams
+
+from mtl.mlvae.prob import normalize_logits
+from mtl.mlvae.prob import marginal_log_prob
+from mtl.mlvae.prob import conditional_log_prob
 
 from mtl.mlvae.vae import log_normal
 from mtl.mlvae.vae import gaussian_sample
@@ -148,7 +152,7 @@ class JointMultiLabelVAE(object):
         raise ValueError("bad prior")
 
     def uniform_prior():
-      return tf.zeros([output_size])
+      return tf.ones([output_size])
 
     def learned_prior():
       return tf.get_variable('prior_weight', shape=[output_size],
@@ -169,20 +173,23 @@ class JointMultiLabelVAE(object):
                                             output_size=label_size)
 
     # p(z | y_1, ..., y_K)
-    self._ln_pz_template = tf.make_template('pz', MLP_gaussian_posterior,
+    self._ln_pz_template = tf.make_template('pz',
+                                            MLP_gaussian_posterior,
                                             hidden_dim=hp.mlp_hidden_dim,
                                             latent_dim=hp.latent_dim)
 
     ########################### Inference Networks ############################
 
     # ln q(y_1, ..., y_K | x)
-    self._log_qy_template = tf.make_template('qy', MLP_unnormalized_log_categorical,
+    self._log_qy_template = tf.make_template('qy',
+                                             MLP_unnormalized_log_categorical,
                                              output_size=output_size,
                                              hidden_dim=hp.qy_mlp_hidden_dim,
                                              num_layer=hp.qy_mlp_num_layer)
 
     # ln q(z | x, y_1, ..., y_K)
-    self._log_qz_template = tf.make_template('qz', MLP_gaussian_posterior,
+    self._log_qz_template = tf.make_template('qz',
+                                             MLP_gaussian_posterior,
                                              hidden_dim=hp.qz_mlp_hidden_dim,
                                              num_layer=hp.qz_mlp_num_layer,
                                              latent_dim=hp.latent_dim)
@@ -199,21 +206,28 @@ class JointMultiLabelVAE(object):
       index += 1
     raise ValueError("unknown label key: %s" % label)
 
+  def joint_logits(self, x):
+    return self._log_qy_template(x)
+
+  def log_joint_prob(self, x):
+    logits = self.joint_logits(x)
+    class_dims = self.class_sizes.values()
+    return normalize_logits(logits, dims=class_dims)
+
   def py_logits(self):
     return self._py_template()
 
-  def qy_given_x_logits(self, target_label, cond_label, features):
-    logits = self._qy_templates(features)
-    target_index = self.label_index(target_label)
-    cond_index = self.label_index(cond_label)
+  def qy_given_x_logits(self, log_joint_normalized, target_index, cond_index,
+                        cond_val=None):
+    logits = conditional_log_prob(log_joint_normalized, target_index,
+                                  cond_index)
+    if cond_val:
+      # q(Y | X = cond_val)
+      logits = tf.gather(logits, cond_val, axis=1)
+    return logits
 
-    # logits is [batch_size, event_space_size]
-
-    #    q(label | cond_label) =    q(label, cond_label) /    q(cond_label)
-    # ln q(label | cond_label) = ln q(label, cond_label) - ln q(cond_label)
-    logits = tf.reshape(logits, self.class_sizes.values())
-    Z = tf.logsumexp(logits[])
-
+  def qy_logits(self, log_joint_normalized, target_index):
+    return marginal_log_prob(log_joint_normalized, target_index)
 
   def pz_mean_var(self, ys):
     return self._pz_template(ys)
@@ -223,7 +237,6 @@ class JointMultiLabelVAE(object):
     return self._qz_template([features] + ys)
 
   def sample_y(self, logits, name):
-    # TODO(noa): check parameter sharing between tasks
     log_qy = ExpRelaxedOneHotCategorical(self._tau,
                                          logits=logits,
                                          name='log_qy_{}'.format(name))
@@ -232,39 +245,60 @@ class JointMultiLabelVAE(object):
 
   def get_predictions(self, inputs, feature_name):
     features = self.encode(inputs, feature_name)
-    logits = self.qy_logits(feature_name, features)
+    log_joint = self.log_joint_prob(features)
+    target_axis = self.label_index(feature_name)
+    logits = self.qy_logits(log_joint, target_axis)
     probs = tf.nn.softmax(logits)
     return tf.argmax(probs, axis=1)
 
-  def get_task_discriminative_loss(self, task, labels, features):
+  def get_task_discriminative_loss(self, task, labels, log_joint):
     nll_ys = []
     for label_key, label_val in labels.items():
+      label_axis = self.label_index(label_key)
       if label_val is not None:
         nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
           labels=label_val,
-          logits=self.qy_logits(label_key, features),
+          logits=self.qy_logits(log_joint, label_axis),
           name='d_loss_{}'.format(label_key))]
     assert len(nll_ys)
     return tf.add_n(nll_ys)
 
-  def get_sample_task_generative_loss(self, task, labels, features, batch):
+  def get_sample_task_generative_loss(self, task, labels, features, log_joint,
+                                      batch):
     ys = {}
     qy_logits = {}
     py_logits = {}
     batch_size = tf.shape(features)[0]
+
+    # Dimension for the observed label
+    observed_axis = None
+    for k, v in labels.items():
+      if v is None:
+        pass
+      else:
+        assert observed_axis is None, "assume one observed feature"
+        observed_axis = self.label_index(k)
+
+    # Accumulate predicted or observed labels
     for label_key, label_val in labels.items():
       py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
                                                  batch_size)
       if label_val is None:
-        qy_logits[label_key] = self.qy_logits(label_key, features)
+        target_axis = self.label_index(label_key)
+        qy_logits[label_key] = self.qy_given_x_logits(log_joint, target_axis,
+                                                      observed_axis,
+                                                      cond_val=label_val)
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
         qy_logits[label_key] = None
         ys[label_key] = tf.one_hot(label_val, self.class_size(label_key))
+
+    # p(z | ys) and q(z | x, ys)
     ys_list = ys.values()
     zm, zv = self.qz_mean_var(features, ys_list)
     z = gaussian_sample(zm, zv)
     zm_prior, zv_prior = self.pz_mean_var(ys_list)
+
     self._task_nll_x[task] = nll_x = self.decode(batch, z, task)
     return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
                            zm_prior, zv_prior)
@@ -287,14 +321,21 @@ class JointMultiLabelVAE(object):
   def get_loss(self, task_name, labels, batch):
     # Encode the inputs using a task-specific encoder
     features = self.encode(batch, task_name)
+
+    # Get normalized log q(y_1, ..., y_K | x)
+    logits = self.joint_logits(features)
+    class_dims = self.class_sizes.values()
+    log_joint = normalize_logits(logits, dims=class_dims)
+
     if self.hp.y_inference == "sum":
-      g_loss = self.get_sum_task_generative_loss(task_name, labels,
-                                                 features, batch)
+      raise ValueError("unimplemented")
     else:
       g_loss = self.get_sample_task_generative_loss(task_name, labels,
-                                                    features, batch)
+                                                    features,
+                                                    log_joint, batch)
     assert len(g_loss.get_shape().as_list()) == 1
-    d_loss = self.get_task_discriminative_loss(task_name, labels, features)
+    d_loss = self.get_task_discriminative_loss(task_name, labels, features,
+                                               log_joint)
     assert len(d_loss.get_shape().as_list()) == 1
     a = self.hp.alpha
     assert a >= 0.0 and a <= 1.0, a

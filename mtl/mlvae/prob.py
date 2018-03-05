@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
@@ -38,8 +38,7 @@ def marginal_log_prob(normalized_logits, target_index):
   return tf.reduce_logsumexp(normalized_logits, reduce_axis)
 
 
-def conditional_log_prob(normalized_logits, target_index, cond_index,
-                         logits=None, normalize=False):
+def conditional_log_prob(normalized_logits, target_index, cond_index):
   assert target_index != cond_index
   ndims = len(normalized_logits.get_shape())
   ln_p_cond = marginal_log_prob(normalized_logits, cond_index)
