@@ -63,7 +63,7 @@ See `../../requirement.txt`
 type|dataset|accuracy|min_freq
 ---|---|---|---
 sentiment|SSTb|40.7240%|1
-sentiment|SUBJ|?|100
+sentiment|SUBJ|?|1
 
 ### hyperparameters:
 - learning rate: 0.0001
