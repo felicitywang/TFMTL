@@ -4,7 +4,8 @@
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
-        "text"
+        "subject",
+        "predicate"
     ],
     "train_ratio": 0.8,
     "valid_ratio": 0.1,
