@@ -1,6 +1,6 @@
 {
     "max_document_length": -1,
-    "min_frequency": 1,
+    "min_frequency": 100,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [

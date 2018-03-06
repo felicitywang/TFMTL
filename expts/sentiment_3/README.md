@@ -2,8 +2,8 @@
 
 type|name|#items|#labels|unit|summary|split|unlabeled
 ---|---|---|---|---|---|---|---
-sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210|none
-sentiment|RTU|739,903|2|sentence|Rotten Tomatoes user movie reviews|train:test=737,903:2000|none
+sentiment|IMDb|600,000|2|paragraph|IMDb movie reviews|train:test=300,000:300,000|none
+sentiment|RTU|739,903|2|paragraph|Rotten Tomatoes user movie reviews|train:test=737,903:2000|none
 
 ## requirements
 
@@ -14,11 +14,11 @@ See `../../requirement.txt`
 - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files
 - `args_merged`: arguments for the datasets that use the shared vocabulary
 - `write_tfrecord_single.py`: python script to generate TFRecord files for the single dataset(without share vocabulary)
-- `args_SSTb`: arguments for the dataset SSTb
+- `args_IMDb`: arguments for the dataset IMDb
 - `args_RTU`: arguments for the dataset RTU
 - `data/raw/`: downloaded/unzipped original data files
 - `data/json/`: converted json data and basic vocabulary of the dataset
-- `data/tf/merged/SSTb_RTU/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
+- `data/tf/merged/IMDb_RTU/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -40,9 +40,9 @@ See `../../requirement.txt`
 1. modify arguments in `args_merged.json`
 2. run `setup.sh` to generate TFRecord files with merged vocabulary
 3. (optional)
-    - modify arguments in `args_SSTb.json` or `args_RTU.json`
+    - modify arguments in `args_IMDb.json` or `args_RTU.json`
     - generate TFRecord files for the single datasetrun by
-        - `python ../scripts/write_tfrecords_single.py SSTb`
+        - `python ../scripts/write_tfrecords_single.py IMDb`
         - `python ../scripts/write_tfrecords_single.py RTU`
 
 ### arguments for datasets
@@ -62,7 +62,7 @@ See `../../requirement.txt`
 ## MLP baseline
 type|dataset|accuracy|min_freq
 ---|---|---|---
-sentiment|SSTb|40.7240%|1
+sentiment|IMDb|40.7240%|1
 sentiment|RTU|?|100
 
 ### hyperparameters:
@@ -77,16 +77,8 @@ sentiment|RTU|?|100
 
 ### state-of-the-art results
 
-- SSTb:
-
-Tree-LSTM: 50.1%
-http://aihuang.org/static/papers/AAAI2018_ClassifyAndStructure.pdf
-
-original: 45.7%
-https://nlp.stanford.edu/sentiment/code.html
-
-others:
-https://github.com/magizbox/underthesea/wiki/DATA-SST
+- IMDb:
+?
 
 - RTU:
 ?
