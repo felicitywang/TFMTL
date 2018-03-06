@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+
 from mtl.util.common import preoutput_MLP
 from mtl.util.layers import dense_layer
 
@@ -38,7 +39,7 @@ class Mult(object):
                  class_sizes=None,
                  dataset_order=None,
                  encoders=None,
-                 hp=None,
+                 hps=None,
                  is_training=None):
 
         # class_sizes: map from feature names to cardinality of label sets
@@ -49,16 +50,16 @@ class Mult(object):
         assert class_sizes is not None
         assert dataset_order is not None
         assert encoders is not None
-        assert hp is not None
+        assert hps is not None
         assert is_training is not None
 
-        self._hp = hp
+        self._hp = hps
 
         self._class_sizes = class_sizes
 
         self._dataset_order = dataset_order
 
-        assert class_sizes.keys() == set(
+        assert set(class_sizes.keys()) == set(
             dataset_order)  # all feature names are present and consistent across data structures
 
         self._encoders = encoders
@@ -75,31 +76,33 @@ class Mult(object):
         # Create templates for the parametrized parts of the computation
         # graph that are re-used in different places.
 
-        self._py_templates = dict()
+        self._mlp = dict()
         for k, v in class_sizes.items():
-            self._py_templates[k] = tf.make_template('py_{}'.format(k),
-                                                     mlp,
-                                                     output_size=v,
-                                                     embed_dim=self._hp.embed_dim,
-                                                     num_layers=self._hp.num_layers,
-                                                     activation=tf.nn.relu,
-                                                     dropout_rate=self._hp.dropout_rate,
-                                                     is_training=is_training
-                                                     )
+            self._mlp[k] = tf.make_template('py_{}'.format(k),
+                                            mlp,
+                                            output_size=v,
+                                            embed_dim=self._hp.embed_dim,
+                                            num_layers=self._hp.num_layers,
+                                            activation=tf.nn.relu,
+                                            dropout_rate=self._hp.dropout_rate,
+                                            is_training=is_training
+                                            )
 
     # Encoding (feature extraction)
     def encode(self, inputs, feature_name, lengths=None):
+        if self._encoders[feature_name] == 'no_op':
+            return inputs
         return self._encoders[feature_name](inputs, lengths)
 
     def get_predictions(self, batch, feature_name, features=None):
         # Returns most likely label given conditioning variables (only run this on eval data)
-        inputs = batch[self._hp.inputs_key]
+        inputs = batch[self._hp.input_key]
         input_lengths = batch[self._hp.token_lengths_key]
 
         if features is None:
             features = self.encode(inputs, feature_name, lengths=input_lengths)
 
-        logits = self._py_templates[feature_name](features)
+        logits = self._mlp[feature_name](features)
 
         res = tf.argmax(logits, axis=1)
         # res = tf.expand_dims(res, axis=1)
@@ -108,14 +111,14 @@ class Mult(object):
 
     def get_loss(self, batch, feature_name, features=None):
         # Returns most likely label given conditioning variables (only run this on eval data)
-        inputs = batch[self._hp.inputs_key]
+        inputs = batch[self._hp.input_key]
         input_lengths = batch[self._hp.token_lengths_key]
-        labels = batch[self._hp.labels_key]
+        labels = batch[self._hp.label_key]
 
         if features is None:
             features = self.encode(inputs, feature_name, lengths=input_lengths)
 
-        logits = self._py_templates[feature_name](features)
+        logits = self._mlp[feature_name](features)
 
         # loss
         ce = tf.reduce_mean(
