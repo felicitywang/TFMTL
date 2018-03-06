@@ -42,15 +42,22 @@ def conditional_log_prob(normalized_logits, target_index, cond_index):
   assert target_index != cond_index
   ndims = len(normalized_logits.get_shape())
   ln_p_cond = marginal_log_prob(normalized_logits, cond_index)
-  reduce_axis = list(xrange(ndims))
-  reduce_axis.remove(target_index + 1)
-  reduce_axis.remove(cond_index + 1)
-  reduce_axis.remove(0)
-  marginal_ln_joint = tf.reduce_logsumexp(normalized_logits,
-                                          reduce_axis)
+
+  if ndims > 3:
+    reduce_axis = list(xrange(ndims))
+    reduce_axis.remove(target_index + 1)
+    reduce_axis.remove(cond_index + 1)
+    reduce_axis.remove(0)
+    marginal_ln_joint = tf.reduce_logsumexp(normalized_logits,
+                                            axis=reduce_axis,
+                                            keepdims=False)
+  else:
+    marginal_ln_joint = normalized_logits
+
   if cond_index > target_index:
     marginal_ln_joint = tf.transpose(marginal_ln_joint,
                                      perm=[0, 2, 1])
+
   ln_p_cond = tf.expand_dims(ln_p_cond, axis=-1)
   final_dim = tf.shape(marginal_ln_joint)[-1]
   ln_p_cond = tf.tile(ln_p_cond, [1, 1, final_dim])

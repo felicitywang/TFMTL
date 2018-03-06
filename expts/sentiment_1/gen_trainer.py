@@ -71,7 +71,11 @@ def parse_args():
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
   p.add_argument('--batch-size', default=128, type=int,
                  help='Size of batch.')
-  p.add_argument('--unlabeled', action='store_true', help="Use unlabeled data")
+  p.add_argument('--unlabeled', action='store_true', dest='unlabeled',
+                 help="Use unlabeled data")
+  p.add_argument('--no-unlabeled', action='store_false', dest='unlabeled',
+                 help="No unlabeled data")
+  p.set_defaults(unlabeled=False)
   p.add_argument('--alpha', default=0.5, type=float,
                  help='Weight placed on the discriminative terms')
   p.add_argument('--encoder-arch', default="conv_max_tied",
@@ -80,6 +84,12 @@ def parse_args():
   p.add_argument('--decoder-arch', default="cnn_unigram",
                  choices=["bow_untied", "bow_tied", "cnn_unigram"],
                  help="Type of decoder to use for each task.")
+  p.add_argument('--y-prediction', default="deterministic",
+                 choices=['deterministic', 'sampled'],
+                 help="Method for test-time prediction")
+  p.add_argument('--y-inference', default="sample",
+                 choices=['sample', 'sum'],
+                 help="How to infer latent labels")
   p.add_argument('--label-prior-type', default="uniform",
                  choices=["uniform", "learned", "fixed"],
                  help="What type of label prior to use")

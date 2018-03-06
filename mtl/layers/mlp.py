@@ -29,6 +29,9 @@ from six.moves import xrange
 
 
 def dense_layer(x, output_size, name, activation=tf.nn.selu):
+  assert type(output_size) is int
+  assert type(name) is str
+
   if type(activation) == str:
     activation = get_activation_fn(activation)
 
@@ -58,10 +61,12 @@ def mlp(x, hidden_dim=256, num_layer=2, activation=tf.nn.selu,
     x = dropout(x, input_keep_prob)
 
   assert not (batch_normalization and layer_normalization)
+  assert not (hidden_dim is None)
+  assert not (num_layer is None)
 
   for i in xrange(num_layer):
     with tf.variable_scope("layer_%d" % i):
-      x = dense_layer(x, hidden_dim, 'linear')
+      x = dense_layer(x, hidden_dim, 'linear', activation=None)
       if batch_normalization:
         x = tf.layers.batch_normalization(x, training=is_training,
                                           name='bn')
