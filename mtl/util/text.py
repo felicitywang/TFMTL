@@ -16,20 +16,21 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-"""Implements a number of text preprocessing utilities."""
-"""Modified version: add max_frequency"""
-
 import re
 
 import numpy as np
 import six
-from tqdm import tqdm
 from tensorflow.python.platform import gfile
+from tqdm import tqdm
 
-# from .categorical_vocabulary import \
-#     CategoricalVocabulary  # pylint: disable=g-bad-import-order
-from tensorflow.contrib.learn.python.learn.preprocessing import \
-    CategoricalVocabulary
+from .categorical_vocabulary import CategoricalVocabulary  # pylint: disable=g-bad-import-order
+
+"""Implements a number of text preprocessing utilities."""
+"""Modified from tensorflow.contrib.learn.python.learn.preprocessing.text"""
+"""Modified version: add max_frequency"""
+
+# from tensorflow.contrib.learn.python.learn.preprocessing import \
+#     CategoricalVocabulary
 
 try:
     # pylint: disable=g-import-not-at-top
@@ -70,7 +71,8 @@ class ByteProcessor(object):
         return self.transform(x)
 
     # pylint: disable=no-self-use
-    def reverse(self, x):
+    @staticmethod
+    def reverse():
         """Reverses output of transform back to text.
 
         Args:

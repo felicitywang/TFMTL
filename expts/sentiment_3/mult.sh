@@ -1,0 +1,1 @@
+python ../scripts/discriminative_driver.py --datasets RTU IMDb --dataset_paths data/tf/merged/IMDb_RTU/min_100_max_-1/RTU/ data/tf/merged/IMDb_RTU/min_100_max_-1/IMDb/ --class_sizes 2 2 --vocab_path data/tf/merged/IMDb_RTU/min_100_max_-1/vocab_size.txt --model mult --encoder_architecture paragram_phrase_tied_word_embeddings
