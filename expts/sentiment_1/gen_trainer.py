@@ -76,13 +76,14 @@ def parse_args():
   p.add_argument('--no-unlabeled', action='store_false', dest='unlabeled',
                  help="No unlabeled data")
   p.set_defaults(unlabeled=False)
-  p.add_argument('--alpha', default=0.5, type=float,
-                 help='Weight placed on the discriminative terms')
-  p.add_argument('--encoder-arch', default="conv_max_tied",
-                 choices=["conv_max_tied"],
+  p.add_argument('--alpha', default=0.75, type=float,
+                 help='Weight placed on the discriminative terms [0, 1.0]')
+  p.add_argument('--encoder-arch', default="conv_max_untied",
+                 choices=["conv_max_tied", "conv_max_untied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder-arch', default="cnn_unigram",
-                 choices=["bow_untied", "bow_tied", "cnn_unigram"],
+  p.add_argument('--decoder-arch', default="shallow_cnn_unigram",
+                 choices=["bow_untied", "bow_tied", "cnn_unigram",
+                          "shallow_cnn_unigram"],
                  help="Type of decoder to use for each task.")
   p.add_argument('--y-prediction', default="deterministic",
                  choices=['deterministic', 'sampled'],
@@ -119,8 +120,6 @@ def parse_args():
   p.add_argument('--no-layer-norm', action='store_false', dest='layer-norm',
                  help='No layer normalization')
   p.set_defaults(layer_norm=True)
-  p.add_argument('--y-inference', default='sample', choices=['sum', 'sample'],
-                 help='How to do inference about latent labels')
   p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max-grad-norm', default=5.0, type=float,
@@ -187,10 +186,10 @@ def get_joint_log_prior(LMRD_path, SSTb_path):
   return np.log(joint_dist)
 
 
-def encoder_graph(batch, embed_fn, tokens_key='tokens'):
+def encoder_graph(batch, embed_fn, tokens_key='tokens', max_filter_width=7):
   tokens = batch[tokens_key]
   embed = embed_fn(tokens)
-  return conv_and_pool(embed, num_filter=256, max_width=5)
+  return conv_and_pool(embed, num_filter=256, max_width=max_filter_width)
 
 
 def build_encoders(arch, vocab_size, args, embedder):
@@ -201,6 +200,10 @@ def build_encoders(arch, vocab_size, args, embedder):
                                          embed_fn=embedder)
     for ds in args.datasets:
       encoders[ds] = feature_extractor
+  elif arch == "conv_max_untied":
+    for ds in args.datasets:
+      encoders[ds] = tf.make_template('encoder_%s' % ds, encoder_graph,
+                                      embed_fn=embedder)
   else:
     raise ValueError("unrecognized encoder architecture")
 
@@ -221,6 +224,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
   loss = model.get_multi_task_loss(train_batches)
+  g_loss = model.get_generative_loss()
+  d_loss = model.get_discriminative_loss()
 
   # Done building compute graph; set up training ops.
 
@@ -244,16 +249,24 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       start_time = time()
 
       # Take steps_per_epoch gradient steps
-      total_loss = 0
+      total_loss = 0.0
+      total_g_loss = 0.0
+      total_d_loss = 0.0
       num_iter = 0
       for i in xrange(steps_per_epoch):
-        step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
+        step, loss_v, g_loss_v, d_loss_v, _ = sess.run([global_step_tensor,
+                                                        loss, g_loss,
+                                                        d_loss, train_op])
         num_iter += 1
         total_loss += loss_v
+        total_g_loss += g_loss_v
+        total_d_loss += d_loss_v
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
-      train_loss = float(total_loss) / float(num_iter)
+      train_loss = total_loss / float(num_iter)
+      train_g_loss = total_g_loss / float(num_iter)
+      train_d_loss = total_d_loss / float(num_iter)
 
       # Evaluate held-out accuracy
       if not args.test:  # Validation mode
@@ -271,9 +284,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         elapsed = end_time - start_time
 
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s' % (
+        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%s g_loss=%s d_loss=%s' % (
           epoch+1, args.num_train_epochs, np.asscalar(step), elapsed,
-          train_loss)
+          train_loss, train_g_loss, train_d_loss)
 
         tot_eval_acc = 0.0
         for dataset_name in model_info:
@@ -313,7 +326,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
     if gold_labels[i] == pred_labels[i]:
       ncorrect += 1
   acc = float(ncorrect) / float(ntotal)
-
   return {
     'ntotal': ntotal,
     'ncorrect': ncorrect,

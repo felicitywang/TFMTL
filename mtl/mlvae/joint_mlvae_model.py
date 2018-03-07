@@ -51,7 +51,7 @@ def default_hparams():
                  tau0=0.5,
                  layer_norm=True,
                  decay_tau=False,
-                 alpha=0.5,
+                 alpha=10.0,
                  y_prediction="deterministic",
                  label_prior_type="uniform",
                  y_inference="sample",
@@ -248,22 +248,18 @@ class JointMultiLabelVAE(object):
   def qy_given_x_logits(self, log_joint_normalized, target_index, cond_index,
                         cond_val=None):
     batch_size = tf.shape(log_joint_normalized)[0]
-    tf.logging.info('log joint normalized: %s', log_joint_normalized)
+    #tf.logging.info('log joint normalized: %s', log_joint_normalized)
     logits = conditional_log_prob(log_joint_normalized, target_index,
                                   cond_index)
-    tf.logging.info('target index: %d', target_index)
-    tf.logging.info('cond index: %s', cond_index)
+    #tf.logging.info('target index: %d', target_index)
+    #tf.logging.info('cond index: %s', cond_index)
     if cond_val is not None:
       with tf.name_scope('conditioning'):
+        # TODO(noa): test case this
         final_dim = logits.get_shape()[-1]
         indices = tf.stack([tf.range(batch_size),
                             tf.to_int32(cond_val)], axis=1)
-        print('indices: %s' % (indices))
         logits = tf.gather_nd(logits, indices)
-        # logits = tf.gather(logits, cond_val, axis=1)
-        # logits = tf.reshape(logits, [batch_size, 1, final_dim])
-        # logits = tf.squeeze(logits, axis=1)
-        print('logits: %s' % (logits))
         assert len(logits.get_shape()) == 2
     else:
       assert len(logits.get_shape()) == 3
@@ -337,8 +333,6 @@ class JointMultiLabelVAE(object):
         qy_logits[label_key] = self.qy_given_x_logits(log_joint, target_axis,
                                                       observed_axis,
                                                       cond_val=observed_label)
-        print('qy logits:')
-        print(qy_logits[label_key])
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
         qy_logits[label_key] = None
@@ -388,12 +382,15 @@ class JointMultiLabelVAE(object):
       g_loss = self.get_sample_task_generative_loss(task_name, labels,
                                                     features,
                                                     log_joint, batch)
-    assert len(g_loss.get_shape().as_list()) == 1
-    d_loss = self.get_task_discriminative_loss(task_name, labels, log_joint)
+      assert len(g_loss.get_shape().as_list()) == 1
+      self._g_loss = g_loss = tf.reduce_mean(g_loss)
+    d_loss = self.get_task_discriminative_loss(task_name, labels,
+                                               log_joint)
     assert len(d_loss.get_shape().as_list()) == 1
+    self._d_loss = d_loss = tf.reduce_mean(d_loss)
     a = self.hp.alpha
     assert a >= 0.0 and a <= 1.0, a
-    return ((1. - a) * tf.reduce_mean(g_loss)) + (a * tf.reduce_mean(d_loss))
+    return (1. - a) * g_loss + (a * d_loss)
 
   def encode(self, inputs, task_name):
     return self._encoders[task_name](inputs)
@@ -403,6 +400,12 @@ class JointMultiLabelVAE(object):
 
   def get_task_loss(self, task_name):
     return self._task_loss[task_name]
+
+  def get_generative_loss(self):
+    return self._g_loss
+
+  def get_discriminative_loss(self):
+    return self._d_loss
 
   def get_task_nll_x(self, task_name):
     return self._task_nll_x[task_name]
