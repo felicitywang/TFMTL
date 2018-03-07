@@ -192,7 +192,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 # Get performance metrics on each dataset
                 for dataset_name in model_info:
                     # _test_batch = dataset_info[dataset_name]['test_dataset'].batch
-                    # _pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
+                    # _pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
                     _pred_op = model_info[dataset_name]['test_pred_op']
                     _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
                     _eval_iter = model_info[dataset_name]['test_iter']
@@ -241,7 +241,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 file.write(" ")
             file.write("\n")
             for dataset, acc in best_eval_acc.items():
-                file.write('Best accuaracy for dataset {}: {}\n'.format(dataset, acc))
+                file.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
             file.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc, best_total_acc_epoch))
 
 
@@ -319,7 +319,7 @@ def main():
     for dataset_name in args.datasets:
         dataset_info[dataset_name] = dict()
         # Collect dataset information/statistics
-        dataset_info[dataset_name]['feature_name'] = dataset_name  # feature name is just dataset name
+        dataset_info[dataset_name]['dataset_name'] = dataset_name  # feature name is just dataset name
         dataset_info[dataset_name]['dir'] = dirs[dataset_name]
         dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
         dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
@@ -418,16 +418,73 @@ def main():
         hps = set_hp(args)
 
         if args.model == 'mult':
-            m = Mult(class_sizes=class_sizes,
-                     dataset_order=dataset_order,
-                     encoders=encoders,
-                     hps=hps,
-                     is_training=True)
+
+            model = Mult(class_sizes=class_sizes,
+                         dataset_order=dataset_order,
+                         encoders=encoders,
+                         hps=hps,
+                         is_training=True)
+
+            test = tf.global_variables()
+            print(type(test))
+            print(test)
+
+            # # Create some variables.
+            # v1 = tf.get_variable("v1", shape=[3])
+            # v2 = tf.get_variable("v2", shape=[5])
+            #
+            # test = tf.global_variables()
+            # print(type(test))
+            # print(test)
+
+
+            # # Add ops to save and restore all the variables.
+            saver = tf.train.Saver()
+            #
+            # saver = tf.train.Saver(var_list=tf.global_variables())
+
+            # with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
+            #     model_train = make_model(args, class_sizes, dataset_order, encoders, hps, is_training=True)
+            # with tf.variable_scope('model', reuse=True):
+            #     model_test = make_model(args, class_sizes, dataset_order, encoders, hps, is_training=False)
+            #
+            # model = dict()
+            # model['train'] = model_train
+            # model['test'] = model_test
+
+            # from mtl.checkmate import BestCheckpointSaver
+            # savers = dict()
+            # best_checkpoint_dir = './best/'
+            # for dataset_name in args.datasets:
+            #     savers[dataset_name] = BestCheckpointSaver(
+            #         save_dir=os.path.join(best_checkpoint_dir, dataset_name),
+            #         num_to_keep=3,
+            #         maximize=True
+            #     )
+            # if len(args.datasets) > 1:
+            #     savers['mult'] = BestCheckpointSaver(
+            #         save_dir=os.path.join(best_checkpoint_dir, 'mult'),
+            #         num_to_keep=3,
+            #         maximize=True
+            #     )
+
         else:
             raise ValueError("unrecognized model: %s" % args.model)
 
         # Do training
-        train_model(m, dataset_info, steps_per_epoch, args)
+        train_model(model, dataset_info, steps_per_epoch, args)
+
+
+def make_model(args, class_sizes, dataset_order, encoders, hps, is_training):
+    if args.model == 'mult':
+        model = Mult(class_sizes=class_sizes,
+                     dataset_order=dataset_order,
+                     encoders=encoders,
+                     hps=hps,
+                     is_training=is_training)
+        return model
+    else:
+        raise ValueError("unrecognized model: %s" % args.model)
 
 
 def set_hp(args):
@@ -500,7 +557,7 @@ def fill_info_dicts(dataset_info, model, args):
         _test_dataset = dataset_info[dataset_name]['test_dataset']
         _test_iter = _test_dataset.iterator
         _test_batch = _test_dataset.batch
-        _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['feature_name'])
+        _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
         model_info[dataset_name]['test_iter'] = _test_iter
         model_info[dataset_name]['test_batch'] = _test_batch
         model_info[dataset_name]['test_pred_op'] = _test_pred_op
