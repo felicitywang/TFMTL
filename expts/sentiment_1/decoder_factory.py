@@ -25,6 +25,8 @@ from mtl.decoders import shallow_cnn
 
 
 def build_template(name, decoder, vocab_size, **kwargs):
+  tf.logging.info("  %s: %s", name, decoder)
+
   if decoder == "unigram":
     return tf.make_template('decoder_{}'.format(name), unigram,
                             vocab_size=vocab_size)
@@ -39,6 +41,8 @@ def build_template(name, decoder, vocab_size, **kwargs):
 
 
 def build_decoders(arch, vocab_size, args, embedder=None):
+  tf.logging.info("Decoders:")
+
   decoders = dict()
   if arch == "bow_untied":
     for ds in args.datasets:

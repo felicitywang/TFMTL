@@ -81,7 +81,7 @@ def parse_args():
   p.add_argument('--encoder-arch', default="conv_max_untied",
                  choices=["conv_max_tied", "conv_max_untied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder-arch', default="shallow_cnn_unigram",
+  p.add_argument('--decoder-arch', default="cnn_unigram",
                  choices=["bow_untied", "bow_tied", "cnn_unigram",
                           "shallow_cnn_unigram"],
                  help="Type of decoder to use for each task.")

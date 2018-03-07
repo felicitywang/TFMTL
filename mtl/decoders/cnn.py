@@ -26,7 +26,8 @@ from mtl.layers.t2t import conv1d
 def default_hparams():
   return HParams(filter_width=3,
                  embed_dim=128,
-                 num_filters=128)
+                 layer_norm=True,
+                 num_filters=256)
 
 
 def shift_right(x, pad_value=None):
@@ -59,17 +60,22 @@ def cnn(batch, z, vocab_size, embedder=None, hp=default_hparams(),
   x = conv1d(x, hp.num_filters, hp.filter_width,
              dilation_rate=1, use_bias=False, padding='CAUSAL',
              name='conv1d_pre')
+  x = tf.nn.relu(x)
+  if hp.layer_norm:
+    x = tf.contrib.layers.layer_norm(x)
   z = tf.expand_dims(z, 1)
   z_tile = tf.tile(z, [1, batch_len, 1])
   xz = tf.concat([x, z_tile], axis=2)
-  xz = tf.nn.relu(xz)
   xz = conv1d(
     xz, hp.num_filters, 1, dilation_rate=1,
     use_bias=True, padding='CAUSAL', name='conv1d_post1')
   xz = tf.nn.relu(xz)
+  if hp.layer_norm:
+    xz = tf.contrib.layers.layer_norm(xz)
   logits = conv1d(
     xz, vocab_size, 1, dilation_rate=1,
     use_bias=True, padding='CAUSAL', name='conv1d_post2')
+  assert logits.get_shape().as_list()[-1] == vocab_size
   mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
   losses = sequence_loss(logits, targets, mask,
                          average_across_timesteps=False,
@@ -96,13 +102,16 @@ def shallow_cnn(batch, z, vocab_size, embedder=None, hp=default_hparams(),
   x = conv1d(x, hp.num_filters, hp.filter_width,
              dilation_rate=1, use_bias=False, padding='CAUSAL',
              name='conv1d_pre')
+  x = tf.nn.relu(x)
+  if hp.layer_norm:
+    x = tf.contrib.layers.layer_norm(x)
   z = tf.expand_dims(z, 1)
   z_tile = tf.tile(z, [1, batch_len, 1])
   xz = tf.concat([x, z_tile], axis=2)
-  xz = tf.nn.relu(xz)
   logits = conv1d(
-    xz, hp.num_filters, 1, dilation_rate=1,
-    use_bias=True, padding='CAUSAL', name='conv1d_post1')
+    xz, vocab_size, 1, dilation_rate=1,
+    use_bias=True, padding='CAUSAL', name='conv1d_post')
+  assert logits.get_shape().as_list()[-1] == vocab_size
   mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
   losses = sequence_loss(logits, targets, mask,
                          average_across_timesteps=False,
