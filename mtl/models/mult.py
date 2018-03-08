@@ -69,21 +69,21 @@ class Mult(object):
             return inputs
         return self._encoders[dataset_name](inputs, lengths)
 
-    def get_predictions(self, batch, dataset_name):
+    def get_predictions(self, batch, dataset_name, is_training):
         # Returns most likely label given conditioning variables (only run this on eval data)
         inputs = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
 
         features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlps[dataset_name](features)
+        logits = self._mlps[dataset_name](features, is_training)
 
         res = tf.argmax(logits, axis=1)
         # res = tf.expand_dims(res, axis=1)
 
         return res
 
-    def get_loss(self, batch, dataset_name, features=None):
+    def get_loss(self, batch, dataset_name, features=None, is_training=True):
         # Returns most likely label given conditioning variables (only run this on eval data)
         inputs = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
@@ -92,7 +92,7 @@ class Mult(object):
         if features is None:
             features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlps[dataset_name](features)
+        logits = self._mlps[dataset_name](features, is_training)
 
         # loss
         ce = tf.reduce_mean(
@@ -107,7 +107,7 @@ class Mult(object):
 
         return loss
 
-    def get_multi_task_loss(self, dataset_batches):
+    def get_multi_task_loss(self, dataset_batches, is_training):
         # dataset_batches: map from dataset names to training batches (one batch per dataset)
         # we assume only one dataset's labels are observed; the rest are unobserved
 
@@ -119,7 +119,7 @@ class Mult(object):
             # We assume that the encoders and decoders always use the same fields/features
             # (given by the keys in the batch accesses below)
             dataset_name, batch = dataset_batch
-            loss = self.get_loss(batch=batch, dataset_name=dataset_name, features=None)
+            loss = self.get_loss(batch=batch, dataset_name=dataset_name, features=None, is_training=is_training)
             total_loss += alpha * loss
             losses[dataset_name] = loss
 

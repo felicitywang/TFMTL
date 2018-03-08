@@ -148,12 +148,12 @@ def init_savers(args, model_info):
 
 def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset_order, encoders, hps):
     # model = dict()
-    # model['train'] = model_train
+    # model = model_train
 
     dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
     train_batches = {name: model_info[name]['train_batch'] for name in model_info}
-    loss = model['train'].get_multi_task_loss(train_batches)
+    loss = model.get_multi_task_loss(train_batches, is_training=True)
 
     # Done building compute graph; set up training ops.
 
@@ -179,9 +179,9 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
 
     print("\n\n\n")
 
-    # model['valid'] = model_train
+    # model = model_train
     # if args.test:
-    #     model['test'] = model_train
+    #     model = model_train
 
     fill_pred_op_info(dataset_info, model, args, model_info)
 
@@ -522,15 +522,9 @@ def main():
 
         hps = set_hp(args)
 
-        mlps_train = build_mlps(class_sizes, hps, is_training=True)
-        model_train = make_model(args, class_sizes, dataset_order, encoders, mlps_train, hps)
-        # mlps_valid = build_mlps(class_sizes, hps, is_training=False)
-        # model_valid = make_model(args, class_sizes, dataset_order, encoders, mlps_valid, hps)
-        model_valid = model_train
-        model = dict()
-        model['train'] = model_train
-        model['valid'] = model_valid
-        model['test'] = model_valid
+        mlps = build_mlps(class_sizes, hps)
+
+        model = make_model(args, class_sizes, dataset_order, encoders, mlps, hps)
 
         # Do training
         train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset_order, encoders, hps)
@@ -626,8 +620,8 @@ def fill_info_dicts(dataset_info, args):
         _valid_batch = _valid_dataset.batch
         model_info[dataset_name]['valid_iter'] = _valid_iter
         model_info[dataset_name]['valid_batch'] = _valid_batch
-        # # _valid_pred_op = model['valid'].get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        # _valid_pred_op = model['valid'].get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
+        # # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
+        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
         # model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
         if args.test:
             _test_dataset = dataset_info[dataset_name]['test_dataset']
@@ -635,8 +629,8 @@ def fill_info_dicts(dataset_info, args):
             _test_batch = _test_dataset.batch
             model_info[dataset_name]['test_iter'] = _test_iter
             model_info[dataset_name]['test_batch'] = _test_batch
-            # # _test_pred_op = model['test'].get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            # _test_pred_op = model['test'].get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
+            # # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
+            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
             # model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
     def _create_feature_dict(ds, dataset_info, model_info):
@@ -660,14 +654,14 @@ def fill_info_dicts(dataset_info, args):
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
     for dataset_name in model_info:
-        # _valid_pred_op = model['valid'].get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        _valid_pred_op = model['valid'].get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
-            dataset_name]['dataset_name'])
+        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
+        _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
+            dataset_name]['dataset_name'], is_training=True)
         model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
         if args.test:
-            # _test_pred_op = model['test'].get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            _test_pred_op = model['test'].get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
-                dataset_name]['dataset_name'])
+            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
+            _test_pred_op = model.get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
+                dataset_name]['dataset_name'], is_training=False)
             model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
 
@@ -696,7 +690,7 @@ from mtl.util.common import preoutput_MLP
 from mtl.util.layers import dense_layer
 
 
-def mlp(inputs, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5, is_training=True):
+def mlp(inputs, is_training, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5):
     # Returns logits (unnormalized log probabilities)
     x = preoutput_MLP(inputs, embed_dim, num_layers=num_layers, activation=activation)
     x = tf.layers.dropout(x, rate=dropout_rate,
@@ -705,7 +699,14 @@ def mlp(inputs, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, drop
     return x
 
 
-def build_mlps(class_sizes, hps, is_training):
+# def mlp(x, hidden_dim=256, num_layer=2, activation=tf.nn.selu,
+#         input_keep_prob=1.0, batch_normalization=False,
+#         layer_normalization=True, output_keep_prob=1.0,
+#         is_training=True):
+
+# TODO mlp
+
+def build_mlps(class_sizes, hps):
     mlps = dict()
     for k, v in class_sizes.items():
         with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
@@ -715,8 +716,7 @@ def build_mlps(class_sizes, hps, is_training):
                                        embed_dim=hps.embed_dim,
                                        num_layers=hps.num_layers,
                                        activation=tf.nn.relu,
-                                       dropout_rate=hps.dropout_rate,
-                                       is_training=is_training
+                                       dropout_rate=hps.dropout_rate
                                        )
     return mlps
 
