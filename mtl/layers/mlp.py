@@ -23,7 +23,7 @@ import tensorflow as tf
 from tensorflow.python.ops.init_ops import glorot_uniform_initializer
 from tensorflow.python.ops.init_ops import zeros_initializer
 
-from tflm.hparams import get_activation_fn
+from mtl.hparams import get_activation_fn
 
 from six.moves import xrange
 
