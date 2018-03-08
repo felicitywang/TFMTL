@@ -15,8 +15,7 @@
 # limitations under the License.
 # ============================================================================
 
-# TODO differentiate train/valid/valid model (is_training) and add regularization
-# TODO save best epoch
+# TODO differentiate train/valid/test model (is_training) and add regularization
 # TODO tune alphas
 
 
@@ -49,7 +48,10 @@ def parse_args():
     p.add_argument('--model', type=str,
                    help='Which model to use [mlvae|mult]')
     p.add_argument('--test', type=bool, default=False,
-                   help='Use held-out test data. WARNING: DO NOT TUNE ON valid')
+                   help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
+    p.add_argument('--predict', type=bool, default=False,
+                   help='Whether to predict on given data.')
+    p.add_argument('--predict_file_path', type=str, help='File path of the text to predict.')
     p.add_argument('--batch_size', default=128, type=int,
                    help='Size of batch.')
     p.add_argument('--eval_batch_size', default=256, type=int,
@@ -67,7 +69,7 @@ def parse_args():
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
                    help='Clip gradients to max_grad_norm during training.')
-    p.add_argument('--num_train_epochs', default=3, type=int,
+    p.add_argument('--num_train_epochs', default=50, type=int,
                    help='Number of training epochs.')
     p.add_argument('--print_trainable_variables', action='store_true',
                    default=False,
@@ -95,7 +97,7 @@ def parse_args():
     p.add_argument('--datasets', nargs='+', type=str,
                    help='Key of the dataset(s) to train and evaluate on')
     p.add_argument('--dataset_paths', nargs='+', type=str,
-                   help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, valid.tf)
+                   help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, test.tf)
                  for the dataset(s) given by the --datasets flag (in the same order)""")
     p.add_argument('--vocab_path', type=str,
                    help='Path to the shared vocabulary for the datasets')
@@ -679,7 +681,7 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=T
                       num_epochs=1)
 
     # We return the class because we might need to access the
-    # initializer op for validING, while training only requires the
+    # initializer op for TESTING, while training only requires the
     # batches returned by the iterator.
     return ds
 
