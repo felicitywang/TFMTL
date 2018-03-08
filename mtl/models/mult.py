@@ -19,9 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.util.common import preoutput_MLP
-from mtl.util.layers import dense_layer
-
 logging = tf.logging
 
 
@@ -39,8 +36,8 @@ class Mult(object):
                  class_sizes=None,
                  dataset_order=None,
                  encoders=None,
-                 hps=None,
-                 is_training=None):
+                 mlps=None,
+                 hps=None):
 
         # class_sizes: map from feature names to cardinality of label sets
         # dataset_order: list of features in some fixed order
@@ -50,8 +47,8 @@ class Mult(object):
         assert class_sizes is not None
         assert dataset_order is not None
         assert encoders is not None
+        assert mlps is not None
         assert hps is not None
-        assert is_training is not None
 
         self._hps = hps
 
@@ -64,31 +61,7 @@ class Mult(object):
 
         self._encoders = encoders
 
-        ####################################
-
-        # Make sub-graph templates. Note that internal scopes and variable
-        # names should not depend on any arguments that are not supplied
-        # to make_template. In general you will get a ValueError telling
-        # you that you are trying to reuse a variable that doesn't exist
-        # if you make a mistake. Note that variables should be properly
-        # re-used if the enclosing variable scope has reuse=True.
-
-        # Create templates for the parametrized parts of the computation
-        # graph that are re-used in different places.
-
-        self._mlp = dict()
-        for k, v in class_sizes.items():
-            self._mlp[k] = tf.make_template('py_{}'.format(k),
-                                            mlp,
-                                            output_size=v,
-                                            embed_dim=self._hps.embed_dim,
-                                            num_layers=self._hps.num_layers,
-                                            activation=tf.nn.relu,
-                                            dropout_rate=self._hps.dropout_rate,
-                                            is_training=is_training
-                                            )
-
-        # self.v1 = tf.get_variable("v1", shape=[3])
+        self._mlps = mlps
 
     # Encoding (feature extraction)
     def encode(self, inputs, dataset_name, lengths=None):
@@ -103,7 +76,7 @@ class Mult(object):
 
         features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlp[dataset_name](features)
+        logits = self._mlps[dataset_name](features)
 
         res = tf.argmax(logits, axis=1)
         # res = tf.expand_dims(res, axis=1)
@@ -119,7 +92,7 @@ class Mult(object):
         if features is None:
             features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlp[dataset_name](features)
+        logits = self._mlps[dataset_name](features)
 
         # loss
         ce = tf.reduce_mean(
@@ -159,12 +132,3 @@ class Mult(object):
     @property
     def hp(self):
         return self._hps
-
-
-def mlp(inputs, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5, is_training=True):
-    # Returns logits (unnormalized log probabilities)
-    x = preoutput_MLP(inputs, embed_dim, num_layers=num_layers, activation=activation)
-    x = tf.layers.dropout(x, rate=dropout_rate,
-                          training=is_training)
-    x = dense_layer(x, output_size, 'logits', activation=None)
-    return x
