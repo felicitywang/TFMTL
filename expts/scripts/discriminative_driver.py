@@ -145,14 +145,13 @@ def init_savers(args, model_info):
     return savers
 
 
-def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset_order, encoders, hps):
-    # model = dict()
-    # model = model_train
-
+def train_model(model, dataset_info, steps_per_epoch, args):
     dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
     train_batches = {name: model_info[name]['train_batch'] for name in model_info}
     loss = model.get_multi_task_loss(train_batches, is_training=True)
+
+    # TODO valid loss
 
     # Done building compute graph; set up training ops.
 
@@ -171,6 +170,7 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
     #   1. A dict of { dataset_key: dataset_iterator }
     #
 
+    print("All the variables so far:")
     all_variables = tf.global_variables()
     print(type(all_variables))
     for _ in all_variables:
@@ -178,23 +178,18 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
 
     print("\n\n\n")
 
-    # model = model_train
-    # if args.test:
-    #     model = model_train
-
     fill_pred_op_info(dataset_info, model, args, model_info)
 
     # # Add ops to save and restore all the variables.
 
-    all_variables = tf.global_variables()
-    print(type(all_variables))
-    for _ in all_variables:
-        print(_)
-
     # latest checkpoint
+    # saves every several steps
+    # automatically done by tf.train.SingularMonitorSession with tf.train.CheckpoinSaverHook
+    # TODO load from some checkpoint dif at the beginning(?)
     saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
                                               save_steps=100)
 
+    # savers that manually saves the model at the end of each epoch
     savers = init_savers(args, model_info)
 
     with tf.train.SingularMonitoredSession(hooks=[saver_hook], config=config) as sess:
@@ -225,7 +220,8 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
             for _ in tqdm(xrange(steps_per_epoch)):
                 step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
                 num_iter += 1
-                total_loss += loss_v  # loss_v is sum over a batch from each dataset of the average loss *per training example*
+                total_loss += loss_v
+                # loss_v is sum over a batch from each dataset of the average loss *per training example*
             assert num_iter > 0
 
             # average loss per batch (which is in turn averaged across examples)
@@ -262,6 +258,7 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
                 if _eval_acc > best_eval_acc[dataset_name]["acc"]:
                     best_eval_acc[dataset_name]["acc"] = _eval_acc
                     best_eval_acc[dataset_name]["epoch"] = epoch
+                    # save best model
                     savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['model_path'])
 
                 total_acc += _eval_acc
@@ -270,20 +267,17 @@ def train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset
                 best_total_acc = total_acc
                 best_total_acc_epoch = epoch
 
-                # TODO
+                # save best model
                 if 'MULT' in savers:
                     savers['MULT'].save(sess.raw_session(), os.path.join(args.checkpoint_dir, 'MULT', 'model'))
 
             logging.info(str_)
 
-
-            #
-            # else:
-            #     raise NotImplementedError("final evaluation mode not implemented")
-
         print(best_eval_acc)
         print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
 
+
+        # TODO write(add) the result to a common report file
         # with open('report.txt', 'a') as file:
         #     for dataset in best_eval_acc.keys():
         #         file.write(str(dataset))
@@ -526,7 +520,7 @@ def main():
         model = make_model(args, class_sizes, dataset_order, encoders, mlps, hps)
 
         # Do training
-        train_model(model, dataset_info, steps_per_epoch, args, class_sizes, dataset_order, encoders, hps)
+        train_model(model, dataset_info, steps_per_epoch, args)
 
 
 def make_model(args, class_sizes, dataset_order, encoders, mlps, hps):
@@ -654,7 +648,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     for dataset_name in model_info:
         # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
         _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
-            dataset_name]['dataset_name'], is_training=True)
+            dataset_name]['dataset_name'], is_training=False)
         model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
         if args.test:
             # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
