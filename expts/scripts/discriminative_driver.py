@@ -33,6 +33,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.encoders.encoder_factory import build_encoders
+from mtl.layers import mlp
 from mtl.models.mult import Mult
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
@@ -150,8 +151,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     train_batches = {name: model_info[name]['train_batch'] for name in model_info}
     loss = model.get_multi_task_loss(train_batches, is_training=True)
+    # # see if dropout and is_training working
+    # # by checking train loss with different is_training the same
+    # test_loss = model.get_multi_task_loss(train_batches, is_training=False)
 
     # TODO valid loss
+    # TODO loss on each dataset
+    # TODO summary and tensorboard
 
     # Done building compute graph; set up training ops.
 
@@ -160,8 +166,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     zero_global_step_op = global_step_tensor.assign(0)
     lr = get_learning_rate(args.lr0)
     tvars, grads = get_var_grads(loss)
+    # testtvars, testgrads = get_var_grads(test_loss)
     train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
                             global_step_tensor, name='train_op')
+    # test_train_op = get_train_op(testtvars, testgrads, lr, args.max_grad_norm, global_step_tensor, name='test_train_op')
     init_ops = [tf.global_variables_initializer(),
                 tf.local_variables_initializer()]
     config = get_proto_config(args)
@@ -170,7 +178,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     #   1. A dict of { dataset_key: dataset_iterator }
     #
 
-    print("All the variables so far:")
+    print("All the variables after defining train loss:")
     all_variables = tf.global_variables()
     print(type(all_variables))
     for _ in all_variables:
@@ -179,6 +187,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     print("\n\n\n")
 
     fill_pred_op_info(dataset_info, model, args, model_info)
+
+    print("All the variables after defining valid/test accuracy:")
+    all_variables = tf.global_variables()
+    print(type(all_variables))
+    for _ in all_variables:
+        print(_)
+
+    print("\n\n\n")
 
     # # Add ops to save and restore all the variables.
 
@@ -216,16 +232,20 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
             # Take steps_per_epoch gradient steps
             total_loss = 0
+            # test_total_loss = 0
             num_iter = 0
             for _ in tqdm(xrange(steps_per_epoch)):
                 step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
+                # test_step, test_loss_v, _ = sess.run([global_step_tensor, test_loss, test_train_op])
                 num_iter += 1
                 total_loss += loss_v
+                # test_total_loss += test_loss_v
                 # loss_v is sum over a batch from each dataset of the average loss *per training example*
             assert num_iter > 0
 
             # average loss per batch (which is in turn averaged across examples)
             train_loss = float(total_loss) / float(num_iter)
+            # test_train_loss = float(test_total_loss) / float(num_iter)
 
             # Evaluate held-out accuracy
             # if not args.test:  # Validation mode
@@ -246,6 +266,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             # Log performance(s)
             str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
                 epoch, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
+            # str_ += '[epoch=%d/%d step=%d (%d s)] test_train_loss=%s (per batch)' % (
+            #     epoch, args.num_train_epochs, np.asscalar(step), elapsed, test_train_loss)
             for dataset_name in model_info:
                 _num_eval_total = model_info[dataset_name]['valid_metrics']['ntotal']
                 _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
@@ -271,11 +293,20 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 if 'MULT' in savers:
                     savers['MULT'].save(sess.raw_session(), os.path.join(args.checkpoint_dir, 'MULT', 'model'))
 
+            # print("All the variables after the first epoch:")
+            # all_variables = tf.global_variables()
+            # print(type(all_variables))
+            # for _ in all_variables:
+            #     print(_)
+            # exit()
+
             logging.info(str_)
 
         print(best_eval_acc)
         print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
 
+        exit()
+        print("\n\n\n")
 
         # TODO write(add) the result to a common report file
         # with open('report.txt', 'a') as file:
@@ -678,26 +709,37 @@ def get_var_grads(loss):
     return tvars, grads
 
 
-from mtl.util.common import preoutput_MLP
-from mtl.util.layers import dense_layer
+# def mlp(inputs, is_training, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5):
+#     # Returns logits (unnormalized log probabilities)
+#     x = preoutput_MLP(inputs, embed_dim, num_layers=num_layers, activation=activation)
+#     x = tf.layers.dropout(x, rate=dropout_rate, training=is_training, name='dropout')
+#     x = dense_layer(x, output_size, 'logits', activation=None)
+#     return x
+#
+#
+# def build_mlps(class_sizes, hps):
+#     mlps = dict()
+#     for k, v in class_sizes.items():
+#         # with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
+#         mlps[k] = tf.make_template('mlp_{}'.format(k),
+#                                    mlp,
+#                                    output_size=v,
+#                                    embed_dim=hps.embed_dim,
+#                                    num_layers=hps.num_layers,
+#                                    activation=tf.nn.relu,
+#                                    dropout_rate=hps.dropout_rate
+#                                    )
+#     return mlps
 
-
-def mlp(inputs, is_training, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5):
-    # Returns logits (unnormalized log probabilities)
-    x = preoutput_MLP(inputs, embed_dim, num_layers=num_layers, activation=activation)
-    x = tf.layers.dropout(x, rate=dropout_rate,
-                          training=is_training)
-    x = dense_layer(x, output_size, 'logits', activation=None)
-    return x
-
-
-# def mlp(x, hidden_dim=256, num_layer=2, activation=tf.nn.selu,
-#         input_keep_prob=1.0, batch_normalization=False,
-#         layer_normalization=True, output_keep_prob=1.0,
-#         is_training=True):
 
 # TODO replace with new mlp function
 # TODO share_hidden flag
+
+# def mlp(x, is_training, embed_dim=256, num_layer=2, activation=tf.nn.selu,
+#         input_keep_prob=1.0, batch_normalization=False,
+#         layer_normalization=True, output_keep_prob=1.0
+#         ):
+#
 
 def build_mlps(class_sizes, hps):
     mlps = dict()
@@ -706,10 +748,17 @@ def build_mlps(class_sizes, hps):
         mlps[k] = tf.make_template('mlp_{}'.format(k),
                                    mlp,
                                    output_size=v,
-                                   embed_dim=hps.embed_dim,
-                                   num_layers=hps.num_layers,
+                                   hidden_dim=hps.embed_dim,
+                                   num_layer=hps.num_layers,
+                                   # TODO from args
                                    activation=tf.nn.relu,
-                                   dropout_rate=hps.dropout_rate
+                                   # TODO args.dropout_rate to keep_prob
+                                   input_keep_prob=1,
+                                   # TODO ?
+                                   batch_normalization=False,
+                                   # TODO ?
+                                   layer_normalization=False,
+                                   output_keep_prob=1 - hps.dropout_rate,
                                    )
     return mlps
 

@@ -18,8 +18,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from mtl.util.layers import dense_layer
 from six.moves import xrange
+
+from mtl.util.layers import dense_layer
 
 
 def listify(x):
