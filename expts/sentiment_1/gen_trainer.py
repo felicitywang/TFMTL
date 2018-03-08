@@ -23,6 +23,7 @@ import os
 import argparse as ap
 from six.moves import xrange
 from time import time
+from collections import Counter
 from itertools import product
 import numpy as np
 import tensorflow as tf
@@ -98,7 +99,7 @@ def parse_args():
                  help='Size of evaluation batch.')
   p.add_argument('--word-embed-dim', default=256, type=int,
                  help='Word embedding size')
-  p.add_argument('--latent-dim', default=512, type=int,
+  p.add_argument('--latent-dim', default=256, type=int,
                  help='Latent embedding dimensionality')
   p.add_argument('--mlp-hidden-dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
@@ -120,6 +121,18 @@ def parse_args():
   p.add_argument('--no-layer-norm', action='store_false', dest='layer-norm',
                  help='No layer normalization')
   p.set_defaults(layer_norm=True)
+  p.add_argument('--qy-mlp-hidden-dim', default=512, type=int,
+                 help='[qy] MLP hidden dim')
+  p.add_argument('--qy-mlp-num-layer', default=2, type=int,
+                 help='[qy] MLP number of hidden layers')
+  p.add_argument('--qz-mlp-hidden-dim', default=512, type=int,
+                 help='[qz] MLP hidden dim')
+  p.add_argument('--qz-mlp-num-layer', default=2, type=int,
+                 help='[qz] MLP number of hidden layers')
+  p.add_argument('--pz-mlp-hidden-dim', default=512, type=int,
+                 help='[pz] MLP hidden dim')
+  p.add_argument('--pz-mlp-num-layer', default=2, type=int,
+                 help='[pz] MLP number of hidden layers')
   p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max-grad-norm', default=5.0, type=float,
@@ -226,6 +239,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   loss = model.get_multi_task_loss(train_batches)
   g_loss = model.get_generative_loss()
   d_loss = model.get_discriminative_loss()
+  SSTb_loss = model.get_task_loss('SSTb')
+  IMDB_loss = model.get_task_loss('IMDB')
 
   # Done building compute graph; set up training ops.
 
@@ -248,25 +263,56 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     for epoch in xrange(args.num_train_epochs):
       start_time = time()
 
+      events = {}
+      events['SSTb'] = Counter()
+      events['IMDB'] = Counter()
+
       # Take steps_per_epoch gradient steps
       total_loss = 0.0
       total_g_loss = 0.0
       total_d_loss = 0.0
+      total_SSTb_loss = 0.0
+      total_IMDB_loss = 0.0
       num_iter = 0
       for i in xrange(steps_per_epoch):
-        step, loss_v, g_loss_v, d_loss_v, _ = sess.run([global_step_tensor,
-                                                        loss, g_loss,
-                                                        d_loss, train_op])
+        vals = sess.run([
+          global_step_tensor,
+          loss,
+          g_loss,
+          d_loss,
+          SSTb_loss,
+          IMDB_loss,
+          model.obs_label('SSTb'),
+          model.obs_label('IMDB'),
+          model.latent_preds('SSTb', 'IMDB'),
+          model.latent_preds('IMDB', 'SSTb'),
+          train_op])
+
         num_iter += 1
-        total_loss += loss_v
-        total_g_loss += g_loss_v
-        total_d_loss += d_loss_v
+        step = vals[0]
+        total_loss += vals[1]
+        total_g_loss += vals[2]
+        total_d_loss += vals[3]
+        total_SSTb_loss += vals[4]
+        total_IMDB_loss += vals[5]
+
+        # Update joint dists
+        SSTb_obs = vals[6].tolist()
+        SSTb_lat = vals[8].tolist()
+        events['SSTb'] += Counter(zip(SSTb_obs, SSTb_lat))
+
+        IMDB_obs = vals[7].tolist()
+        IMDB_lat = vals[9].tolist()
+        events['IMDB'] += Counter(zip(IMDB_obs, IMDB_lat))
+
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
       train_loss = total_loss / float(num_iter)
       train_g_loss = total_g_loss / float(num_iter)
       train_d_loss = total_d_loss / float(num_iter)
+      train_SSTb_loss = total_SSTb_loss / float(num_iter)
+      train_IMDB_loss = total_IMDB_loss / float(num_iter)
 
       # Evaluate held-out accuracy
       if not args.test:  # Validation mode
@@ -284,9 +330,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         elapsed = end_time - start_time
 
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%s g_loss=%s d_loss=%s' % (
+        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%.2f g_loss=%.2f d_loss=%.4f' % (
           epoch+1, args.num_train_epochs, np.asscalar(step), elapsed,
           train_loss, train_g_loss, train_d_loss)
+        str_ += ' SSTb_loss=%.2f IMDB_loss=%.2f' % (train_SSTb_loss,
+                                                    train_IMDB_loss)
 
         tot_eval_acc = 0.0
         for dataset_name in model_info:
@@ -295,6 +343,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           tot_eval_acc += eval_acc
           str_ += '\n(%s) num_eval_total=%d eval_acc=%f' % (
             dataset_name, num_eval_total, eval_acc)
+
+          str_ += '\nMost frequent events:'
+          for event, count in events[dataset_name].most_common(5):
+            str_ += '\n%s: %d' % (event, count)
+
         str_ += '\nmean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
         logging.info(str_)
       else:

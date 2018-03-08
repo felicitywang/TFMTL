@@ -46,12 +46,12 @@ def default_hparams():
                  qz_mlp_hidden_dim=512,
                  qz_mlp_num_layer=2,
                  pz_mlp_hidden_dim=512,
-                 pz_mlp_num_layer=2,
+                 pz_mlp_num_layer=0,
                  latent_dim=256,
                  tau0=0.5,
                  layer_norm=True,
                  decay_tau=False,
-                 alpha=10.0,
+                 alpha=0.5,
                  y_prediction="deterministic",
                  label_prior_type="uniform",
                  y_inference="sample",
@@ -325,6 +325,7 @@ class JointMultiLabelVAE(object):
         observed_label = v
 
     # Accumulate predicted or observed labels
+    self._latent_preds[task] = {}
     for label_key, label_val in labels.items():
       py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
                                                  batch_size)
@@ -333,8 +334,11 @@ class JointMultiLabelVAE(object):
         qy_logits[label_key] = self.qy_given_x_logits(log_joint, target_axis,
                                                       observed_axis,
                                                       cond_val=observed_label)
+        preds = tf.argmax(tf.nn.softmax(qy_logits[label_key]), axis=1)
+        self._latent_preds[task][label_key] = preds
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
+        self._obs_label[task] = label_val
         qy_logits[label_key] = None
         ys[label_key] = tf.one_hot(label_val, self.class_sizes[label_key])
 
@@ -354,6 +358,8 @@ class JointMultiLabelVAE(object):
 
   def get_multi_task_loss(self, task_batches):
     losses = []
+    self._obs_label = {}
+    self._latent_preds = {}
     for task_name, batch in task_batches.items():
       labels = {k: None for k in task_batches.keys()}
       labels[task_name] = batch[self.hp.labels_key]
@@ -409,6 +415,12 @@ class JointMultiLabelVAE(object):
 
   def get_task_nll_x(self, task_name):
     return self._task_nll_x[task_name]
+
+  def obs_label(self, task_name):
+    return self._obs_label[task_name]
+
+  def latent_preds(self, task_name, label_name):
+    return self._latent_preds[task_name][label_name]
 
   @property
   def class_sizes(self):
