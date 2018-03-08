@@ -64,7 +64,7 @@ def parse_args():
                    help='Whether datasets share the encoder.')
     p.add_argument('--share_decoders', action='store_true', default=False,
                    help='Whether decoders are shared across datasets')
-    p.add_argument('--share_hidden', type=bool, help='Whether datasets share the hidden layers.')
+    p.add_argument('--share_mlp', type=bool, help='Whether datasets share the hidden layers.')
     p.add_argument('--lr0', default=0.0001, type=float,
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
@@ -709,38 +709,8 @@ def get_var_grads(loss):
     return tvars, grads
 
 
-# def mlp(inputs, is_training, output_size, embed_dim, num_layers=2, activation=tf.nn.elu, dropout_rate=0.5):
-#     # Returns logits (unnormalized log probabilities)
-#     x = preoutput_MLP(inputs, embed_dim, num_layers=num_layers, activation=activation)
-#     x = tf.layers.dropout(x, rate=dropout_rate, training=is_training, name='dropout')
-#     x = dense_layer(x, output_size, 'logits', activation=None)
-#     return x
-#
-#
-# def build_mlps(class_sizes, hps):
-#     mlps = dict()
-#     for k, v in class_sizes.items():
-#         # with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
-#         mlps[k] = tf.make_template('mlp_{}'.format(k),
-#                                    mlp,
-#                                    output_size=v,
-#                                    embed_dim=hps.embed_dim,
-#                                    num_layers=hps.num_layers,
-#                                    activation=tf.nn.relu,
-#                                    dropout_rate=hps.dropout_rate
-#                                    )
-#     return mlps
-
-
-# TODO replace with new mlp function
-# TODO share_hidden flag
-
-# def mlp(x, is_training, embed_dim=256, num_layer=2, activation=tf.nn.selu,
-#         input_keep_prob=1.0, batch_normalization=False,
-#         layer_normalization=True, output_keep_prob=1.0
-#         ):
-#
-
+# TODO share_mlp flag
+# TODO remove dense out to support share_mlp
 def build_mlps(class_sizes, hps):
     mlps = dict()
     for k, v in class_sizes.items():
