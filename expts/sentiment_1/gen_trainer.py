@@ -297,12 +297,12 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         total_IMDB_loss += vals[5]
 
         # Update joint dists
-        SSTb_obs = vals[6].tolist()
-        SSTb_lat = vals[8].tolist()
+        SSTb_obs = ['obs_%d' % x for x in vals[6].tolist()]
+        SSTb_lat = ['lat_%d' % x for x in vals[8].tolist()]
         events['SSTb'] += Counter(zip(SSTb_obs, SSTb_lat))
 
-        IMDB_obs = vals[7].tolist()
-        IMDB_lat = vals[9].tolist()
+        IMDB_obs = ['obs_%d' % x for x in vals[7].tolist()]
+        IMDB_lat = ['lat_%d' % x for x in vals[9].tolist()]
         events['IMDB'] += Counter(zip(IMDB_obs, IMDB_lat))
 
       assert num_iter > 0
