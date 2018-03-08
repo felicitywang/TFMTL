@@ -19,6 +19,9 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from mtl.encoders.encoder_factory import build_encoders
+from mtl.layers.mlp import dense_layer, mlp
+
 logging = tf.logging
 
 
@@ -35,10 +38,11 @@ class Mult(object):
     def __init__(self,
                  class_sizes=None,
                  dataset_order=None,
-                 encoders=None,
-                 mlps=None,
-                 logits=None,
-                 hps=None):
+                 vocab_size=None,
+                 encoder_hps=None,
+                 # TODO keep one of hps and args only
+                 hps=None,
+                 args=None):
 
         # class_sizes: map from feature names to cardinality of label sets
         # dataset_order: list of features in some fixed order
@@ -47,25 +51,24 @@ class Mult(object):
 
         assert class_sizes is not None
         assert dataset_order is not None
-        assert encoders is not None
-        assert mlps is not None
-        assert logits is not None
+        assert vocab_size is not None
         assert hps is not None
-
-        self._hps = hps
+        assert args is not None
 
         self._class_sizes = class_sizes
-
         self._dataset_order = dataset_order
+        self._encoder_hps = encoder_hps
+        self._hps = hps
+        # self._args = args
 
         assert set(class_sizes.keys()) == set(
             dataset_order)  # all feature names are present and consistent across data structures
 
-        self._encoders = encoders
+        self._encoders = build_encoders(vocab_size, args, encoder_hps)
 
-        self._mlps = mlps
+        self._mlps = build_mlps(class_sizes, hps)
 
-        self._logits = logits
+        self._logits = build_logits(class_sizes)
 
     # Encoding (feature extraction)
     def encode(self, inputs, dataset_name, lengths=None):
@@ -140,3 +143,53 @@ class Mult(object):
     @property
     def hp(self):
         return self._hps
+
+
+def build_mlps(class_sizes, hps):
+    mlps = dict()
+    if hps.share_mlp:
+        mlp_shared = tf.make_template('mlp_shared',
+                                      mlp,
+                                      hidden_dim=hps.hidden_dim,
+                                      num_layers=hps.num_layers,
+                                      # TODO from args
+                                      activation=tf.nn.relu,
+                                      # TODO args.dropout_rate to keep_prob
+                                      input_keep_prob=1,
+                                      # TODO ?
+                                      batch_normalization=False,
+                                      # TODO ?
+                                      layer_normalization=False,
+                                      output_keep_prob=1 - hps.dropout_rate,
+                                      )
+        for k, v in class_sizes.items():
+            mlps[k] = mlp_shared
+    else:
+        for k, v in class_sizes.items():
+            mlps[k] = tf.make_template('mlp_{}'.format(k),
+                                       mlp,
+                                       hidden_dim=hps.hiddem_dim,
+                                       num_layers=hps.num_layers,
+                                       # TODO from args
+                                       activation=tf.nn.relu,
+                                       # TODO args.dropout_rate to keep_prob
+                                       input_keep_prob=1,
+                                       # TODO ?
+                                       batch_normalization=False,
+                                       # TODO ?
+                                       layer_normalization=False,
+                                       output_keep_prob=1 - hps.dropout_rate,
+                                       )
+    return mlps
+
+
+def build_logits(class_sizes):
+    logits = dict()
+    for k, v in class_sizes.items():
+        logits[k] = tf.make_template('logit_{}'.format(k),
+                                     dense_layer,
+                                     name='logits',
+                                     output_size=v,
+                                     activation=None
+                                     )
+    return logits

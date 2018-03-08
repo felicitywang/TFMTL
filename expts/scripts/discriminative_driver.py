@@ -32,8 +32,6 @@ from six.moves import xrange
 from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
-from mtl.encoders.encoder_factory import build_encoders
-from mtl.layers import dense_layer, mlp
 from mtl.models.mult import Mult
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
@@ -56,8 +54,9 @@ def parse_args():
                    help='Size of batch.')
     p.add_argument('--eval_batch_size', default=256, type=int,
                    help='Size of evaluation batch.')
-    p.add_argument('--word_embed_dim', default=256, type=int,
+    p.add_argument('--word_embed_dim', default=128, type=int,
                    help='Word embedding size')
+    # TODO use these share_xxx flags
     p.add_argument('--share_embed', action='store_true', default=False,
                    help='Whether datasets share word embeddings')
     p.add_argument('--share_encoder', action='store_true', default=False,
@@ -105,7 +104,7 @@ def parse_args():
                    help='Encoder architecture type (see encoder_factory.py for supported architectures)')
     p.add_argument('--architectures_path', type=str, help='Path of the args file of the architectures of the '
                                                           'experiment.')
-    p.add_argument('--embed_dim', default=128, type=int, help='Dense(hidden) layer size.')
+    p.add_argument('--hidden_dim', default=128, type=int, help='Dense(hidden) layer size.')
     p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
     p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
     p.add_argument('--alphas', nargs='+', type=float, default=[0.5, 0.5],
@@ -541,37 +540,27 @@ def main():
         #                  hps=None)
         # Felicity's discriminative baseline
 
-        encoder_hp = None
-        encoders = build_encoders(vocab_size, args, encoder_hp)
+        if args.model == 'mult':
+            hps = set_hps(args)
+            # TODO encoder_hps
+            encoder_hps = None
+            model = Mult(class_sizes=class_sizes,
+                         dataset_order=dataset_order,
+                         vocab_size=vocab_size,
+                         encoder_hps=encoder_hps,
+                         hps=hps,
+                         args=args)
 
-        hps = set_hps(args)
+            # Do training
+            train_model(model, dataset_info, steps_per_epoch, args)
 
-        mlps = build_mlps(class_sizes, hps)
-
-        logits = build_logits(class_sizes)
-
-        model = make_model(args, class_sizes, dataset_order, encoders, mlps, logits, hps)
-
-        # Do training
-        train_model(model, dataset_info, steps_per_epoch, args)
-
-
-def make_model(args, class_sizes, dataset_order, encoders, mlps, logits, hps):
-    if args.model == 'mult':
-        model = Mult(class_sizes=class_sizes,
-                     dataset_order=dataset_order,
-                     encoders=encoders,
-                     mlps=mlps,
-                     logits=logits,
-                     hps=hps)
-        return model
-    else:
-        raise ValueError("unrecognized model: %s" % args.model)
+        else:
+            raise ValueError("unrecognized model: %s" % args.model)
 
 
 # TODO easier implementation
 def set_hps(args):
-    return HParams(embed_dim=args.embed_dim,
+    return HParams(hidden_dim=args.hidden_dim,
                    num_filter=args.num_filter,
                    max_width=args.max_width,
                    word_embed_dim=args.word_embed_dim,
@@ -582,7 +571,8 @@ def set_hps(args):
                    l2_weight=0.0,
                    dropout_rate=0.5,
                    num_layers=args.num_layers,
-                   share_mlp=args.share_mlp)
+                   share_mlp=args.share_mlp
+                   )
 
 
 def get_learning_rate(learning_rate):
@@ -711,56 +701,6 @@ def get_var_grads(loss):
     tvars = tf.trainable_variables()
     grads = tf.gradients(loss, tvars)
     return tvars, grads
-
-
-def build_mlps(class_sizes, hps):
-    mlps = dict()
-    if hps.share_mlp:
-        mlp_shared = tf.make_template('mlp_shared',
-                                      mlp,
-                                      hidden_dim=hps.embed_dim,
-                                      num_layers=hps.num_layers,
-                                      # TODO from args
-                                      activation=tf.nn.relu,
-                                      # TODO args.dropout_rate to keep_prob
-                                      input_keep_prob=1,
-                                      # TODO ?
-                                      batch_normalization=False,
-                                      # TODO ?
-                                      layer_normalization=False,
-                                      output_keep_prob=1 - hps.dropout_rate,
-                                      )
-        for k, v in class_sizes.items():
-            mlps[k] = mlp_shared
-    else:
-        for k, v in class_sizes.items():
-            mlps[k] = tf.make_template('mlp_{}'.format(k),
-                                       mlp,
-                                       hidden_dim=hps.embed_dim,
-                                       num_layers=hps.num_layers,
-                                       # TODO from args
-                                       activation=tf.nn.relu,
-                                       # TODO args.dropout_rate to keep_prob
-                                       input_keep_prob=1,
-                                       # TODO ?
-                                       batch_normalization=False,
-                                       # TODO ?
-                                       layer_normalization=False,
-                                       output_keep_prob=1 - hps.dropout_rate,
-                                       )
-    return mlps
-
-
-def build_logits(class_sizes):
-    logits = dict()
-    for k, v in class_sizes.items():
-        logits[k] = tf.make_template('logit_{}'.format(k),
-                                     dense_layer,
-                                     name='dense',
-                                     output_size=v,
-                                     activation=None
-                                     )
-    return logits
 
 
 if __name__ == "__main__":

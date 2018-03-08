@@ -13,11 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
-import tensorflow as tf
-from six.moves import xrange
-
+from mtl.layers import dense_layer
 from mtl.util.reducers import *
-from mtl.util.layers import dense_layer
 
 
 def paragram_phrase(inputs,

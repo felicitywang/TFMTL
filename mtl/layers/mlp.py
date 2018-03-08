@@ -23,7 +23,7 @@ from six.moves import xrange
 from tensorflow.python.ops.init_ops import glorot_uniform_initializer
 from tensorflow.python.ops.init_ops import zeros_initializer
 
-from mtl.hparams import get_activation_fn
+from mtl.util.hparams import get_activation_fn
 
 
 def dense_layer(x, output_size, name, activation=tf.nn.selu):
