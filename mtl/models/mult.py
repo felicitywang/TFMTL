@@ -65,8 +65,8 @@ class Mult(object):
 
     # Encoding (feature extraction)
     def encode(self, inputs, dataset_name, lengths=None):
-        if self._encoders[dataset_name] == 'no_op':
-            return inputs
+        # if self._encoders[dataset_name] == 'no_op':
+        #     return inputs
         return self._encoders[dataset_name](inputs, lengths)
 
     def get_predictions(self, batch, dataset_name, is_training):
