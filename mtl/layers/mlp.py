@@ -75,7 +75,4 @@ def mlp(x, is_training, output_size, hidden_dim=256, num_layer=2, activation=tf.
     if output_keep_prob < 1.0:
         x = dropout(x, output_keep_prob, name='output_dropout')
 
-    # added logits here
-    x = dense_layer(x, output_size, 'logits', activation=None)
-
     return x
