@@ -15,7 +15,6 @@
 # limitations under the License.
 # ============================================================================
 
-# TODO differentiate train/valid/test model (is_training) and add regularization
 # TODO tune alphas
 
 
@@ -544,7 +543,6 @@ def make_model(args, class_sizes, dataset_order, encoders, mlps, hps):
 
 def set_hp(args):
     # TODO get hyperparameters from arguments
-    # TODO add regularization
     return HParams(embed_dim=args.embed_dim,
                    num_filter=args.num_filter,
                    max_width=args.max_width,
@@ -704,20 +702,21 @@ def mlp(inputs, is_training, output_size, embed_dim, num_layers=2, activation=tf
 #         layer_normalization=True, output_keep_prob=1.0,
 #         is_training=True):
 
-# TODO mlp
+# TODO replace with new mlp function
+# TODO share_hidden flag
 
 def build_mlps(class_sizes, hps):
     mlps = dict()
     for k, v in class_sizes.items():
-        with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
-            mlps[k] = tf.make_template('mlp_{}'.format(k),
-                                       mlp,
-                                       output_size=v,
-                                       embed_dim=hps.embed_dim,
-                                       num_layers=hps.num_layers,
-                                       activation=tf.nn.relu,
-                                       dropout_rate=hps.dropout_rate
-                                       )
+        # with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
+        mlps[k] = tf.make_template('mlp_{}'.format(k),
+                                   mlp,
+                                   output_size=v,
+                                   embed_dim=hps.embed_dim,
+                                   num_layers=hps.num_layers,
+                                   activation=tf.nn.relu,
+                                   dropout_rate=hps.dropout_rate
+                                   )
     return mlps
 
 
