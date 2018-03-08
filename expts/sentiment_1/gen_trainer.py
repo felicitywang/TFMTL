@@ -23,22 +23,29 @@ import os
 import argparse as ap
 from six.moves import xrange
 from time import time
-
+from collections import Counter
+from itertools import product
 import numpy as np
 import tensorflow as tf
 
 from decoder_factory import build_decoders
 
-from mlvae.hparams import update_hparams_from_args
-from mlvae.pipeline import Pipeline
-from mlvae.embed import embed_sequence
-from mlvae.cnn import conv_and_pool
+from mtl.io import get_num_records
+from mtl.io import get_empirical_label_prior
+from mtl.hparams import update_hparams_from_args
+from mtl.util.pipeline import Pipeline
 
-from mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
-from mlvae.simple_mlvae_model import SimpleMultiLabelVAE
+from mtl.util.embed import embed_sequence
+from mtl.encoders.cnn import conv_and_pool
 
-from mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
-from mlvae.mlvae_model import MultiLabelVAE
+from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
+from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
+
+from mtl.mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
+from mtl.mlvae.mlvae_model import MultiLabelVAE
+
+from mtl.mlvae.joint_mlvae_model import default_hparams as joint_mlvae_hparams
+from mtl.mlvae.joint_mlvae_model import JointMultiLabelVAE
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -59,45 +66,80 @@ SSTb_NUM_LABEL = 5
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='normal',
-                 choices=['simple', 'normal', 'fancy'], help='Model to use.')
+  p.add_argument('--model', type=str, default='joint',
+                 choices=['simple', 'normal', 'joint'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
-  p.add_argument('--batch_size', default=128, type=int,
+  p.add_argument('--batch-size', default=128, type=int,
                  help='Size of batch.')
-  p.add_argument('--unlabeled', action='store_true', help="Use unlabeled data")
-  p.add_argument('--alpha', default=0.5, type=float,
-                 help='Weight placed on the discriminative terms')
-  p.add_argument('--encoder_arch', default="conv_max_tied",
-                 choices=["conv_max_tied"],
+  p.add_argument('--unlabeled', action='store_true', dest='unlabeled',
+                 help="Use unlabeled data")
+  p.add_argument('--no-unlabeled', action='store_false', dest='unlabeled',
+                 help="No unlabeled data")
+  p.set_defaults(unlabeled=False)
+  p.add_argument('--alpha', default=0.75, type=float,
+                 help='Weight placed on the discriminative terms [0, 1.0]')
+  p.add_argument('--encoder-arch', default="conv_max_untied",
+                 choices=["conv_max_tied", "conv_max_untied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder_arch', default="cnn_unigram",
-                 choices=["bow_untied", "bow_tied", "cnn_unigram"],
+  p.add_argument('--decoder-arch', default="cnn_unigram",
+                 choices=["bow_untied", "bow_tied", "cnn_unigram",
+                          "shallow_cnn_unigram"],
                  help="Type of decoder to use for each task.")
-  p.add_argument('--label_prior_type', default="learned",
-                 choices=["uniform", "learned"],
-                 help="What type of label prior to use (SimpleMultiLabelVAE)")
-  p.add_argument('--eval_batch_size', default=256, type=int,
+  p.add_argument('--y-prediction', default="deterministic",
+                 choices=['deterministic', 'sampled'],
+                 help="Method for test-time prediction")
+  p.add_argument('--y-inference', default="sample",
+                 choices=['sample', 'sum'],
+                 help="How to infer latent labels")
+  p.add_argument('--label-prior-type', default="uniform",
+                 choices=["uniform", "learned", "fixed"],
+                 help="What type of label prior to use")
+  p.add_argument('--eval-batch-size', default=256, type=int,
                  help='Size of evaluation batch.')
-  p.add_argument('--word_embed_dim', default=256, type=int,
+  p.add_argument('--word-embed-dim', default=256, type=int,
                  help='Word embedding size')
-  p.add_argument('--latent_dim', default=512, type=int,
+  p.add_argument('--latent-dim', default=256, type=int,
                  help='Latent embedding dimensionality')
-  p.add_argument('--mlp_hidden_dim', default=512, type=int,
+  p.add_argument('--mlp-hidden-dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
-  p.add_argument('--mlp_num_layers', default=2, type=int,
+  p.add_argument('--mlp-num-layers', default=2, type=int,
                  help='Number of MLP layers')
-  p.add_argument('--share_embed', action='store_true', default=False,
-                 help='Whether datasets share word embeddings')
-  p.add_argument('--share_decoders', action='store_true', default=False,
-                 help='Whether decoders are shared across datasets')
+  p.add_argument('--share-embed', action='store_true', dest='share-embed',
+                 help='Share word embeddings between tasks')
+  p.add_argument('--no-share-embed', action='store_false', dest='share-embed',
+                 help='Do not share word embeddings between tasks')
+  p.set_defaults(share_embed=True)
+  p.add_argument('--share-decoders', action='store_true', dest='share-decoder',
+                 help='Share decoders between tasks')
+  p.add_argument('--no-share-decoders', action='store_false',
+                 dest='share-decoder',
+                 help='Share decoders between tasks')
+  p.set_defaults(share_decoder=False)
+  p.add_argument('--layer-norm', action='store_true', dest='layer-norm',
+                 help='Use layer normalization')
+  p.add_argument('--no-layer-norm', action='store_false', dest='layer-norm',
+                 help='No layer normalization')
+  p.set_defaults(layer_norm=True)
+  p.add_argument('--qy-mlp-hidden-dim', default=512, type=int,
+                 help='[qy] MLP hidden dim')
+  p.add_argument('--qy-mlp-num-layer', default=2, type=int,
+                 help='[qy] MLP number of hidden layers')
+  p.add_argument('--qz-mlp-hidden-dim', default=512, type=int,
+                 help='[qz] MLP hidden dim')
+  p.add_argument('--qz-mlp-num-layer', default=2, type=int,
+                 help='[qz] MLP number of hidden layers')
+  p.add_argument('--pz-mlp-hidden-dim', default=512, type=int,
+                 help='[pz] MLP hidden dim')
+  p.add_argument('--pz-mlp-num-layer', default=2, type=int,
+                 help='[pz] MLP number of hidden layers')
   p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
-  p.add_argument('--max_grad_norm', default=5.0, type=float,
+  p.add_argument('--max-grad-norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
-  p.add_argument('--num_train_epochs', default=100, type=int,
+  p.add_argument('--num-train-epochs', default=100, type=int,
                  help='Number of training epochs.')
-  p.add_argument('--print_trainable_variables', action='store_true',
+  p.add_argument('--print-trainable-variables', action='store_true',
                  default=False,
                  help='Diagnostic: print trainable variables')
   p.add_argument('--seed', default=42, type=int,
@@ -129,10 +171,38 @@ def parse_args():
   return p.parse_args()
 
 
-def encoder_graph(batch, embed_fn, tokens_key='tokens'):
+def get_joint_log_prior(LMRD_path, SSTb_path):
+  LMRD_labels = [0, 1]
+  SSTb_labels = [0, 1, 2, 3, 4]
+  joint_dist = np.zeros([len(LMRD_labels) * len(SSTb_labels)])
+  index = 0
+  for e in product(LMRD_labels, SSTb_labels):
+    LMRD_label = e[0]
+    SSTb_label = e[1]
+    if SSTb_label > 2:
+      mapped_SSTb_label = 1
+    elif SSTb_label < 2:
+      mapped_SSTb_label = 0
+    else:
+      mapped_SSTb_label = 2
+
+    if mapped_SSTb_label == LMRD_label:
+      joint_dist[index] = 2.0
+    elif mapped_SSTb_label == 2:
+      joint_dist[index] = 1.0
+    else:
+      joint_dist[index] = 0.1
+
+    index += 1
+
+  joint_dist = joint_dist / np.sum(joint_dist)
+  return np.log(joint_dist)
+
+
+def encoder_graph(batch, embed_fn, tokens_key='tokens', max_filter_width=7):
   tokens = batch[tokens_key]
   embed = embed_fn(tokens)
-  return conv_and_pool(embed, num_filter=256, max_width=5)
+  return conv_and_pool(embed, num_filter=256, max_width=max_filter_width)
 
 
 def build_encoders(arch, vocab_size, args, embedder):
@@ -143,17 +213,14 @@ def build_encoders(arch, vocab_size, args, embedder):
                                          embed_fn=embedder)
     for ds in args.datasets:
       encoders[ds] = feature_extractor
+  elif arch == "conv_max_untied":
+    for ds in args.datasets:
+      encoders[ds] = tf.make_template('encoder_%s' % ds, encoder_graph,
+                                      embed_fn=embedder)
   else:
     raise ValueError("unrecognized encoder architecture")
 
   return encoders
-
-
-def get_num_records(tf_record_filename):
-  c = 0
-  for record in tf.python_io.tf_record_iterator(tf_record_filename):
-      c += 1
-  return c
 
 
 def get_vocab_size(vocab_file_path):
@@ -170,6 +237,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
   loss = model.get_multi_task_loss(train_batches)
+  g_loss = model.get_generative_loss()
+  d_loss = model.get_discriminative_loss()
+  SSTb_loss = model.get_task_loss('SSTb')
+  IMDB_loss = model.get_task_loss('IMDB')
 
   # Done building compute graph; set up training ops.
 
@@ -192,17 +263,56 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     for epoch in xrange(args.num_train_epochs):
       start_time = time()
 
+      events = {}
+      events['SSTb'] = Counter()
+      events['IMDB'] = Counter()
+
       # Take steps_per_epoch gradient steps
-      total_loss = 0
+      total_loss = 0.0
+      total_g_loss = 0.0
+      total_d_loss = 0.0
+      total_SSTb_loss = 0.0
+      total_IMDB_loss = 0.0
       num_iter = 0
       for i in xrange(steps_per_epoch):
-        step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
+        vals = sess.run([
+          global_step_tensor,
+          loss,
+          g_loss,
+          d_loss,
+          SSTb_loss,
+          IMDB_loss,
+          model.obs_label('SSTb'),
+          model.obs_label('IMDB'),
+          model.latent_preds('SSTb', 'IMDB'),
+          model.latent_preds('IMDB', 'SSTb'),
+          train_op])
+
         num_iter += 1
-        total_loss += loss_v
+        step = vals[0]
+        total_loss += vals[1]
+        total_g_loss += vals[2]
+        total_d_loss += vals[3]
+        total_SSTb_loss += vals[4]
+        total_IMDB_loss += vals[5]
+
+        # Update joint dists
+        SSTb_obs = ['obs_%d' % x for x in vals[6].tolist()]
+        SSTb_lat = ['lat_%d' % x for x in vals[8].tolist()]
+        events['SSTb'] += Counter(zip(SSTb_obs, SSTb_lat))
+
+        IMDB_obs = ['obs_%d' % x for x in vals[7].tolist()]
+        IMDB_lat = ['lat_%d' % x for x in vals[9].tolist()]
+        events['IMDB'] += Counter(zip(IMDB_obs, IMDB_lat))
+
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
-      train_loss = float(total_loss) / float(num_iter)
+      train_loss = total_loss / float(num_iter)
+      train_g_loss = total_g_loss / float(num_iter)
+      train_d_loss = total_d_loss / float(num_iter)
+      train_SSTb_loss = total_SSTb_loss / float(num_iter)
+      train_IMDB_loss = total_IMDB_loss / float(num_iter)
 
       # Evaluate held-out accuracy
       if not args.test:  # Validation mode
@@ -220,9 +330,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         elapsed = end_time - start_time
 
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s' % (
+        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%.2f g_loss=%.2f d_loss=%.4f' % (
           epoch+1, args.num_train_epochs, np.asscalar(step), elapsed,
-          train_loss)
+          train_loss, train_g_loss, train_d_loss)
+        str_ += ' SSTb_loss=%.2f IMDB_loss=%.2f' % (train_SSTb_loss,
+                                                    train_IMDB_loss)
 
         tot_eval_acc = 0.0
         for dataset_name in model_info:
@@ -231,6 +343,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           tot_eval_acc += eval_acc
           str_ += '\n(%s) num_eval_total=%d eval_acc=%f' % (
             dataset_name, num_eval_total, eval_acc)
+
+          str_ += '\nMost frequent events:'
+          for event, count in events[dataset_name].most_common(5):
+            str_ += '\n%s: %d' % (event, count)
+
         str_ += '\nmean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
         logging.info(str_)
       else:
@@ -262,7 +379,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
     if gold_labels[i] == pred_labels[i]:
       ncorrect += 1
   acc = float(ncorrect) / float(ntotal)
-
   return {
     'ntotal': ntotal,
     'ncorrect': ncorrect,
@@ -370,6 +486,18 @@ def main():
       update_hparams_from_args(hp, args)
       m = MultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
                         decoders=decoders, hp=hp)
+    elif args.model == 'joint':
+      hp = joint_mlvae_hparams()
+      update_hparams_from_args(hp, args)
+
+      if args.label_prior_type == 'fixed':
+        prior = get_joint_log_prior(dataset_info['IMDB']['train_path'],
+                                    dataset_info['SSTb']['train_path'])
+      else:
+        prior = None
+
+      m = JointMultiLabelVAE(class_sizes=class_sizes, encoders=encoders,
+                             decoders=decoders, prior=prior, hp=hp)
     else:
       raise ValueError("unrecognized model: %s" % (args.model))
 

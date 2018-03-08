@@ -25,8 +25,9 @@ from mtl.layers.t2t import conv1d
 
 def default_hparams():
   return HParams(filter_width=3,
-                 embed_dim=32,
-                 num_filters=128)
+                 embed_dim=128,
+                 layer_norm=True,
+                 num_filters=256)
 
 
 def shift_right(x, pad_value=None):
@@ -59,17 +60,58 @@ def cnn(batch, z, vocab_size, embedder=None, hp=default_hparams(),
   x = conv1d(x, hp.num_filters, hp.filter_width,
              dilation_rate=1, use_bias=False, padding='CAUSAL',
              name='conv1d_pre')
+  x = tf.nn.relu(x)
+  if hp.layer_norm:
+    x = tf.contrib.layers.layer_norm(x)
   z = tf.expand_dims(z, 1)
   z_tile = tf.tile(z, [1, batch_len, 1])
   xz = tf.concat([x, z_tile], axis=2)
-  xz = tf.nn.relu(xz)
   xz = conv1d(
     xz, hp.num_filters, 1, dilation_rate=1,
     use_bias=True, padding='CAUSAL', name='conv1d_post1')
   xz = tf.nn.relu(xz)
+  if hp.layer_norm:
+    xz = tf.contrib.layers.layer_norm(xz)
   logits = conv1d(
     xz, vocab_size, 1, dilation_rate=1,
     use_bias=True, padding='CAUSAL', name='conv1d_post2')
+  assert logits.get_shape().as_list()[-1] == vocab_size
+  mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
+  losses = sequence_loss(logits, targets, mask,
+                         average_across_timesteps=False,
+                         average_across_batch=False)
+  return tf.reduce_sum(losses, axis=1)
+
+
+def shallow_cnn(batch, z, vocab_size, embedder=None, hp=default_hparams(),
+                targets_key="tokens", lengths_key="tokens_length"):
+  targets = batch[targets_key]
+  lengths = batch[lengths_key]
+  assert len(targets.get_shape().as_list()) == 2
+  assert len(lengths.get_shape().as_list()) == 1
+  targets_shape = tf.shape(targets)
+  batch_len = targets_shape[1]
+  if embedder is None:
+    tf.logging.info("[CNN decoder] Using new word embedding.")
+    x = tf.contrib.layers.embed_sequence(targets, vocab_size=vocab_size,
+                                         embed_dim=hp.embed_dim)
+  else:
+    tf.logging.info("[CNN decoder] Using existing word embedder.")
+    x = embedder(targets)
+  x = shift_right(x)
+  x = conv1d(x, hp.num_filters, hp.filter_width,
+             dilation_rate=1, use_bias=False, padding='CAUSAL',
+             name='conv1d_pre')
+  x = tf.nn.relu(x)
+  if hp.layer_norm:
+    x = tf.contrib.layers.layer_norm(x)
+  z = tf.expand_dims(z, 1)
+  z_tile = tf.tile(z, [1, batch_len, 1])
+  xz = tf.concat([x, z_tile], axis=2)
+  logits = conv1d(
+    xz, vocab_size, 1, dilation_rate=1,
+    use_bias=True, padding='CAUSAL', name='conv1d_post')
+  assert logits.get_shape().as_list()[-1] == vocab_size
   mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
   losses = sequence_loss(logits, targets, mask,
                          average_across_timesteps=False,
