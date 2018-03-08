@@ -20,7 +20,6 @@ from __future__ import division
 from __future__ import print_function
 
 import json
-#from functools import partial
 
 from mtl.util.embedder_factory import create_embedders
 from mtl.util.extractor_factory import create_extractors
@@ -64,11 +63,6 @@ def create_encoders(embedders, extractors, args):
   encoders = dict()
   for ds in args.datasets:
     # TODO: does this still tie together embed/extract params?
-
-    #encoder = partial(encoder_fn,
-    #                  embed_fn=embedders[ds],
-    #                  extract_fn=extractors[ds])
-
     encoder = tf.make_template('encoder_{}'.format(ds),
                                encoder_fn,
                                embed_fn=embedders[ds],
@@ -97,19 +91,17 @@ def build_encoders(vocab_size, args):
 
   # Convert all strings in config into functions (look-up table)
   architectures = string_to_func(architectures, FUNCTIONS)
-  print('Architectures: {}'.format(architectures))
 
   arch = args.architecture
 
   embed_fns = {ds: architectures[arch][ds]['embed_fn'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
+  embed_kwargs = {ds: architectures[arch][ds]['embed_kwargs'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
   
   extract_fns = {ds: architectures[arch][ds]['extract_fn'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
+  extract_kwargs = {ds: architectures[arch][ds]['extract_kwargs'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
 
   tie_embedders = architectures[arch]['embedders_tied']
   tie_extractors = architectures[arch]['extractors_tied']
-
-  embed_kwargs = {ds: architectures[arch][ds]['embed_kwargs'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
-  extract_kwargs = {ds: architectures[arch][ds]['extract_kwargs'] for ds in architectures[arch] if type(architectures[arch][ds]) is dict}
   
   embedders = create_embedders(embed_fns, tie_embedders, vocab_size=vocab_size, args=args, embedder_kwargs=embed_kwargs)
   extractors = create_extractors(extract_fns, tie_extractors, args=args, extractor_kwargs=extract_kwargs)

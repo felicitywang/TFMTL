@@ -40,10 +40,8 @@ def create_embedders(embed_fns, tie_embedders, vocab_size, args, embedder_kwargs
     assert all([embedder_kwargs[a] == embedder_kwargs[b] for a in args.datasets for b in args.datasets])
     embedder_kwargs = embedder_kwargs[args.datasets[0]]
 
-    #print('EMBEDDER KWARGS: {}'.format(embedder_kwargs))
     embedder = tf.make_template('embedder',
                                 embed_fn,
-                                #lambda x: embed_fn(x, **embedder_kwargs),
                                 **embedder_kwargs)
     for ds in args.datasets:
       embedders[ds] = embedder

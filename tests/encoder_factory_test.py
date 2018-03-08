@@ -22,7 +22,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from mtl.util.encoder_factory import *
+from mtl.util.encoder_factory import build_encoders
 
 class EncoderTests(tf.test.TestCase):
   def test_template(self):
