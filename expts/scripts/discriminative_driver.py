@@ -33,7 +33,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.encoders.encoder_factory import build_encoders
-from mtl.layers import mlp, dense_layer
+from mtl.layers import dense_layer, mlp
 from mtl.models.mult import Mult
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
@@ -64,7 +64,7 @@ def parse_args():
                    help='Whether datasets share the encoder.')
     p.add_argument('--share_decoders', action='store_true', default=False,
                    help='Whether decoders are shared across datasets')
-    p.add_argument('--share_mlp', type=bool, help='Whether datasets share the hidden layers.')
+    p.add_argument('--share_mlp', type=bool, default=True, help='Whether datasets share the hidden layers.')
     p.add_argument('--lr0', default=0.0001, type=float,
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
@@ -544,7 +544,7 @@ def main():
         encoder_hp = None
         encoders = build_encoders(vocab_size, args, encoder_hp)
 
-        hps = set_hp(args)
+        hps = set_hps(args)
 
         mlps = build_mlps(class_sizes, hps)
 
@@ -569,8 +569,8 @@ def make_model(args, class_sizes, dataset_order, encoders, mlps, logits, hps):
         raise ValueError("unrecognized model: %s" % args.model)
 
 
-def set_hp(args):
-    # TODO get hyperparameters from arguments
+# TODO easier implementation
+def set_hps(args):
     return HParams(embed_dim=args.embed_dim,
                    num_filter=args.num_filter,
                    max_width=args.max_width,
@@ -581,7 +581,8 @@ def set_hp(args):
                    token_lengths_key="tokens_length",
                    l2_weight=0.0,
                    dropout_rate=0.5,
-                   num_layers=args.num_layers)
+                   num_layers=args.num_layers,
+                   share_mlp=args.share_mlp)
 
 
 def get_learning_rate(learning_rate):
@@ -712,26 +713,41 @@ def get_var_grads(loss):
     return tvars, grads
 
 
-# TODO share_mlp flag
-# TODO remove dense out to support share_mlp
 def build_mlps(class_sizes, hps):
     mlps = dict()
-    for k, v in class_sizes.items():
-        mlps[k] = tf.make_template('mlp_{}'.format(k),
-                                   mlp,
-                                   output_size=v,
-                                   hidden_dim=hps.embed_dim,
-                                   num_layer=hps.num_layers,
-                                   # TODO from args
-                                   activation=tf.nn.relu,
-                                   # TODO args.dropout_rate to keep_prob
-                                   input_keep_prob=1,
-                                   # TODO ?
-                                   batch_normalization=False,
-                                   # TODO ?
-                                   layer_normalization=False,
-                                   output_keep_prob=1 - hps.dropout_rate,
-                                   )
+    if hps.share_mlp:
+        mlp_shared = tf.make_template('mlp_shared',
+                                      mlp,
+                                      hidden_dim=hps.embed_dim,
+                                      num_layers=hps.num_layers,
+                                      # TODO from args
+                                      activation=tf.nn.relu,
+                                      # TODO args.dropout_rate to keep_prob
+                                      input_keep_prob=1,
+                                      # TODO ?
+                                      batch_normalization=False,
+                                      # TODO ?
+                                      layer_normalization=False,
+                                      output_keep_prob=1 - hps.dropout_rate,
+                                      )
+        for k, v in class_sizes.items():
+            mlps[k] = mlp_shared
+    else:
+        for k, v in class_sizes.items():
+            mlps[k] = tf.make_template('mlp_{}'.format(k),
+                                       mlp,
+                                       hidden_dim=hps.embed_dim,
+                                       num_layers=hps.num_layers,
+                                       # TODO from args
+                                       activation=tf.nn.relu,
+                                       # TODO args.dropout_rate to keep_prob
+                                       input_keep_prob=1,
+                                       # TODO ?
+                                       batch_normalization=False,
+                                       # TODO ?
+                                       layer_normalization=False,
+                                       output_keep_prob=1 - hps.dropout_rate,
+                                       )
     return mlps
 
 

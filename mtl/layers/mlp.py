@@ -44,11 +44,11 @@ def dense_layer(x, output_size, name, activation=tf.nn.selu):
                            activation=activation)
 
 
-def mlp(x, is_training, output_size, hidden_dim=256, num_layer=2, activation=tf.nn.selu,
+def mlp(x, is_training, hidden_dim=256, num_layers=2, activation=tf.nn.selu,
         input_keep_prob=1.0, batch_normalization=False,
         layer_normalization=True, output_keep_prob=1.0
         ):
-    if num_layer < 1:
+    if num_layers < 1:
         return x
     if activation == tf.nn.selu:
         dropout = tf.contrib.nn.alpha_dropout
@@ -60,9 +60,9 @@ def mlp(x, is_training, output_size, hidden_dim=256, num_layer=2, activation=tf.
 
     assert not (batch_normalization and layer_normalization)
     assert not (hidden_dim is None)
-    assert not (num_layer is None)
+    assert not (num_layers is None)
 
-    for i in xrange(num_layer):
+    for i in xrange(num_layers):
         with tf.variable_scope("layer_%d" % i):
             x = dense_layer(x, hidden_dim, 'linear', activation=None)
             if batch_normalization:
