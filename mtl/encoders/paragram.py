@@ -48,7 +48,7 @@ def paragram_phrase(inputs,
   s_embedding = reducer(inputs, lengths=lengths, time_axis=1)
 
   if apply_activation:
-    embed_dim = tf.shape(inputs)[2]
+    embed_dim = inputs.get_shape().as_list()[2]
     s_embedding = dense_layer(s_embedding, embed_dim, name="paragram_phrase", activation=activation_fn)
 
   return s_embedding

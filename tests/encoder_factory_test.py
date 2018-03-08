@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +19,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
+import numpy as np
 import tensorflow as tf
 
+from mtl.util.encoder_factory import *
 
-def embed_sequence(x, vocab_size, embed_dim):
-  return tf.contrib.layers.embed_sequence(x, vocab_size=vocab_size, embed_dim=embed_dim)
-
-def no_op_embedding(x):
-  """For use when an embedding function is required but the inputs
-  do not need to be embedded, e.g., bag of words encoding.
-  """
-
-  return x
+class EncoderTests(tf.test.TestCase):
+  def test_template(self):
+    with self.test_session() as sess:
+      # TODO: create fully tied encoders and check that emb1 == emb2, extr1 == extr2, etc.
+      # TODO: create fully untied encoders and check equalities/inequalities
+      # TODO: create tied embeddings, untied extractors ...
+      # TODO: create untied embeddings, tied extractors ...
+      pass

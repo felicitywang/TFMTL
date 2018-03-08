@@ -34,8 +34,8 @@ from six.moves import xrange
 from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
-from mtl.encoders.encoder_factory import build_encoders
 from mtl.models.mult import Mult
+from mtl.util.encoder_factory import build_encoders
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
 
@@ -99,6 +99,8 @@ def parse_args():
                  for the dataset(s) given by the --datasets flag (in the same order)""")
     p.add_argument('--vocab_path', type=str,
                    help='Path to the shared vocabulary for the datasets')
+    p.add_argument('--encoder_config_file', type=str,
+                   help='Absolute path to the encoder config file')
     p.add_argument('--encoder_architecture', type=str,
                    help='Encoder architecture type (see encoder_factory.py for supported architectures)')
     p.add_argument('--architectures_path', type=str, help='Path of the args file of the architectures of the '
