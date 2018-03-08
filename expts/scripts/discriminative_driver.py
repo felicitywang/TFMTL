@@ -33,7 +33,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.encoders.encoder_factory import build_encoders
-from mtl.layers import mlp
+from mtl.layers import mlp, dense_layer
 from mtl.models.mult import Mult
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
@@ -548,18 +548,21 @@ def main():
 
         mlps = build_mlps(class_sizes, hps)
 
-        model = make_model(args, class_sizes, dataset_order, encoders, mlps, hps)
+        logits = build_logits(class_sizes)
+
+        model = make_model(args, class_sizes, dataset_order, encoders, mlps, logits, hps)
 
         # Do training
         train_model(model, dataset_info, steps_per_epoch, args)
 
 
-def make_model(args, class_sizes, dataset_order, encoders, mlps, hps):
+def make_model(args, class_sizes, dataset_order, encoders, mlps, logits, hps):
     if args.model == 'mult':
         model = Mult(class_sizes=class_sizes,
                      dataset_order=dataset_order,
                      encoders=encoders,
                      mlps=mlps,
+                     logits=logits,
                      hps=hps)
         return model
     else:
@@ -714,7 +717,6 @@ def get_var_grads(loss):
 def build_mlps(class_sizes, hps):
     mlps = dict()
     for k, v in class_sizes.items():
-        # with tf.variable_scope('mlp', reuse=tf.AUTO_REUSE):
         mlps[k] = tf.make_template('mlp_{}'.format(k),
                                    mlp,
                                    output_size=v,
@@ -731,6 +733,18 @@ def build_mlps(class_sizes, hps):
                                    output_keep_prob=1 - hps.dropout_rate,
                                    )
     return mlps
+
+
+def build_logits(class_sizes):
+    logits = dict()
+    for k, v in class_sizes.items():
+        logits[k] = tf.make_template('logit_{}'.format(k),
+                                     dense_layer,
+                                     name='dense',
+                                     output_size=v,
+                                     activation=None
+                                     )
+    return logits
 
 
 if __name__ == "__main__":

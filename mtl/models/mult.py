@@ -37,6 +37,7 @@ class Mult(object):
                  dataset_order=None,
                  encoders=None,
                  mlps=None,
+                 logits=None,
                  hps=None):
 
         # class_sizes: map from feature names to cardinality of label sets
@@ -48,6 +49,7 @@ class Mult(object):
         assert dataset_order is not None
         assert encoders is not None
         assert mlps is not None
+        assert logits is not None
         assert hps is not None
 
         self._hps = hps
@@ -63,6 +65,8 @@ class Mult(object):
 
         self._mlps = mlps
 
+        self._logits = logits
+
     # Encoding (feature extraction)
     def encode(self, inputs, dataset_name, lengths=None):
         # if self._encoders[dataset_name] == 'no_op':
@@ -76,7 +80,9 @@ class Mult(object):
 
         features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlps[dataset_name](features, is_training)
+        mlps = self._mlps[dataset_name](features, is_training)
+
+        logits = self._logits[dataset_name](mlps)
 
         res = tf.argmax(logits, axis=1)
         # res = tf.expand_dims(res, axis=1)
@@ -92,7 +98,9 @@ class Mult(object):
         if features is None:
             features = self.encode(inputs, dataset_name, lengths=input_lengths)
 
-        logits = self._mlps[dataset_name](features, is_training)
+        mlps = self._mlps[dataset_name](features, is_training)
+
+        logits = self._logits[dataset_name](mlps)
 
         # loss
         ce = tf.reduce_mean(
