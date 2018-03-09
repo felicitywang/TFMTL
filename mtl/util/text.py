@@ -23,7 +23,12 @@ import six
 from tensorflow.python.platform import gfile
 from tqdm import tqdm
 
-from .categorical_vocabulary import CategoricalVocabulary  # pylint: disable=g-bad-import-order
+from mtl.util.categorical_vocabulary import CategoricalVocabulary
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 """Implements a number of text preprocessing utilities."""
 """Modified from tensorflow.contrib.learn.python.learn.preprocessing.text"""
@@ -32,12 +37,6 @@ from .categorical_vocabulary import CategoricalVocabulary  # pylint: disable=g-b
 # from tensorflow.contrib.learn.python.learn.preprocessing import \
 #     CategoricalVocabulary
 
-try:
-    # pylint: disable=g-import-not-at-top
-    import cPickle as pickle
-except ImportError:
-    # pylint: disable=g-import-not-at-top
-    import pickle
 
 TOKENIZER_RE = re.compile(r"[A-Z]{2,}(?![a-z])|[A-Z][a-z]+(?=[A-Z])|[\'\w\-]+",
                           re.UNICODE)
@@ -122,7 +121,8 @@ class VocabularyProcessor(object):
                  min_frequency=0,
                  max_frequency=-1,
                  vocabulary=None,
-                 tokenizer_fn=None):
+                 tokenizer_fn=None,
+                 max_vocab_size=None):
         """Initializes a VocabularyProcessor instance.
 
         Args:
@@ -137,6 +137,10 @@ class VocabularyProcessor(object):
         self.max_document_length = max_document_length
         self.min_frequency = min_frequency
         self.max_frequency = max_frequency
+        if max_vocab_size:
+            self.max_vocab_size = max_vocab_size
+        else:
+            self.max_vocab_size = float('inf')
         if vocabulary:
             self.vocabulary_ = vocabulary
         else:
@@ -162,7 +166,8 @@ class VocabularyProcessor(object):
                 self.vocabulary_.add(token)
         # if self.min_frequency > 0:
         self.vocabulary_.trim(min_frequency=self.min_frequency,
-                              max_frequency=self.max_frequency)
+                              max_frequency=self.max_frequency,
+                              max_vocab_size=self.max_vocab_size)
         self.vocabulary_.freeze()
         return self
 
