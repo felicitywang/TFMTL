@@ -1,5 +1,9 @@
-build-test-deploy:
+image: python:3.5-slim
+
+basic:
+  stage: test
   script:
+    - pip install pip --user --upgrade
     - pip install . --user --upgrade
   tags:
-    - shell
+    - docker
