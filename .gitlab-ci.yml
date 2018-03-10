@@ -5,6 +5,8 @@ basic:
   script:
     - pip install pip --user --upgrade
     - pip install . --user --upgrade
+    - pip install --user -r requirements.txt
+    - pip install --user flake8
     - ./run_checks.sh
   tags:
     - docker
