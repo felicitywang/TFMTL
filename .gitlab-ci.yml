@@ -1,7 +1,5 @@
 build-test-deploy:
-  before_script:
-    - docker info
   script:
-    - ls
+    - pip install . --user --upgrade
   tags:
     - shell
