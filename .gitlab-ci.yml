@@ -1,0 +1,7 @@
+build-test-deploy:
+  before_script:
+    - docker info
+  script:
+    - ls
+  tags:
+    - shell
