@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 from six.moves import xrange
+from collections import OrderedDict
 
 import tensorflow as tf
 
@@ -87,15 +88,9 @@ class SimpleMultiLabelVAE(object):
                encoders=None,
                decoders=None,
                hp=None):
-    """
-    class_sizes: map from feature names to cardinality of label sets
-    dataset_order: *ordered* list of features
-    encoders: one per label (i.e. dataset)
-    decoders: one per label (i.e. dataset)
-    """
-
     assert class_sizes is not None
     assert encoders.keys() == decoders.keys()
+    assert class_sizes.keys() == encoders.keys()
 
     self._encoders = encoders
     self._decoders = decoders
@@ -174,7 +169,6 @@ class SimpleMultiLabelVAE(object):
     return self._qz_template([features] + ys)
 
   def sample_y(self, logits, name):
-    # TODO(noa): check parameter sharing between tasks
     log_qy = ExpRelaxedOneHotCategorical(self._tau,
                                          logits=logits,
                                          name='log_qy_{}'.format(name))
@@ -203,13 +197,18 @@ class SimpleMultiLabelVAE(object):
     qy_logits = {}
     py_logits = {}
     batch_size = tf.shape(features)[0]
+    self._latent_preds[task] = {}
     for label_key, label_val in labels.items():
       py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
                                                  batch_size)
       if label_val is None:
         qy_logits[label_key] = self.qy_logits(label_key, features)
+        preds = tf.argmax(tf.nn.softmax(qy_logits[label_key]), axis=1)
+        self._latent_preds[task][label_key] = preds
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
+        assert task not in self._obs_label
+        self._obs_label[task] = label_val
         qy_logits[label_key] = None
         ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
     ys_list = ys.values()
@@ -223,8 +222,13 @@ class SimpleMultiLabelVAE(object):
 
   def get_multi_task_loss(self, task_batches):
     losses = []
+    self._g_loss = {}
+    self._d_loss = {}
+    self._latent_preds = {}
+    self._obs_label = {}
+    sorted_keys = sorted(task_batches.keys())  # order matters
     for task_name, batch in task_batches.items():
-      labels = {k: None for k in task_batches.keys()}
+      labels = OrderedDict([(k, None) for k in sorted_keys])
       labels[task_name] = batch[self.hp.labels_key]
       if self.hp.loss_reduce == "even":
         with tf.name_scope(task_name):
@@ -242,11 +246,25 @@ class SimpleMultiLabelVAE(object):
     g_loss = self.get_task_generative_loss(task_name, labels,
                                            features, batch)
     assert len(g_loss.get_shape().as_list()) == 1
+    self._g_loss[task_name] = g_loss = tf.reduce_mean(g_loss)
     d_loss = self.get_task_discriminative_loss(task_name, labels, features)
     assert len(d_loss.get_shape().as_list()) == 1
+    self._d_loss[task_name] = d_loss = tf.reduce_mean(d_loss)
     a = self.hp.alpha
     assert a >= 0.0 and a <= 1.0, a
-    return ((1. - a) * tf.reduce_mean(g_loss)) + (a * tf.reduce_mean(d_loss))
+    return ((1. - a) * g_loss) + (a * d_loss)
+
+  def get_generative_loss(self, task_name):
+    return self._g_loss[task_name]
+
+  def get_discriminative_loss(self, task_name):
+    return self._d_loss[task_name]
+
+  def obs_label(self, task_name):
+    return self._obs_label[task_name]
+
+  def latent_preds(self, task_name, label_name):
+    return self._latent_preds[task_name][label_name]
 
   def encode(self, inputs, task_name):
     return self._encoders[task_name](inputs)

@@ -189,8 +189,9 @@ class MultiLabelVAE(object):
     losses = []
     self._latent_preds = {}
     self._obs_label = {}
+    sorted_keys = sorted(task_batches.keys())  # order matters
     for task_name, batch in task_batches.items():
-      labels = {k: None for k in task_batches.keys()}
+      labels = OrderedDict([(k, None) for k in sorted_keys])
       labels[task_name] = batch[self.hp.labels_key]
       if self.hp.loss_reduce == "even":
         with tf.name_scope(task_name):
@@ -263,11 +264,11 @@ class MultiLabelVAE(object):
   def get_task_nll_x(self, task_name):
     return self._task_nll_x[task_name]
 
-  def get_generative_loss(self):
-    return self._g_loss
+  def get_generative_loss(self, task_name):
+    return self._g_loss[task_name]
 
-  def get_discriminative_loss(self):
-    return self._d_loss
+  def get_discriminative_loss(self, task_name):
+    return self._d_loss[task_name]
 
   def obs_label(self, task_name):
     return self._obs_label[task_name]

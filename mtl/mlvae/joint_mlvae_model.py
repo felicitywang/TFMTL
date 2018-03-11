@@ -360,8 +360,11 @@ class JointMultiLabelVAE(object):
     losses = []
     self._obs_label = {}
     self._latent_preds = {}
+    self._d_loss = {}
+    self._g_loss = {}
+    sorted_keys = sorted(task_batches.keys())
     for task_name, batch in task_batches.items():
-      labels = {k: None for k in task_batches.keys()}
+      labels = OrderedDict([(k, None) for k in sorted_keys])
       labels[task_name] = batch[self.hp.labels_key]
       if self.hp.loss_reduce == "even":
         with tf.name_scope(task_name):
@@ -389,11 +392,11 @@ class JointMultiLabelVAE(object):
                                                     features,
                                                     log_joint, batch)
       assert len(g_loss.get_shape().as_list()) == 1
-      self._g_loss = g_loss = tf.reduce_mean(g_loss)
+      self._g_loss[task_name] = g_loss = tf.reduce_mean(g_loss)
     d_loss = self.get_task_discriminative_loss(task_name, labels,
                                                log_joint)
     assert len(d_loss.get_shape().as_list()) == 1
-    self._d_loss = d_loss = tf.reduce_mean(d_loss)
+    self._d_loss[task_name] = d_loss = tf.reduce_mean(d_loss)
     a = self.hp.alpha
     assert a >= 0.0 and a <= 1.0, a
     return (1. - a) * g_loss + (a * d_loss)
@@ -407,11 +410,11 @@ class JointMultiLabelVAE(object):
   def get_task_loss(self, task_name):
     return self._task_loss[task_name]
 
-  def get_generative_loss(self):
-    return self._g_loss
+  def get_generative_loss(self, task_name):
+    return self._g_loss[task_name]
 
-  def get_discriminative_loss(self):
-    return self._d_loss
+  def get_discriminative_loss(self, task_name):
+    return self._d_loss[task_name]
 
   def get_task_nll_x(self, task_name):
     return self._task_nll_x[task_name]
