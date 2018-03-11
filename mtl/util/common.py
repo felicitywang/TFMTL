@@ -20,7 +20,7 @@ from __future__ import print_function
 import tensorflow as tf
 from six.moves import xrange
 
-from mtl.util.layers import dense_layer
+from mtl.layers import dense_layer
 
 
 def listify(x):
