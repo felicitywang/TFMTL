@@ -63,7 +63,6 @@ def parse_args():
                    help='Whether datasets share the encoder.')
     p.add_argument('--share_decoders', action='store_true', default=False,
                    help='Whether decoders are shared across datasets')
-    p.add_argument('--share_mlp', type=bool, default=True, help='Whether datasets share the hidden layers.')
     p.add_argument('--lr0', default=0.0001, type=float,
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
@@ -104,17 +103,30 @@ def parse_args():
                    help='Encoder architecture type (see encoder_factory.py for supported architectures)')
     p.add_argument('--architectures_path', type=str, help='Path of the args file of the architectures of the '
                                                           'experiment.')
-    p.add_argument('--hidden_dim', default=128, type=int, help='Dense(hidden) layer size.')
+    p.add_argument('--shared_hidden_dims', nargs='+', type=int, default=[128, 128],
+                   help='Sizes of the hidden layers shared by all datasets.')
+    p.add_argument('--private_hidden_dims', nargs='+', type=int, default=None,
+                   help='Sizes of the hidden layers private to each dataset.')
+    p.add_argument('--shared_mlp_layers', type=int, default=2,
+                   help='Number of hidden layers of the MLP model shared between datasets.')
+    p.add_argument('--private_mlp_layers', type=int, default=0,
+                   help='Number of hidden layers of the MLP model private for each dataset.')
     p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
     p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
     p.add_argument('--alphas', nargs='+', type=float, default=[0.5, 0.5],
                    help='alpha for each dataset in the MULT model')
-    p.add_argument('--num_layers', type=int, default=2,
-                   help='Number off hidden layers of the MLP model.')
     p.add_argument('--class_sizes', nargs='+', type=int,
                    help='Number of classes for each dataset.')
     p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/', help='Directory to save the '
                                                                                      'checkpoints.')
+    p.add_argument('--input_keep_prob', type=float, default=1,
+                   help="Probability to keep of the dropout layer before the MLP(shared+private).")
+    p.add_argument('--output_keep_prob', type=float, default=0.5,
+                   help="Probability to keep of the dropout layer after the MLP(shared+private).")
+    p.add_argument('--token_lengths_key', type=str, default='tokens_length',
+                   help='Key of the tokens lengths.')
+    p.add_argument('--l2_weight', type=float, default=0.0,
+                   help='Weight of the l2 regularization.')
 
     return p.parse_args()
 
@@ -177,13 +189,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     #   1. A dict of { dataset_key: dataset_iterator }
     #
 
-    print("All the variables after defining train loss:")
-    all_variables = tf.global_variables()
-    print(type(all_variables))
-    for _ in all_variables:
-        print(_)
-
-    print("\n\n\n")
+    # print("All the variables after defining train loss:")
+    # all_variables = tf.global_variables()
+    # print(type(all_variables))
+    # for _ in all_variables:
+    #     print(_)
+    #
+    # print("\n\n\n")
 
     fill_pred_op_info(dataset_info, model, args, model_info)
 
@@ -538,12 +550,17 @@ def main():
         #                  encoders=encoders,
         #                  decoders=decoders,
         #                  hps=None)
-        # Felicity's discriminative baseline
 
         if args.model == 'mult':
+            # # TODO encoder_hps
+            # encoder_hps = HParams()
+            # hps = HParams()
+            # encoder_hps.parse(path to encoder_hps.json)
+            # hps.parse(path to hps.json)
+
             hps = set_hps(args)
-            # TODO encoder_hps
             encoder_hps = None
+
             model = Mult(class_sizes=class_sizes,
                          dataset_order=dataset_order,
                          vocab_size=vocab_size,
@@ -558,21 +575,30 @@ def main():
             raise ValueError("unrecognized model: %s" % args.model)
 
 
-# TODO easier implementation
+# TODO: use this directly:
+# https://www.tensorflow.org/api_docs/python/tf/contrib/training/HParams
+#   # If the hyperparameters are in json format use parse_json:
+#   hparams.parse_json('{"learning_rate": 0.3, "activations": "relu"}')
 def set_hps(args):
-    return HParams(hidden_dim=args.hidden_dim,
-                   num_filter=args.num_filter,
-                   max_width=args.max_width,
-                   word_embed_dim=args.word_embed_dim,
-                   alphas=args.alphas,
-                   label_key=args.label_key,
-                   input_key=args.input_key,
-                   token_lengths_key="tokens_length",
-                   l2_weight=0.0,
-                   dropout_rate=0.5,
-                   num_layers=args.num_layers,
-                   share_mlp=args.share_mlp
-                   )
+    hParams = HParams()
+
+    for k, v in vars(args).items():
+        hParams.add_hparam(k, v)
+
+    return hParams
+    #
+    #
+    # return HParams(hidden_dim=args.hidden_dim,
+    #                num_filter=args.num_filter,
+    #                max_width=args.max_width,
+    #                word_embed_dim=args.word_embed_dim,
+    #                alphas=args.alphas,
+    #                label_key=args.label_key,
+    #                input_key=args.input_key,
+    #                dropout_rate=0.5,
+    #                num_layers=args.num_layers,
+    #                share_mlp=args.share_mlp
+    #                )
 
 
 def get_learning_rate(learning_rate):

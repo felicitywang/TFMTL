@@ -66,7 +66,8 @@ class Mult(object):
 
         self._encoders = build_encoders(vocab_size, args, encoder_hps)
 
-        self._mlps = build_mlps(class_sizes, hps)
+        self._mlps_shared = build_mlps(hps, is_shared=True)
+        self._mlps_private = build_mlps(hps, is_shared=False)
 
         self._logits = build_logits(class_sizes)
 
@@ -78,37 +79,42 @@ class Mult(object):
 
     def get_predictions(self, batch, dataset_name, is_training):
         # Returns most likely label given conditioning variables (only run this on eval data)
-        inputs = batch[self._hps.input_key]
+        x = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
 
-        features = self.encode(inputs, dataset_name, lengths=input_lengths)
+        x = self.encode(x, dataset_name, lengths=input_lengths)
 
-        mlps = self._mlps[dataset_name](features, is_training)
+        x = self._mlps_shared[dataset_name](x, is_training)
+        x = self._mlps_private[dataset_name](x, is_training)
 
-        logits = self._logits[dataset_name](mlps)
+        x = self._logits[dataset_name](x)
 
-        res = tf.argmax(logits, axis=1)
+        res = tf.argmax(x, axis=1)
         # res = tf.expand_dims(res, axis=1)
 
         return res
 
     def get_loss(self, batch, dataset_name, features=None, is_training=True):
         # Returns most likely label given conditioning variables (only run this on eval data)
-        inputs = batch[self._hps.input_key]
+        x = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
         labels = batch[self._hps.label_key]
 
+        # TODO remove this?
         if features is None:
-            features = self.encode(inputs, dataset_name, lengths=input_lengths)
+            x = self.encode(x, dataset_name, lengths=input_lengths)
+        else:
+            x = features
 
-        mlps = self._mlps[dataset_name](features, is_training)
+        x = self._mlps_shared[dataset_name](x, is_training)
+        x = self._mlps_private[dataset_name](x, is_training)
 
-        logits = self._logits[dataset_name](mlps)
+        x = self._logits[dataset_name](x)
 
         # loss
         ce = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(
-                logits=logits, labels=tf.cast(labels, dtype=tf.int32)))
+                logits=x, labels=tf.cast(labels, dtype=tf.int32)))
 
         # l2 regularization
         variables = tf.trainable_variables()
@@ -145,41 +151,43 @@ class Mult(object):
         return self._hps
 
 
-def build_mlps(class_sizes, hps):
+def build_mlps(hps, is_shared):
     mlps = dict()
-    if hps.share_mlp:
+    if is_shared:
         mlp_shared = tf.make_template('mlp_shared',
                                       mlp,
-                                      hidden_dim=hps.hidden_dim,
-                                      num_layers=hps.num_layers,
+                                      hidden_dims=hps.shared_hidden_dims,
+                                      num_layers=hps.shared_mlp_layers,
                                       # TODO from args
                                       activation=tf.nn.relu,
-                                      # TODO args.dropout_rate to keep_prob
-                                      input_keep_prob=1,
+                                      input_keep_prob=hps.input_keep_prob,
                                       # TODO ?
                                       batch_normalization=False,
                                       # TODO ?
                                       layer_normalization=False,
-                                      output_keep_prob=1 - hps.dropout_rate,
+                                      # TODO ?
+                                      output_keep_prob=1,
                                       )
-        for k, v in class_sizes.items():
-            mlps[k] = mlp_shared
+        for dataset in hps.datasets:
+            mlps[dataset] = mlp_shared
+        return mlps
     else:
-        for k, v in class_sizes.items():
-            mlps[k] = tf.make_template('mlp_{}'.format(k),
-                                       mlp,
-                                       hidden_dim=hps.hiddem_dim,
-                                       num_layers=hps.num_layers,
-                                       # TODO from args
-                                       activation=tf.nn.relu,
-                                       # TODO args.dropout_rate to keep_prob
-                                       input_keep_prob=1,
-                                       # TODO ?
-                                       batch_normalization=False,
-                                       # TODO ?
-                                       layer_normalization=False,
-                                       output_keep_prob=1 - hps.dropout_rate,
-                                       )
+        for dataset in hps.datasets:
+            mlps[dataset] = tf.make_template('mlp_{}'.format(dataset),
+                                             mlp,
+                                             hidden_dims=hps.private_hidden_dims,
+                                             num_layers=hps.private_mlp_layers,
+                                             # TODO from args
+                                             activation=tf.nn.relu,
+                                             # TODO args.dropout_rate to keep_prob
+                                             input_keep_prob=1,
+                                             # TODO ?
+                                             batch_normalization=False,
+                                             # TODO ?
+                                             layer_normalization=False,
+                                             output_keep_prob=hps.output_keep_prob,
+                                             )
+
     return mlps
 
 
