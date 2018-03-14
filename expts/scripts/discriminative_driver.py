@@ -67,7 +67,7 @@ def parse_args():
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
                    help='Clip gradients to max_grad_norm during training.')
-    p.add_argument('--num_train_epochs', default=50, type=int,
+    p.add_argument('--num_train_epochs', default=3, type=int,
                    help='Number of training epochs.')
     p.add_argument('--print_trainable_variables', action='store_true',
                    default=False,
@@ -117,8 +117,10 @@ def parse_args():
                    help='alpha for each dataset in the MULT model')
     p.add_argument('--class_sizes', nargs='+', type=int,
                    help='Number of classes for each dataset.')
-    p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/', help='Directory to save the '
-                                                                                     'checkpoints.')
+    p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/',
+                   help='Directory to save the checkpoints.')
+    p.add_argument('--export_dir', type=str, default='./data/exports/',
+                   help='Directory to export the saved models.')
     p.add_argument('--input_keep_prob', type=float, default=1,
                    help="Probability to keep of the dropout layer before the MLP(shared+private).")
     p.add_argument('--output_keep_prob', type=float, default=0.5,
@@ -145,17 +147,25 @@ def get_vocab_size(vocab_file_path):
     return vocab_size
 
 
-def init_savers(args, model_info):
-    # best checkpoints
-    savers = dict()
+# def init_savers(args, model_info):
+#     """
+#     Initiate savers
+#     :param args:
+#     :param model_info:
+#     :return:
+#     """
+#     savers = dict()
+#
+#     for dataset_name in model_info:
+#         savers[dataset_name] = tf.train.Saver()
+#         if len(args.datasets) > 1:
+#             savers['MULT'] = tf.train.Saver()
+#
+#     return savers
 
-    for dataset_name in model_info:
-        savers[dataset_name] = tf.train.Saver()
-        if len(args.datasets) > 1:
-            savers['MULT'] = tf.train.Saver()
 
-    return savers
-
+# def init_builders(args, model_info):
+#
 
 def train_model(model, dataset_info, steps_per_epoch, args):
     dataset_info, model_info = fill_info_dicts(dataset_info, args)
@@ -217,7 +227,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                               save_steps=100)
 
     # savers that manually saves the model at the end of each epoch
-    savers = init_savers(args, model_info)
+    # savers = init_savers(args, model_info)
+
+    # saver = tf.train.Saver()
 
     with tf.train.SingularMonitoredSession(hooks=[saver_hook], config=config) as sess:
         # Initialize model parameters
@@ -292,17 +304,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     best_eval_acc[dataset_name]["acc"] = _eval_acc
                     best_eval_acc[dataset_name]["epoch"] = epoch
                     # save best model
-                    savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['model_path'])
+                    # savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
+                    # saver.save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
 
                 total_acc += _eval_acc
 
             if total_acc > best_total_acc:
                 best_total_acc = total_acc
                 best_total_acc_epoch = epoch
-
-                # save best model
-                if 'MULT' in savers:
-                    savers['MULT'].save(sess.raw_session(), os.path.join(args.checkpoint_dir, 'MULT', 'model'))
 
             # print("All the variables after the first epoch:")
             # all_variables = tf.global_variables()
@@ -343,12 +352,11 @@ def test(model_info, args):
         # load the saved best model
         str_ += '\nUsing the model that performs the best on (%s)' % model_name
         with tf.Session() as sess:
-            saver = tf.train.Saver()
-            if model_name == 'MULT':
-                model_path = os.path.join(args.checkpoint_dir, 'MULT', 'model')
-            else:
-                model_path = model_info[model_name]['model_path']
-            saver.restore(sess, model_path)
+            # if model_name == 'MULT':
+            #     checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT', 'model')
+            # else:
+            #     checkpoint_path = model_info[model_name]['checkpoint_path']
+            # saver.restore(sess, checkpoint_path)
 
             for dataset_name in model_info:
                 # _test_batch = dataset_info[dataset_name]['test_dataset'].batch
@@ -641,10 +649,12 @@ def fill_info_dicts(dataset_info, args):
 
     # Storage for pointers to dataset-specific Tensors
     model_info = dict()
+
+    # paths to save the checkpoints and exported models
     for dataset_name in dataset_info:
         model_info[dataset_name] = dict()
-        model_info[dataset_name]['model_path'] = os.path.join(args.checkpoint_dir, dataset_name, 'model')
-
+        model_info[dataset_name]['checkpoint_path'] = os.path.join(args.checkpoint_dir, dataset_name, 'model')
+        model_info[dataset_name]['export_dir'] = os.path.join(args.export_dir, dataset_name)
     # Data iterators, etc.
     for dataset_name in dataset_info:
         # Training data, iterator, and batch
