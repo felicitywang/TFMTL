@@ -17,7 +17,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from itertools import product
+from collections import OrderedDict
+
 import tensorflow as tf
+
+
+def entropy(logits):
+  assert len(logits.get_shape()) == 2
+  p = tf.nn.softmax(logits, axis=1)
+  lp = tf.log(p)
+  return -tf.reduce_sum(p * lp, axis=1)
+
+
+def enum_events(class_sizes, cond_vals=None, return_dict=False):
+  assert type(class_sizes) is OrderedDict
+  lists = []
+  for k, v in class_sizes.items():
+    if cond_vals is not None and k in cond_vals:
+      cond_val = cond_vals[k]
+      lists.append([cond_val])
+    else:
+      lists.append(list(xrange(v)))
+  return list(product(*lists))
 
 
 def normalize_logits(logits, dims=None):

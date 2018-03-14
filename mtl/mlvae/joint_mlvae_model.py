@@ -19,6 +19,7 @@ from __future__ import print_function
 
 from six.moves import xrange
 from operator import mul
+from operator import itemgetter
 from itertools import product
 from collections import OrderedDict
 
@@ -115,9 +116,11 @@ class JointMultiLabelVAE(object):
                hp=None):
 
     assert encoders.keys() == decoders.keys()
+    assert class_sizes.keys() == encoders.keys()
 
     if type(class_sizes) is dict:
-      self._class_sizes = OrderedDict(class_sizes)
+      self._class_sizes = OrderedDict(sorted(class_sizes.items(),
+                                             key=itemgetter(1)))
     elif type(class_sizes) is OrderedDict:
       self._class_sizes = class_sizes
     else:
@@ -280,11 +283,12 @@ class JointMultiLabelVAE(object):
     return self._ln_qz_template(xy)
 
   def sample_y(self, logits, name):
-    log_qy = tfd.ExpRelaxedOneHotCategorical(self._tau,
-                                             logits=logits,
-                                             name='log_qy_{}'.format(name))
-    y = tf.exp(log_qy.sample())
-    return y
+    with tf.name_scope('sample'):
+      log_qy = tfd.ExpRelaxedOneHotCategorical(self._tau,
+                                               logits=logits,
+                                               name='log_qy_{}'.format(name))
+      y = tf.exp(log_qy.sample())
+      return y
 
   def get_predictions(self, inputs, feature_name):
     features = self.encode(inputs, feature_name)
@@ -338,7 +342,9 @@ class JointMultiLabelVAE(object):
         self._latent_preds[task][label_key] = preds
         ys[label_key] = self.sample_y(qy_logits[label_key], label_key)
       else:
-        self._obs_label[task] = label_val
+        assert label_key not in self._obs_label
+        assert label_key == task
+        self._obs_label[label_key] = label_val
         qy_logits[label_key] = None
         ys[label_key] = tf.one_hot(label_val, self.class_sizes[label_key])
 
@@ -356,25 +362,58 @@ class JointMultiLabelVAE(object):
                                    py_logits, z, zm, zv, zm_prior,
                                    zv_prior)
 
-  def get_multi_task_loss(self, task_batches):
+  def get_multi_task_loss(self, task_batches, unlabeled_batches=None):
     losses = []
     self._obs_label = {}
     self._latent_preds = {}
     self._d_loss = {}
     self._g_loss = {}
+    self._unlabeled_task_loss = {}
     sorted_keys = sorted(task_batches.keys())
     for task_name, batch in task_batches.items():
       labels = OrderedDict([(k, None) for k in sorted_keys])
       labels[task_name] = batch[self.hp.labels_key]
-      if self.hp.loss_reduce == "even":
+      if self.hp.loss_reduce == "even" or self.hp.loss_reduce == "scaled":
         with tf.name_scope(task_name):
           loss = self.get_loss(task_name, labels, batch)
           losses.append(loss)
           self._task_loss[task_name] = loss
+          if unlabeled_batches and task_name in unlabeled_batches:
+            tf.logging.info("Unlabeled batch: %s", task_name)
+            unlabeled_batch = unlabeled_batches[task_name]
+            loss = self.get_unlabeled_loss(task_name, unlabeled_batch)
+            self._unlabeled_task_loss[task_name] = loss
+            losses.append(loss)
       else:
         raise ValueError("bad loss combination type: %s" %
                          (self.hp.loss_reduce))
-    return tf.add_n(losses, name='combined_mt_loss')
+
+    total_loss = tf.add_n(losses, name='combined_multi_task_loss')
+
+    if self.hp.loss_reduce == "even":
+      return total_loss / float(len(losses))
+    else:
+      raise ValueError('unimplemented')
+
+  def get_unlabeled_loss(self, task_name, batch):
+    # Encode the inputs using a task-specific encoder
+    features = self.encode(batch, task_name)
+
+    # Get normalized log q(y_1, ..., y_K | x)
+    logits = self.joint_logits(features)
+    class_dims = self.class_sizes.values()
+    log_joint = normalize_logits(logits, dims=class_dims)
+
+    raise ValueError("unimplemented")
+
+    if self.hp.y_inference == "sum":
+      raise ValueError("unimplemented")
+    else:
+      g_loss = self.get_sample_task_generative_loss(task_name, labels,
+                                                    features,
+                                                    log_joint, batch)
+      assert len(g_loss.get_shape().as_list()) == 1
+      self._u_loss[task_name] = g_loss = tf.reduce_mean(g_loss)
 
   def get_loss(self, task_name, labels, batch):
     # Encode the inputs using a task-specific encoder
