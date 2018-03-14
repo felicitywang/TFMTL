@@ -41,7 +41,7 @@ def build_prepared_encoders(vocab_size, args, ARCHITECTURES, encoder_hp=None):
         # Separate encoder for each dataset
         embed_temp = tf.make_template('embedding', embed_sequence,
                                       vocab_size=vocab_size,
-                                      embed_dim=args.embed_dim)
+                                      embed_dim=args.word_embed_dim)
         for ds in args.datasets:
             if (encoder_hp is not None) and (ds in encoder_hp):
                 kwargs = encoder_hp[ds]
@@ -63,7 +63,7 @@ def build_prepared_encoders(vocab_size, args, ARCHITECTURES, encoder_hp=None):
         # Separate encoder for each dataset
         embed_temp = tf.make_template('embedding', embed_sequence,
                                       vocab_size=vocab_size,
-                                      embed_dim=args.embed_dim)
+                                      embed_dim=args.word_embed_dim)
         for ds in args.datasets:
             if (encoder_hp is not None) and (ds in encoder_hp):
                 kwargs = encoder_hp[ds]
@@ -96,7 +96,7 @@ def build_prepared_encoders(vocab_size, args, ARCHITECTURES, encoder_hp=None):
         embed_temp = tf.make_template('embedding',
                                       embed_sequence,
                                       vocab_size=vocab_size,
-                                      embed_dim=args.embed_dim)
+                                      embed_dim=args.word_embed_dim)
         encode_temp = tf.make_template('encoding',
                                        conv_and_pool,
                                        kwargs)

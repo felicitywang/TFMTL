@@ -18,7 +18,7 @@ See `../../requirement.txt`
 - `args_LMRD`: arguments for the dataset LMRD
 - `data/raw/`: downloaded/unzipped original data files
 - `data/json/`: converted json data and basic vocabulary of the dataset
-- `data/tf/merged/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
+- `data/tf/merged/SSTb_LMRD/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -42,8 +42,8 @@ See `../../requirement.txt`
 3. (optional)
     - modify arguments in `args_SSTb.json` or `args_LMRD.json`
     - generate TFRecord files for the single datasetrun by
-        - `python write_tfrecords_single.py SSTb`
-        - `python write_tfrecords_single.py LMRD`
+        - `python ../scripts/write_tfrecords_single.py SSTb`
+        - `python ../scripts/write_tfrecords_single.py LMRD`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)

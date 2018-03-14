@@ -33,7 +33,7 @@ from tqdm import tqdm
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
 from mtl.util.data_prep import *
 from mtl.util.text import VocabularyProcessor
-from mtl.util.util import bag_of_words, tfidf
+from mtl.util.util import bag_of_words, tfidf, make_dir
 
 flags = tf.flags
 logging = tf.logging
@@ -189,10 +189,7 @@ class Dataset:
             # self._tfidf_list = tfidf(self._token_list)
 
         # write labeled data to TFRecord files
-        try:
-            os.stat(tfrecord_dir)
-        except OSError:
-            os.mkdir(tfrecord_dir)
+        make_dir(tfrecord_dir)
         self._train_path = os.path.join(tfrecord_dir, 'train.tf')
         self._valid_path = os.path.join(tfrecord_dir, 'valid.tf')
         self._test_path = os.path.join(tfrecord_dir, 'test.tf')
@@ -274,10 +271,7 @@ class Dataset:
     def save_vocab(self, vocab_dir):
 
         # save the built vocab to the disk for future use
-        try:
-            os.stat(vocab_dir)
-        except OSError:
-            os.mkdir(vocab_dir)
+        make_dir(vocab_dir)
 
         with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
                          mode='w', encoding='utf-8')as file:
@@ -316,10 +310,7 @@ class Dataset:
 
         vocab_freq_dict = vocab_processor.vocabulary_.freq
         print("total word size =", len(vocab_freq_dict))
-        try:
-            os.stat(vocab_dir)
-        except OSError:
-            os.mkdir(vocab_dir)
+        make_dir(vocab_dir)
 
         with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
                          mode='w', encoding='utf-8') as file:
@@ -594,10 +585,8 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
     data_names = [os.path.basename(os.path.normpath(json_dir)) for json_dir
                   in json_dirs]
     data_names.sort()
-    try:
-        os.stat(merged_dir)
-    except OSError:
-        os.mkdir(merged_dir)
+
+    make_dir(merged_dir)
 
     # merge all the vocabularies
     vocab_paths = []

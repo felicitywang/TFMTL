@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import threading
 from datetime import datetime
 from datetime import timedelta
@@ -179,6 +180,13 @@ def _cosine_similarity(vector1, vector2):
     if not magnitude:
         return 0
     return dot_product / magnitude
+
+
+def make_dir(dir):
+    try:
+        os.stat(dir)
+    except OSError:
+        os.makedirs(dir)
 
 
 if __name__ == "__main__":
