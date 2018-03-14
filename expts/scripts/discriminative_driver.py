@@ -309,14 +309,12 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             # print(type(all_variables))
             # for _ in all_variables:
             #     print(_)
-            # exit()
 
             logging.info(str_)
 
         print(best_eval_acc)
         print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
 
-        exit()
         print("\n\n\n")
 
         # TODO write(add) the result to a common report file
