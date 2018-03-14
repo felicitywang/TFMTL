@@ -45,16 +45,15 @@ def parse_args():
     p = ap.ArgumentParser()
     p.add_argument('--model', type=str,
                    help='Which model to use [mlvae|mult]')
-    # TODO modify explanation
     p.add_argument('-mode', choices=['train', 'test', 'predict'], required=True,
-                   help='Whether to train(train on train data and evaluate on valid data for certain epochs) '
-                        'or test(evaluate on held-out test data using the trained model) the model.')
+                   help='Whether to train, test or predict. \n'
+                        'train: train on train data and evaluate on valid data for certain epochs\n'
+                        'test: evaluate on held-out test data using the trained model. \n'
+                        'predict: predict the labels of the given text file using the trained model.')
     p.add_argument('--test', type=bool, default=False,
                    help='Final evaluation using held-out test data(using saved trained model without training again. '
                         'WARNING: DO NOT TUNE ON TEST')
-    p.add_argument('--predict', type=bool, default=False,
-                   help='Whether to predict on given data.')
-    p.add_argument('--predict_file_path', type=str, help='File path of the text to predict.')
+    p.add_argument('--predict_file_path', type=str, help='File path of the text to predict. Used in predict mode.')
     p.add_argument('--batch_size', default=128, type=int,
                    help='Size of batch.')
     p.add_argument('--eval_batch_size', default=256, type=int,
@@ -122,9 +121,9 @@ def parse_args():
                    help='alpha for each dataset in the MULT model')
     p.add_argument('--class_sizes', nargs='+', type=int,
                    help='Number of classes for each dataset.')
-    p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/',
-                   help='Directory to save the checkpoints.')
-    p.add_argument('--export_dir', type=str, default='./data/exports/',
+    p.add_argument('--checkpoint_dir', type=str, default='./data/saved_model/checkpoint/',
+                   help='Directory to save the newest checkpoints.')
+    p.add_argument('--export_dir', type=str, default='./data/saved_model/exports/',
                    help='Directory to export the saved models.')
     p.add_argument('--input_keep_prob', type=float, default=1,
                    help="Probability to keep of the dropout layer before the MLP(shared+private).")
@@ -152,22 +151,25 @@ def get_vocab_size(vocab_file_path):
     return vocab_size
 
 
-# def init_savers(args, model_info):
-#     """
-#     Initiate savers
-#     :param args:
-#     :param model_info:
-#     :return:
-#     """
-#     savers = dict()
-#
-#     for dataset_name in model_info:
-#         savers[dataset_name] = tf.train.Saver()
-#         if len(args.datasets) > 1:
-#             savers['MULT'] = tf.train.Saver()
-#
-#     return savers
+def init_builders(args, model_info):
+    """
+    Initialize SavedModel builders for each model.
+    Note that tf.train.Saver only saves the checkpoint and can only be used in the current program under the defined
+    graph;
+    whereas tf.saved_model.builder.SavedModelBuilder builds the SavedModel protocol buffer and saves variables and
+    assets so that meta graphs are saved and can be used in other programs.
+    """
 
+    builders = dict()
+    for dataset_name in model_info:
+        builders[dataset_name] = tf.saved_model.builder.SavedModelBuilder(
+            export_dir=model_info[dataset_name]['export_dir']
+        )
+    if len(args.datasets) > 1:
+        builders['MULT'] = tf.saved_model.builder.SavedModelBuilder(
+            export_dir=os.join.pah(args.export_dir, 'MULT')
+        )
+    return builders
 
 
 def test_model(model, dataset_info, args):
@@ -228,13 +230,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # saves every several steps
     # automatically done by tf.train.SingularMonitorSession with tf.train.CheckpoinSaverHook
     # TODO load from some checkpoint dif at the beginning(?)
-    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
+    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=args.checkpoint_dir,
                                               save_steps=100)
 
-    # savers that manually saves the model at the end of each epoch
-    # savers = init_savers(args, model_info)
-
-    # saver = tf.train.Saver()
+    # saved model builders for each model
+    builders = init_builders(args, model_info)
 
     with tf.train.SingularMonitoredSession(hooks=[saver_hook], config=config) as sess:
         # Initialize model parameters
@@ -306,6 +306,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     # save best model
                     # savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
                     # saver.save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
+                    # TODO builder.xxx
 
                 total_acc += _eval_acc
 
@@ -663,26 +664,27 @@ def fill_info_dicts(dataset_info, args):
     # paths to save the checkpoints and exported models
     for dataset_name in dataset_info:
         model_info[dataset_name] = dict()
-        model_info[dataset_name]['checkpoint_path'] = os.path.join(args.checkpoint_dir, dataset_name, 'model')
         model_info[dataset_name]['export_dir'] = os.path.join(args.export_dir, dataset_name)
     # Data iterators, etc.
     for dataset_name in dataset_info:
-        # Training data, iterator, and batch
-        _train_dataset = dataset_info[dataset_name]['train_dataset']
-        _train_iter = _train_dataset.iterator
-        _train_init_op = _train_dataset.init_op
-        _train_batch = _train_dataset.batch
-        model_info[dataset_name]['train_iter'] = _train_iter
-        model_info[dataset_name]['train_init_op'] = _train_init_op
-        model_info[dataset_name]['train_batch'] = _train_batch
 
         if args.mode == 'train':
+            # Training data, iterator, and batch
+            _train_dataset = dataset_info[dataset_name]['train_dataset']
+            _train_iter = _train_dataset.iterator
+            _train_init_op = _train_dataset.init_op
+            _train_batch = _train_dataset.batch
+            model_info[dataset_name]['train_iter'] = _train_iter
+            model_info[dataset_name]['train_init_op'] = _train_init_op
+            model_info[dataset_name]['train_batch'] = _train_batch
+
             # Held-out valid data, iterator, batch, and prediction operation
             _valid_dataset = dataset_info[dataset_name]['valid_dataset']
             _valid_iter = _valid_dataset.iterator
             _valid_batch = _valid_dataset.batch
             model_info[dataset_name]['valid_iter'] = _valid_iter
             model_info[dataset_name]['valid_batch'] = _valid_batch
+
         elif args.mode == 'test':
             _test_dataset = dataset_info[dataset_name]['test_dataset']
             _test_iter = _test_dataset.iterator
