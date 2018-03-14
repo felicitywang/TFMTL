@@ -500,11 +500,12 @@ def main():
             ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
             dataset_info[dataset_name]['train_dataset'] = ds
 
-            # Validation or valid dataset
+            # Validation dataset
             _valid_path = dataset_info[dataset_name]['valid_path']
             ds = build_input_dataset(_valid_path, FEATURES, args.eval_batch_size, is_training=False)
             dataset_info[dataset_name]['valid_dataset'] = ds
 
+            # Test dataset
             if args.test:
                 _test_path = dataset_info[dataset_name]['test_path']
                 ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
