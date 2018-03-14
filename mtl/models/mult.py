@@ -77,15 +77,15 @@ class Mult(object):
         #     return inputs
         return self._encoders[dataset_name](inputs, lengths)
 
-    def get_predictions(self, batch, dataset_name, is_training):
+    def get_predictions(self, batch, dataset_name):
         # Returns most likely label given conditioning variables (only run this on eval data)
         x = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
 
         x = self.encode(x, dataset_name, lengths=input_lengths)
 
-        x = self._mlps_shared[dataset_name](x, is_training)
-        x = self._mlps_private[dataset_name](x, is_training)
+        x = self._mlps_shared[dataset_name](x, is_training=False)
+        x = self._mlps_private[dataset_name](x, is_training=False)
 
         x = self._logits[dataset_name](x)
 

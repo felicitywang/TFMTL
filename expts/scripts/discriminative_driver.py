@@ -699,12 +699,12 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     for dataset_name in model_info:
         # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
         _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
-            dataset_name]['dataset_name'], is_training=False)
+            dataset_name]['dataset_name'])
         model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
         if args.test:
             # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
             _test_pred_op = model.get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
-                dataset_name]['dataset_name'], is_training=False)
+                dataset_name]['dataset_name'])
             model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
 
