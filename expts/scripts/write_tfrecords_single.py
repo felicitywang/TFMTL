@@ -1,8 +1,8 @@
 import json
-import os
 import sys
 
 from mtl.util.dataset import Dataset
+from mtl.util.util import make_dir
 
 with open('args_' + sys.argv[1] + '.json', 'rt') as file:
     args_single = json.load(file)
@@ -14,10 +14,7 @@ tfrecord_dir = "data/tf/single/"
 tfrecord_dir += sys.argv[1] + "/"
 tfrecord_dir += "min_" + str(args_single['min_frequency']) + \
                 "_max_" + str(args_single['max_frequency']) + "/"
-try:
-    os.stat(tfrecord_dir)
-except OSError:
-    os.makedirs(tfrecord_dir)
+make_dir(tfrecord_dir)
 
 dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,
