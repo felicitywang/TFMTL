@@ -45,8 +45,13 @@ def parse_args():
     p = ap.ArgumentParser()
     p.add_argument('--model', type=str,
                    help='Which model to use [mlvae|mult]')
+    # TODO modify explanation
+    p.add_argument('-mode', choices=['train', 'test', 'predict'], required=True,
+                   help='Whether to train(train on train data and evaluate on valid data for certain epochs) '
+                        'or test(evaluate on held-out test data using the trained model) the model.')
     p.add_argument('--test', type=bool, default=False,
-                   help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
+                   help='Final evaluation using held-out test data(using saved trained model without training again. '
+                        'WARNING: DO NOT TUNE ON TEST')
     p.add_argument('--predict', type=bool, default=False,
                    help='Whether to predict on given data.')
     p.add_argument('--predict_file_path', type=str, help='File path of the text to predict.')
@@ -164,10 +169,20 @@ def get_vocab_size(vocab_file_path):
 #     return savers
 
 
-# def init_builders(args, model_info):
-#
+
+def test_model(model, dataset_info, args):
+    """
+    Test the saved best model using held-out test data without training again.
+    """
+    pass
+
 
 def train_model(model, dataset_info, steps_per_epoch, args):
+    """
+    Train the model for certain epochs;
+    Evaluate on valid data after each epoch;
+    Save the model the performs the best on the validation epoch.
+    """
     dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
     train_batches = {name: model_info[name]['train_batch'] for name in model_info}
@@ -187,10 +202,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     zero_global_step_op = global_step_tensor.assign(0)
     lr = get_learning_rate(args.lr0)
     tvars, grads = get_var_grads(loss)
-    # testtvars, testgrads = get_var_grads(test_loss)
     train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
                             global_step_tensor, name='train_op')
-    # test_train_op = get_train_op(testtvars, testgrads, lr, args.max_grad_norm, global_step_tensor, name='test_train_op')
     init_ops = [tf.global_variables_initializer(),
                 tf.local_variables_initializer()]
     config = get_proto_config(args)
@@ -198,14 +211,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # Get training objective. The inputs are:
     #   1. A dict of { dataset_key: dataset_iterator }
     #
-
-    # print("All the variables after defining train loss:")
-    # all_variables = tf.global_variables()
-    # print(type(all_variables))
-    # for _ in all_variables:
-    #     print(_)
-    #
-    # print("\n\n\n")
 
     fill_pred_op_info(dataset_info, model, args, model_info)
 
@@ -259,23 +264,18 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             num_iter = 0
             for _ in tqdm(xrange(steps_per_epoch)):
                 step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
-                # test_step, test_loss_v, _ = sess.run([global_step_tensor, test_loss, test_train_op])
                 num_iter += 1
                 total_loss += loss_v
-                # test_total_loss += test_loss_v
                 # loss_v is sum over a batch from each dataset of the average loss *per training example*
             assert num_iter > 0
 
             # average loss per batch (which is in turn averaged across examples)
             train_loss = float(total_loss) / float(num_iter)
-            # test_train_loss = float(test_total_loss) / float(num_iter)
 
             # Evaluate held-out accuracy
             # if not args.test:  # Validation mode
             # Get performance metrics on each dataset
             for dataset_name in model_info:
-                # _valid_batch = dataset_info[dataset_name]['valid_dataset'].batch
-                # _pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
                 _pred_op = model_info[dataset_name]['valid_pred_op']
                 _eval_labels = model_info[dataset_name]['valid_batch'][args.label_key]
                 _eval_iter = model_info[dataset_name]['valid_iter']
@@ -313,18 +313,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 best_total_acc = total_acc
                 best_total_acc_epoch = epoch
 
-            # print("All the variables after the first epoch:")
-            # all_variables = tf.global_variables()
-            # print(type(all_variables))
-            # for _ in all_variables:
-            #     print(_)
-
             logging.info(str_)
 
         print(best_eval_acc)
         print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
-
-        print("\n\n\n")
 
         # TODO write(add) the result to a common report file
         # with open('report.txt', 'a') as file:
@@ -336,9 +328,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         #         file.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
         #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc, best_total_acc_epoch))
 
-    # final evaluation on test data
-    if args.test:
-        test(model_info, args)
+        # # final evaluation on test data
+        # if args.test:
+        #     # TODO call test_model
+        #     # test_model(model, model_info, args)
+        #     test(model_info, args)
 
 
 def test(model_info, args):
@@ -466,10 +460,12 @@ def main():
         _dir = dataset_info[dataset_name]['dir']
         # Set paths to TFRecord files
         _dataset_train_path = os.path.join(_dir, "train.tf")
-        _dataset_valid_path = os.path.join(_dir, "valid.tf")
         dataset_info[dataset_name]['train_path'] = _dataset_train_path
-        dataset_info[dataset_name]['valid_path'] = _dataset_valid_path
-        if args.test:
+
+        if args.mode == 'train':
+            _dataset_valid_path = os.path.join(_dir, "valid.tf")
+            dataset_info[dataset_name]['valid_path'] = _dataset_valid_path
+        elif args.mode == 'test':
             _dataset_test_path = os.path.join(_dir, "test.tf")
             dataset_info[dataset_name]['test_path'] = _dataset_test_path
 
@@ -508,13 +504,14 @@ def main():
             ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
             dataset_info[dataset_name]['train_dataset'] = ds
 
-            # Validation dataset
-            _valid_path = dataset_info[dataset_name]['valid_path']
-            ds = build_input_dataset(_valid_path, FEATURES, args.eval_batch_size, is_training=False)
-            dataset_info[dataset_name]['valid_dataset'] = ds
-
+            # TODO predict mode
             # Test dataset
-            if args.test:
+            if args.mode == 'train':
+                # Validation dataset
+                _valid_path = dataset_info[dataset_name]['valid_path']
+                ds = build_input_dataset(_valid_path, FEATURES, args.eval_batch_size, is_training=False)
+                dataset_info[dataset_name]['valid_dataset'] = ds
+            elif args.mode == 'test':
                 _test_path = dataset_info[dataset_name]['test_path']
                 ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
                 dataset_info[dataset_name]['test_dataset'] = ds
@@ -576,7 +573,16 @@ def main():
                          args=args)
 
             # Do training
-            train_model(model, dataset_info, steps_per_epoch, args)
+            if args.mode == 'train':
+                train_model(model, dataset_info, steps_per_epoch, args)
+            elif args.mode == 'test':
+                test_model(model, dataset_info, args)
+            elif args.mode == 'predict':
+                # TODO
+                # predict()
+                pass
+            else:
+                raise NotImplementedError('Mode %s is not implemented!' % args.mode)
 
         else:
             raise ValueError("unrecognized model: %s" % args.model)
@@ -643,9 +649,13 @@ def fill_info_dicts(dataset_info, args):
     #  e.g., data iterators, batches, prediction operations
 
     # use validation data for evaluation anyway
-    logging.info("Using validation data for evaluation.")
-    if args.test:
+    if args.mode == 'train':
+        logging.info("Using validation data for evaluation.")
+    elif args.mode == 'test':
         logging.info("Using test data for final evaluation.")
+    elif args.mode == 'predict':
+        # TODO
+        pass
 
     # Storage for pointers to dataset-specific Tensors
     model_info = dict()
@@ -666,24 +676,22 @@ def fill_info_dicts(dataset_info, args):
         model_info[dataset_name]['train_init_op'] = _train_init_op
         model_info[dataset_name]['train_batch'] = _train_batch
 
-        # Held-out valid data, iterator, batch, and prediction operation
-        _valid_dataset = dataset_info[dataset_name]['valid_dataset']
-        _valid_iter = _valid_dataset.iterator
-        _valid_batch = _valid_dataset.batch
-        model_info[dataset_name]['valid_iter'] = _valid_iter
-        model_info[dataset_name]['valid_batch'] = _valid_batch
-        # # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        # model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
-        if args.test:
+        if args.mode == 'train':
+            # Held-out valid data, iterator, batch, and prediction operation
+            _valid_dataset = dataset_info[dataset_name]['valid_dataset']
+            _valid_iter = _valid_dataset.iterator
+            _valid_batch = _valid_dataset.batch
+            model_info[dataset_name]['valid_iter'] = _valid_iter
+            model_info[dataset_name]['valid_batch'] = _valid_batch
+        elif args.mode == 'test':
             _test_dataset = dataset_info[dataset_name]['test_dataset']
             _test_iter = _test_dataset.iterator
             _test_batch = _test_dataset.batch
             model_info[dataset_name]['test_iter'] = _test_iter
             model_info[dataset_name]['test_batch'] = _test_batch
-            # # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            # model_info[dataset_name]['test_pred_op'] = _test_pred_op
+        else:
+            # TODO predict mode
+            pass
 
     def _create_feature_dict(ds, dataset_info, model_info):
         _feature_dict = dict()
@@ -706,15 +714,17 @@ def fill_info_dicts(dataset_info, args):
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
     for dataset_name in model_info:
-        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
-            dataset_name]['dataset_name'])
-        model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
-        if args.test:
-            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
+        if args.mode == 'train':
+            _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
+                dataset_name]['dataset_name'])
+            model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+        elif args.mode == 'test':
             _test_pred_op = model.get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
                 dataset_name]['dataset_name'])
             model_info[dataset_name]['test_pred_op'] = _test_pred_op
+        # TODO predict mode
+        else:
+            pass
 
 
 def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=True):
