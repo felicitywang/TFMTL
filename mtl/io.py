@@ -17,22 +17,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
 import tensorflow as tf
+from six.moves import xrange
+from collections import defaultdict
+from google.protobuf.json_format import MessageToJson
+import json
+
+def get_num_records(tf_record_filename):
+  c = 0
+  for record in tf.python_io.tf_record_iterator(tf_record_filename):
+      c += 1
+  return c
 
 
-def update_hparams_from_args(hps, args, log=True):
-  """
-  Updates hps with values of matching keys in args
-
-  Inputs:
-    hps: HParams object
-    args: argparse Namespace returned from parse_args()
-  """
-  if log:
-    tf.logging.info("Updating hyper-parameters from command-line arguments.")
-  opts = vars(args)
-  for hps_k, hps_v in hps.values().items():
-    if hps_k in opts:
-      if log:
-        tf.logging.info("  %20s: %10s -> %10s", hps_k, hps_v, opts[hps_k])
-      hps.set_hparam(hps_k, opts[hps_k])
+def get_empirical_label_prior(tf_record_filename, label_key="label"):
+  freq = defaultdict(int)
+  for record in tf.python_io.tf_record_iterator(tf_record_filename):
+    jsonMessage = MessageToJson(tf.train.Example.FromString(record))
+    d = json.loads(jsonMessage)
+    label = int(d['features']['feature'][label_key]['int64List']['value'][0])
+    freq[label] += 1
+  N = float(sum(freq.values()))
+  p = np.zeros(len(freq))
+  for k, c in freq.items():
+    p[k] = freq[k] / N
+  return p
