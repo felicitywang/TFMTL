@@ -117,10 +117,6 @@ class Dataset:
         self._write_bow = write_bow
         self._write_tfidf = tfidf
 
-        self._padding = padding;
-        self._write_bow = write_bow;
-        self._write_tfidf = write_tfidf;
-
         print("data in", json_dir)
 
         with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt', encoding='utf-8') as file:
