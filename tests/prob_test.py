@@ -22,6 +22,8 @@ from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 from operator import mul
+from functools import reduce
+from six.moves import xrange
 
 from mtl.mlvae.prob import normalize_logits
 from mtl.mlvae.prob import marginal_log_prob

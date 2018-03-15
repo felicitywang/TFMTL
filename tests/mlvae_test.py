@@ -22,7 +22,7 @@ from __future__ import print_function
 import tensorflow as tf
 from mtl.decoders import unigram
 from mtl.encoders.cnn import conv_and_pool
-from mtl.mlvae.mlvae_model import MultiLabel
+#from mtl.mlvae.mlvae_model import MultiLabel
 from mtl.util.embed import embed_sequence
 
 
@@ -99,23 +99,23 @@ class MlvaeTests(tf.test.TestCase):
         encoder_features = "bow"
         decoder_features = None
 
-        m = MultiLabel(class_sizes=class_sizes,
-                       dataset_order=dataset_order,
-                       encoders=encoders,
-                       decoders=decoders,
-                       encoder_features=encoder_features,
-                       decoder_features=decoder_features)
+        # m = MultiLabel(class_sizes=class_sizes,
+        #                dataset_order=dataset_order,
+        #                encoders=encoders,
+        #                decoders=decoders,
+        #                encoder_features=encoder_features,
+        #                decoder_features=decoder_features)
 
-        batch = self.generate_batch()
-        train_batches = {'foo': batch}
+        # batch = self.generate_batch()
+        # train_batches = {'foo': batch}
 
-        with self.test_session() as sess:
-            loss = m.get_multi_task_loss(train_batches)
-            init_ops = [tf.global_variables_initializer(),
-                        tf.local_variables_initializer()]
-            sess.run(init_ops)
-            loss_val = sess.run([loss])
-            print('loss: {}'.format(loss_val))
+        # with self.test_session() as sess:
+        #     loss = m.get_multi_task_loss(train_batches)
+        #     init_ops = [tf.global_variables_initializer(),
+        #                 tf.local_variables_initializer()]
+        #     sess.run(init_ops)
+        #     loss_val = sess.run([loss])
+        #     print('loss: {}'.format(loss_val))
 
 
 if __name__ == '__main__':

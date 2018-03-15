@@ -2,7 +2,7 @@
 
 set -e
 
-flake8
 python setup.py test
+flake8
 
 echo "All checks pass!"
