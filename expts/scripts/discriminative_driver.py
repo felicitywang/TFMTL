@@ -399,7 +399,16 @@ def predict(model, dataset_info, args):
 
 def get_predictions(session, pred_op, pred_iterator):
     session.run(pred_iterator.initializer)
-    predictions = session.run(pred_op)
+
+    predictions = []
+    while True:
+        try:
+            pred_class = session.run(pred_op)
+            pred_class_list = pred_class.tolist()
+            predictions += pred_class_list
+        except tf.errors.OutOfRangeError:
+            break
+
     return predictions
 
 
