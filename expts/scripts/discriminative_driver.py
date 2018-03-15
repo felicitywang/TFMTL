@@ -149,27 +149,6 @@ def get_vocab_size(vocab_file_path):
     return vocab_size
 
 
-def init_builders(args, model_info):
-    """
-    Initialize SavedModel builders for each model.
-    Note that tf.train.Saver only saves the checkpoint and can only be used in the current program under the defined
-    graph;
-    whereas tf.saved_model.builder.SavedModelBuilder builds the SavedModel protocol buffer and saves variables and
-    assets so that meta graphs are saved and can be used in other programs.
-    """
-
-    builders = dict()
-    for dataset_name in model_info:
-        builders[dataset_name] = tf.saved_model.builder.SavedModelBuilder(
-            export_dir=model_info[dataset_name]['export_dir']
-        )
-    if len(args.datasets) > 1:
-        builders['MULT'] = tf.saved_model.builder.SavedModelBuilder(
-            export_dir=os.path.join(args.checkpoint_dir, 'MULT')
-        )
-    return builders
-
-
 def train_model(model, dataset_info, steps_per_epoch, args):
     """
     Train the model for certain epochs;
@@ -274,7 +253,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 _eval_iter = model_info[dataset_name]['valid_iter']
                 _metrics = compute_held_out_performance(sess, _pred_op,
                                                         _eval_labels,
-                                                        _eval_iter, args)
+                                                        _eval_iter)
                 model_info[dataset_name]['valid_metrics'] = _metrics
 
             end_time = time()
@@ -297,8 +276,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     best_eval_acc[dataset_name]["acc"] = _eval_acc
                     best_eval_acc[dataset_name]["epoch"] = epoch
                     # save best model
-                    # savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
-                    # TODO builder.xxx
                     saver.save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
 
                 total_acc += _eval_acc
@@ -363,7 +340,7 @@ def test_model(model, dataset_info, args):
                 _pred_op = model_info[dataset_name]['test_pred_op']
                 _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
                 _eval_iter = model_info[dataset_name]['test_iter']
-                _metrics = compute_held_out_performance(sess, _pred_op, _eval_labels, _eval_iter, args)
+                _metrics = compute_held_out_performance(sess, _pred_op, _eval_labels, _eval_iter)
                 model_info[dataset_name]['test_metrics'] = _metrics
 
                 _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
@@ -382,7 +359,7 @@ def test_model(model, dataset_info, args):
     logging.info(str_)
 
 
-def predict_model(model, dataset_info, args):
+def predict(model, dataset_info, args):
     """
     Predict the text data using the trained model
     """
@@ -390,8 +367,7 @@ def predict_model(model, dataset_info, args):
 
     fill_pred_op_info(dataset_info, model, args, model_info)
 
-    # TODO
-    str_ = '\nAccuracy on the held-out test data using different saved models:'
+    str_ = '\nPredictions of the given text data using different saved models:'
 
     saver = tf.train.Saver()
 
@@ -412,34 +388,24 @@ def predict_model(model, dataset_info, args):
             saver.restore(sess, checkpoint_path)
 
             for dataset_name in model_info:
+                # TODO predict
+                _pred_op = model_info[dataset_name]['pred_pred_op']
+                _pred_iter = model_info[dataset_name]['pred_iter']
+                _predictions = get_predictions(sess, _pred_op, _pred_iter)
 
-                # TODO perdict
-                _pred_op = model_info[dataset_name]['test_pred_op']
-                _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
-                _eval_iter = model_info[dataset_name]['test_iter']
-                _metrics = compute_held_out_performance(sess, _pred_op,
-                                                        _eval_labels,
-                                                        _eval_iter, args)
-                model_info[dataset_name]['test_metrics'] = _metrics
-
-                _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
-                _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
-                _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
-                str_ += '\n'
-                if dataset_name == model_name:
-                    str_ += '(*)'
-                else:
-                    str_ += '( )'
-                str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
-                                                                                  _num_eval_total,
-                                                                                  _eval_acc,
-                                                                                  _eval_align_acc)
+                print(_predictions)
 
     logging.info(str_)
 
 
+def get_predictions(session, pred_op, pred_iterator):
+    session.run(pred_iterator.initializer)
+    predictions = session.run(pred_op)
+    return predictions
+
+
 def compute_held_out_performance(session, pred_op, eval_label,
-                                 eval_iterator, args):
+                                 eval_iterator):
     # pred_op: predicted labels
     # eval_label: gold labels
 
@@ -559,17 +525,21 @@ def main():
             ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
             dataset_info[dataset_name]['train_dataset'] = ds
 
-            # TODO predict mode
-            # Test dataset
             if args.mode == 'train':
                 # Validation dataset
                 _valid_path = dataset_info[dataset_name]['valid_path']
                 ds = build_input_dataset(_valid_path, FEATURES, args.eval_batch_size, is_training=False)
                 dataset_info[dataset_name]['valid_dataset'] = ds
             elif args.mode == 'test':
+                # Test dataset
                 _test_path = dataset_info[dataset_name]['test_path']
                 ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
                 dataset_info[dataset_name]['test_dataset'] = ds
+            elif args.mode == 'predict':
+                # TODO pred path
+                _pred_path = dataset_info[dataset_name]['pred_path']
+                ds = build_input_dataset(_pred_path, FEATURES, args.eval_batch_size, is_training=False)
+                dataset_info[dataset_name]['pred_dataset'] = ds
 
         # This finds the size of the largest training dataset.
         training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
@@ -626,9 +596,8 @@ def main():
             elif args.mode == 'test':
                 test_model(model, dataset_info, args)
             elif args.mode == 'predict':
-                # TODO
-                # predict()
-                pass
+                # TODO text data to predict.tf
+                predict(model, dataset_info, args)
             else:
                 raise NotImplementedError('Mode %s is not implemented!' % args.mode)
 
@@ -702,8 +671,7 @@ def fill_info_dicts(dataset_info, args):
     elif args.mode == 'test':
         logging.info("Using test data for final evaluation.")
     elif args.mode == 'predict':
-        # TODO
-        pass
+        logging.info("Predict on the given text data.")
 
     # Storage for pointers to dataset-specific Tensors
     model_info = dict()
@@ -738,9 +706,13 @@ def fill_info_dicts(dataset_info, args):
             _test_batch = _test_dataset.batch
             model_info[dataset_name]['test_iter'] = _test_iter
             model_info[dataset_name]['test_batch'] = _test_batch
-        else:
-            # TODO predict mode
-            pass
+
+        elif args.mode == 'predict':
+            _pred_dataset = dataset_info[dataset_name]['pred_dataset']
+            _pred_iter = _pred_dataset.iterator
+            _pred_batch = _pred_dataset.batch
+            model_info[dataset_name]['pred_iter'] = _pred_iter
+            model_info[dataset_name]['pred_iter'] = _pred_batch
 
     def _create_feature_dict(ds, dataset_info, model_info):
         _feature_dict = dict()
@@ -772,9 +744,10 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
             _test_pred_op = model.get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
                 dataset_name]['dataset_name'])
             model_info[dataset_name]['test_pred_op'] = _test_pred_op
-        # TODO predict mode
-        else:
-            pass
+        elif args.mode == 'predict':
+            _pred_pred_op = model.get_predictions(model_info[dataset_name]['pred_batch'], dataset_info[
+                dataset_name]['dataset_name'])
+            model_info[dataset_name]['test_pred_op'] = _pred_pred_op
 
 
 def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=True):
