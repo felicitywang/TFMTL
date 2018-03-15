@@ -45,14 +45,13 @@ def parse_args():
     p = ap.ArgumentParser()
     p.add_argument('--model', type=str,
                    help='Which model to use [mlvae|mult]')
-    p.add_argument('-mode', choices=['train', 'test', 'predict'], required=True,
+
+    p.add_argument('--mode', choices=['train', 'test', 'predict'], required=True,
                    help='Whether to train, test or predict. \n'
                         'train: train on train data and evaluate on valid data for certain epochs\n'
                         'test: evaluate on held-out test data using the trained model. \n'
                         'predict: predict the labels of the given text file using the trained model.')
-    p.add_argument('--test', type=bool, default=False,
-                   help='Final evaluation using held-out test data(using saved trained model without training again. '
-                        'WARNING: DO NOT TUNE ON TEST')
+
     p.add_argument('--predict_file_path', type=str, help='File path of the text to predict. Used in predict mode.')
     p.add_argument('--batch_size', default=128, type=int,
                    help='Size of batch.')
