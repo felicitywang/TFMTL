@@ -102,7 +102,7 @@ class Dataset:
         :param generate_tf_record: True if tf record files need generating
         :param padding: True if token(word id) list needs padding to max_document_length
         :param write_bow: True if to write bag of words as a feature in the tf record
-        :param write_bow: True if to write tf-idf as a feature in the tf record
+        :param write_tfidf: True if to write tf-idf as a feature in the tf record
         """
 
         if max_vocab_size:
