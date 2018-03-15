@@ -71,7 +71,7 @@ def parse_args():
                    help='Initial learning rate')
     p.add_argument('--max_grad_norm', default=5.0, type=float,
                    help='Clip gradients to max_grad_norm during training.')
-    p.add_argument('--num_train_epochs', default=3, type=int,
+    p.add_argument('--num_train_epochs', default=50, type=int,
                    help='Number of training epochs.')
     p.add_argument('--print_trainable_variables', action='store_true',
                    default=False,
@@ -121,10 +121,8 @@ def parse_args():
                    help='alpha for each dataset in the MULT model')
     p.add_argument('--class_sizes', nargs='+', type=int,
                    help='Number of classes for each dataset.')
-    p.add_argument('--checkpoint_dir', type=str, default='./data/saved_model/checkpoint/',
-                   help='Directory to save the newest checkpoints.')
-    p.add_argument('--export_dir', type=str, default='./data/saved_model/exports/',
-                   help='Directory to export the saved models.')
+    p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
+                   help='Directory to save the checkpoints.')
     p.add_argument('--input_keep_prob', type=float, default=1,
                    help="Probability to keep of the dropout layer before the MLP(shared+private).")
     p.add_argument('--output_keep_prob', type=float, default=0.5,
@@ -167,16 +165,9 @@ def init_builders(args, model_info):
         )
     if len(args.datasets) > 1:
         builders['MULT'] = tf.saved_model.builder.SavedModelBuilder(
-            export_dir=os.join.pah(args.export_dir, 'MULT')
+            export_dir=os.path.join(args.checkpoint_dir, 'MULT')
         )
     return builders
-
-
-def test_model(model, dataset_info, args):
-    """
-    Test the saved best model using held-out test data without training again.
-    """
-    pass
 
 
 def train_model(model, dataset_info, steps_per_epoch, args):
@@ -230,11 +221,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     # saves every several steps
     # automatically done by tf.train.SingularMonitorSession with tf.train.CheckpoinSaverHook
     # TODO load from some checkpoint dif at the beginning(?)
-    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=args.checkpoint_dir,
+    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
                                               save_steps=100)
 
     # saved model builders for each model
-    builders = init_builders(args, model_info)
+    # builders = init_builders(args, model_info)
+
+    saver = tf.train.Saver()
 
     with tf.train.SingularMonitoredSession(hooks=[saver_hook], config=config) as sess:
         # Initialize model parameters
@@ -305,14 +298,16 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     best_eval_acc[dataset_name]["epoch"] = epoch
                     # save best model
                     # savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
-                    # saver.save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
                     # TODO builder.xxx
+                    saver.save(sess.raw_session(), model_info[dataset_name]['checkpoint_path'])
 
                 total_acc += _eval_acc
 
             if total_acc > best_total_acc:
                 best_total_acc = total_acc
                 best_total_acc_epoch = epoch
+                if len(args.datasets) > 1:
+                    saver.save(sess.raw_session(), os.path.join(args.checkpoint_dir, 'MULT', 'model'))
 
             logging.info(str_)
 
@@ -336,8 +331,69 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         #     test(model_info, args)
 
 
-def test(model_info, args):
+def test_model(model, dataset_info, args):
+    """
+    Evaluate on test data using the trained model.
+    """
+    dataset_info, model_info = fill_info_dicts(dataset_info, args)
+
+    fill_pred_op_info(dataset_info, model, args, model_info)
+
     str_ = '\nAccuracy on the held-out test data using different saved models:'
+
+    model_names = args.datasets
+    if len(args.datasets) > 1:
+        model_names.append('MULT')
+
+    saver = tf.train.Saver()
+
+    for model_name in model_names:
+        # load the saved best model
+        str_ += '\nUsing the model that performs the best on (%s)' % model_name
+        with tf.Session() as sess:
+            if model_name == 'MULT':
+                checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT', 'model')
+            else:
+                checkpoint_path = model_info[model_name]['checkpoint_path']
+            print(checkpoint_path)
+
+            saver.restore(sess, checkpoint_path)
+
+            for dataset_name in model_info:
+                _pred_op = model_info[dataset_name]['test_pred_op']
+                _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
+                _eval_iter = model_info[dataset_name]['test_iter']
+                _metrics = compute_held_out_performance(sess, _pred_op, _eval_labels, _eval_iter, args)
+                model_info[dataset_name]['test_metrics'] = _metrics
+
+                _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
+                _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
+                _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
+                str_ += '\n'
+                if dataset_name == model_name:
+                    str_ += '(*)'
+                else:
+                    str_ += '( )'
+                str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
+                                                                                  _num_eval_total,
+                                                                                  _eval_acc,
+                                                                                  _eval_align_acc)
+
+    logging.info(str_)
+
+
+def predict_model(model, dataset_info, args):
+    """
+    Predict the text data using the trained model
+    """
+    dataset_info, model_info = fill_info_dicts(dataset_info, args)
+
+    fill_pred_op_info(dataset_info, model, args, model_info)
+
+    # TODO
+    str_ = '\nAccuracy on the held-out test data using different saved models:'
+
+    saver = tf.train.Saver()
 
     model_names = args.datasets
     if len(args.datasets) > 1:
@@ -347,15 +403,17 @@ def test(model_info, args):
         # load the saved best model
         str_ += '\nUsing the model that performs the best on (%s)' % model_name
         with tf.Session() as sess:
-            # if model_name == 'MULT':
-            #     checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT', 'model')
-            # else:
-            #     checkpoint_path = model_info[model_name]['checkpoint_path']
-            # saver.restore(sess, checkpoint_path)
+            if model_name == 'MULT':
+                checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT', 'model')
+            else:
+                checkpoint_path = model_info[model_name]['checkpoint_path']
+            print(checkpoint_path)
+
+            saver.restore(sess, checkpoint_path)
 
             for dataset_name in model_info:
-                # _test_batch = dataset_info[dataset_name]['test_dataset'].batch
-                # _pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
+
+                # TODO perdict
                 _pred_op = model_info[dataset_name]['test_pred_op']
                 _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
                 _eval_iter = model_info[dataset_name]['test_iter']
@@ -396,11 +454,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
             y, y_hat = session.run([eval_label, pred_op])
             assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
             y_list = y.tolist()
-            # print("y list type: ", type(y_list))
-            # print("y list: ", y_list)
-            # y_list = [item for sublist in y_list for item in sublist]
             y_hat_list = y_hat.tolist()
-            # y_hat_list = [item for sublist in y_hat_list for item in sublist]
             ys += y_list
             y_hats += y_hat_list
         except tf.errors.OutOfRangeError:
@@ -548,13 +602,6 @@ def main():
         #        args: valid batch (with <batch_len> examples), name of feature to predict
         #        returns: Tensor of size <batch_len> specifying the predicted label
         #                 for the specified feature for each of the examples in the batch
-        # Seth's multi-task VAE model
-        # if args.model == 'mlvae':
-        #   m = MultiLabel(class_sizes=class_sizes,
-        #                  dataset_order=dataset_order,
-        #                  encoders=encoders,
-        #                  decoders=decoders,
-        #                  hps=None)
 
         if args.model == 'mult':
             # # TODO encoder_hps
@@ -661,10 +708,10 @@ def fill_info_dicts(dataset_info, args):
     # Storage for pointers to dataset-specific Tensors
     model_info = dict()
 
-    # paths to save the checkpoints and exported models
+    # paths to save/restore the checkpoints of the best model for each dataset
     for dataset_name in dataset_info:
         model_info[dataset_name] = dict()
-        model_info[dataset_name]['export_dir'] = os.path.join(args.export_dir, dataset_name)
+        model_info[dataset_name]['checkpoint_path'] = os.path.join(args.checkpoint_dir, dataset_name, 'model')
     # Data iterators, etc.
     for dataset_name in dataset_info:
 
@@ -707,8 +754,9 @@ def fill_info_dicts(dataset_info, args):
         return _feature_dict
 
     # Create feature_dicts for each dataset
-    for dataset_name in model_info:
-        model_info[dataset_name]['feature_dict'] = _create_feature_dict(dataset_name, dataset_info, model_info)
+    if args.mode == 'train':
+        for dataset_name in model_info:
+            model_info[dataset_name]['feature_dict'] = _create_feature_dict(dataset_name, dataset_info, model_info)
 
     # Return dataset_info dict and model_info dict
     return dataset_info, model_info
