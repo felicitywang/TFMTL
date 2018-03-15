@@ -746,7 +746,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         elif args.mode == 'predict':
             _pred_pred_op = model.get_predictions(model_info[dataset_name]['pred_batch'], dataset_info[
                 dataset_name]['dataset_name'])
-            model_info[dataset_name]['test_pred_op'] = _pred_pred_op
+            model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
 
 
 def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=True):
