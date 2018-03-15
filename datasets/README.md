@@ -5,6 +5,10 @@ type|name|#items|#labels|unit|summary
 ---|---|---|---|---|---
 sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews
 sentiment|LMRD|50,000|2|document|IMDB movie reviews
+sentiment|IMDb|600,000|2|paragraph|IMDb movie reviews
+sentiment|RTC|43,800|2|sentence|Rotten Tomatoes critic movie reviews
+sentiment|RTU|739,903|2|paragraph|Rotten Tomatoes user movie reviews
+sentiment|SUBJ|10,000|2|sentence|Rotten Tomatoes and IMDB movie reviews
 sentiment|Amazon_Movie_Reviews_Categories|7,911,684|5|document|Amazon movie reviews
 sentiment|Amazon_Review_Full|3,650,000|5|document|Amazon product reviews
 sentiment|Amazon_Review_Polarity|4,000,000|2|document|Amazon product review
@@ -13,6 +17,8 @@ sentiment|Yelp_Review_Polarity|598,000|2|paragraph|Yelp reviews
 sentiment|Twitter_Sentiment_Corpus|5,513|4|paragraph|Sentiment tweets on 4 topics
 sentiment|Yelp_Challenge|4,736,897|5|paragraph|Yelp review
 sentiment|Sentiment140|1,600,498|3|paragraph|Sentiment tweets on different brands/products/topics
+politics|FGPS|766|5|sentence|Political propositions
+politics|POLT|318,761|2|paragraph|Political tweets
 topic|AG_News|127,600|4|document|AG's news
 topic|DBPedia|63,000|14|paragraph|DBPedia
 topic|Sogou_News|510,000|5|document|Sogou News(Chinese)
@@ -25,7 +31,7 @@ emotion|Emoti_Tweets|38,900,000|8|paragraph|Tweets with emotional hashtags, emot
 emotion|NLP-dataset|416,809|6|paragraph|Unknown source
 emotion|NRC_TEC|21,051|6|paragraph|Tweets self-labeled with hashtag annotations
 emotion|Twitter_18|2,524|18|sentence|Emotional tweets
-domain|MATERIAL|276
+
 
 
 ### file structure
