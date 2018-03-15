@@ -720,7 +720,7 @@ def fill_info_dicts(dataset_info, args):
             _pred_iter = _pred_dataset.iterator
             _pred_batch = _pred_dataset.batch
             model_info[dataset_name]['pred_iter'] = _pred_iter
-            model_info[dataset_name]['pred_iter'] = _pred_batch
+            model_info[dataset_name]['pred_batch'] = _pred_batch
 
     def _create_feature_dict(ds, dataset_info, model_info):
         _feature_dict = dict()
