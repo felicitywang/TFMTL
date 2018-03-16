@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding=utf-8 -*-
 
-import pandas as pd
 import json
 
 file = open('train.csv', 'r', encoding='utf-8')
@@ -15,7 +14,6 @@ for line in file.readlines():
     })
 file = open('train.json', 'w', encoding='utf-8')
 json.dump(train_list, file)
-
 
 file = open('test.csv', 'r', encoding='utf-8')
 test_list = []

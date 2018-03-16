@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+# =============================================================================
 
 """Reorganize data collected using Reddit API with join_forum_data.py
 
@@ -28,7 +28,7 @@ Save the lists to ../cache/post_list.pickle and ../cache/thread_list.pickle
 import json
 import pickle
 
-import nltk
+from sklearn.preprocessing import LabelEncoder
 
 data_list = []
 
@@ -154,8 +154,8 @@ for thread in data_list:
         # get number of sentences/words/characters of each post and each thread
         if 'post_depth' not in post:
             post['post_depth'] = 0
-        # if 'text' in post:
-        #     text = post['text']
+            # if 'text' in post:
+            #     text = post['text']
             # sents = nltk.sent_tokenize(text)
             # tokens = nltk.word_tokenize(text)
             # post['num_sent'] = len(sents)
@@ -315,7 +315,6 @@ for post in post_list:
 
 import pandas as pd
 
-
 post_df = pd.DataFrame(post_list)
 thread_df = pd.DataFrame(thread_list)
 
@@ -395,7 +394,6 @@ for index, row in post_df.iterrows():
     # test of dataframe
     # post_list = post_list[:1000]
 
-
 data_dir = "./original/cache/"
 post_df_path = data_dir + "post_df.json"
 thread_df_path = data_dir + "thread_df.json"
@@ -416,26 +414,23 @@ for index, row in post_df.iterrows():
     post_df.set_value(
         index, 'parent_title',
         "" if parent_id != parent_id or parent_id not in
-        post_df.index
+                                        post_df.index
         else
         post_df.loc[parent_id].title)
     post_df.set_value(
         index, 'parent_body',
         "" if parent_id != parent_id or parent_id not in
-        post_df.index
+                                        post_df.index
         else
         post_df.loc[parent_id].body)
 
 # label
-post_df=post_df[post_df.majority_type.notnull()]
-post_df = post_df[post_df.majority_type!='other']
+post_df = post_df[post_df.majority_type.notnull()]
+post_df = post_df[post_df.majority_type != 'other']
 
-from sklearn.preprocessing import LabelEncoder
 label_encoder = LabelEncoder()
 post_df['label'] = label_encoder.fit_transform(post_df.majority_type)
 post_df = post_df.assign(label=post_df.label)
 
-
 post_df_path = "data.json"
 post_df.to_json(path_or_buf=post_df_path, orient='records')
-

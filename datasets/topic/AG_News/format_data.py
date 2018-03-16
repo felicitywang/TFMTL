@@ -1,8 +1,5 @@
-import pandas as pd
-import json
 import gzip
-import numpy as np
-
+import json
 
 file = open('train.csv', 'r')
 train_list = []
@@ -13,7 +10,6 @@ for line in file.readlines():
         'title': line[1][1:-1],
         'description': line[2][1:-1]
     })
-
 
 file = open('test.csv', 'r')
 test_list = []
@@ -37,13 +33,11 @@ assert len(set(index['train']).intersection(index['test'])) == 0
 with gzip.open('index.json.gz', mode='wt') as file:
     json.dump(index, file)
 
-
 all_list = train_list
 all_list.extend(test_list)
 
 with gzip.open('data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
-
 
 # test
 with gzip.open('data.json.gz', mode='rt') as file:
