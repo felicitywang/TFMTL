@@ -29,8 +29,8 @@ print(tfrecord_dirs)
 merge_dict_write_tfrecord(json_dirs=json_dirs,
                           tfrecord_dirs=tfrecord_dirs,
                           merged_dir=tfrecord_dir,
-                          max_document_length=args_merged[
-                              'max_document_length'],
+                          max_document_length=args_merged['max_document_length'],
+                          max_vocab_size=args_merged['max_vocab_size'],
                           min_frequency=args_merged['min_frequency'],
                           max_frequency=args_merged['max_frequency'],
                           train_ratio=args_merged['train_ratio'],

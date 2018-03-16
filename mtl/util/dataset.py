@@ -48,12 +48,13 @@ RANDOM_SEED = 42
 class Dataset:
     def __init__(self,
                  json_dir,
-                 load_vocab,
+                 vocab_given,
                  generate_basic_vocab,
                  generate_tf_record,
                  vocab_dir,
                  tfrecord_dir,
                  max_document_length=-1,
+                 max_vocab_size=None,
                  min_frequency=0,
                  max_frequency=-1,
                  text_field_names=['text'],
@@ -71,16 +72,17 @@ class Dataset:
         :param json_dir: where data.json.gz and index.json.gz are
         located, and vocabulary/tf records built from the single datasets
         are to be saved
-        :param load_vocab: True if to use the given vocabulary
+        :param vocab_given: True if to use the given vocabulary
         :param vocab_dir: directory to load the given (e.g. merged) vocabulary
         frequency dict json file or to save the self-generated vocabulary
         :param tfrecord_dir: directory to save generated TFRecord files
         :param max_document_length: maximum document length for the mapped
         word ids, computed as the maximum document length of all the
         training data if None
+        :param max_vocab_size: maximum size of the vocabulary allowed
         :param min_frequency: minimum frequency to build the vocabulary,
         words that appear lower than or equal to this number would be discarded
-        :param max_frequency: maximum frequency to build the vocabulray,
+        :param max_frequency: maximum frequency to build the vocabulary,
         words that appear more than or equal to this number would be discarded
         :param text_field_names: string of a list of text field names joined
         with spaces, read from json_dir if None
@@ -100,8 +102,20 @@ class Dataset:
         :param generate_tf_record: True if tf record files need generating
         :param padding: True if token(word id) list needs padding to max_document_length
         :param write_bow: True if to write bag of words as a feature in the tf record
-        :param write_bow: True if to write tf-idf as a feature in the tf record
+        :param write_tfidf: True if to write tf-idf as a feature in the tf record
         """
+
+        if max_vocab_size:
+            self._max_vocab_size = max_vocab_size
+        else:
+            self._max_vocab_size = float('inf')
+
+        self._min_frequency = min_frequency
+        self._max_frequency = max_frequency
+
+        self._padding = padding
+        self._write_bow = write_bow
+        self._write_tfidf = tfidf
 
         print("data in", json_dir)
 
@@ -152,29 +166,30 @@ class Dataset:
         self._vocab_dict = None
         self._categorical_vocab = None
         self._vocab_freq_dict = None
+        self._vocab_dir = None
 
         # generate and save the vocabulary which contains all the words
         if generate_basic_vocab:
             print("Generating the basic vocabulary.")
-            self.build_save_basic_vocab(vocab_dir=json_dir)
+            self._vocab_dir = json_dir
+            self.build_save_basic_vocab()
 
         if generate_tf_record is False:
             print("No need to generate tf records. Done. ")
             return
 
-        if load_vocab is False:
+        if vocab_given is False:
             print("No vocabulary given. Generate a new one.")
-            self._categorical_vocab = self.build_vocab(
-                min_frequency=min_frequency,
-                max_frequency=max_frequency)
-            self.save_vocab(tfrecord_dir)
+            self._categorical_vocab = self.build_vocab()
+            self._vocab_dir = tfrecord_dir
+            self.save_vocab()
 
         else:
             print("Public vocabulary given. Use that to build vocabulary "
                   "processor.")
-            self._categorical_vocab = self.load_vocab(vocab_dir,
-                                                      min_frequency=min_frequency,
-                                                      max_frequency=max_frequency)
+            self._vocab_dir = vocab_dir
+            self._categorical_vocab = self.load_vocab()
+
         # save mapping/reverse mapping to the disk
         # freq:            vocab_dir/vocab_freq.json
         # mapping:         vocab_dir/vocab_v2i.json
@@ -196,13 +211,13 @@ class Dataset:
 
         print("Writing TFRecord files for the training data...")
         self.write_examples(
-            self._train_path, self._train_index, write_bow, write_tfidf, labeled=True)
+            self._train_path, self._train_index, labeled=True)
         print("Writing TFRecord files for the validation data...")
         self.write_examples(
-            self._valid_path, self._valid_index, write_bow, write_tfidf, labeled=True)
+            self._valid_path, self._valid_index, labeled=True)
         print("Writing TFRecord files for the test data...")
-        self.write_examples(self._test_path, self._test_index,
-                            write_bow, write_tfidf, labeled=True)
+        self.write_examples(
+            self._test_path, self._test_index, labeled=True)
 
         # write unlabeled data to TFRecord files if there're any
 
@@ -215,8 +230,8 @@ class Dataset:
             self._has_unlabeled = True
             print("Writing TFRecord files for the unlabeled data...")
             self._unlabeled_path = os.path.join(tfrecord_dir, 'unlabeled.tf')
-            self.write_examples(self._unlabeled_path,
-                                self._unlabeled_index, write_bow, write_tfidf, labeled=False)
+            self.write_examples(
+                self._unlabeled_path, self._unlabeled_index, labeled=False)
 
         # save dataset arguments
         self._args = {
@@ -242,7 +257,7 @@ class Dataset:
             json.dump(self._args, file, ensure_ascii=False, indent=4)
             file.close()
 
-    def build_vocab(self, min_frequency, max_frequency):
+    def build_vocab(self):
         """Builds vocabulary for this dataset only using tensorflow's
         VocabularyProcessor
 
@@ -250,8 +265,9 @@ class Dataset:
         """
         vocab_processor = VocabularyProcessor(
             max_document_length=self._max_document_length,
-            min_frequency=min_frequency,
-            max_frequency=max_frequency,
+            max_vocab_size=self._max_vocab_size,
+            min_frequency=self._min_frequency,
+            max_frequency=self._max_frequency,
             tokenizer_fn=tokenizer)
 
         # build vocabulary only according to training data
@@ -268,18 +284,18 @@ class Dataset:
 
         return vocab_processor.vocabulary_
 
-    def save_vocab(self, vocab_dir):
+    def save_vocab(self):
 
         # save the built vocab to the disk for future use
-        make_dir(vocab_dir)
+        make_dir(self._vocab_dir)
 
-        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+        with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
                          mode='w', encoding='utf-8')as file:
             json.dump(self._vocab_freq_dict, file,
                       ensure_ascii=False, indent=4)
             file.close()
 
-        with codecs.open(os.path.join(vocab_dir, "vocab_v2i.json"),
+        with codecs.open(os.path.join(self._vocab_dir, "vocab_v2i.json"),
                          mode='w', encoding='utf-8')as file:
             json.dump(self._categorical_vocab.mapping, file,
                       ensure_ascii=False, indent=4)
@@ -288,12 +304,12 @@ class Dataset:
         vocab_i2v_dict = dict()
         for i in range(len(self._categorical_vocab.reverse_mapping)):
             vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
-        with codecs.open(os.path.join(vocab_dir, "vocab_i2v.json"),
+        with codecs.open(os.path.join(self._vocab_dir, "vocab_i2v.json"),
                          mode='w', encoding='utf-8')as file:
             json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
             file.close()
 
-    def build_save_basic_vocab(self, vocab_dir):
+    def build_save_basic_vocab(self):
         """Bulid vocabulary with min_frequency=0 for this dataset'
 
         training data only and save to the directory
@@ -310,29 +326,33 @@ class Dataset:
 
         vocab_freq_dict = vocab_processor.vocabulary_.freq
         print("total word size =", len(vocab_freq_dict))
-        make_dir(vocab_dir)
 
-        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+        make_dir(self._vocab_dir)
+        with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
                          mode='w', encoding='utf-8') as file:
             json.dump(vocab_freq_dict, file, ensure_ascii=False, indent=4)
             file.close()
 
-    def load_vocab(self, vocab_dir, min_frequency, max_frequency):
-        with codecs.open(os.path.join(vocab_dir, "vocab_freq.json"),
+    def load_vocab(self):
+        make_dir(self._vocab_dir)
+        with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
                          mode='r', encoding='utf-8') as file:
             self._vocab_freq_dict = json.load(file)
             file.close()
         categorical_vocab = CategoricalVocabulary()
         for word in self._vocab_freq_dict:
             categorical_vocab.add(word, count=self._vocab_freq_dict[word])
-        categorical_vocab.trim(min_frequency=min_frequency,
-                               max_frequency=max_frequency)
+        categorical_vocab.trim(min_frequency=self._min_frequency,
+                               max_frequency=self._max_frequency,
+                               max_vocab_size=self._max_vocab_size)
         categorical_vocab.freeze()
 
         vocab_processor = VocabularyProcessor(
             vocabulary=categorical_vocab,
             max_document_length=self._max_document_length,
-            min_frequency=min_frequency,
+            min_frequency=self._min_frequency,
+            max_frequency=self._max_frequency,
+            max_vocab_size=self._max_vocab_size,
             tokenizer_fn=tokenizer)
 
         if self._padding is True:
@@ -344,7 +364,7 @@ class Dataset:
         self._token_list = [list(i) for i in self._token_list]
         return vocab_processor.vocabulary_
 
-    def write_examples(self, file_name, split_index, write_bow, write_tfidf, labeled):
+    def write_examples(self, file_name, split_index, labeled):
         # write to TFRecord data file
         tf.logging.info("Writing to: %s", file_name)
         with tf.python_io.TFRecordWriter(file_name) as writer:
@@ -387,7 +407,7 @@ class Dataset:
                 feature['types_length'] = tf.train.Feature(
                     int64_list=tf.train.Int64List(value=[len(types)]))
 
-                if write_bow:
+                if self._write_bow:
                     # print("???", type(bag_of_words(
                     #     self._token_list[index],
                     #     self._vocab_size).tolist()))
@@ -400,7 +420,7 @@ class Dataset:
                                 self._token_list[index],
                                 self._vocab_size).tolist()))
 
-                if write_tfidf:
+                if self._write_tfidf:
                     feature['tfidf'] = tf.train.Feature(
                         float_list=tf.train.FloatList(
                             value=self._tfidf_list[index]
@@ -552,11 +572,19 @@ def combine_dicts(x, y):
             set(itertools.chain(x, y))}
 
 
-def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
-                              max_document_length=-1, min_frequency=0,
-                              max_frequency=-1, train_ratio=TRAIN_RATIO,
-                              valid_ratio=VALID_RATIO, subsample_ratio=1,
-                              padding=False, write_bow=False, write_tfidf=False):
+def merge_dict_write_tfrecord(json_dirs,
+                              tfrecord_dirs,
+                              merged_dir,
+                              max_document_length=-1,
+                              max_vocab_size=None,
+                              min_frequency=0,
+                              max_frequency=-1,
+                              train_ratio=TRAIN_RATIO,
+                              valid_ratio=VALID_RATIO,
+                              subsample_ratio=1,
+                              padding=False,
+                              write_bow=False,
+                              write_tfidf=False):
     """
     1. generate and save vocab dictionary which contains all the words(
     cleaned) for each dataset
@@ -574,10 +602,11 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
         dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
                           vocab_dir=merged_dir,
                           max_document_length=-1,
+                          max_vocab_size=float('inf'),
                           min_frequency=0,
                           max_frequency=-1,
                           generate_basic_vocab=True,
-                          load_vocab=False,
+                          vocab_given=False,
                           generate_tf_record=False)
         max_document_lengths.append(dataset.max_document_length)
 
@@ -615,9 +644,10 @@ def merge_dict_write_tfrecord(json_dirs, tfrecord_dirs, merged_dir,
                           tfrecord_dir=tfrecord_dir,
                           vocab_dir=merged_dir,
                           generate_basic_vocab=False,
-                          load_vocab=True,
+                          vocab_given=True,
                           generate_tf_record=True,
                           max_document_length=max_document_length,
+                          max_vocab_size=max_vocab_size,
                           min_frequency=min_frequency,
                           max_frequency=max_frequency,
                           train_ratio=train_ratio,
