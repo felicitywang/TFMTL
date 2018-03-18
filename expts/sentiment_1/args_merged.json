@@ -1,5 +1,6 @@
 {
     "max_document_length": -1,
+    "max_vocab_size": 10000,
     "min_frequency": 50,
     "max_frequency": -1,
     "label_field_name": "label",
@@ -11,5 +12,6 @@
     "random_seed": 42,
     "subsample_ratio": 1,
     "padding": false,
-    "write_bow": false
+    "write_bow": false,
+    "write_tfidf": false
 }

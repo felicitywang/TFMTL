@@ -3,7 +3,8 @@
 type|name|#items|#labels|unit|summary|split|unlabeled
 ---|---|---|---|---|---|---|---
 sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210|none
-sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000|50,000
+sentiment|RTC|43,800|2|sentence|Rotten Tomatoes critic movie reviews|train:test=43,600,2000|none
+sentiment|RTU|739,903|2|paragraph|Rotten Tomatoes user movie reviews|train:test=737,903:2000|none
 
 ## requirements
 
@@ -15,10 +16,10 @@ See `../../requirement.txt`
 - `args_merged`: arguments for the datasets that use the shared vocabulary
 - `write_tfrecord_single.py`: python script to generate TFRecord files for the single dataset(without share vocabulary)
 - `args_SSTb`: arguments for the dataset SSTb
-- `args_LMRD`: arguments for the dataset LMRD
+- `args_RTC`: arguments for the dataset RTC
 - `data/raw/`: downloaded/unzipped original data files
 - `data/json/`: converted json data and basic vocabulary of the dataset
-- `data/tf/merged/SSTb_LMRD/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
+- `data/tf/merged/SSTb_RTC/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency
     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -40,10 +41,11 @@ See `../../requirement.txt`
 1. modify arguments in `args_merged.json`
 2. run `setup.sh` to generate TFRecord files with merged vocabulary
 3. (optional)
-    - modify arguments in `args_SSTb.json` or `args_LMRD.json`
+    - modify arguments in `args_SSTb.json`, `args_IMDB.json` or `args_RTU.json`
     - generate TFRecord files for the single datasetrun by
         - `python ../scripts/write_tfrecords_single.py SSTb`
-        - `python ../scripts/write_tfrecords_single.py LMRD`
+        - `python ../scripts/write_tfrecords_single.py IMDB`
+        - `python ../scripts/write_tfrecords_single.py RTU`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)
@@ -59,27 +61,12 @@ See `../../requirement.txt`
 - `write_bow`: whether to write bag of words in the TFRecord file
 
 
-## file size
-- raw(original):
-    - SSTb: 3.8M
-    - LMRD: 308.3M(zipped: 84M)
-- json:
-    - SSTb: 1M
-    - LMRD: 30M
-- tf:
-    - min_freq=0, write_bow=true
-        - SSTb: 4.7G
-        - LMRD: 20G
-    - min_freq=50, write_bow=true
-        - SSTb: 309M
-        - LMRD: 1.3G
-
-
 ## MLP baseline
 type|dataset|accuracy|min_freq
 ---|---|---|---
-sentiment|SSTb|40.7240%|1
-sentiment|LMRD|89.0160%|50
+sentiment|SSTb|?|1
+sentiment|IMDB|?|?
+sentiment|RTU|?|?
 
 ### hyperparameters:
 - learning rate: 0.0001
@@ -104,11 +91,8 @@ https://nlp.stanford.edu/sentiment/code.html
 others:
 https://github.com/magizbox/underthesea/wiki/DATA-SST
 
-- LMRD:
+- IMDB:
+?
 
-NgramCNN: 91.2%
-http://porto.polito.it/2695485/1/ErionCanoIcgda2018_CR.pdf
-
-original: 88.89%
-http://ai.stanford.edu/~amaas/data/sentiment/
-
+- RTU:
+?

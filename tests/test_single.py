@@ -175,7 +175,7 @@ def main(_):
             FLAGS.max_freq)
 
         dataset = Dataset(json_dir=FLAGS.data_dir,
-                          load_vocab=False,
+                          vocab_given=False,
                           generate_basic_vocab=False,
                           generate_tf_record=True,
                           vocab_dir=tfrecord_dir,
