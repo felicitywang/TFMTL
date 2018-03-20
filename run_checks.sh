@@ -10,6 +10,6 @@ flake8 mtl/mlvae
 flake8 mtl/hparams.py
 flake8 mtl/io.py
 
-python setup.py test
+pytest
 
 echo "All checks pass!"
