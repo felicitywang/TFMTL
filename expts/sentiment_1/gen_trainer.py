@@ -24,6 +24,7 @@ import argparse as ap
 from six.moves import xrange
 from time import time
 from collections import Counter
+from collections import defaultdict
 from itertools import product
 import numpy as np
 import tensorflow as tf
@@ -66,7 +67,7 @@ SSTb_NUM_LABEL = 5
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='joint',
+  p.add_argument('--model', type=str, default='normal',
                  choices=['simple', 'normal', 'joint'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
@@ -77,20 +78,20 @@ def parse_args():
   p.add_argument('--no-unlabeled', action='store_false', dest='unlabeled',
                  help="No unlabeled data")
   p.set_defaults(unlabeled=False)
-  p.add_argument('--alpha', default=0.75, type=float,
+  p.add_argument('--alpha', default=0.50, type=float,
                  help='Weight placed on the discriminative terms [0, 1.0]')
-  p.add_argument('--encoder-arch', default="conv_max_untied",
+  p.add_argument('--encoder-arch', default="conv_max_tied",
                  choices=["conv_max_tied", "conv_max_untied"],
                  help="Type of encoder to use for each task.")
-  p.add_argument('--decoder-arch', default="cnn_unigram",
+  p.add_argument('--decoder-arch', default="bow_tied",
                  choices=["bow_untied", "bow_tied", "cnn_unigram",
                           "shallow_cnn_unigram"],
                  help="Type of decoder to use for each task.")
   p.add_argument('--y-prediction', default="deterministic",
                  choices=['deterministic', 'sampled'],
                  help="Method for test-time prediction")
-  p.add_argument('--y-inference', default="sample",
-                 choices=['sample', 'sum'],
+  p.add_argument('--y-inference', default="exact",
+                 choices=['exact', 'sample'],
                  help="How to infer latent labels")
   p.add_argument('--label-prior-type', default="uniform",
                  choices=["uniform", "learned", "fixed"],
@@ -99,7 +100,7 @@ def parse_args():
                  help='Size of evaluation batch.')
   p.add_argument('--word-embed-dim', default=256, type=int,
                  help='Word embedding size')
-  p.add_argument('--latent-dim', default=256, type=int,
+  p.add_argument('--latent-dim', default=128, type=int,
                  help='Latent embedding dimensionality')
   p.add_argument('--mlp-hidden-dim', default=512, type=int,
                  help='Size of the MLP hidden layers.')
@@ -237,8 +238,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
   loss = model.get_multi_task_loss(train_batches)
-  g_loss = model.get_generative_loss()
-  d_loss = model.get_discriminative_loss()
+  SSTb_g_loss = model.get_generative_loss('SSTb')
+  IMDB_g_loss = model.get_generative_loss('IMDB')
+  SSTb_d_loss = model.get_discriminative_loss('SSTb')
+  IMDB_d_loss = model.get_discriminative_loss('IMDB')
   SSTb_loss = model.get_task_loss('SSTb')
   IMDB_loss = model.get_task_loss('IMDB')
 
@@ -269,8 +272,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
       # Take steps_per_epoch gradient steps
       total_loss = 0.0
-      total_g_loss = 0.0
-      total_d_loss = 0.0
+      total_g_loss = defaultdict(float)
+      total_d_loss = defaultdict(float)
       total_SSTb_loss = 0.0
       total_IMDB_loss = 0.0
       num_iter = 0
@@ -278,8 +281,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         vals = sess.run([
           global_step_tensor,
           loss,
-          g_loss,
-          d_loss,
+          SSTb_g_loss,
+          IMDB_g_loss,
+          SSTb_d_loss,
+          IMDB_d_loss,
           SSTb_loss,
           IMDB_loss,
           model.obs_label('SSTb'),
@@ -291,26 +296,26 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         num_iter += 1
         step = vals[0]
         total_loss += vals[1]
-        total_g_loss += vals[2]
-        total_d_loss += vals[3]
-        total_SSTb_loss += vals[4]
-        total_IMDB_loss += vals[5]
+        total_g_loss['SSTb'] += vals[2]
+        total_g_loss['IMDB'] += vals[3]
+        total_d_loss['SSTb'] += vals[4]
+        total_d_loss['IMDB'] += vals[5]
+        total_SSTb_loss += vals[6]
+        total_IMDB_loss += vals[7]
 
         # Update joint dists
-        SSTb_obs = ['obs_%d' % x for x in vals[6].tolist()]
-        SSTb_lat = ['lat_%d' % x for x in vals[8].tolist()]
+        SSTb_obs = ['obs_%d' % x for x in vals[8].tolist()]
+        SSTb_lat = ['lat_%d' % x for x in vals[10].tolist()]
         events['SSTb'] += Counter(zip(SSTb_obs, SSTb_lat))
 
-        IMDB_obs = ['obs_%d' % x for x in vals[7].tolist()]
-        IMDB_lat = ['lat_%d' % x for x in vals[9].tolist()]
+        IMDB_obs = ['obs_%d' % x for x in vals[9].tolist()]
+        IMDB_lat = ['lat_%d' % x for x in vals[11].tolist()]
         events['IMDB'] += Counter(zip(IMDB_obs, IMDB_lat))
 
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
       train_loss = total_loss / float(num_iter)
-      train_g_loss = total_g_loss / float(num_iter)
-      train_d_loss = total_d_loss / float(num_iter)
       train_SSTb_loss = total_SSTb_loss / float(num_iter)
       train_IMDB_loss = total_IMDB_loss / float(num_iter)
 
@@ -330,11 +335,18 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         elapsed = end_time - start_time
 
         # Log performance(s)
-        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%.2f g_loss=%.2f d_loss=%.4f' % (
+        str_ = '[epoch=%d/%d step=%d (%d s)] loss=%.2f' % (
           epoch+1, args.num_train_epochs, np.asscalar(step), elapsed,
-          train_loss, train_g_loss, train_d_loss)
+          train_loss)
         str_ += ' SSTb_loss=%.2f IMDB_loss=%.2f' % (train_SSTb_loss,
                                                     train_IMDB_loss)
+        for dataset_name in model_info:
+          g_loss = total_g_loss[dataset_name] / float(num_iter)
+          d_loss = total_d_loss[dataset_name] / float(num_iter)
+          str_ += ' %s_g_loss=%.2f %s_d_loss=%.4f' % (dataset_name,
+                                                      g_loss,
+                                                      dataset_name,
+                                                      d_loss)
 
         tot_eval_acc = 0.0
         for dataset_name in model_info:
