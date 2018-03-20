@@ -67,7 +67,7 @@ SSTb_NUM_LABEL = 5
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='simple',
+  p.add_argument('--model', type=str, default='normal',
                  choices=['simple', 'normal', 'joint'], help='Model to use.')
   p.add_argument('--test', action='store_true', default=False,
                  help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
@@ -90,8 +90,8 @@ def parse_args():
   p.add_argument('--y-prediction', default="deterministic",
                  choices=['deterministic', 'sampled'],
                  help="Method for test-time prediction")
-  p.add_argument('--y-inference', default="sample",
-                 choices=['sample', 'sum'],
+  p.add_argument('--y-inference', default="exact",
+                 choices=['exact', 'sample'],
                  help="How to infer latent labels")
   p.add_argument('--label-prior-type', default="uniform",
                  choices=["uniform", "learned", "fixed"],

@@ -121,6 +121,17 @@ class ProbTests(tf.test.TestCase):
     for e in events:
       self.assertEqual(e[0], 1)
 
+    batch_size = 2
+    cond = {'x': tf.constant([0, 4], dtype=tf.int32)}
+    events = enum(sizes, cond_vals=cond)
+    with self.test_session() as sess:
+      for e in events:
+        assert type(e[0]) is tf.Tensor
+        assert type(e[1]) is tf.Tensor
+        e0, e1 = sess.run(e)
+        self.assertEqual(e0[0], 0)
+        self.assertEqual(e0[1], 4)
+        self.assertEqual(len(e1), 2)
 
   def test_unflat_and_normalize(self):
     batch_size = 2

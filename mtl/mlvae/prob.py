@@ -30,17 +30,39 @@ def entropy(logits):
   return -tf.reduce_sum(p * lp, axis=1)
 
 
-def enum_events(class_sizes, cond_vals=None, return_dict=False):
+def enum_events(class_sizes, cond_vals=None):
   assert type(class_sizes) is OrderedDict
   lists = []
+  batch_cond = True
+  batch_size = None
+  first_cond_val = None
+  if cond_vals is not None:
+    vs = cond_vals.values()
+    assert len(vs) > 0
+    if type(vs[0]) is int:
+      batch_cond = False
+    else:
+      first_cond_val = vs[0]
+      batch_size = tf.shape(first_cond_val)[0]
+
   for k, v in class_sizes.items():
     if cond_vals is not None and k in cond_vals:
       cond_val = cond_vals[k]
       lists.append([cond_val])
     else:
       lists.append(list(xrange(v)))
-  return list(product(*lists))
 
+  events = [list(e) for e in list(product(*lists))]
+
+  if cond_vals is not None and batch_cond is True:
+    assert first_cond_val is not None
+    for i in xrange(len(events)):  # each event is a tuple (val0, val1, ...)
+      for j in xrange(len(events[i])):
+        if type(events[i][j]) is int:
+          y = events[i][j]
+          events[i][j] = tf.ones_like(first_cond_val) * y
+
+  return events
 
 def normalize_logits(logits, dims=None):
   assert len(logits.get_shape()) == 2

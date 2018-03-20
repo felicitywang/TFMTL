@@ -24,7 +24,8 @@ import tensorflow as tf
 
 from mtl.layers import dense_layer
 from mtl.layers import mlp
-
+from mtl.mlvae.prob import enum_events
+from mtl.mlvae.prob import entropy
 from mtl.mlvae.vae import gaussian_sample
 from mtl.mlvae.vae import get_tau
 from mtl.mlvae.vae import log_normal
@@ -225,7 +226,7 @@ class MultiLabelVAE(object):
     probs = tf.nn.softmax(logits)
     return tf.argmax(probs, axis=1)
 
-  def get_multi_task_loss(self, task_batches):
+  def get_multi_task_loss(self, task_batches, unlabeled_batches=None):
     losses = []
     self._latent_preds = {}
     self._obs_label = {}
@@ -243,7 +244,13 @@ class MultiLabelVAE(object):
       else:
         raise ValueError("bad loss combination type: %s" %
                          (self.hp.loss_reduce))
-    return tf.add_n(losses, name='combined_mt_loss')
+
+    total_loss = tf.add_n(losses, name='combined_mt_loss')
+
+    if self.hp.loss_reduce == "even":
+      return total_loss / float(len(losses))
+    else:
+      raise ValueError('unimplemented')
 
   def get_loss(self, task_name, labels, batch):
     features = self.encode(batch, task_name)
@@ -260,6 +267,8 @@ class MultiLabelVAE(object):
 
     # Discriminative loss
     nll_ys = []
+    zm, zv = self.qz_mean_var(task_name, features)
+    z = gaussian_sample(zm, zv)
     for label_key, label_val in labels.items():
       if label_val is not None:
         nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -274,7 +283,7 @@ class MultiLabelVAE(object):
     assert a >= 0.0 and a <= 1.0, a
     return (1. - a) * g_loss + (a * d_loss)
 
-  def get_exact_loss(self, task_name, labels, batch, features):
+  def get_exact_generative_loss(self, task_name, labels, batch, features):
     assert type(labels) is OrderedDict
     self._latent_preds[task_name] = {}
     ys = {}
@@ -290,9 +299,9 @@ class MultiLabelVAE(object):
     # Set up observed / latent variables
     obs_label = None
     for label_key, label_val in labels.items():
+      py_logits[label_key] = self.py_logits(label_key, z)
       if label_val is None:
         qy_logits[label_key] = self.qy_logits(label_key, features, z)
-        py_logits[label_key] = self.py_logits(label_key, z)
         preds = tf.argmax(tf.nn.softmax(qy_logits[label_key]), axis=1)
         self._latent_preds[task_name][label_key] = preds
       else:
@@ -302,48 +311,67 @@ class MultiLabelVAE(object):
 
     # Loop over all possible events conditioning on observed ones
     assert obs_label is not None
-    events = enum_events(self.class_sizes, cond_vals=obs_label)
+    events = enum_events(self.class_sizes, cond_vals={task_name: obs_label})
+
+    #print('events:')
+    #print(events)
 
     def labeled_loss(e):
-      ys = dict(zip(labels.keys(), e))
-      assert len(ys) == py_logits
-      assert len(ys) == qy_logits
+      assert type(e) is list
+      ys = OrderedDict(zip(labels.keys(), e))
+      onehot_ys = []
+      for k, v in ys.items():
+        size = self.class_sizes[k]
+        onehot_ys += [tf.one_hot(v, size)]
+      #print('ys: %s' % ys)
+      #print('py_logits: %s' % py_logits)
+      #print('qy_logits: %s' % qy_logits)
+      assert len(ys) == len(py_logits)
+      assert len(ys) == len(qy_logits) + 1
       nll_ys = []
-      for k, label in ys:
+      for k, label in ys.items():
+        assert type(label) is tf.Tensor
         nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
           logits=py_logits[k],
-          labels=ys[k]
+          labels=label
         )]
       assert len(nll_ys) > 0
       nll_y = tf.add_n(nll_ys)
       kl_z = log_normal(z, zm, zv) - log_normal(z, zm_prior, zv_prior)
+      markov_blanket = tf.concat(onehot_ys, axis=1)
       nll_x = self.decode(batch, markov_blanket, task_name)
       return nll_x + nll_y + kl_z
 
     losses = []
     batch_size = tf.shape(features)[0]
     for e in events:
-      # ln q(e) = ln q(e[0]) + ... + ln q(e[K])
       nll_qys = []
-      for v in e:
-        nll_qys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
-          logits=qy_logits[k],
-          labels=tf.ones([batch_size], dtype=tf.int32) * v
-        )]
+      i = 0
+      for label_key, label_val in labels.items():
+        if label_val is None:  # latent variable
+          enum_val = e[i]
+          nll_qys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
+            logits=qy_logits[label_key],
+            labels=enum_val
+          )]
+        i += 1
+
+      assert len(nll_qys) > 0
       nll_qy = tf.add_n(nll_qys) # qy logits are independent
-      qy_prob = -tf.exp(nll_qy)
+      qy_prob = tf.exp(nll_qy)  # TODO(noa): negative sign here?
       losses += [qy_prob * labeled_loss(e)]
-
+    entropies = []
     for k, v in labels.items():
-      tf.nn.softmax()
-
-    loss = tf.add_n(losses + label_entropy)
-
+      if v is None:
+        entropies.append(entropy(qy_logits[k]))
+    assert len(entropies) > 0
+    self._label_entropy = label_entropy = tf.add_n(entropies)
+    g_loss = tf.add_n(losses + [-label_entropy])
     assert len(g_loss.get_shape().as_list()) == 1
     self._g_loss[task_name] = g_loss = tf.reduce_mean(g_loss)
     return g_loss
 
-  def get_sampled_loss(self, task_name, labels, batch, features):
+  def get_sampled_generative_loss(self, task_name, labels, batch, features):
     self._latent_preds[task_name] = {}
     ys = {}
     qy_logits = {}
@@ -401,9 +429,17 @@ class MultiLabelVAE(object):
     return self._latent_preds[task_name][label_name]
 
   @property
+  def class_sizes(self):
+    return self._class_sizes
+
+  @property
   def hp(self):
     return self._hp
 
   @property
   def tau(self):
     return self._tau
+
+  @property
+  def label_entropy(self):
+    return self._label_entropy
