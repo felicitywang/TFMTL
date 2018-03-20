@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import xrange
 from collections import OrderedDict
 
 import tensorflow as tf
@@ -32,10 +31,7 @@ from mtl.vae.common import gaussian_sample
 from mtl.vae.common import get_tau
 
 logging = tf.logging
-
-Categorical = tf.contrib.distributions.Categorical
-ExpRelaxedOneHotCategorical = tf.contrib.distributions.ExpRelaxedOneHotCategorical
-kl_divergence = tf.contrib.distributions.kl_divergence
+tfd = tf.contrib.distributions
 
 
 def default_hparams():
@@ -61,9 +57,11 @@ def generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
     qy_logit = qy_logits[label_key]
     py_logit = py_logits[label_key]
     if label_val is None:
-      qcat = Categorical(logits=qy_logit, name='qy_cat_{}'.format(label_key))
-      pcat = Categorical(logits=py_logit, name='py_cat_{}'.format(label_key))
-      kl_ys += [kl_divergence(qcat, pcat)]
+      qcat = tfd.Categorical(logits=qy_logit,
+                             name='qy_cat_{}'.format(label_key))
+      pcat = tfd.Categorical(logits=py_logit,
+                             name='py_cat_{}'.format(label_key))
+      kl_ys += [tfd.kl_divergence(qcat, pcat)]
     else:
       nll_ys += [tf.nn.sparse_softmax_cross_entropy_with_logits(
         logits=py_logit,
@@ -106,8 +104,6 @@ class SimpleMultiLabelVAE(object):
     self._task_nll_x = dict()
     self._task_loss = dict()
 
-    ########################### Generative Networks ###########################
-
     # p(y_1), ..., p(y_K)
     self._py_templates = dict()
 
@@ -136,8 +132,6 @@ class SimpleMultiLabelVAE(object):
                                          hidden_dim=hp.mlp_hidden_dim,
                                          latent_dim=hp.latent_dim)
 
-    ########################### Inference Networks ############################
-
     # q(y_1 | x), ..., q(y_K | x)
     self._qy_templates = dict()
     for k, v in class_sizes.items():
@@ -152,8 +146,6 @@ class SimpleMultiLabelVAE(object):
                                          hidden_dim=hp.mlp_hidden_dim,
                                          latent_dim=hp.latent_dim)
 
-
-    # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
   def py_logits(self, label_key):
@@ -169,9 +161,9 @@ class SimpleMultiLabelVAE(object):
     return self._qz_template([features] + ys)
 
   def sample_y(self, logits, name):
-    log_qy = ExpRelaxedOneHotCategorical(self._tau,
-                                         logits=logits,
-                                         name='log_qy_{}'.format(name))
+    log_qy = tfd.ExpRelaxedOneHotCategorical(self._tau,
+                                             logits=logits,
+                                             name='log_qy_{}'.format(name))
     y = tf.exp(log_qy.sample())
     return y
 

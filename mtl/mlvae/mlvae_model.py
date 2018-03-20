@@ -139,8 +139,6 @@ class MultiLabelVAE(object):
     self._task_nll_x = dict()
     self._task_loss = dict()
 
-    ########################### Generative Networks ###########################
-
     # p(z | task)
     def gaussian_prior():
       zm = tf.get_variable("mean", shape=[hp.latent_dim], trainable=True,
@@ -170,8 +168,6 @@ class MultiLabelVAE(object):
         output_size=label_size,
         hidden_dim=hp.py_mlp_hidden_dim,
         num_layer=hp.py_mlp_num_layer)
-
-    ########################### Inference Networks ############################
 
     # q(y_1 | z), ..., q(y_K | z)
     self._qy_templates = dict()
@@ -289,7 +285,7 @@ class MultiLabelVAE(object):
   def get_exact_generative_loss(self, task_name, labels, batch, features):
     assert type(labels) is OrderedDict
     self._latent_preds[task_name] = {}
-    ys = {}
+
     qy_logits = {}
     py_logits = {}
     batch_size = tf.shape(features)[0]
@@ -316,9 +312,6 @@ class MultiLabelVAE(object):
     assert obs_label is not None
     events = enum_events(self.class_sizes, cond_vals={task_name: obs_label})
 
-    #print('events:')
-    #print(events)
-
     def labeled_loss(e):
       assert type(e) is list
       ys = OrderedDict(zip(labels.keys(), e))
@@ -326,9 +319,7 @@ class MultiLabelVAE(object):
       for k, v in ys.items():
         size = self.class_sizes[k]
         onehot_ys += [tf.one_hot(v, size)]
-      #print('ys: %s' % ys)
-      #print('py_logits: %s' % py_logits)
-      #print('qy_logits: %s' % qy_logits)
+
       assert len(ys) == len(py_logits)
       assert len(ys) == len(qy_logits) + 1
       nll_ys = []
@@ -360,7 +351,7 @@ class MultiLabelVAE(object):
         i += 1
 
       assert len(nll_qys) > 0
-      nll_qy = tf.add_n(nll_qys) # qy logits are independent
+      nll_qy = tf.add_n(nll_qys)  # qy logits are independent
       qy_prob = tf.exp(nll_qy)  # TODO(noa): negative sign here?
       losses += [qy_prob * labeled_loss(e)]
     entropies = []

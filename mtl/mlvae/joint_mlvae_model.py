@@ -17,11 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import xrange
 from operator import mul
 from operator import itemgetter
-from itertools import product
 from collections import OrderedDict
+from functools import reduce
 
 import tensorflow as tf
 
@@ -42,6 +41,7 @@ from mtl.vae.common import get_tau
 
 logging = tf.logging
 tfd = tf.contrib.distributions
+
 
 def default_hparams():
   return HParams(qy_mlp_hidden_dim=512,
@@ -145,8 +145,6 @@ class JointMultiLabelVAE(object):
     self._task_nll_x = dict()
     self._task_loss = dict()
 
-    ########################### Generative Networks ###########################
-
     output_size = reduce(mul, class_sizes.values())
     tf.logging.info("Full size of event space of joint distribution: %d",
                     output_size)
@@ -207,8 +205,6 @@ class JointMultiLabelVAE(object):
                                             hidden_dim=hp.pz_mlp_hidden_dim,
                                             num_layer=hp.pz_mlp_num_layer)
 
-    ########################### Inference Networks ############################
-
     # ln q(y_1, ..., y_K | x)
     self._ln_qy_template = tf.make_template('qy',
                                             joint_posterior_logits,
@@ -252,15 +248,11 @@ class JointMultiLabelVAE(object):
   def qy_given_x_logits(self, log_joint_normalized, target_index, cond_index,
                         cond_val=None):
     batch_size = tf.shape(log_joint_normalized)[0]
-    #tf.logging.info('log joint normalized: %s', log_joint_normalized)
     logits = conditional_log_prob(log_joint_normalized, target_index,
                                   cond_index)
-    #tf.logging.info('target index: %d', target_index)
-    #tf.logging.info('cond index: %s', cond_index)
     if cond_val is not None:
       with tf.name_scope('conditioning'):
         # TODO(noa): test case this
-        final_dim = logits.get_shape()[-1]
         indices = tf.stack([tf.range(batch_size),
                             tf.to_int32(cond_val)], axis=1)
         logits = tf.gather_nd(logits, indices)
@@ -315,7 +307,6 @@ class JointMultiLabelVAE(object):
                                 log_joint, batch):
     assert type(labels) is OrderedDict
     self._latent_preds[task_name] = {}
-    ys = {}
     qy_logits = {}
     py_logits = {}
     batch_size = tf.shape(features)[0]
@@ -496,25 +487,7 @@ class JointMultiLabelVAE(object):
       raise ValueError('unimplemented')
 
   def get_unlabeled_loss(self, task_name, batch):
-    # Encode the inputs using a task-specific encoder
-    features = self.encode(batch, task_name)
-
-    # Get normalized log q(y_1, ..., y_K | x)
-    logits = self.joint_logits(features)
-    class_dims = self.class_sizes.values()
-    log_joint = normalize_logits(logits, dims=class_dims)
-
-    raise ValueError("unimplemented")
-
-    if self.hp.y_inference == "exact":
-      raise ValueError("unimplemented")
-    else:
-      g_loss = self.get_sample_generative_loss(task_name, labels,
-                                               features,
-                                               log_joint, batch)
-
-    assert len(g_loss.get_shape().as_list()) == 1
-    self._u_loss[task_name] = g_loss = tf.reduce_mean(g_loss)
+    raise ValueError('unimplemented')
 
   def get_loss(self, task_name, labels, batch):
     # Encode the inputs using a task-specific encoder
