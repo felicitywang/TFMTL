@@ -30,15 +30,15 @@ from tensorflow.contrib.training import HParams
 from mtl.layers import dense_layer
 from mtl.layers import mlp
 
-from mtl.mlvae.prob import enum_events
-from mtl.mlvae.prob import entropy
-from mtl.mlvae.prob import normalize_logits
-from mtl.mlvae.prob import marginal_log_prob
-from mtl.mlvae.prob import conditional_log_prob
+from mtl.vae.prob import enum_events
+from mtl.vae.prob import entropy
+from mtl.vae.prob import normalize_logits
+from mtl.vae.prob import marginal_log_prob
+from mtl.vae.prob import conditional_log_prob
 
-from mtl.mlvae.vae import log_normal
-from mtl.mlvae.vae import gaussian_sample
-from mtl.mlvae.vae import get_tau
+from mtl.vae.common import log_normal
+from mtl.vae.common import gaussian_sample
+from mtl.vae.common import get_tau
 
 logging = tf.logging
 tfd = tf.contrib.distributions

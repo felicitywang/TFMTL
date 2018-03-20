@@ -27,9 +27,9 @@ from tensorflow.contrib.training import HParams
 from mtl.util.common import MLP_gaussian_posterior
 from mtl.util.common import MLP_unnormalized_log_categorical
 
-from mtl.mlvae.vae import log_normal
-from mtl.mlvae.vae import gaussian_sample
-from mtl.mlvae.vae import get_tau
+from mtl.vae.common import log_normal
+from mtl.vae.common import gaussian_sample
+from mtl.vae.common import get_tau
 
 logging = tf.logging
 
