@@ -3,11 +3,8 @@ set -e
 
 mkdir -p data/raw/SSTb
 mkdir -p data/json/SSTb
-mkdir -p data/raw/IMDb
-mkdir -p data/json/IMDb
-mkdir -p data/raw/RTU
-mkdir -p data/json/RTU
-
+mkdir -p data/raw/SUBJ
+mkdir -p data/json/SUBJ
 
 echo "Downloading the SSTb data..."
 wget -nc https://nlp.stanford.edu/sentiment/trainDevTestTrees_PTB.zip
@@ -23,39 +20,24 @@ mv -f index.json.gz data/json/SSTb/
 
 cp ../../datasets/sentiment/SSTb/label.json ./label_SSTb.json -f
 
-echo "Downloading the IMDb data..."
-wget -nc http://ugrad.cs.jhu.edu/~fxwang/imdb.tar.gz
+echo "Downloading the SUBJ data..."
+wget -nc http://www.cs.cornell.edu/people/pabo/movie-review-data/rotten_imdb.tar.gz
 
-tar zxvf imdb.tar.gz
-mv -f imdb.tar.gz data/raw/IMDb/
+echo "Untarring the SUBJ data..."
+mkdir -p rotten_imdb/
+tar -zxvf rotten_imdb.tar.gz -C rotten_imdb/
+mv -f rotten_imdb.tar.gz data/raw/SUBJ/
+iconv -f MACCYRILLIC -t UTF-8 < rotten_imdb/quote.tok.gt9.5000 > tmp
+mv -f tmp rotten_imdb/quote.tok.gt9.5000
 
-echo "Converting the IMDb data to json..."
-python3 ../../datasets/sentiment/IMDb/convert_IMDb_to_JSON.py ./
-mv -f imdb data/raw/IMDb/
-mv -f data.json.gz data/json/IMDb/
-mv -f index.json.gz data/json/IMDb/
+echo "Converting the SUBJ data to json..."
+python3 ../../datasets/sentiment/SUBJ/convert_SUBJ_to_JSON.py ./
 
-cp ../../datasets/sentiment/IMDb/label.json ./label_IMDb.json -f
+mv -f rotten_imdb/ data/raw/SUBJ/
+mv -f data.json.gz data/json/SUBJ/
 
-
-echo "Downloading the RTU data..."
-wget -nc http://ugrad.cs.jhu.edu/~fxwang/rtu.tar.gz
-
-echo "Untarring the RTU data..."
-tar -zxvf rtu.tar.gz
-mv -f rtu.tar.gz data/raw/RTU/
-#rm -fr aclImdb_v1.tar.gz
-
-echo "Converting the RTU data to json..."
-python3 ../../datasets/sentiment/RTU/convert_RTU_to_JSON.py ./
-
-cp ../../datasets/sentiment/RTU/label.json ./label_RTU.json -f
-
-mv -f rtu/ data/raw/RTU/
-mv -f data.json.gz data/json/RTU/
-mv -f index.json.gz data/json/RTU/
-
+cp ../../datasets/sentiment/SUBJ/label.json ./label_SSTb.json -f
 
 mkdir -p data/tf/merged
-python ../scripts/write_tfrecords_merged.py SSTb IMDb RTU
 echo "Generating TFRecord files..."
+python ../scripts/write_tfrecords_merged.py SSTb SUBJ

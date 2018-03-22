@@ -91,7 +91,7 @@ class CategoricalVocabulary(object):
             return
         self._freq[category] += count
 
-    def trim(self, min_frequency, max_frequency=-1):
+    def trim(self, min_frequency, max_frequency=-1, max_vocab_size=None):
         """Trims vocabulary for minimum frequency.
 
         Remaps ids from 1..n in sort frequency order.
@@ -103,6 +103,8 @@ class CategoricalVocabulary(object):
             Useful to remove very frequent categories (like stop words).
         """
         # Sort by alphabet then reversed frequency.
+        if not max_vocab_size:
+            max_vocab_size = int('inf')
         self._freq = sorted(
             sorted(
                 six.iteritems(self._freq),
@@ -113,6 +115,7 @@ class CategoricalVocabulary(object):
         if self._support_reverse:
             self._reverse_mapping = [self._unknown_token]
         idx = 1
+        vocab_size = 0
         for category, count in self._freq:
             if 0 < max_frequency <= count:
                 continue
@@ -122,6 +125,9 @@ class CategoricalVocabulary(object):
             idx += 1
             if self._support_reverse:
                 self._reverse_mapping.append(category)
+            vocab_size += 1
+            if vocab_size == max_vocab_size:
+                break
         self._freq = dict(self._freq[:idx - 1])
 
     def reverse(self, class_id):
