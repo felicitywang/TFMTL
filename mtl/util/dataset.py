@@ -115,15 +115,21 @@ class Dataset:
 
         self._padding = padding
         self._write_bow = write_bow
-        self._write_tfidf = tfidf
+        self._write_tfidf = write_tfidf
 
         print("data in", json_dir)
 
-        with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt', encoding='utf-8') as file:
+        # with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt',
+        #                encoding='utf-8') as file:
+        #     data = json.load(file, encoding='utf-8')
+        #     file.close()
+        with gzip.open(os.path.join(json_dir, "data.json.gz"),
+                       mode='rt') as file:
             data = json.load(file, encoding='utf-8')
             file.close()
         self._label_list = [int(
-            item[label_field_name]) if label_field_name in item else None for item in data]
+            item[label_field_name]) if label_field_name in item else None for
+                            item in data]
         self._num_classes = len(set(self._label_list))
 
         # if sys.version_info[0] < 3:
@@ -137,7 +143,8 @@ class Dataset:
                             for text_field_name in text_field_names for
                             item in data]
 
-        self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text in
+        self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text
+                            in
                             self._token_list]
         self._token_length_list = [len(text) for text in
                                    self._token_list]  # length of cleaned text (including EOS)
@@ -150,7 +157,8 @@ class Dataset:
         print("Generating train/valid/test splits...")
         index_path = os.path.join(json_dir, "index.json.gz")
         self._train_index, self._valid_index, self._test_index, self._unlabeled_index \
-            = self.split(index_path, train_ratio, valid_ratio, random_seed, subsample_ratio)
+            = self.split(index_path, train_ratio, valid_ratio, random_seed,
+                         subsample_ratio)
 
         # only compute from training data
         if max_document_length == -1:
@@ -200,7 +208,8 @@ class Dataset:
 
         # generate tfidf list if write_tfidf is True
         if write_tfidf:
-            self._tfidf_list = tfidf(self._token_list, set(self.mapping.values()))
+            self._tfidf_list = tfidf(self._token_list,
+                                     set(self.mapping.values()))
             # self._tfidf_list = tfidf(self._token_list)
 
         # write labeled data to TFRecord files
@@ -248,7 +257,8 @@ class Dataset:
             'valid_size': len(self._valid_index),
             'test_size': len(self._test_index),
             'has_unlabeled': self._has_unlabeled,
-            'unlabeled_path': os.path.abspath(self._unlabeled_path) if self._unlabeled_path is not None else None,
+            'unlabeled_path': os.path.abspath(
+                self._unlabeled_path) if self._unlabeled_path is not None else None,
             'unlabeled_size': len(self._unlabeled_index)
         }
         print(self._args)
@@ -715,7 +725,8 @@ def main():
                      './vocab_test/2/min_0_max_0/',
                      './vocab_test/3/min_0_max_0/']
     merge_dict_write_tfrecord(json_dirs, tfrecord_dirs,
-                              merged_dir="./vocab_test/merged/", write_bow=True, write_tfidf=True)
+                              merged_dir="./vocab_test/merged/",
+                              write_bow=True, write_tfidf=True)
 
 
 if __name__ == '__main__':
