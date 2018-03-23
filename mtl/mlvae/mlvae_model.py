@@ -107,6 +107,7 @@ def posterior_gaussian(x, latent_dim, **kwargs):
 
 class MultiLabelVAE(object):
   def __init__(self,
+               is_training=True,
                class_sizes=None,
                encoders=None,
                decoders=None,
@@ -165,9 +166,10 @@ class MultiLabelVAE(object):
       self._py_templates[label_key] = tf.make_template(
         'py_{}'.format(label_key),
         prior_logits,
+        is_training=is_training,
         output_size=label_size,
-        hidden_dim=hp.py_mlp_hidden_dim,
-        num_layer=hp.py_mlp_num_layer)
+        hidden_dims=hp.py_mlp_hidden_dim,
+        num_layers=hp.py_mlp_num_layer)
 
     # q(y_1 | z), ..., q(y_K | z)
     self._qy_templates = dict()
@@ -175,16 +177,18 @@ class MultiLabelVAE(object):
       self._qy_templates[k] = tf.make_template(
         'qy_{}'.format(k),
         posterior_logits,
+        is_training=is_training,
         output_size=v,
-        hidden_dim=hp.qy_mlp_hidden_dim,
-        num_layer=hp.qy_mlp_num_layer)
+        hidden_dims=hp.qy_mlp_hidden_dim,
+        num_layers=hp.qy_mlp_num_layer)
 
     # q(z | x, task)
     self._qz_template = tf.make_template('qz',
                                          posterior_gaussian,
+                                         is_training=is_training,
                                          latent_dim=hp.latent_dim,
-                                         hidden_dim=hp.qz_mlp_hidden_dim,
-                                         num_layer=hp.qz_mlp_num_layer)
+                                         hidden_dims=hp.qz_mlp_hidden_dim,
+                                         num_layers=hp.qz_mlp_num_layer)
 
     self._tau = get_tau(hp, decay=hp.decay_tau)
 
