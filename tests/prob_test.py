@@ -23,12 +23,13 @@ import tensorflow as tf
 import numpy as np
 from collections import OrderedDict
 from operator import mul
+from six.moves import reduce, xrange
 
-from mtl.mlvae.prob import enum_events as enum
-from mtl.mlvae.prob import normalize_logits
-from mtl.mlvae.prob import marginal_log_prob
-from mtl.mlvae.prob import conditional_log_prob
-from mtl.mlvae.prob import entropy
+from mtl.vae.prob import enum_events as enum
+from mtl.vae.prob import normalize_logits
+from mtl.vae.prob import marginal_log_prob
+from mtl.vae.prob import conditional_log_prob
+from mtl.vae.prob import entropy
 
 
 def slow_marginal(ln_joint_prob, target_dim):
