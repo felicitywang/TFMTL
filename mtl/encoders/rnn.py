@@ -16,7 +16,8 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mtl.util.reducers import *
+from mtl.util.reducers import reduce_max_over_time
+
 
 def rnn_and_pool(inputs,
                  lengths,
@@ -40,6 +41,6 @@ def rnn_and_pool(inputs,
                                      sequence_length=lengths,
                                      time_major=False,
                                      initial_state=initial_state)
-  
+
   # Pooling
   return reducer(outputs, lengths=lengths, time_axis=1)
