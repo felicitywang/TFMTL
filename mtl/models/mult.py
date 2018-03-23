@@ -29,8 +29,8 @@ def validate_labels(feature_dict, class_sizes):
     for k in feature_dict:
         with tf.control_dependencies([
             tf.assert_greater(tf.cast(class_sizes[k], dtype=tf.int64),
-                              tf.cast(tf.reduce_max(feature_dict[k]), dtype=tf.int64)
-                              )]):
+                              tf.cast(tf.reduce_max(feature_dict[k]),
+                                      dtype=tf.int64))]):
             pass
 
 
@@ -61,8 +61,8 @@ class Mult(object):
         self._hps = hps
         # self._args = args
 
-        assert set(class_sizes.keys()) == set(
-            dataset_order)  # all feature names are present and consistent across data structures
+        # all feature names are present and consistent across data structures
+        assert set(class_sizes.keys()) == set(dataset_order)
 
         self._encoders = build_encoders(vocab_size, args, encoder_hps)
 
@@ -78,7 +78,8 @@ class Mult(object):
         return self._encoders[dataset_name](inputs, lengths)
 
     def get_predictions(self, batch, dataset_name):
-        # Returns most likely label given conditioning variables (only run this on eval data)
+        # Returns most likely label given conditioning variables (only
+        # run this on eval data)
         x = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
 
@@ -95,7 +96,8 @@ class Mult(object):
         return res
 
     def get_loss(self, batch, dataset_name, features=None, is_training=True):
-        # Returns most likely label given conditioning variables (only run this on eval data)
+        # Returns most likely label given conditioning variables (only
+        # run this on eval data)
         x = batch[self._hps.input_key]
         input_lengths = batch[self._hps.token_lengths_key]
         labels = batch[self._hps.label_key]
@@ -118,25 +120,31 @@ class Mult(object):
 
         # l2 regularization
         variables = tf.trainable_variables()
-        l2_weight_penalty = tf.add_n([tf.nn.l2_loss(v) for v in variables
-                                      if 'bias' not in v.name]) * self._hps.l2_weight
+        l2_weight_penalty = tf.add_n([
+            tf.nn.l2_loss(v) for v in variables if 'bias' not in v.name
+        ]) * self._hps.l2_weight
+
         loss = tf.reduce_mean(ce) + l2_weight_penalty
 
         return loss
 
     def get_multi_task_loss(self, dataset_batches, is_training):
-        # dataset_batches: map from dataset names to training batches (one batch per dataset)
-        # we assume only one dataset's labels are observed; the rest are unobserved
+        # dataset_batches: map from dataset names to training batches
+        # (one batch per dataset); we assume only one dataset's labels
+        # are observed; the rest are unobserved
 
         losses = dict()
         total_loss = 0.0
         assert len(dataset_batches) == len(self._hps.alphas)
         assert sum(self._hps.alphas) == 1.0
-        for dataset_batch, alpha in zip(dataset_batches.items(), self._hps.alphas):
-            # We assume that the encoders and decoders always use the same fields/features
-            # (given by the keys in the batch accesses below)
+        for dataset_batch, alpha in zip(dataset_batches.items(),
+                                        self._hps.alphas):
+            # We assume that the encoders and decoders always use the
+            # same fields/features (given by the keys in the batch
+            # accesses below)
             dataset_name, batch = dataset_batch
-            loss = self.get_loss(batch=batch, dataset_name=dataset_name, features=None, is_training=is_training)
+            loss = self.get_loss(batch=batch, dataset_name=dataset_name,
+                                 features=None, is_training=is_training)
             total_loss += alpha * loss
             losses[dataset_name] = loss
 
@@ -173,20 +181,21 @@ def build_mlps(hps, is_shared):
         return mlps
     else:
         for dataset in hps.datasets:
-            mlps[dataset] = tf.make_template('mlp_{}'.format(dataset),
-                                             mlp,
-                                             hidden_dims=hps.private_hidden_dims,
-                                             num_layers=hps.private_mlp_layers,
-                                             # TODO from args
-                                             activation=tf.nn.relu,
-                                             # TODO args.dropout_rate to keep_prob
-                                             input_keep_prob=1,
-                                             # TODO ?
-                                             batch_normalization=False,
-                                             # TODO ?
-                                             layer_normalization=False,
-                                             output_keep_prob=hps.output_keep_prob,
-                                             )
+            mlps[dataset] = tf.make_template(
+                'mlp_{}'.format(dataset),
+                mlp,
+                hidden_dims=hps.private_hidden_dims,
+                num_layers=hps.private_mlp_layers,
+                # TODO from args
+                activation=tf.nn.relu,
+                # TODO args.dropout_rate to keep_prob
+                input_keep_prob=1,
+                # TODO ?
+                batch_normalization=False,
+                # TODO ?
+                layer_normalization=False,
+                output_keep_prob=hps.output_keep_prob,
+            )
 
     return mlps
 

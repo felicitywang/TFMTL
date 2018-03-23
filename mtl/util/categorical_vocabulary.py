@@ -24,19 +24,15 @@ import collections
 
 import six
 
-"""Categorical vocabulary classes to map categories to indexes.
-
-Can be used for categorical variables, sparse variables and words.
-"""
-
-"""Modified from tensorflow.contrib.learn.python.learn.preprocessing.categorial_vocabulary"""
-
 
 class CategoricalVocabulary(object):
     """Categorical variables vocabulary class.
 
     Accumulates and provides mapping from classes to indexes.
     Can be easily used for words.
+
+    Modified from:
+    tensorflow.contrib.learn.python.learn.preprocessing.categorial_vocabulary
     """
 
     def __init__(self, unknown_token="<UNK>", support_reverse=True):
@@ -140,7 +136,8 @@ class CategoricalVocabulary(object):
           Class name.
 
         Raises:
-          ValueError: if this vocabulary wasn't initialized with support_reverse.
+          ValueError: if this vocabulary wasn't initialized with
+            support_reverse.
         """
         if not self._support_reverse:
             raise ValueError("This vocabulary wasn't initialized with "
