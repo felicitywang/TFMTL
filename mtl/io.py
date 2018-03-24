@@ -19,10 +19,10 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
-from six.moves import xrange
 from collections import defaultdict
 from google.protobuf.json_format import MessageToJson
 import json
+
 
 def get_num_records(tf_record_filename):
   c = 0

@@ -22,11 +22,13 @@ from __future__ import print_function
 
 import codecs
 import json
+import tensorflow as tf
 
 from mtl.encoders.cnn import conv_and_pool
 from mtl.encoders.paragram import paragram_phrase
 from mtl.util.embed import embed_sequence
-from mtl.util.reducers import *
+from mtl.util.reducers import reduce_avg_over_time, reduce_min_over_time, \
+    reduce_max_over_time, reduce_var_over_time
 
 
 def encoder_graph(inputs, lengths, embed_fn, encode_fn):
@@ -172,7 +174,7 @@ def build_encoders(vocab_size, args, encoder_hp=None):
         encoders = build_prepared_encoders(
             vocab_size, args, ARCHITECTURES, encoder_hp=encoder_hp)
     else:
-        raise NotImplementedError(
-            "encoder architecture not supported: %s" % args.encoder_architecture)
+        raise NotImplementedError("encoder architecture not supported: %s"
+                                  % args.encoder_architecture)
 
     return encoders

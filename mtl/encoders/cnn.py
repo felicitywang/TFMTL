@@ -13,9 +13,11 @@
 # limitations under the License.
 # ============================================================================
 
+import tensorflow as tf
+
 from six.moves import xrange
 
-from mtl.util.reducers import *
+from mtl.util.reducers import reduce_max_over_time
 
 
 def conv_and_pool(inputs,
@@ -33,7 +35,7 @@ def conv_and_pool(inputs,
       lengths: batch of size [batch_size] **ignored in this function**
       num_filter: number of filters for each width
       max_width: maximum filter width
-      activation_fn: non-linearity to apply after the convolutions. Can be None.
+      activation_fn: non-linearity to apply after convolutions. Can be None.
       reducer: pooling operation to apply to each convolved output
 
     Outputs

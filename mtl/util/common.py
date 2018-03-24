@@ -41,7 +41,8 @@ def preoutput_MLP(inputs, hidden_dim=512, num_layers=2, activation=tf.nn.selu):
     assert type(inputs) is list or type(inputs) is tf.Tensor, type(inputs)
     x = maybe_concat(inputs)
     for i in xrange(num_layers):
-        x = dense_layer(x, hidden_dim, 'l{}'.format(i + 1), activation=activation)
+        x = dense_layer(x, hidden_dim, 'l{}'.format(i + 1),
+                        activation=activation)
     return x
 
 
