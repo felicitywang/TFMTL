@@ -20,7 +20,6 @@ from __future__ import print_function
 from six.moves import xrange
 from itertools import product
 from collections import OrderedDict
-
 import tensorflow as tf
 
 

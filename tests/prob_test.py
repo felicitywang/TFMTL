@@ -23,7 +23,8 @@ import tensorflow as tf
 import numpy as np
 from collections import OrderedDict
 from operator import mul
-from six.moves import reduce, xrange
+from functools import reduce
+from six.moves import xrange
 
 from mtl.vae.prob import enum_events as enum
 from mtl.vae.prob import normalize_logits
