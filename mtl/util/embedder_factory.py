@@ -21,9 +21,12 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.util.embed import *
 
-def create_embedders(embed_fns, tie_embedders, vocab_size, args, embedder_kwargs):
+def create_embedders(embed_fns,
+                     tie_embedders,
+                     vocab_size,
+                     args,
+                     embedder_kwargs):
   # embed_fns: map from dataset name to embedding function
 
   # map from dataset name to embedder template
@@ -33,11 +36,15 @@ def create_embedders(embed_fns, tie_embedders, vocab_size, args, embedder_kwargs
     # all datasets use the same embedder
     # (same embedding function, shared parameters)
     embed_fn_set = set(embed_fns.values())
-    assert len(embed_fn_set) == 1, "tied embeddings must use the same embedding function"
+    assert len(embed_fn_set) == 1, "tied embeddings " \
+                                   "must use the same " \
+                                   "embedding function"
     embed_fn = next(iter(embed_fn_set))
 
-    # Arguments for embedder function should be the same if the embedder is tied
-    assert all([embedder_kwargs[a] == embedder_kwargs[b] for a in args.datasets for b in args.datasets])
+    # Arguments for embedder function should be
+    # the same if the embedder is tied
+    assert all([embedder_kwargs[a] == embedder_kwargs[b]
+                for a in args.datasets for b in args.datasets])
     embedder_kwargs = embedder_kwargs[args.datasets[0]]
 
     embedder = tf.make_template('embedder',

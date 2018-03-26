@@ -16,10 +16,6 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mtl.util.reducers import *
-from mtl.util.layers import dense_layer
-
-
 def no_op_encoding(inputs):
   """A no-op encoder, e.g., for use with bag-of-words features
   that have already been encoded.

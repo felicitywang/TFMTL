@@ -33,7 +33,6 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.models.mult import Mult
-from mtl.util.encoder_factory import build_encoders
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
 
@@ -50,7 +49,8 @@ def parse_args():
                    help='Use held-out test data. WARNING: DO NOT TUNE ON TEST')
     p.add_argument('--predict', type=bool, default=False,
                    help='Whether to predict on given data.')
-    p.add_argument('--predict_file_path', type=str, help='File path of the text to predict.')
+    p.add_argument('--predict_file_path', type=str,
+                   help='File path of the text to predict.')
     p.add_argument('--batch_size', default=128, type=int,
                    help='Size of batch.')
     p.add_argument('--eval_batch_size', default=256, type=int,
@@ -85,9 +85,10 @@ def parse_args():
                    help="""Number of threads to use for inter-op
                      parallelism. If set to 0, the system will pick
                      an appropriate number.""")
-    p.add_argument('--log_device_placement', action='store_true', default=False,
-                   help='Log where compute graph is placed.')
-    p.add_argument('--force_gpu_compatible', action='store_true', default=False,
+    p.add_argument('--log_device_placement', action='store_true',
+                   default=False, help='Log where compute graph is placed.')
+    p.add_argument('--force_gpu_compatible', action='store_true',
+                   default=False,
                    help='Throw error if any operations are not GPU-compatible')
     p.add_argument('--label_key', default="label", type=str,
                    help='Key for label field in the batches')
@@ -96,36 +97,42 @@ def parse_args():
     p.add_argument('--datasets', nargs='+', type=str,
                    help='Key of the dataset(s) to train and evaluate on')
     p.add_argument('--dataset_paths', nargs='+', type=str,
-                   help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, test.tf)
-                 for the dataset(s) given by the --datasets flag (in the same order)""")
+                   help="""Paths to the directory containing the TFRecord files
+                   (train.tf, valid.tf, test.tf) for the dataset(s) given by
+                   the --datasets flag (in the same order)""")
     p.add_argument('--vocab_path', type=str,
                    help='Path to the shared vocabulary for the datasets')
     p.add_argument('--encoder_config_file', type=str,
                    help='Absolute path to the encoder config file')
     p.add_argument('--encoder_architecture', type=str,
-                   help='Encoder architecture type (see encoder_factory.py for supported architectures)')
-    p.add_argument('--architectures_path', type=str, help='Path of the args file of the architectures of the '
-                                                          'experiment.')
-    p.add_argument('--shared_hidden_dims', nargs='+', type=int, default=[128, 128],
+                   help="""Encoder architecture type
+                   (see encoder_factory.py for supported architectures)""")
+    p.add_argument('--architectures_path', type=str,
+                   help="""Path of the args file of the
+                   architectures of the experiment.""")
+    p.add_argument('--shared_hidden_dims', nargs='+', type=int,
+                   default=[128, 128],
                    help='Sizes of the hidden layers shared by all datasets.')
     p.add_argument('--private_hidden_dims', nargs='+', type=int, default=None,
                    help='Sizes of the hidden layers private to each dataset.')
     p.add_argument('--shared_mlp_layers', type=int, default=2,
-                   help='Number of hidden layers of the MLP model shared between datasets.')
+                   help="""Number of hidden layers of the MLP model
+                   shared between datasets.""")
     p.add_argument('--private_mlp_layers', type=int, default=0,
-                   help='Number of hidden layers of the MLP model private for each dataset.')
-    p.add_argument('--num_filter', default=64, type=int, help='Number of filters for the CNN model.')
-    p.add_argument('--max_width', default=5, type=int, help='Maximum window width for the CNN model.')
+                   help="""Number of hidden layers of the MLP model
+                   private for each dataset.""")
     p.add_argument('--alphas', nargs='+', type=float, default=[0.5, 0.5],
                    help='alpha for each dataset in the MULT model')
     p.add_argument('--class_sizes', nargs='+', type=int,
                    help='Number of classes for each dataset.')
-    p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/', help='Directory to save the '
-                                                                                     'checkpoints.')
+    p.add_argument('--checkpoint_dir', type=str, default='./data/checkpoints/',
+                   help='Directory to save the checkpoints.')
     p.add_argument('--input_keep_prob', type=float, default=1,
-                   help="Probability to keep of the dropout layer before the MLP(shared+private).")
+                   help="""Probability to keep of the dropout layer
+                   before the MLP(shared+private).""")
     p.add_argument('--output_keep_prob', type=float, default=0.5,
-                   help="Probability to keep of the dropout layer after the MLP(shared+private).")
+                   help="""Probability to keep of the dropout layer
+                   after the MLP(shared+private).""")
     p.add_argument('--token_lengths_key', type=str, default='tokens_length',
                    help='Key of the tokens lengths.')
     p.add_argument('--l2_weight', type=float, default=0.0,
@@ -163,7 +170,8 @@ def init_savers(args, model_info):
 def train_model(model, dataset_info, steps_per_epoch, args):
     dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
-    train_batches = {name: model_info[name]['train_batch'] for name in model_info}
+    train_batches = {name: model_info[name]['train_batch']
+                     for name in model_info}
     loss = model.get_multi_task_loss(train_batches, is_training=True)
     # # see if dropout and is_training working
     # # by checking train loss with different is_training the same
@@ -177,13 +185,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     # Training ops
     global_step_tensor = tf.train.get_or_create_global_step()
-    zero_global_step_op = global_step_tensor.assign(0)
+    _ = global_step_tensor.assign(0)
     lr = get_learning_rate(args.lr0)
     tvars, grads = get_var_grads(loss)
-    # testtvars, testgrads = get_var_grads(test_loss)
+
     train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
                             global_step_tensor, name='train_op')
-    # test_train_op = get_train_op(testtvars, testgrads, lr, args.max_grad_norm, global_step_tensor, name='test_train_op')
+
     init_ops = [tf.global_variables_initializer(),
                 tf.local_variables_initializer()]
     config = get_proto_config(args)
@@ -214,15 +222,18 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     # latest checkpoint
     # saves every several steps
-    # automatically done by tf.train.SingularMonitorSession with tf.train.CheckpoinSaverHook
+    # automatically done by tf.train.SingularMonitorSession
+    #   with tf.train.CheckpoinSaverHook
     # TODO load from some checkpoint dif at the beginning(?)
-    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
+    ckpt_dir = os.path.join(args.checkpoint_dir, 'latest')
+    saver_hook = tf.train.CheckpointSaverHook(checkpoint_dir=ckpt_dir,
                                               save_steps=100)
 
     # savers that manually saves the model at the end of each epoch
     savers = init_savers(args, model_info)
 
-    with tf.train.SingularMonitoredSession(hooks=[saver_hook], config=config) as sess:
+    hooks = [saver_hook]
+    with tf.train.SingularMonitoredSession(hooks=hooks, config=config) as sess:
         # Initialize model parameters
 
         sess.run(init_ops)
@@ -249,15 +260,16 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             # test_total_loss = 0
             num_iter = 0
             for _ in tqdm(xrange(steps_per_epoch)):
-                step, loss_v, _ = sess.run([global_step_tensor, loss, train_op])
-                # test_step, test_loss_v, _ = sess.run([global_step_tensor, test_loss, test_train_op])
+                step, loss_v, _ = sess.run([global_step_tensor,
+                                            loss,
+                                            train_op])
                 num_iter += 1
                 total_loss += loss_v
-                # test_total_loss += test_loss_v
-                # loss_v is sum over a batch from each dataset of the average loss *per training example*
+                # loss_v is sum over a batch from each dataset of the
+                #   average loss *per training example*
             assert num_iter > 0
 
-            # average loss per batch (which is in turn averaged across examples)
+            # average loss per batch, which is in turn averaged across examples
             train_loss = float(total_loss) / float(num_iter)
             # test_train_loss = float(test_total_loss) / float(num_iter)
 
@@ -265,37 +277,44 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             # if not args.test:  # Validation mode
             # Get performance metrics on each dataset
             for dataset_name in model_info:
-                # _valid_batch = dataset_info[dataset_name]['valid_dataset'].batch
-                # _pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-                _pred_op = model_info[dataset_name]['valid_pred_op']
-                _eval_labels = model_info[dataset_name]['valid_batch'][args.label_key]
-                _eval_iter = model_info[dataset_name]['valid_iter']
-                _metrics = compute_held_out_performance(sess, _pred_op,
+                _info = model_info[dataset_name]
+                _pred_op = _info['valid_pred_op']
+                _eval_labels = _info['valid_batch'][args.label_key]
+                _eval_iter = _info['valid_iter']
+                _metrics = compute_held_out_performance(sess,
+                                                        _pred_op,
                                                         _eval_labels,
-                                                        _eval_iter, args)
+                                                        _eval_iter,
+                                                        args)
                 model_info[dataset_name]['valid_metrics'] = _metrics
 
             end_time = time()
             elapsed = end_time - start_time
             # Log performance(s)
-            str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
-                epoch, args.num_train_epochs, np.asscalar(step), elapsed, train_loss)
-            # str_ += '[epoch=%d/%d step=%d (%d s)] test_train_loss=%s (per batch)' % (
-            #     epoch, args.num_train_epochs, np.asscalar(step), elapsed, test_train_loss)
+            f = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)'
+            str_ = f % (epoch,
+                        args.num_train_epochs,
+                        np.asscalar(step),
+                        elapsed,
+                        train_loss)
+
             for dataset_name in model_info:
-                _num_eval_total = model_info[dataset_name]['valid_metrics']['ntotal']
-                _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
-                _eval_align_acc = model_info[dataset_name]['valid_metrics']['aligned_accuracy']
-                str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
-                                                                                    _num_eval_total,
-                                                                                    _eval_acc,
-                                                                                    _eval_align_acc)
+                _info = model_info[dataset_name]
+                _num_eval_total = _info['valid_metrics']['ntotal']
+                _eval_acc = _info['valid_metrics']['accuracy']
+                _eval_align_acc = _info['valid_metrics']['aligned_accuracy']
+                f = '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f'
+                str_ += f % (dataset_name,
+                             _num_eval_total,
+                             _eval_acc,
+                             _eval_align_acc)
 
                 if _eval_acc > best_eval_acc[dataset_name]["acc"]:
                     best_eval_acc[dataset_name]["acc"] = _eval_acc
                     best_eval_acc[dataset_name]["epoch"] = epoch
                     # save best model
-                    savers[dataset_name].save(sess.raw_session(), model_info[dataset_name]['model_path'])
+                    savers[dataset_name].save(sess.raw_session(),
+                                              _info['model_path'])
 
                 total_acc += _eval_acc
 
@@ -305,7 +324,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
                 # save best model
                 if 'MULT' in savers:
-                    savers['MULT'].save(sess.raw_session(), os.path.join(args.checkpoint_dir, 'MULT', 'model'))
+                    savers['MULT'].save(sess.raw_session(),
+                                        os.path.join(args.checkpoint_dir,
+                                                     'MULT',
+                                                     'model'))
 
             # print("All the variables after the first epoch:")
             # all_variables = tf.global_variables()
@@ -316,19 +338,13 @@ def train_model(model, dataset_info, steps_per_epoch, args):
             logging.info(str_)
 
         print(best_eval_acc)
-        print('Best total accuracy: {} at epoch {}'.format(best_total_acc, best_total_acc_epoch))
+        print('Best total accuracy: {} at epoch {}'.format(
+          best_total_acc,
+          best_total_acc_epoch))
 
         print("\n\n\n")
 
         # TODO write(add) the result to a common report file
-        # with open('report.txt', 'a') as file:
-        #     for dataset in best_eval_acc.keys():
-        #         file.write(str(dataset))
-        #         file.write(" ")
-        #     file.write("\n")
-        #     for dataset, acc in best_eval_acc.items():
-        #         file.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
-        #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc, best_total_acc_epoch))
 
     # final evaluation on test data
     if args.test:
@@ -354,28 +370,30 @@ def test(model_info, args):
             saver.restore(sess, model_path)
 
             for dataset_name in model_info:
-                # _test_batch = dataset_info[dataset_name]['test_dataset'].batch
-                # _pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-                _pred_op = model_info[dataset_name]['test_pred_op']
-                _eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
-                _eval_iter = model_info[dataset_name]['test_iter']
-                _metrics = compute_held_out_performance(sess, _pred_op,
+                _info = model_info[dataset_name]
+                _pred_op = _info['test_pred_op']
+                _eval_labels = _info['test_batch'][args.label_key]
+                _eval_iter = _info['test_iter']
+                _metrics = compute_held_out_performance(sess,
+                                                        _pred_op,
                                                         _eval_labels,
-                                                        _eval_iter, args)
+                                                        _eval_iter,
+                                                        args)
                 model_info[dataset_name]['test_metrics'] = _metrics
 
-                _num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
-                _eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
-                _eval_align_acc = model_info[dataset_name]['test_metrics']['aligned_accuracy']
+                _num_eval_total = _metrics['ntotal']
+                _eval_acc = _metrics['accuracy']
+                _eval_align_acc = _metrics['aligned_accuracy']
                 str_ += '\n'
                 if dataset_name == model_name:
                     str_ += '(*)'
                 else:
                     str_ += '( )'
-                str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (dataset_name,
-                                                                                  _num_eval_total,
-                                                                                  _eval_acc,
-                                                                                  _eval_align_acc)
+                f = '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f'
+                str_ += f % (dataset_name,
+                             _num_eval_total,
+                             _eval_acc,
+                             _eval_align_acc)
 
     logging.info(str_)
 
@@ -454,7 +472,7 @@ def main():
     for dataset_name in args.datasets:
         dataset_info[dataset_name] = dict()
         # Collect dataset information/statistics
-        dataset_info[dataset_name]['dataset_name'] = dataset_name  # feature name is just dataset name
+        dataset_info[dataset_name]['dataset_name'] = dataset_name
         dataset_info[dataset_name]['dir'] = dirs[dataset_name]
         dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
         dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
@@ -470,9 +488,11 @@ def main():
 
     vocab_size = get_vocab_size(args.vocab_path)
 
-    class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for dataset_name in dataset_info}
+    class_sizes = {dataset_name: dataset_info[dataset_name]['class_size']
+                   for dataset_name in dataset_info}
 
-    order_dict = {dataset_name: dataset_info[dataset_name]['ordering'] for dataset_name in dataset_info}
+    order_dict = {dataset_name: dataset_info[dataset_name]['ordering']
+                  for dataset_name in dataset_info}
     dataset_order = sorted(order_dict, key=order_dict.get)
 
     # This defines ALL the features that ANY model possibly needs access
@@ -500,23 +520,34 @@ def main():
         # examples from serialized TF record files.
         for dataset_name in dataset_info:
             _train_path = dataset_info[dataset_name]['train_path']
-            ds = build_input_dataset(_train_path, FEATURES, args.batch_size, is_training=True)
+            ds = build_input_dataset(_train_path,
+                                     FEATURES,
+                                     args.batch_size,
+                                     is_training=True)
             dataset_info[dataset_name]['train_dataset'] = ds
 
             # Validation dataset
             _valid_path = dataset_info[dataset_name]['valid_path']
-            ds = build_input_dataset(_valid_path, FEATURES, args.eval_batch_size, is_training=False)
+            ds = build_input_dataset(_valid_path,
+                                     FEATURES,
+                                     args.eval_batch_size,
+                                     is_training=False)
             dataset_info[dataset_name]['valid_dataset'] = ds
 
             # Test dataset
             if args.test:
                 _test_path = dataset_info[dataset_name]['test_path']
-                ds = build_input_dataset(_test_path, FEATURES, args.eval_batch_size, is_training=False)
+                ds = build_input_dataset(_test_path,
+                                         FEATURES,
+                                         args.eval_batch_size,
+                                         is_training=False)
                 dataset_info[dataset_name]['test_dataset'] = ds
 
         # This finds the size of the largest training dataset.
-        training_files = [dataset_info[dataset_name]['train_path'] for dataset_name in dataset_info]
-        max_N_train = max([get_num_records(tf_rec_file) for tf_rec_file in training_files])
+        training_files = [dataset_info[dataset_name]['train_path']
+                          for dataset_name in dataset_info]
+        max_N_train = max([get_num_records(tf_rec_file)
+                           for tf_rec_file in training_files])
 
         # Seed TensorFlow RNG
         tf.set_random_seed(args.seed)
@@ -540,18 +571,14 @@ def main():
         # NOTE: models must support the following functions:
         #  * get_multi_task_loss()
         #        args: dictionary that maps dataset -> training batch
-        #        returns: total loss accumulated over all batches in the dictionary
+        #        returns: total loss accumulated over
+        #                 all batches in the dictionary
         #  * get_predictions()
-        #        args: valid batch (with <batch_len> examples), name of feature to predict
-        #        returns: Tensor of size <batch_len> specifying the predicted label
-        #                 for the specified feature for each of the examples in the batch
-        # Seth's multi-task VAE model
-        # if args.model == 'mlvae':
-        #   m = MultiLabel(class_sizes=class_sizes,
-        #                  dataset_order=dataset_order,
-        #                  encoders=encoders,
-        #                  decoders=decoders,
-        #                  hps=None)
+        #        args: valid batch (with <batch_len> examples),
+        #              name of feature to predict
+        #        returns: Tensor of size <batch_len> specifying the
+        #                 predicted label for the specified feature
+        #                 for each of the examples in the batch
 
         if args.model == 'mult':
             # # TODO encoder_hps
@@ -634,7 +661,8 @@ def fill_info_dicts(dataset_info, args):
 
     # dataset_info: dict containing dataset-specific parameters/statistics
     #  e.g., number of classes, path to data
-    # model_info: dict containing dataset-specific information w.r.t. running the model
+    # model_info: dict containing dataset-specific information
+    #  w.r.t. running the model
     #  e.g., data iterators, batches, prediction operations
 
     # use validation data for evaluation anyway
@@ -646,7 +674,8 @@ def fill_info_dicts(dataset_info, args):
     model_info = dict()
     for dataset_name in dataset_info:
         model_info[dataset_name] = dict()
-        model_info[dataset_name]['model_path'] = os.path.join(args.checkpoint_dir, dataset_name, 'model')
+        _path = os.path.join(args.checkpoint_dir, dataset_name, 'model')
+        model_info[dataset_name]['model_path'] = _path
 
     # Data iterators, etc.
     for dataset_name in dataset_info:
@@ -665,18 +694,13 @@ def fill_info_dicts(dataset_info, args):
         _valid_batch = _valid_dataset.batch
         model_info[dataset_name]['valid_iter'] = _valid_iter
         model_info[dataset_name]['valid_batch'] = _valid_batch
-        # # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        # model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+
         if args.test:
             _test_dataset = dataset_info[dataset_name]['test_dataset']
             _test_iter = _test_dataset.iterator
             _test_batch = _test_dataset.batch
             model_info[dataset_name]['test_iter'] = _test_iter
             model_info[dataset_name]['test_batch'] = _test_batch
-            # # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            # model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
     def _create_feature_dict(ds, dataset_info, model_info):
         _feature_dict = dict()
@@ -691,7 +715,10 @@ def fill_info_dicts(dataset_info, args):
 
     # Create feature_dicts for each dataset
     for dataset_name in model_info:
-        model_info[dataset_name]['feature_dict'] = _create_feature_dict(dataset_name, dataset_info, model_info)
+        _feature_dict = _create_feature_dict(dataset_name,
+                                             dataset_info,
+                                             model_info)
+        model_info[dataset_name]['feature_dict'] = _feature_dict
 
     # Return dataset_info dict and model_info dict
     return dataset_info, model_info
@@ -699,18 +726,22 @@ def fill_info_dicts(dataset_info, args):
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
     for dataset_name in model_info:
-        # _valid_pred_op = model.get_predictions(_valid_batch, dataset_info[dataset_name]['dataset_name'])
-        _valid_pred_op = model.get_predictions(model_info[dataset_name]['valid_batch'], dataset_info[
-            dataset_name]['dataset_name'])
+        _batch = model_info[dataset_name]['valid_batch']
+        _dataset = dataset_info[dataset_name]['dataset_name']
+        _valid_pred_op = model.get_predictions(_batch, _dataset)
         model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
+
         if args.test:
-            # _test_pred_op = model.get_predictions(_test_batch, dataset_info[dataset_name]['dataset_name'])
-            _test_pred_op = model.get_predictions(model_info[dataset_name]['test_batch'], dataset_info[
-                dataset_name]['dataset_name'])
+            _batch = model_info[dataset_name]['test_batch']
+            _dataset = dataset_info[dataset_name]['dataset_name']
+            _test_pred_op = model.get_predictions(_batch, _dataset)
             model_info[dataset_name]['test_pred_op'] = _test_pred_op
 
 
-def build_input_dataset(tfrecord_path, batch_features, batch_size, is_training=True):
+def build_input_dataset(tfrecord_path,
+                        batch_features,
+                        batch_size,
+                        is_training=True):
     if is_training:
         ds = Pipeline(tfrecord_path, batch_features, batch_size,
                       num_epochs=None,  # repeat indefinitely

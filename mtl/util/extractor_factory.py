@@ -32,11 +32,14 @@ def create_extractors(extract_fns, tie_extractors, args, extractor_kwargs):
     # all datasets use the same extractor
     # same extraction function, shared parameters
     extract_fn_set = set(extract_fns.values())
-    assert len(extract_fn_set) == 1, "tied extractors must use the same extraction function"
+    assert len(extract_fn_set) == 1, "tied extractors must use " \
+                                     "the same extraction function"
     extract_fn = next(iter(extract_fn_set))
 
-    # Arguments for extractor function should be the same if the extractor is tied
-    assert all([extractor_kwargs[a] == extractor_kwargs[b] for a in args.datasets for b in args.datasets])
+    # Arguments for extractor function should be
+    # the same if the extractor is tied
+    assert all([extractor_kwargs[a] == extractor_kwargs[b]
+                for a in args.datasets for b in args.datasets])
     extractor_kwargs = extractor_kwargs[args.datasets[0]]
 
     extractor = tf.make_template('extractor',
