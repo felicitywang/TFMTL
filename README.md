@@ -80,8 +80,8 @@ all datasets specified in the given architecture (similarly if `extractors_tied`
 
 An example configuration file can be found at `tfmtl/tests/encoders.json`.
 
-Embedding functions and extraction functions can be found in `tfmtl/mtl/util/embed.py`
-and `tfmtl/mtl/encoders`, respectively.
+Embedding functions and extraction functions can be found in `tfmtl/mtl/embedders`
+and `tfmtl/mtl/extractors`, respectively.
 
 The architecture to use in an experiment is given by the `--architecture` flag,
 and the file containing the architecture(s) is given by the `--encoder_config_file`
