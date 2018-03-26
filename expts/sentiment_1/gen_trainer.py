@@ -36,8 +36,8 @@ from mtl.io import get_empirical_label_prior
 from mtl.hparams import update_hparams_from_args
 from mtl.util.pipeline import Pipeline
 
-from mtl.util.embed import embed_sequence
-from mtl.encoders.cnn import conv_and_pool
+from mtl.embedders.embed_sequence import embed_sequence
+from mtl.extractors.cnn import conv_and_pool
 
 from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
 from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
