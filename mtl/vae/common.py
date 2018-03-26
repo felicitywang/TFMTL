@@ -40,7 +40,9 @@ def mvn_diag_kl(p_loc=None, p_log_sigma=None, q_loc=None,
   D = tf.to_float(tf.shape(p_mu)[-1])
   delta = p_mu - q_mu
   delta_sq = delta * delta
-  a = tf.reduce_sum(q_ls, axis=1, keep_dims=True) - tf.reduce_sum(p_ls, axis=1, keep_dims=True)
+  a1 = tf.reduce_sum(q_ls, axis=1, keep_dims=True)
+  a2 = tf.reduce_sum(p_ls, axis=1, keep_dims=True)
+  a = a1 - a2
   b = tf.reduce_sum(tf.exp(2.0 * (p_ls - q_ls)), axis=1, keep_dims=True)
   c = tf.reduce_sum(delta_sq * tf.exp(-2.0 * q_ls), axis=1, keep_dims=True)
   return a + 0.5 * (b - D + c)

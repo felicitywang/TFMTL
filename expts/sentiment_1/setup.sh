@@ -37,6 +37,6 @@ mv -f index.json.gz data/json/LMRD/
 
 mkdir -p data/tf/merged
 echo "Generating TFRecord files..."
-python write_tfrecords_merged.py
+python ../scripts/write_tfrecords_merged.py SSTb LMRD
 
 cp ../../datasets/sentiment/LMRD/label.json ./label_LMRD.json -f

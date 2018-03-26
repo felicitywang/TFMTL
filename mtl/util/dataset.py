@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import codecs
 import gzip
+import itertools
 import json
 import os
 from pathlib import Path
@@ -31,7 +32,7 @@ from six.moves import xrange
 from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
-from mtl.util.data_prep import *
+from mtl.util.data_prep import tweet_tokenizer
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -68,41 +69,44 @@ class Dataset:
                  write_tfidf=False
                  ):
         """
-        :param data_type: whether the data is json data or tf records
-        :param json_dir: where data.json.gz and index.json.gz are
-        located, and vocabulary/tf records built from the single datasets
-        are to be saved
-        :param vocab_given: True if to use the given vocabulary
-        :param vocab_dir: directory to load the given (e.g. merged) vocabulary
-        frequency dict json file or to save the self-generated vocabulary
-        :param tfrecord_dir: directory to save generated TFRecord files
-        :param max_document_length: maximum document length for the mapped
-        word ids, computed as the maximum document length of all the
-        training data if None
-        :param max_vocab_size: maximum size of the vocabulary allowed
-        :param min_frequency: minimum frequency to build the vocabulary,
-        words that appear lower than or equal to this number would be discarded
-        :param max_frequency: maximum frequency to build the vocabulary,
-        words that appear more than or equal to this number would be discarded
-        :param text_field_names: string of a list of text field names joined
-        with spaces, read from json_dir if None
-        :param label_field_name: label field name(only 1), read from
-        json_dir if None
-        :param valid_ratio: how many data out of all data to use as valid
-        data if not splits are given, or how many data out of train data to
-        use as valid if train/test splits are given
-        :param train_ratio: how many data to use as train data if train
-        split not given
-        :param random_seed: random seed used in random spliting, makeing
-        sure the same random split is used when given the same random seed
-        :param subsample_ratio: randomly takes part of the datasets when it's
-        too large
-        :param generate_basic_vocab: True if the basic vocabulary(which
-        shall be used to merge the public vocabulary) needs to be generated
-        :param generate_tf_record: True if tf record files need generating
-        :param padding: True if token(word id) list needs padding to max_document_length
-        :param write_bow: True if to write bag of words as a feature in the tf record
-        :param write_tfidf: True if to write tf-idf as a feature in the tf record
+    Args:
+        data_type: whether the data is json data or tf records
+        json_dir: where data.json.gz and index.json.gz are
+            located, and vocabulary/tf records built from the single
+            datasets are to be saved
+        vocab_given: True if to use the given vocabulary
+        vocab_dir: directory to load the given (e.g. merged) vocabulary
+            frequency dict json file or to save the self-generated vocabulary
+        tfrecord_dir: directory to save generated TFRecord files
+        max_document_length: maximum document length for the mapped
+            word ids, computed as the maximum document length of all the
+            training data if None
+        max_vocab_size: maximum size of the vocabulary allowed
+        min_frequency: minimum frequency to build the vocabulary,
+            words that appear lower than or equal to this number would be
+            discarded
+        max_frequency: maximum frequency to build the vocabulary,
+            words that appear more than or equal to this number would be
+            discarded
+        text_field_names: string of a list of text field names joined
+            with spaces, read from json_dir if None
+        label_field_name: label field name(only 1), read from json_dir if None
+        valid_ratio: how many data out of all data to use as valid
+            data if not splits are given, or how many data out of train data to
+            use as valid if train/test splits are given
+        train_ratio: how many data to use as train data if train
+            split not given
+        random_seed: random seed used in random spliting, makeing
+            sure the same random split is used when given the same random seed
+        subsample_ratio: randomly takes part of the datasets when it's
+            too large
+        generate_basic_vocab: True if the basic vocabulary(which
+            shall be used to merge the public vocabulary) needs to be generated
+        generate_tf_record: True if tf record files need generating
+        padding: True if token(word id) list needs padding to
+            max_document_length
+        write_bow: True if to write bag of words as a feature in the tf record
+        write_tfidf: True if to write tf-idf as a feature in the tf record
         """
 
         if max_vocab_size:
@@ -115,15 +119,21 @@ class Dataset:
 
         self._padding = padding
         self._write_bow = write_bow
-        self._write_tfidf = tfidf
+        self._write_tfidf = write_tfidf
 
         print("data in", json_dir)
 
-        with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt', encoding='utf-8') as file:
+        # with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt',
+        #                encoding='utf-8') as file:
+        #     data = json.load(file, encoding='utf-8')
+        #     file.close()
+        with gzip.open(os.path.join(json_dir, "data.json.gz"),
+                       mode='rt') as file:
             data = json.load(file, encoding='utf-8')
             file.close()
-        self._label_list = [int(
-            item[label_field_name]) if label_field_name in item else None for item in data]
+        self._label_list = [int(item[label_field_name])
+                            if label_field_name in item else None for
+                            item in data]
         self._num_classes = len(set(self._label_list))
 
         # if sys.version_info[0] < 3:
@@ -137,10 +147,13 @@ class Dataset:
                             for text_field_name in text_field_names for
                             item in data]
 
-        self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text in
+        self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text
+                            in
                             self._token_list]
+
+        # length of cleaned text (including EOS)
         self._token_length_list = [len(text) for text in
-                                   self._token_list]  # length of cleaned text (including EOS)
+                                   self._token_list]
         self._padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
@@ -149,8 +162,10 @@ class Dataset:
         # get index
         print("Generating train/valid/test splits...")
         index_path = os.path.join(json_dir, "index.json.gz")
-        self._train_index, self._valid_index, self._test_index, self._unlabeled_index \
-            = self.split(index_path, train_ratio, valid_ratio, random_seed, subsample_ratio)
+        (self._train_index, self._valid_index, self._test_index,
+         self._unlabeled_index) = self.split(index_path, train_ratio,
+                                             valid_ratio, random_seed,
+                                             subsample_ratio)
 
         # only compute from training data
         if max_document_length == -1:
@@ -200,7 +215,8 @@ class Dataset:
 
         # generate tfidf list if write_tfidf is True
         if write_tfidf:
-            self._tfidf_list = tfidf(self._token_list, set(self.mapping.values()))
+            self._tfidf_list = tfidf(self._token_list,
+                                     set(self.mapping.values()))
             # self._tfidf_list = tfidf(self._token_list)
 
         # write labeled data to TFRecord files
@@ -248,7 +264,9 @@ class Dataset:
             'valid_size': len(self._valid_index),
             'test_size': len(self._test_index),
             'has_unlabeled': self._has_unlabeled,
-            'unlabeled_path': os.path.abspath(self._unlabeled_path) if self._unlabeled_path is not None else None,
+            'unlabeled_path': os.path.abspath(
+                self._unlabeled_path
+            ) if self._unlabeled_path is not None else None,
             'unlabeled_size': len(self._unlabeled_index)
         }
         print(self._args)
@@ -387,8 +405,8 @@ class Dataset:
                     label = self._label_list[index]
                     assert label is None
 
-                types, counts = get_types_and_counts(self._token_list[
-                                                         index])  # including EOS
+                types, counts = get_types_and_counts(
+                    self._token_list[index])  # including EOS
 
                 assert len(types) == len(counts)
                 assert len(types) > 0
@@ -435,7 +453,8 @@ class Dataset:
     def split(self, index_path, train_ratio, valid_ratio, random_seed,
               subsample_ratio):
         """
-        return given/randomly generated train/valid/test/unlabeled split indices
+        return given/randomly generated train/valid/test/unlabeled
+            split indices
         """
         if not Path(index_path).exists():
             # no split given
@@ -625,8 +644,8 @@ def merge_dict_write_tfrecord(json_dirs,
     merge_save_vocab_dicts(vocab_paths, os.path.join(merged_dir,
                                                      "vocab_freq.json"))
 
-    print("merged public vocabulary saved to path", os.path.join(merged_dir,
-                                                                 "vocab_freq.json"))
+    print("merged public vocabulary saved to path", os.path.join(
+        merged_dir, "vocab_freq.json"))
 
     # write tf records
     vocab_i2v_lists = []
@@ -715,7 +734,8 @@ def main():
                      './vocab_test/2/min_0_max_0/',
                      './vocab_test/3/min_0_max_0/']
     merge_dict_write_tfrecord(json_dirs, tfrecord_dirs,
-                              merged_dir="./vocab_test/merged/", write_bow=True, write_tfidf=True)
+                              merged_dir="./vocab_test/merged/",
+                              write_bow=True, write_tfidf=True)
 
 
 if __name__ == '__main__':

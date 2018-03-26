@@ -21,11 +21,16 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
+from collections import OrderedDict
 from operator import mul
+from functools import reduce
+from six.moves import xrange
 
-from mtl.mlvae.prob import normalize_logits
-from mtl.mlvae.prob import marginal_log_prob
-from mtl.mlvae.prob import conditional_log_prob
+from mtl.vae.prob import enum_events as enum
+from mtl.vae.prob import normalize_logits
+from mtl.vae.prob import marginal_log_prob
+from mtl.vae.prob import conditional_log_prob
+from mtl.vae.prob import entropy
 
 
 def slow_marginal(ln_joint_prob, target_dim):
@@ -69,7 +74,67 @@ def slow_conditional(ln_joint_prob, target_dim, cond_dim):
   return ret
 
 
+def softmax(x):
+  assert len(x.shape) == 1
+  scoreMatExp = np.exp(np.asarray(x))
+  return scoreMatExp / scoreMatExp.sum(0)
+
+
+def slow_entropy(logits):
+  assert len(logits.shape) == 1
+  p = softmax(logits)
+  lp = np.log(p)
+  return -sum(p * lp)
+
+
 class ProbTests(tf.test.TestCase):
+  def test_entropy(self):
+    batch_size = 5
+    space_dim = 3
+    logits = tf.random_normal([batch_size, space_dim])
+    H = entropy(logits)
+    with self.test_session() as sess:
+      logits_v, H_v = sess.run([logits, H])
+      for i in xrange(batch_size):
+        np_H = slow_entropy(logits_v[i])
+        tf_H = H_v[i]
+        self.assertAlmostEqual(np.sum(np_H), np.sum(tf_H), places=4)
+
+
+  def test_enumerate(self):
+    sizes = OrderedDict()
+    sizes['x'] = 5
+    sizes['y'] = 2
+    events = enum(sizes)
+    self.assertEqual(len(list(events)), sizes['x'] * sizes['y'])
+    for e in events:
+      self.assertLess(e[0], 5)
+      self.assertLess(e[1], 2)
+
+    cond = {'y': 1}
+    events = enum(sizes, cond_vals=cond)
+    self.assertEqual(len(list(events)), sizes['x'])
+    for e in events:
+      self.assertEqual(e[1], 1)
+
+    cond = {'x': 1}
+    events = enum(sizes, cond_vals=cond)
+    self.assertEqual(len(list(events)), sizes['y'])
+    for e in events:
+      self.assertEqual(e[0], 1)
+
+    batch_size = 2
+    cond = {'x': tf.constant([0, 4], dtype=tf.int32)}
+    events = enum(sizes, cond_vals=cond)
+    with self.test_session() as sess:
+      for e in events:
+        assert type(e[0]) is tf.Tensor
+        assert type(e[1]) is tf.Tensor
+        e0, e1 = sess.run(e)
+        self.assertEqual(e0[0], 0)
+        self.assertEqual(e0[1], 4)
+        self.assertEqual(len(e1), 2)
+
   def test_unflat_and_normalize(self):
     batch_size = 2
     dims = [2, 3, 4]

@@ -13,8 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-import tensorflow as tf
-from six.moves import xrange
 
 def no_op_encoding(inputs):
   """A no-op encoder, e.g., for use with bag-of-words features

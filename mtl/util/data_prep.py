@@ -65,7 +65,8 @@ def my_tokenizer(text):
 def clean_str(string):
     """
     Tokenization/string cleaning for all datasets except for SST.
-    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+    Original taken from:
+        https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     not used
     """
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)

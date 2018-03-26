@@ -14,10 +14,7 @@
 # ============================================================================
 
 from __future__ import absolute_import
-from __future__ import absolute_import
 from __future__ import division
-from __future__ import division
-from __future__ import print_function
 from __future__ import print_function
 
 import tensorflow as tf
@@ -34,8 +31,8 @@ def get_activation_fn(s):
         act_fn = None
     elif s == 'tanh':
         act_fn = tf.nn.tanh
-    elif s == 'prelu':
-        act_fn = prelu
+#    elif s == 'prelu':
+#        act_fn = prelu
     else:
         raise ValueError("unsupported activation fn: %s" % s)
     return act_fn

@@ -47,11 +47,13 @@ class Pipeline(object):
 
         if bucket_info is None:
             dataset = dataset.batch(batch_size)
-            dataset = dataset.map(self.parse_example, num_parallel_calls=num_threads)
+            dataset = dataset.map(self.parse_example,
+                                  num_parallel_calls=num_threads)
         else:
             # Bucket before batching. There's some copying here
             def _parse_single_example(serialized):
-                parsed = parsing_ops.parse_single_example(serialized, feature_map)
+                parsed = parsing_ops.parse_single_example(serialized,
+                                                          feature_map)
                 result = []
                 for key in sorted(self._feature_map.keys()):
                     val = parsed[key]

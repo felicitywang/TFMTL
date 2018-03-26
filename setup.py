@@ -4,7 +4,7 @@ REQUIRED_PACKAGES = ['six', 'enum34']
 
 setup(name='mtl',
       version='0.1',
-      description='Multi-Task Learning Models for Text',
+      description='A TensorFlow Package for Multi-Task Learning',
       url='https://github.com/noa/tfmtl',
       author='Johns Hopkins University',
       author_email='noa@jhu.edu',
