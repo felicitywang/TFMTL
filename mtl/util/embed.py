@@ -21,8 +21,9 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-def embed_sequence(x, vocab_size=None, embed_dim=None):
-  return tf.contrib.layers.embed_sequence(x, vocab_size=vocab_size,
+def embed_sequence(x, vocab_size, embed_dim):
+  return tf.contrib.layers.embed_sequence(x,
+                                          vocab_size=vocab_size,
                                           embed_dim=embed_dim)
 
 

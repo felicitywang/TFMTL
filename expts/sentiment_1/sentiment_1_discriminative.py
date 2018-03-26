@@ -18,7 +18,6 @@
 # TODO dataset name from sys arguments(?) -> one driver for all experiments
 # TODO differentiate train/valid/test model (is_training) and add regularization
 # TODO save best epoch
-# TODO use encoder hyperparameters built from sys arguments
 # TODO tune alphas
 
 
@@ -32,8 +31,8 @@ from time import time
 
 import numpy as np
 import tensorflow as tf
-from expts.sentiment_1.encoder_factory import build_encoders
 from mtl.models.mult import Mult
+from mtl.util.encoder_factory import build_encoders
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
 from six.moves import xrange
@@ -95,6 +94,8 @@ def parse_args():
                  for the dataset(s) given by the --datasets flag (in the same order)""")
     p.add_argument('--vocab_path', type=str,
                    help='Path to the shared vocabulary for the datasets')
+    p.add_argument('--encoder_config_file', type=str,
+                   help='Absolute path to the encoder config file')
     p.add_argument('--encoder_architecture', type=str,
                    help='Encoder architecture type (see encoder_factory.py for supported architectures)')
     p.add_argument('--embed_dim', default=128, type=int, help='Dense(hidden) layer size.')

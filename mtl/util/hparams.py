@@ -14,10 +14,7 @@
 # ============================================================================
 
 from __future__ import absolute_import
-from __future__ import absolute_import
 from __future__ import division
-from __future__ import division
-from __future__ import print_function
 from __future__ import print_function
 
 import tensorflow as tf
@@ -41,6 +38,54 @@ def get_activation_fn(s):
     return act_fn
 
 
+def dict2func(d):
+  """Converts all strings in a dictionary to their
+  corresponding functions (if applicable)"""
+  res = dict()
+  for k, v in d.items():
+    if isinstance(v, dict):
+      res[k] = dict2func(v)
+    else:
+      res[k] = str2func(v)
+  return res
+
+
+def str2func(s):
+  from mtl.util.embed import (embed_sequence,
+                              no_op_embedding)
+
+  from mtl.encoders.paragram import paragram_phrase
+  from mtl.encoders.cnn import conv_and_pool
+  from mtl.encoders.rnn import rnn_and_pool
+  from mtl.encoders.no_op import no_op_encoding
+
+  from mtl.util.reducers import (reduce_avg_over_time,
+                                 reduce_var_over_time,
+                                 reduce_max_over_time,
+                                 reduce_min_over_time)
+
+  functions = {
+    "embed_sequence": embed_sequence,
+    "no_op_embedding": no_op_embedding,
+
+    "paragram": paragram_phrase,
+    "conv_and_pool": conv_and_pool,
+    "rnn_and_pool": rnn_and_pool,
+    "no_op_encoding": no_op_encoding,
+
+    "reduce_min_over_time": reduce_min_over_time,
+    "reduce_max_over_time": reduce_max_over_time,
+    "reduce_avg_over_time": reduce_avg_over_time,
+    "reduce_var_over_time": reduce_var_over_time,
+
+    "tf.nn.relu": tf.nn.relu,
+    "tf.nn.elu": tf.nn.elu,
+  }
+
+  res = functions[s] if s in functions else s
+  return res
+
+
 def update_hparams_from_args(hps, args, log=True):
     """
     Updates hps with values of matching keys in args
@@ -50,12 +95,13 @@ def update_hparams_from_args(hps, args, log=True):
       args: argparse Namespace returned from parse_args()
     """
     if log:
-        tf.logging.info(
-            "Updating hyper-parameters from command-line arguments.")
+        tf.logging.info("Updating hyperparameters from command line arguments")
     opts = vars(args)
     for hps_k, hps_v in hps.values().items():
         if hps_k in opts:
             if log:
-                tf.logging.info("  %20s: %10s -> %10s", hps_k, hps_v,
+                tf.logging.info("  %20s: %10s -> %10s",
+                                hps_k,
+                                hps_v,
                                 opts[hps_k])
             hps.set_hparam(hps_k, opts[hps_k])
