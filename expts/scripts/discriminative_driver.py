@@ -60,8 +60,8 @@ def parse_args():
     # TODO use these share_xxx flags
     p.add_argument('--share_embed', action='store_true', default=False,
                    help='Whether datasets share word embeddings')
-    p.add_argument('--share_encoder', action='store_true', default=False,
-                   help='Whether datasets share the encoder.')
+    # p.add_argument('--share_encoder', action='store_true', default=False,
+    #                help='Whether datasets share the encoder.')
     p.add_argument('--share_decoders', action='store_true', default=False,
                    help='Whether decoders are shared across datasets')
     p.add_argument('--lr0', default=0.0001, type=float,
@@ -104,12 +104,12 @@ def parse_args():
                    help='Path to the shared vocabulary for the datasets')
     p.add_argument('--encoder_config_file', type=str,
                    help='Absolute path to the encoder config file')
-    p.add_argument('--encoder_architecture', type=str,
+    p.add_argument('--architecture', type=str,
                    help="""Encoder architecture type
-                   (see encoder_factory.py for supported architectures)""")
-    p.add_argument('--architectures_path', type=str,
-                   help="""Path of the args file of the
-                   architectures of the experiment.""")
+                   (from encoder config file)""")
+    # p.add_argument('--architectures_path', type=str,
+    #                help="""Path of the args file of the
+    #                architectures of the experiment.""")
     p.add_argument('--shared_hidden_dims', nargs='+', type=int,
                    default=[128, 128],
                    help='Sizes of the hidden layers shared by all datasets.')
@@ -581,19 +581,14 @@ def main():
         #                 for each of the examples in the batch
 
         if args.model == 'mult':
-            # # TODO encoder_hps
-            # encoder_hps = HParams()
             # hps = HParams()
-            # encoder_hps.parse(path to encoder_hps.json)
             # hps.parse(path to hps.json)
 
             hps = set_hps(args)
-            encoder_hps = None
 
             model = Mult(class_sizes=class_sizes,
                          dataset_order=dataset_order,
                          vocab_size=vocab_size,
-                         encoder_hps=encoder_hps,
                          hps=hps,
                          args=args)
 
