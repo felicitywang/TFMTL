@@ -51,13 +51,13 @@ def dict2func(d):
 
 
 def str2func(s):
-  from mtl.util.embed import (embed_sequence,
-                              no_op_embedding)
+  from mtl.embedders.embed_sequence import embed_sequence
+  from mtl.embedders.no_op import no_op_embedding
 
-  from mtl.encoders.paragram import paragram_phrase
-  from mtl.encoders.cnn import conv_and_pool
-  from mtl.encoders.rnn import rnn_and_pool
-  from mtl.encoders.no_op import no_op_encoding
+  from mtl.extractors.paragram import paragram_phrase
+  from mtl.extractors.cnn import conv_and_pool
+  from mtl.extractors.rnn import rnn_and_pool
+  from mtl.extractors.no_op import no_op_encoding
 
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
