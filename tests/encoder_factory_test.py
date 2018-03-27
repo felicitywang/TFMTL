@@ -30,7 +30,7 @@ class EncoderTests(tf.test.TestCase):
 of tied/untied embedders and extractors are correct."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--architecture', default='paragram')
+    parser.add_argument('--architecture', default='example')
     parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
     parser.add_argument('--encoder_config_file', default='tests/encoders.json')
     args = parser.parse_args()
