@@ -59,7 +59,7 @@ def str2func(s):
   from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import conv_and_pool
   from mtl.extractors.rnn import rnn_and_pool
-  from mtl.extractors.lbirnn import lbirnn_and_pool
+  from mtl.extractors.lbirnn import lbirnn
   from mtl.extractors.no_op import no_op_encoding
 
   from mtl.util.reducers import (reduce_avg_over_time,
@@ -74,7 +74,7 @@ def str2func(s):
     "paragram": paragram_phrase,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,
-    "lbirnn_and_pool": lbirnn_and_pool,
+    "lbirnn": lbirnn,
     "no_op_encoding": no_op_encoding,
 
     "reduce_min_over_time": reduce_min_over_time,

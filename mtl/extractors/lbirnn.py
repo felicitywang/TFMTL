@@ -16,36 +16,39 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mtl.util.reducers import (reduce_max_over_time,
-                               reduce_avg_over_time,
-                               reduce_var_over_time,
-                               reduce_min_over_time)
-
 
 def get_multi_cell(cell_type, cell_size, num_layers):
   cells = [cell_type(cell_size) for _ in xrange(num_layers)]
   return tf.contrib.rnn.MultiRNNCell(cells)
 
 
-def lbirnn_and_pool(inputs,
-                    lengths,
-                    num_layers=2,
-                    cell_type=tf.contrib.rnn.BasicLSTMCell,
-                    cell_size=64,
-                    initial_state_fwd=None,
-                    initial_state_bwd=None,
-                    reducer=reduce_max_over_time):
-  """Stacked linear chain bi-directional LSTM"""
-  # TODO: determine dimensions of output representation
+def lbirnn(inputs,
+           lengths,
+           num_layers=2,
+           cell_type=tf.contrib.rnn.BasicLSTMCell,
+           cell_size=64,
+           initial_state_fwd=None,
+           initial_state_bwd=None):
+  """Stacked linear chain bi-directional RNN
+
+  Inputs
+  _____
+    inputs: batch of size [batch_size, batch_len, embed_size]
+    lengths: batch of size [batch_size]
+    num_layers: number of stacked layers in the bi-RNN
+    cell_type: type of RNN cell to use (e.g., LSTM, GRU)
+    cell_size: cell's output size
+    initial_state_fwd: initial state for forward direction
+    initial_state_bwd: initial state for backward direction
+
+  Outputs
+  _______
+    If the input word vectors have dimension D, the output is a Tensor of size
+    [batch_size, batch_len, cell_size_fwd + cell_size_bwd]
+      = [batch_size, batch_len, 2*cell_size].
+  """
 
   # TODO: does padding affect how we want to do the reversal?
-
-  reducers = [reduce_avg_over_time,
-              reduce_var_over_time,
-              reduce_max_over_time,
-              reduce_min_over_time]
-  assert reducer in reducers, "unrecognized bi-rnn reducer: %s" % reducer
-
   inputs_rev = tf.reverse(inputs, [1])  # reverse along time axis
 
   cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
@@ -76,5 +79,4 @@ def lbirnn_and_pool(inputs,
 
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=2)
 
-  # Pooling
-  return reducer(outputs, lengths=lengths, time_axis=1)
+  return outputs

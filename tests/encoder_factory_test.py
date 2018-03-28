@@ -74,6 +74,8 @@ of tied/untied embedders and extractors are correct."""
       for var in trainable_variables:
         print(var)
 
+      print(output_SSTb_1.eval())
+
 
 if __name__ == '__main__':
     tf.test.main()
