@@ -71,7 +71,7 @@ class ByteProcessor(object):
 
     # pylint: disable=no-self-use
     @staticmethod
-    def reverse():
+    def reverse(x):
         """Reverses output of transform back to text.
 
         Args:
@@ -93,7 +93,8 @@ class ByteProcessor(object):
         Args:
           x: iterator or list of input documents.
             Documents can be bytes or unicode strings, which will be encoded as
-            utf-8 to map to bytes. Note, in Python2 str and bytes is the same type.
+            utf-8 to map to bytes. Note, in Python2 str and bytes is the same
+            type.
 
         Yields:
           iterator of byte ids.
@@ -102,7 +103,8 @@ class ByteProcessor(object):
             # For Python3 defined buffer as memoryview.
             buffer_or_memoryview = memoryview
         else:
-            buffer_or_memoryview = buffer  # pylint: disable=undefined-variable
+            # (disable undefined variable for pylint and flakes respectively)
+            buffer_or_memoryview = buffer  # noqa: F821 # pylint: disable=E0602
         for document in x:
             if isinstance(document, six.text_type):
                 document = document.encode('utf-8')

@@ -140,14 +140,17 @@ def _sublinear_term_frequency(term, tokenized_document):
 
 
 def _augmented_term_frequency(term, tokenized_document):
-    max_count = max([_term_frequency(t, tokenized_document) for t in tokenized_document])
-    return 0.5 + ((0.5 * _term_frequency(term, tokenized_document)) / max_count)
+    max_count = max([_term_frequency(t, tokenized_document)
+                     for t in tokenized_document])
+    return 0.5 + (
+        (0.5 * _term_frequency(term, tokenized_document)) / max_count)
 
 
 def _inverse_document_frequencies(tokenized_documents, vocab=None):
     idf_values = {}
     if not vocab:
-        vocab = set([item for sublist in tokenized_documents for item in sublist])
+        vocab = set([item for sublist in tokenized_documents
+                     for item in sublist])
     # print("vocab", vocab)
     print("Generating idf values...")
     for token in tqdm(vocab):
@@ -156,7 +159,8 @@ def _inverse_document_frequencies(tokenized_documents, vocab=None):
         sum_contains_token = sum(contains_token)
         if sum_contains_token == 0:
             sum_contains_token = 1
-        idf_values[token] = 1 + np.log(len(tokenized_documents) / sum_contains_token)
+        idf_values[token] = 1 + np.log(
+            len(tokenized_documents) / sum_contains_token)
     return idf_values
 
 
@@ -176,7 +180,8 @@ def tfidf(tokenized_documents, vocab=None):
 
 def _cosine_similarity(vector1, vector2):
     dot_product = sum(p * q for p, q in zip(vector1, vector2))
-    magnitude = np.sqrt(sum([val ** 2 for val in vector1])) * np.sqrt(sum([val ** 2 for val in vector2]))
+    magnitude = (np.sqrt(sum([val ** 2 for val in vector1])) *
+                 np.sqrt(sum([val ** 2 for val in vector2])))
     if not magnitude:
         return 0
     return dot_product / magnitude
@@ -201,15 +206,14 @@ if __name__ == "__main__":
     """Test Tf-idf"""
     all_documents = ['a b b c c c EOS', 'd e f g EOS', 'a b c d e f g h EOS']
 
-
     def tokenize(doc):
         return doc.lower().split(" ")
-
 
     # in Scikit-Learn
     from sklearn.feature_extraction.text import TfidfVectorizer
 
-    sklearn_tfidf = TfidfVectorizer(norm='l2', min_df=0, use_idf=True, smooth_idf=False, sublinear_tf=True,
+    sklearn_tfidf = TfidfVectorizer(norm='l2', min_df=0, use_idf=True,
+                                    smooth_idf=False, sublinear_tf=True,
                                     tokenizer=tokenize)
     sklearn_representation = sklearn_tfidf.fit_transform(all_documents)
 
@@ -219,12 +223,15 @@ if __name__ == "__main__":
     our_tfidf_comparisons = []
     for count_0, doc_0 in enumerate(tfidf_representation):
         for count_1, doc_1 in enumerate(tfidf_representation):
-            our_tfidf_comparisons.append((_cosine_similarity(doc_0, doc_1), count_0, count_1))
+            our_tfidf_comparisons.append((_cosine_similarity(doc_0, doc_1),
+                                          count_0, count_1))
 
     skl_tfidf_comparisons = []
     for count_0, doc_0 in enumerate(sklearn_representation.toarray()):
         for count_1, doc_1 in enumerate(sklearn_representation.toarray()):
-            skl_tfidf_comparisons.append((_cosine_similarity(doc_0, doc_1), count_0, count_1))
+            skl_tfidf_comparisons.append((_cosine_similarity(doc_0, doc_1),
+                                          count_0, count_1))
 
-    for x in zip(sorted(our_tfidf_comparisons, reverse=True), sorted(skl_tfidf_comparisons, reverse=True)):
+    for x in zip(sorted(our_tfidf_comparisons, reverse=True),
+                 sorted(skl_tfidf_comparisons, reverse=True)):
         print(x)

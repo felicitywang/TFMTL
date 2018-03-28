@@ -20,7 +20,6 @@ from __future__ import print_function
 from six.moves import xrange
 from itertools import product
 from collections import OrderedDict
-
 import tensorflow as tf
 
 
@@ -39,10 +38,11 @@ def enum_events(class_sizes, cond_vals=None):
   if cond_vals is not None:
     vs = cond_vals.values()
     assert len(vs) > 0
-    if type(vs[0]) is int:
+    v0 = next(iter(vs))
+    if type(v0) is int:
       batch_cond = False
     else:
-      first_cond_val = vs[0]
+      first_cond_val = v0
 
   for k, v in class_sizes.items():
     if cond_vals is not None and k in cond_vals:

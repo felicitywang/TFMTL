@@ -13,8 +13,12 @@
 # limitations under the License.
 # ============================================================================
 
+import tensorflow as tf
 from mtl.layers import dense_layer
-from mtl.util.reducers import *
+from mtl.util.reducers import (reduce_avg_over_time,
+                               reduce_var_over_time,
+                               reduce_max_over_time,
+                               reduce_min_over_time)
 
 
 def paragram_phrase(inputs,
@@ -29,9 +33,12 @@ def paragram_phrase(inputs,
   ------
     inputs: batch of size [batch_size, batch_Len, embed_size]
     lengths: batch of size [batch_size]
-    reducer: pooling operation to apply to the word embeddings to get the sentence embedding
-    apply_activation: whether to apply an activation function to the sentence embedding
-    activation_fn: (non-)linearity to apply to the reduced sentence embedding (linear projection if activation_fn=None)
+    reducer: pooling operation to apply to the word embeddings
+             to get the sentence embedding
+    apply_activation: whether to apply an activation function
+                      to the sentence embedding
+    activation_fn: (non-)linearity to apply to the reduced sentence embedding
+                   (linear projection if activation_fn=None)
 
   Outputs
   -------
@@ -39,13 +46,22 @@ def paragram_phrase(inputs,
     [batch_size, D].
   """
 
+  reducers = [reduce_avg_over_time,
+              reduce_var_over_time,
+              reduce_max_over_time,
+              reduce_min_over_time]
+  assert reducer in reducers, "unrecognized paragram reducer: %s" % reducer
+
   if len(lengths.get_shape()) == 1:
     lengths = tf.expand_dims(lengths, 1)
 
   s_embedding = reducer(inputs, lengths=lengths, time_axis=1)
 
   if apply_activation:
-    embed_dim = tf.shape(inputs)[2]
-    s_embedding = dense_layer(s_embedding, embed_dim, name="paragram_phrase", activation=activation_fn)
+    embed_dim = inputs.get_shape().as_list()[2]
+    s_embedding = dense_layer(s_embedding,
+                              embed_dim,
+                              name="paragram_phrase",
+                              activation=activation_fn)
 
   return s_embedding

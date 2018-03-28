@@ -76,14 +76,14 @@ class Optimizer(object):
         elif config.optimizer == 'adadelta':
             self._opt = tf.train.AdadeltaOptimizer(learning_rate)
         elif config.optimizer == 'momentum':
-            self._opt = tf.train.MomentumOptimizer(learning_rate,
-                                                   config.momentum,
-                                                   use_nesterov=config.use_nesterov)
+            self._opt = tf.train.MomentumOptimizer(
+                learning_rate, config.momentum,
+                use_nesterov=config.use_nesterov)
         elif config.optimizer == 'rmsprop':
-            self._opt = tf.train.RMSPropOptimizer(learning_rate,
-                                                  config.rmsprop_decay,
-                                                  momentum=config.rmsprop_momentum,
-                                                  epsilon=config.rmsprop_epsilon)
+            self._opt = tf.train.RMSPropOptimizer(
+                learning_rate, config.rmsprop_decay,
+                momentum=config.rmsprop_momentum,
+                epsilon=config.rmsprop_epsilon)
         else:
             raise ValueError(
                 'unrecognized optimizer: {}'.format(config.optimizer))

@@ -201,23 +201,26 @@ class JointMultiLabelVAE(object):
     # ln p(z | y_1, ..., y_K)
     self._ln_pz_template = tf.make_template('pz',
                                             gaussian_posterior,
+                                            is_training=is_training,
                                             latent_dim=hp.latent_dim,
-                                            hidden_dim=hp.pz_mlp_hidden_dim,
-                                            num_layer=hp.pz_mlp_num_layer)
+                                            hidden_dims=hp.pz_mlp_hidden_dim,
+                                            num_layers=hp.pz_mlp_num_layer)
 
     # ln q(y_1, ..., y_K | x)
     self._ln_qy_template = tf.make_template('qy',
                                             joint_posterior_logits,
                                             output_size=output_size,
-                                            hidden_dim=hp.qy_mlp_hidden_dim,
-                                            num_layer=hp.qy_mlp_num_layer)
+                                            is_training=is_training,
+                                            hidden_dims=hp.qy_mlp_hidden_dim,
+                                            num_layers=hp.qy_mlp_num_layer)
 
     # ln q(z | x, y_1, ..., y_K)
     self._ln_qz_template = tf.make_template('qz',
                                             gaussian_posterior,
+                                            is_training=is_training,
                                             latent_dim=hp.latent_dim,
-                                            hidden_dim=hp.qz_mlp_hidden_dim,
-                                            num_layer=hp.qz_mlp_num_layer)
+                                            hidden_dims=hp.qz_mlp_hidden_dim,
+                                            num_layers=hp.qz_mlp_num_layer)
 
     # NOTE: In general we will probably use a constant value for tau.
     self._tau = get_tau(hp, decay=hp.decay_tau)

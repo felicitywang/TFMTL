@@ -7,3 +7,5 @@ tensorflow
 tqdm
 pathlib
 pytreebank
+pytest
+pytest-runner

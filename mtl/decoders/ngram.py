@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
+from tensorflow.contrib.layers import embed_sequence
 
 
 def ngram(x, z, vocab_size, embed_dim, ngram_order=3):
@@ -34,8 +35,8 @@ def ngram(x, z, vocab_size, embed_dim, ngram_order=3):
     # Embed context word IDs
     contexts = tf.reshape(contexts, [batch_size, batch_len, ngram_order])
     with tf.variable_scope("embedding"):
-        embed = tf.contrib.layers.embed_sequence(contexts, vocab_size=vocab_size,
-                                                 embed_dim=embed_dim)
+        embed = embed_sequence(contexts, vocab_size=vocab_size,
+                               embed_dim=embed_dim)
 
     # Join N-Gram Embeddings with Latent Code
     unstacked = tf.unstack(embed, axis=2)
