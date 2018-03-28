@@ -12,6 +12,6 @@
     "random_seed": 42,
     "subsample_ratio": 1,
     "padding": false,
-    "write_bow": true,
+    "write_bow": false,
     "write_tfidf": false
 }
