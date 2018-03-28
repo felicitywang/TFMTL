@@ -13,5 +13,5 @@
     "subsample_ratio": 1,
     "padding": false,
     "write_bow": true,
-    "write_tfidf": true
+    "write_tfidf": false
 }
