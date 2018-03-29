@@ -26,7 +26,6 @@ def rnn_and_pool(inputs,
                  cell_size=64,
                  initial_state=None,
                  reducer=reduce_max_over_time):
-
   cells = [cell_type(cell_size) for _ in xrange(num_layers)]
   cell = tf.contrib.rnn.MultiRNNCell(cells)
 
