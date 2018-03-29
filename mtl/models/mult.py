@@ -39,7 +39,6 @@ class Mult(object):
                  class_sizes=None,
                  dataset_order=None,
                  vocab_size=None,
-                 encoder_hps=None,
                  # TODO keep one of hps and args only
                  hps=None,
                  args=None):
@@ -57,14 +56,13 @@ class Mult(object):
 
         self._class_sizes = class_sizes
         self._dataset_order = dataset_order
-        self._encoder_hps = encoder_hps
         self._hps = hps
         # self._args = args
 
         # all feature names are present and consistent across data structures
         assert set(class_sizes.keys()) == set(dataset_order)
 
-        self._encoders = build_encoders(vocab_size, args, encoder_hps)
+        self._encoders = build_encoders(vocab_size, args)
 
         self._mlps_shared = build_mlps(hps, is_shared=True)
         self._mlps_private = build_mlps(hps, is_shared=False)
