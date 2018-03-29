@@ -19,12 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import json
 
-from mtl.util.hparams import dict2func
+import tensorflow as tf
+
 from mtl.util.embedder_factory import create_embedders
 from mtl.util.extractor_factory import create_extractors
+from mtl.util.hparams import dict2func
 
 
 def encoder_fn(inputs, lengths, embed_fn, extract_fn):
