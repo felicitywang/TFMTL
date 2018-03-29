@@ -20,7 +20,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from mtl.layers.mlp import dense_layer, mlp
-from mtl.util.old_encoder_factory import build_encoders
+from mtl.util.encoder_factory import build_encoders
 
 logging = tf.logging
 
