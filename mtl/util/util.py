@@ -206,10 +206,8 @@ if __name__ == "__main__":
   """Test Tf-idf"""
   all_documents = ['a b b c c c EOS', 'd e f g EOS', 'a b c d e f g h EOS']
 
-
   def tokenize(doc):
     return doc.lower().split(" ")
-
 
   # in Scikit-Learn
   from sklearn.feature_extraction.text import TfidfVectorizer
