@@ -23,10 +23,9 @@ from __future__ import print_function
 import codecs
 import json
 
-from mtl.encoders.cnn import conv_and_pool
-from mtl.encoders.paragram import paragram_phrase
-from mtl.util.embed import embed_sequence
-
+from mtl.embedders.embed_sequence import embed_sequence
+from mtl.extractors.cnn import conv_and_pool
+from mtl.extractors.paragram import paragram_phrase
 from mtl.util.reducers import *
 
 
