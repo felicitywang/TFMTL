@@ -61,11 +61,6 @@ def parse_args():
                    help='Size of evaluation batch.')
     p.add_argument('--word_embed_dim', default=128, type=int,
                    help='Word embedding size')
-    # TODO use these share_xxx flags
-    p.add_argument('--share_embed', action='store_true', default=False,
-                   help='Whether datasets share word embeddings')
-    p.add_argument('--share_encoder', action='store_true', default=False,
-                   help='Whether datasets share the encoder.')
     p.add_argument('--share_decoders', action='store_true', default=False,
                    help='Whether decoders are shared across datasets')
     p.add_argument('--lr0', default=0.0001, type=float,
@@ -626,19 +621,14 @@ def main():
         #                 for the specified feature for each of the examples in the batch
 
         if args.model == 'mult':
-            # # TODO encoder_hps
-            # encoder_hps = HParams()
             # hps = HParams()
-            # encoder_hps.parse(path to encoder_hps.json)
             # hps.parse(path to hps.json)
 
             hps = set_hps(args)
-            encoder_hps = None
 
             model = Mult(class_sizes=class_sizes,
                          dataset_order=dataset_order,
                          vocab_size=vocab_size,
-                         encoder_hps=encoder_hps,
                          hps=hps,
                          args=args)
 
