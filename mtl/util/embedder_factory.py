@@ -47,7 +47,7 @@ def create_embedders(embed_fns,
                 for a in args.datasets for b in args.datasets])
     embedder_kwargs = embedder_kwargs[args.datasets[0]]
 
-    embedder = tf.make_template('embedder',
+    embedder = tf.make_template('embedder_shared',
                                 embed_fn,
                                 **embedder_kwargs)
     for ds in args.datasets:
