@@ -49,6 +49,7 @@ def create_embedders(embed_fns,
 
     embedder = tf.make_template('embedder_shared',
                                 embed_fn,
+                                vocab_size=vocab_size,
                                 **embedder_kwargs)
     for ds in args.datasets:
       embedders[ds] = embedder
@@ -59,6 +60,7 @@ def create_embedders(embed_fns,
     for ds in args.datasets:
       embedder = tf.make_template('embedder_{}'.format(ds),
                                   embed_fns[ds],
+                                  vocab_size=vocab_size,
                                   **embedder_kwargs[ds])
       embedders[ds] = embedder
 

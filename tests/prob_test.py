@@ -19,18 +19,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-import numpy as np
 from collections import OrderedDict
-from operator import mul
 from functools import reduce
+from operator import mul
+
+import numpy as np
+import tensorflow as tf
 from six.moves import xrange
 
-from mtl.vae.prob import enum_events as enum
-from mtl.vae.prob import normalize_logits
-from mtl.vae.prob import marginal_log_prob
 from mtl.vae.prob import conditional_log_prob
 from mtl.vae.prob import entropy
+from mtl.vae.prob import enum_events as enum
+from mtl.vae.prob import marginal_log_prob
+from mtl.vae.prob import normalize_logits
 
 
 def slow_marginal(ln_joint_prob, target_dim):
@@ -99,7 +100,6 @@ class ProbTests(tf.test.TestCase):
         np_H = slow_entropy(logits_v[i])
         tf_H = H_v[i]
         self.assertAlmostEqual(np.sum(np_H), np.sum(tf_H), places=4)
-
 
   def test_enumerate(self):
     sizes = OrderedDict()
@@ -256,11 +256,12 @@ class ProbTests(tf.test.TestCase):
     pz_x = tf.exp(conditional_log_prob(ln_joint, 2, 0))
     py_z = tf.exp(conditional_log_prob(ln_joint, 1, 2))
     with self.test_session() as sess:
-      ln_joint_val, px_y_val, py_x_val, pz_x_val, py_z_val = sess.run([ln_joint,
-                                                                       px_y,
-                                                                       py_x,
-                                                                       pz_x,
-                                                                       py_z])
+      ln_joint_val, px_y_val, py_x_val, pz_x_val, py_z_val = sess.run(
+        [ln_joint,
+         px_y,
+         py_x,
+         pz_x,
+         py_z])
       self.assertEqual(len(ln_joint_val.shape), 4)
       self.assertEqual(ln_joint_val.shape[0], batch_size)
       self.assertEqual(ln_joint_val.shape[1], dims[0])
@@ -305,6 +306,7 @@ class ProbTests(tf.test.TestCase):
           for k in xrange(dims[1]):
             self.assertAlmostEqual(true_py_z[i][j][k], py_z_val[i][j][k],
                                    places=3)
+
 
 if __name__ == "__main__":
   tf.test.main()

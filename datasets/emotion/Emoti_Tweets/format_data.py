@@ -1,6 +1,9 @@
-import os
 import json
+import os
+
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
 path = "./original/"
 files = os.listdir(path)
 count = 0
@@ -16,8 +19,7 @@ json.dump(data_list, open('data.json', 'w'), ensure_ascii=False)
 print(count)
 
 df = pd.read_json('data.json')
-import sklearn
-from sklearn.preprocessing import LabelEncoder
+
 label_encoder = LabelEncoder()
 df['label'] = None
 df.label = label_encoder.fit_transform(df.emotion)

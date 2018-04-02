@@ -23,8 +23,6 @@ import os
 # path that saves
 import sys
 
-from itertools import islice
-
 path = sys.argv[1]
 
 train_list = []

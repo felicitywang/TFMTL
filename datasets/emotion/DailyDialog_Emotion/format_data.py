@@ -1,4 +1,4 @@
-# Copyright 2017 Johns Hopkins University. All Rights Reserved.
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,16 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+# =============================================================================
 
 # -*- coding: utf-8 -*-
 
 # runs under DailyDialogue-Parse-master/ folder
 
 import json
-import re
-from os import listdir
-import pandas as pd
 
 text = open('dialogues_text.txt', 'r')
 act = open('dialogues_act.txt', 'r')
@@ -38,15 +35,19 @@ for text_line in text.readlines():
 
     for i in range(len(texts) - 1):
         content = dict()
-        content['dialogue_id'] = index # which dialogue it's in
-        content['sentence_id'] = i # index of the sentence in the current dialogue(shall be used to track context)
+        content['dialogue_id'] = index  # which dialogue it's in
+        content[
+            'sentence_id'] = i
+        # index of the sentence in the current dialogue
+        # (shall be used to track context)
         index += 1
         content['text'] = texts[i]
         content['act'] = acts[i]
         content['emotion'] = acts[i]
         content['topic'] = topics[0]
         content['label'] = content['emotion']
-        content['dialogue_num_sentence'] = len(texts) # how many sentences(paragraphs) there are in each dialogue
+        content['dialogue_num_sentence'] = len(
+            texts)  # how many sentences(paragraphs) there are in each dialogue
         all_list.append(content)
     dialogue_id += 1
 

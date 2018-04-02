@@ -1,6 +1,4 @@
 import json
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 
 file = open('smile-annotations-final.json')
 

@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+
 import tensorflow as tf
 
 from mtl.util.encoder_factory import build_encoders
@@ -76,4 +77,4 @@ of tied/untied embedders and extractors are correct."""
 
 
 if __name__ == '__main__':
-    tf.test.main()
+  tf.test.main()

@@ -19,12 +19,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-from mtl.util.reducers import reduce_min_over_time as min_over_time
-from mtl.util.reducers import reduce_max_over_time as max_over_time
 from mtl.util.reducers import reduce_avg_over_time as avg_over_time
+from mtl.util.reducers import reduce_max_over_time as max_over_time
+from mtl.util.reducers import reduce_min_over_time as min_over_time
 from mtl.util.reducers import reduce_var_over_time as var_over_time
 
 
@@ -53,8 +53,8 @@ class ReducerTests(tf.test.TestCase):
     x_avg = avg_over_time(x)
     with self.test_session() as sess:
       x_avg_val = sess.run(x_avg)
-      self.assertAlmostEqual(x_avg_val[0], sum(X[0])/len(X[0]), places=4)
-      self.assertAlmostEqual(x_avg_val[1], sum(X[1])/len(X[1]), places=4)
+      self.assertAlmostEqual(x_avg_val[0], sum(X[0]) / len(X[0]), places=4)
+      self.assertAlmostEqual(x_avg_val[1], sum(X[1]) / len(X[1]), places=4)
 
   def test_avg_padding(self):
     X = [[1., 2., 1.], [2., 3., 0.]]
@@ -64,8 +64,8 @@ class ReducerTests(tf.test.TestCase):
     x_avg = avg_over_time(x, lengths=l)
     with self.test_session() as sess:
       x_avg_val = sess.run(x_avg)
-      self.assertAlmostEqual(x_avg_val[0], sum(X[0])/len(X[0]))
-      self.assertAlmostEqual(x_avg_val[1], sum(X[1])/(len(X[1]) - 1))
+      self.assertAlmostEqual(x_avg_val[0], sum(X[0]) / len(X[0]))
+      self.assertAlmostEqual(x_avg_val[1], sum(X[1]) / (len(X[1]) - 1))
 
   def test_var(self):
     X = [[1., 2., 1.], [2., 2., 3.]]
