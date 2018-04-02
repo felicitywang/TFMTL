@@ -33,17 +33,36 @@ def encoder_fn(inputs, lengths, embed_fn, extract_fn):
   return extract_fn(e, lengths)
 
 
-def create_encoders(embedders, extractors, args):
+def create_encoders(embedders, extractors, fully_shared, args):
   # combine embedder and extractor for each dataset
 
   # map from dataset name to encoder template
   encoders = dict()
-  for ds in args.datasets:
-    encoder = tf.make_template('encoder_{}'.format(ds),
+
+  if fully_shared:
+    embedder_set = set(embedders.values())
+    assert len(embedder_set) == 1, "fully shared encoders " \
+                                   "must use the same embedder"
+    embed_fn = next(iter(embedder_set))
+
+    extractor_set = set(extractors.values())
+    assert len(extractor_set) == 1, "fully shared encoders " \
+                                    "must use the same extractor"
+    extract_fn = next(iter(extractor_set))
+
+    encoder = tf.make_template('encoder_shared',
                                encoder_fn,
-                               embed_fn=embedders[ds],
-                               extract_fn=extractors[ds])
-    encoders[ds] = encoder
+                               embed_fn=embed_fn,
+                               extract_fn=extract_fn)
+    for ds in args.datasets:
+      encoders[ds] = encoder
+  else:
+    for ds in args.datasets:
+      encoder = tf.make_template('encoder_{}'.format(ds),
+                                 encoder_fn,
+                                 embed_fn=embedders[ds],
+                                 extract_fn=extractors[ds])
+      encoders[ds] = encoder
 
   return encoders
 
@@ -76,6 +95,7 @@ def build_encoders(vocab_size, args):
 
   tie_embedders = architectures[arch]['embedders_tied']
   tie_extractors = architectures[arch]['extractors_tied']
+  fully_shared = tie_embedders and tie_extractors
 
   embedders = create_embedders(embed_fns,
                                tie_embedders,
@@ -86,6 +106,6 @@ def build_encoders(vocab_size, args):
                                  tie_extractors,
                                  args=args,
                                  extractor_kwargs=extract_kwargs)
-  encoders = create_encoders(embedders, extractors, args)
+  encoders = create_encoders(embedders, extractors, fully_shared, args)
 
   return encoders

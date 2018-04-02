@@ -42,7 +42,7 @@ def create_extractors(extract_fns, tie_extractors, args, extractor_kwargs):
                 for a in args.datasets for b in args.datasets])
     extractor_kwargs = extractor_kwargs[args.datasets[0]]
 
-    extractor = tf.make_template('extractor',
+    extractor = tf.make_template('extractor_shared',
                                  extract_fn,
                                  **extractor_kwargs)
 
