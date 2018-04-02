@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 
-def no_op_embedding(x):
+def no_op_embedding(x, vocab_size):
   """For use when an embedding function is required but the inputs
   do not need to be embedded, e.g., bag of words encoding.
   """
