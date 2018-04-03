@@ -1,2 +1,2 @@
-python ../scripts/discriminative_driver.py --datasets LMRD --dataset_paths data/tf/single/LMRD/min_50_max_-1/ --class_sizes 2 --vocab_path data/tf/single/LMRD/min_50_max_-1/vocab_size.txt --encoder_config_file encoders.json --model mult --alphas 1 --architecture paragram --mode predict --checkpoint_dir ./data/ckpt/LMRD/ --predict_tfrecord_path LMRD_neg.tf
+python ../scripts/discriminative_driver.py --datasets LMRD --dataset_paths data/tf/single/LMRD/min_50_max_-1/ --class_sizes 2 --vocab_path data/tf/single/LMRD/min_50_max_-1/vocab_size.txt --encoder_config_file encoders.json --model mult --alphas 1 --architecture paragram --mode predict --checkpoint_dir ./data/ckpt/LMRD/ --predict_tfrecord_path ../../tests/LMRD_neg.tf
 

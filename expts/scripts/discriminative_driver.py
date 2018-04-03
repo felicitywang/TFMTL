@@ -421,6 +421,9 @@ def predict(model, dataset_info, args):
         _pred_iter = model_info[dataset_name]['pred_iter']
         _predictions = get_all_predictions(sess, _pred_op, _pred_iter)
 
+        print(len(_predictions))
+        print(_predictions)
+
         # TODO write to some file
 
   logging.info(str_)
