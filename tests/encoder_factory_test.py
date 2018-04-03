@@ -31,7 +31,7 @@ class EncoderTests(tf.test.TestCase):
 of tied/untied embedders and extractors are correct."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--architecture', default='paragram')
+    parser.add_argument('--architecture', default='example')
     parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
     parser.add_argument('--encoder_config_file', default='tests/encoders.json')
     parser.add_argument('--vocab_path', default='tests/.vocab.txt')
@@ -42,8 +42,16 @@ of tied/untied embedders and extractors are correct."""
 
       inputs1 = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
       lengths1 = tf.constant([3, 3, 3, 3])
-      output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1)
-      output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1)
+
+      k = dict()
+
+      ### COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
+      indices1 = tf.constant([1,1,2,0])
+      k = {'indices': indices1}
+      ###
+
+      output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
+      output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1, **k)
 
       inputs2 = tf.constant([[1, 1, 1], [2, 2, 0]])
       lengths2 = tf.constant([3, 2])
@@ -73,6 +81,11 @@ of tied/untied embedders and extractors are correct."""
       print('Trainable variables created...')
       for var in trainable_variables:
         print(var)
+
+      print(output_SSTb_1.eval())
+
+      print('SSTb_1 size: {}'.format(output_SSTb_1.get_shape().as_list()))
+      print('SSTb_2 size: {}'.format(output_SSTb_2.get_shape().as_list()))
 
 
 if __name__ == '__main__':

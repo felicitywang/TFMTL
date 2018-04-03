@@ -28,9 +28,12 @@ from mtl.util.extractor_factory import create_extractors
 from mtl.util.hparams import dict2func
 
 
-def encoder_fn(inputs, lengths, embed_fn, extract_fn):
-  e = embed_fn(inputs)
-  return extract_fn(e, lengths)
+def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
+  extr = embed_fn(inputs)
+
+  # All extra arguments (kwargs) get passed into the extractor function
+  enc = extract_fn(extr, lengths, **kwargs)
+  return enc
 
 
 def create_encoders(embedders, extractors, fully_shared, args):
