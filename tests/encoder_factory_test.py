@@ -34,12 +34,11 @@ of tied/untied embedders and extractors are correct."""
     parser.add_argument('--architecture', default='paragram')
     parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
     parser.add_argument('--encoder_config_file', default='tests/encoders.json')
+    parser.add_argument('--vocab_path', default='tests/.vocab.txt')
     args = parser.parse_args()
 
-    vocab_size = 1000
-
     with self.test_session() as sess:
-      encoders = build_encoders(vocab_size, args)
+      encoders = build_encoders(args)
 
       inputs1 = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
       lengths1 = tf.constant([3, 3, 3, 3])

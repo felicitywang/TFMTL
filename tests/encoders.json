@@ -9,8 +9,7 @@
             "embed_fn": "embed_sequence",
             "embed_kwargs":
             {
-                "embed_dim": 256,
-                "vocab_size": 1000
+                "embed_dim": 256
             },
             "extract_fn": "paragram",
             "extract_kwargs":
@@ -26,8 +25,7 @@
             "embed_fn": "embed_sequence",
             "embed_kwargs":
             {
-                "embed_dim": 256,
-                "vocab_size": 1000
+                "embed_dim": 256
             },
             "extract_fn": "paragram",
             "extract_kwargs":
