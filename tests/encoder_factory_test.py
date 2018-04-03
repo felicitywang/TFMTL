@@ -34,7 +34,7 @@ of tied/untied embedders and extractors are correct."""
     parser.add_argument('--architecture', default='example')
     parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
     parser.add_argument('--encoder_config_file', default='tests/encoders.json')
-    parser.add_argument('--vocab_path', default='tests/.vocab.txt')
+    parser.add_argument('--vocab_path', default='tests/.vocab_size.txt')
     args = parser.parse_args()
 
     with self.test_session() as sess:
