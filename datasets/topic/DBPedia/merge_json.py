@@ -1,6 +1,5 @@
-import json
-import pandas as pd
 import gzip
+import json
 
 index = 0
 
@@ -14,13 +13,11 @@ for i in test_list:
     i['index'] = index
     index += 1
 
-
 all_list = train_list
 all_list.extend(test_list)
 
 with gzip.open('data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
-
 
 # indices
 train_index = list(range(len(train_list)))

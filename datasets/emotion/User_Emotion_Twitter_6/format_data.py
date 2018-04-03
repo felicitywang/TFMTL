@@ -1,9 +1,7 @@
 import json
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 
 file = open(
-    '/home/fay/jhu/lab/mlvae/tasks/emotion/User_Emotion_Twitter_6/annotated-data-emotions/tweets_annotated_with_6_Ekman\'s_emotions')
+    'annotated-data-emotions/tweets_annotated_with_6_Ekman\'s_emotions')
 
 data_list = []
 
@@ -24,8 +22,8 @@ for line in file.readlines():
     # print(emotion)
     data_list.append({'text': text, 'emotion': emotion})
 
-file=open('data.json','w')
-json.dump(data_list,file)
+file = open('data.json', 'w')
+json.dump(data_list, file)
 
 # df = pd.DataFrame(data_list)
 # df['label'] = None

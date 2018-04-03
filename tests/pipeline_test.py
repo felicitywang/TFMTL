@@ -24,14 +24,7 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-
 from mtl.util.pipeline import Pipeline
-from mtl.util.pipeline import bucket_info
 from mtl.util.pipeline import int64_feature
 from mtl.util.pipeline import int64_list_feature
 

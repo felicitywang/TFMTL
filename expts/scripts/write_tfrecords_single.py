@@ -4,10 +4,9 @@ import sys
 from mtl.util.dataset import Dataset
 from mtl.util.util import make_dir
 
-
 with open('args_' + sys.argv[1] + '.json', 'rt') as file:
-    args_single = json.load(file)
-    file.close()
+  args_single = json.load(file)
+  file.close()
 
 json_dir = "data/json/" + sys.argv[1]
 
@@ -35,4 +34,4 @@ dataset = Dataset(json_dir=json_dir,
                   generate_tf_record=True)
 
 with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-    f.write(str(dataset.vocab_size))
+  f.write(str(dataset.vocab_size))

@@ -14,6 +14,7 @@
 # ============================================================================
 
 import tensorflow as tf
+
 from mtl.layers import dense_layer
 from mtl.util.reducers import (reduce_avg_over_time,
                                reduce_var_over_time,

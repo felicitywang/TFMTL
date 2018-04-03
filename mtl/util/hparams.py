@@ -21,21 +21,21 @@ import tensorflow as tf
 
 
 def get_activation_fn(s):
-    if s == 'elu':
-        act_fn = tf.nn.elu
-    elif s == 'selu':
-        act_fn = tf.nn.selu
-    elif s == 'relu':
-        act_fn = tf.nn.relu
-    elif s == 'none' or None:
-        act_fn = None
-    elif s == 'tanh':
-        act_fn = tf.nn.tanh
-#    elif s == 'prelu':
-#        act_fn = prelu
-    else:
-        raise ValueError("unsupported activation fn: %s" % s)
-    return act_fn
+  if s == 'elu':
+    act_fn = tf.nn.elu
+  elif s == 'selu':
+    act_fn = tf.nn.selu
+  elif s == 'relu':
+    act_fn = tf.nn.relu
+  elif s == 'none' or None:
+    act_fn = None
+  elif s == 'tanh':
+    act_fn = tf.nn.tanh
+  #    elif s == 'prelu':
+  #        act_fn = prelu
+  else:
+    raise ValueError("unsupported activation fn: %s" % s)
+  return act_fn
 
 
 def dict2func(d):
@@ -94,21 +94,21 @@ def str2func(s):
 
 
 def update_hparams_from_args(hps, args, log=True):
-    """
-    Updates hps with values of matching keys in args
+  """
+  Updates hps with values of matching keys in args
 
-    Inputs:
-      hps: HParams object
-      args: argparse Namespace returned from parse_args()
-    """
-    if log:
-        tf.logging.info("Updating hyperparameters from command line arguments")
-    opts = vars(args)
-    for hps_k, hps_v in hps.values().items():
-        if hps_k in opts:
-            if log:
-                tf.logging.info("  %20s: %10s -> %10s",
-                                hps_k,
-                                hps_v,
-                                opts[hps_k])
-            hps.set_hparam(hps_k, opts[hps_k])
+  Inputs:
+    hps: HParams object
+    args: argparse Namespace returned from parse_args()
+  """
+  if log:
+    tf.logging.info("Updating hyperparameters from command line arguments")
+  opts = vars(args)
+  for hps_k, hps_v in hps.values().items():
+    if hps_k in opts:
+      if log:
+        tf.logging.info("  %20s: %10s -> %10s",
+                        hps_k,
+                        hps_v,
+                        opts[hps_k])
+      hps.set_hparam(hps_k, opts[hps_k])

@@ -22,8 +22,6 @@ import json
 import os
 # path that saves
 import sys
-from tqdm import tqdm
-from itertools import islice
 
 path = sys.argv[1]
 
