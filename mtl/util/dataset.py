@@ -68,7 +68,8 @@ class Dataset:
                write_bow=False,
                write_tfidf=False,
                predict_mode=False,
-               predict_file_name='predict.json.gz'
+               predict_json_path='predict.json.gz',
+               predict_tf_path='predict.tf'
                ):
     """
 Args:
@@ -110,6 +111,9 @@ Args:
     write_bow: True if to write bag of words as a feature in the tf record
     write_tfidf: True if to write tf-idf as a feature in the tf record
     predict_mode: True if to only write unlabeled text to predict
+    predict_json_path: File path of the gzipped json file of the text to
+    predict
+    predict_tf_path: File path of the tf records file of the text to predict
     """
 
     if max_vocab_size:
@@ -132,13 +136,12 @@ Args:
     #     file.close()
 
     if predict_mode:
-      assert predict_file_name is not None
-      data_file_name = predict_file_name
+      assert predict_json_path is not None
+      data_file_name = predict_json_path
     else:
-      data_file_name = 'data.json.gz'
+      data_file_name = os.path.join(json_dir, 'data.json.gz')
 
-    with gzip.open(os.path.join(json_dir, data_file_name),
-                   mode='rt') as file:
+    with gzip.open(data_file_name, mode='rt') as file:
       data = json.load(file, encoding='utf-8')
       file.close()
     self._label_list = [int(item[label_field_name])
@@ -170,15 +173,20 @@ Args:
     # takes as input)
 
     # get index
-    print("Generating train/valid/test splits...")
-    index_path = os.path.join(json_dir, "index.json.gz")
-    (self._train_index, self._valid_index, self._test_index,
-     self._unlabeled_index) = self.split(index_path, train_ratio,
-                                         valid_ratio, random_seed,
-                                         subsample_ratio)
+    if predict_mode:
+      # TODO
+      self._predict_index = np.asarray(range(len(self._token_list)))
+    else:
+      print("Generating train/valid/test splits...")
+      index_path = os.path.join(json_dir, "index.json.gz")
+      (self._train_index, self._valid_index, self._test_index,
+       self._unlabeled_index) = self.split(index_path, train_ratio,
+                                           valid_ratio, random_seed,
+                                           subsample_ratio)
 
     # only compute from training data
     if max_document_length == -1:
+
       self._max_document_length = max(len(self._token_list[i]) for i in
                                       self._train_index)
       print("max document length (computed) =",
@@ -229,61 +237,70 @@ Args:
                                set(self.mapping.values()))
       # self._tfidf_list = tfidf(self._token_list)
 
-    # write labeled data to TFRecord files
-    make_dir(tfrecord_dir)
-    self._train_path = os.path.join(tfrecord_dir, 'train.tf')
-    self._valid_path = os.path.join(tfrecord_dir, 'valid.tf')
-    self._test_path = os.path.join(tfrecord_dir, 'test.tf')
-
-    print("Writing TFRecord files for the training data...")
-    self.write_examples(
-      self._train_path, self._train_index, labeled=True)
-    print("Writing TFRecord files for the validation data...")
-    self.write_examples(
-      self._valid_path, self._valid_index, labeled=True)
-    print("Writing TFRecord files for the test data...")
-    self.write_examples(
-      self._test_path, self._test_index, labeled=True)
-
-    # write unlabeled data to TFRecord files if there're any
-
-    if len(self._unlabeled_index) == 0:
-      print("Unlabeled data not found.")
-      self._unlabeled_path = None
-      self._has_unlabeled = False
+    if predict_mode:
+      # TODO
+      self._predict_path = predict_tf_path
+      print("Writing TFRecord file for the predicting file...")
+      self.write_examples(self._predict_path, self._predict_index,
+                          labeled=False)
     else:
-      print("Unlabeled data found.")
-      self._has_unlabeled = True
-      print("Writing TFRecord files for the unlabeled data...")
-      self._unlabeled_path = os.path.join(tfrecord_dir, 'unlabeled.tf')
-      self.write_examples(
-        self._unlabeled_path, self._unlabeled_index, labeled=False)
+      # write tf records for train/valid/test data
 
-    # save dataset arguments
-    self._args = {
-      'num_classes': self._num_classes,
-      'max_document_length': self._max_document_length,
-      'vocab_size': self._vocab_size,
-      'min_frequency': min_frequency,
-      'max_frequency': max_frequency,
-      'random_seed': random_seed,
-      'train_path': os.path.abspath(self._train_path),
-      'valid_path': os.path.abspath(self._valid_path),
-      'test_path': os.path.abspath(self._test_path),
-      'train_size': len(self._train_index),
-      'valid_size': len(self._valid_index),
-      'test_size': len(self._test_index),
-      'has_unlabeled': self._has_unlabeled,
-      'unlabeled_path': os.path.abspath(
-        self._unlabeled_path
-      ) if self._unlabeled_path is not None else None,
-      'unlabeled_size': len(self._unlabeled_index)
-    }
-    print(self._args)
-    args_path = os.path.join(tfrecord_dir, "args.json")
-    with codecs.open(args_path, mode='w', encoding='utf-8') as file:
-      json.dump(self._args, file, ensure_ascii=False, indent=4)
-      file.close()
+      # write labeled data to TFRecord files
+      make_dir(tfrecord_dir)
+      self._train_path = os.path.join(tfrecord_dir, 'train.tf')
+      self._valid_path = os.path.join(tfrecord_dir, 'valid.tf')
+      self._test_path = os.path.join(tfrecord_dir, 'test.tf')
+
+      print("Writing TFRecord file for the training data...")
+      self.write_examples(
+        self._train_path, self._train_index, labeled=True)
+      print("Writing TFRecord file for the validation data...")
+      self.write_examples(
+        self._valid_path, self._valid_index, labeled=True)
+      print("Writing TFRecord file for the test data...")
+      self.write_examples(
+        self._test_path, self._test_index, labeled=True)
+
+      # write unlabeled data to TFRecord files if there're any
+
+      if len(self._unlabeled_index) == 0:
+        print("Unlabeled data not found.")
+        self._unlabeled_path = None
+        self._has_unlabeled = False
+      else:
+        print("Unlabeled data found.")
+        self._has_unlabeled = True
+        print("Writing TFRecord files for the unlabeled data...")
+        self._unlabeled_path = os.path.join(tfrecord_dir, 'unlabeled.tf')
+        self.write_examples(
+          self._unlabeled_path, self._unlabeled_index, labeled=False)
+
+      # save dataset arguments
+      self._args = {
+        'num_classes': self._num_classes,
+        'max_document_length': self._max_document_length,
+        'vocab_size': self._vocab_size,
+        'min_frequency': min_frequency,
+        'max_frequency': max_frequency,
+        'random_seed': random_seed,
+        'train_path': os.path.abspath(self._train_path),
+        'valid_path': os.path.abspath(self._valid_path),
+        'test_path': os.path.abspath(self._test_path),
+        'train_size': len(self._train_index),
+        'valid_size': len(self._valid_index),
+        'test_size': len(self._test_index),
+        'has_unlabeled': self._has_unlabeled,
+        'unlabeled_path': os.path.abspath(
+          self._unlabeled_path
+        ) if self._unlabeled_path is not None else None,
+        'unlabeled_size': len(self._unlabeled_index)
+      }
+      print(self._args)
+      args_path = os.path.join(tfrecord_dir, "args.json")
+      with codecs.open(args_path, mode='w', encoding='utf-8') as file:
+        json.dump(self._args, file, ensure_ascii=False, indent=4)
+        file.close()
 
   def build_vocab(self):
     """Builds vocabulary for this dataset only using tensorflow's

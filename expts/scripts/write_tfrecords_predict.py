@@ -16,27 +16,34 @@
 # ============================================================================
 
 import json
+import os
 import sys
 
 from mtl.util.dataset import Dataset
-from mtl.util.util import make_dir
+
+if len(sys.argv) != 5:
+  print("Usage: python write_tfrecords_predict.py DATASET_NAME "
+        "predict_json_path predict_tf_path tf_record_dir")
 
 with open('args_' + sys.argv[1] + '.json', 'rt') as file:
   args_predict = json.load(file)
   file.close()
 
-json_dir = "data/json/" + sys.argv[1]
+predict_json_path = sys.argv[2]
+predict_tf_path = sys.argv[3]
 
-tfrecord_dir = "data/tf/predict/"
-tfrecord_dir += sys.argv[1] + "/"
-tfrecord_dir += "min_" + str(args_predict['min_frequency']) + \
-                "_max_" + str(args_predict['max_frequency']) + "/"
-make_dir(tfrecord_dir)
+json_dir = sys.argv[1]
+
+tfrecord_dir = sys.argv[4]
+args_json_path = os.path.join(tfrecord_dir, 'args.json')
+with open(args_json_path) as file:
+  args = json.load(file)
+  max_document_length = args['max_document_length']
 
 dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,
                   vocab_dir=tfrecord_dir,
-                  max_document_length=args_predict['max_document_length'],
+                  max_document_length=max_document_length,
                   padding=args_predict['padding'],
                   write_bow=args_predict['write_bow'],
                   write_tfidf=args_predict['write_tfidf'],
@@ -44,8 +51,11 @@ dataset = Dataset(json_dir=json_dir,
                   vocab_given=True,
                   generate_tf_record=True,
                   predict_mode=True,
-                  # TODO predict file name from command line
-                  predict_file_name='predict.json.gz')
+                  predict_json_path=predict_json_path,
+                  predict_tf_path=predict_tf_path)
 
-with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-  f.write(str(dataset.vocab_size))
+# with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
+#   f.write(str(dataset.vocab_size))
+
+
+# TODO from plain text file

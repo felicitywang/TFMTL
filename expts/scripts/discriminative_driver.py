@@ -416,17 +416,17 @@ def predict(model, dataset_info, args):
       saver.restore(sess, checkpoint_path)
 
       for dataset_name in model_info:
-        # TODO predict
+        # TODO predict for one dataset
         _pred_op = model_info[dataset_name]['pred_pred_op']
         _pred_iter = model_info[dataset_name]['pred_iter']
-        _predictions = get_predictions(sess, _pred_op, _pred_iter)
+        _predictions = get_all_predictions(sess, _pred_op, _pred_iter)
 
-        print(_predictions)
+        # TODO write to some file
 
   logging.info(str_)
 
 
-def get_predictions(session, pred_op, pred_iterator):
+def get_all_predictions(session, pred_op, pred_iterator):
   session.run(pred_iterator.initializer)
 
   predictions = []
@@ -527,6 +527,12 @@ def main():
     elif args.mode == 'test':
       _dataset_test_path = os.path.join(_dir, "test.tf")
       dataset_info[dataset_name]['test_path'] = _dataset_test_path
+    elif args.mode == 'predict':
+      # TODO
+      _dataset_predict_path = args.predict_tfrecord_path
+      dataset_info[dataset_name]['pred_path'] = _dataset_predict_path
+    else:
+      raise ValueError('No such mode!')
 
   vocab_size = get_vocab_size(args.vocab_path)
 
@@ -540,7 +546,6 @@ def main():
   # This defines ALL the features that ANY model possibly needs access
   # to. That is, some models will only need a subset of these features.
   FEATURES = {
-    'label': tf.FixedLenFeature([], dtype=tf.int64),
     'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
     # 'types': tf.VarLenFeature(dtype=tf.int64),
     # 'type_counts': tf.VarLenFeature(dtype=tf.int64),
@@ -554,6 +559,8 @@ def main():
     FEATURES['tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
   else:
     raise ValueError("Input key %s not supported!" % args.input_key)
+  if args.mode == 'train' or args.mode == 'test':
+    FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
