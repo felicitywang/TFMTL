@@ -46,10 +46,12 @@ See `../../requirement.txt`
         - `python ../scripts/write_tfrecords_single.py SSTb`
         - `python ../scripts/write_tfrecords_single.py LMRD`
 4. (optional)
+    - generate gzipped json file of the plain text predicting file:
+        - `python ../scripts/convert_TEXT_to_JSON.py ../../tests/LMRD_neg.txt data/raw/LMRD_neg.json.gz`
     - generate TFRecord file for the dataset by
-        - `python write_tfrecords_predict.py DATASET_NAME predict_json_path predict_tf_path tfrecord_dir`
-        - e.g. `python ../scripts/write_tfrecords_predict.py args_LMRD.json ../../tests/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_50_max_-1/ data/tf/single/LMRD/min_50_max_-1/`
-        - e.g. `python ../scripts/write_tfrecords_predict.py args_merged.json ../../tests/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_50_max_-1/LMRD/ data/tf/single/LMRD/min_50_max_-1/`
+        - `python ../scripts/write_tfrecords_predict.py DATASET_NAME predict_json_path predict_tf_path tfrecord_dir`
+        - e.g. `python ../scripts/write_tfrecords_predict.py args_LMRD.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_50_max_-1/ data/tf/single/LMRD/min_50_max_-1/`
+        - e.g. `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_50_max_-1/LMRD/ data/tf/single/LMRD/min_50_max_-1/`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)
