@@ -51,12 +51,15 @@ def dict2func(d):
 
 
 def str2func(s):
+  # putting import statements here prevents circular imports
+  # for functions using, e.g., dense_layer()
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
 
   from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import conv_and_pool
   from mtl.extractors.rnn import rnn_and_pool
+  from mtl.extractors.lbirnn import lbirnn
   from mtl.extractors.no_op import no_op_encoding
 
   from mtl.util.reducers import (reduce_avg_over_time,
@@ -71,6 +74,7 @@ def str2func(s):
     "paragram": paragram_phrase,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,
+    "lbirnn": lbirnn,
     "no_op_encoding": no_op_encoding,
 
     "reduce_min_over_time": reduce_min_over_time,
@@ -80,6 +84,9 @@ def str2func(s):
 
     "tf.nn.relu": tf.nn.relu,
     "tf.nn.elu": tf.nn.elu,
+
+    "tf.contrib.rnn.BasicLSTMCell": tf.contrib.rnn.BasicLSTMCell,
+    "tf.contrib.rnn.GRUCell": tf.contrib.rnn.GRUCell,
   }
 
   res = functions[s] if s in functions else s
