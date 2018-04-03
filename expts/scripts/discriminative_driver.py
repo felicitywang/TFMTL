@@ -35,6 +35,7 @@ from tqdm import tqdm
 from mtl.models.mult import Mult
 from mtl.util.clustering import accuracy
 from mtl.util.pipeline import Pipeline
+from mtl.util.util import make_dir
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -55,9 +56,11 @@ def parse_args():
 
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
-                      'predict. Used in '
-                      'predict '
-                      'mode.')
+                      'predict. Used in predict mode.')
+  p.add_argument('--predict_dataset', type=str,
+                 help='The dataset the text to predict belongs to.')
+  p.add_argument('--predict_output_folder', type=str,
+                 help='Folder to save the predictions using each model.')
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
   p.add_argument('--eval_batch_size', default=256, type=int,
@@ -320,12 +323,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     #         file.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
     #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc, best_total_acc_epoch))
 
-    # # final evaluation on test data
-    # if args.test:
-    #     # TODO call test_model
-    #     # test_model(model, model_info, args)
-    #     test(model_info, args)
-
 
 def test_model(model, dataset_info, args):
   """
@@ -394,7 +391,7 @@ def predict(model, dataset_info, args):
 
   fill_pred_op_info(dataset_info, model, args, model_info)
 
-  str_ = '\nPredictions of the given text data using different saved models:'
+  str_ = 'Predictions of the given text data of dataset %s using different saved models:' % args.predict_dataset
 
   saver = tf.train.Saver()
 
@@ -404,27 +401,31 @@ def predict(model, dataset_info, args):
 
   for model_name in model_names:
     # load the saved best model
-    str_ += '\nUsing the model that performs the best on (%s)' % model_name
+    str_ += '\nUsing the model that performs the best on (%s)\n' % model_name
+
     with tf.Session() as sess:
       if model_name == 'MULT':
         checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT',
                                        'model')
       else:
         checkpoint_path = model_info[model_name]['checkpoint_path']
-      print(checkpoint_path)
 
       saver.restore(sess, checkpoint_path)
 
-      for dataset_name in model_info:
-        # TODO predict for one dataset
-        _pred_op = model_info[dataset_name]['pred_pred_op']
-        _pred_iter = model_info[dataset_name]['pred_iter']
-        _predictions = get_all_predictions(sess, _pred_op, _pred_iter)
+      dataset_name = args.predict_dataset
+      _pred_op = model_info[dataset_name]['pred_pred_op']
+      _pred_iter = model_info[dataset_name]['pred_iter']
+      _predictions = get_all_predictions(sess, _pred_op, _pred_iter)
 
-        print(len(_predictions))
-        print(_predictions)
+      str_ += str(_predictions)
 
-        # TODO write to some file
+      # TODO write to output file
+      make_dir(args.predict_output_folder)
+      with open(os.path.join(args.predict_output_folder, model_name) + '.pred',
+                'w') as file:
+        for i in _predictions:
+          file.write(str(i) + '\n')
+        file.close
 
   logging.info(str_)
 
@@ -531,7 +532,6 @@ def main():
       _dataset_test_path = os.path.join(_dir, "test.tf")
       dataset_info[dataset_name]['test_path'] = _dataset_test_path
     elif args.mode == 'predict':
-      # TODO
       _dataset_predict_path = args.predict_tfrecord_path
       dataset_info[dataset_name]['pred_path'] = _dataset_predict_path
     else:
@@ -591,7 +591,6 @@ def main():
                                  is_training=False)
         dataset_info[dataset_name]['test_dataset'] = ds
       elif args.mode == 'predict':
-        # TODO pred path
         _pred_path = dataset_info[dataset_name]['pred_path']
         ds = build_input_dataset(_pred_path, FEATURES,
                                  args.eval_batch_size,

@@ -13,7 +13,8 @@ See `../../requirement.txt`
 - `setup.sh`: shell(bash) script to download original data files, convert them to json format, generate their shared vocabulary, and generate TFRecord files according to that vocabulary
 - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files
 - `args_merged`: arguments for the datasets that use the shared vocabulary
-- `write_tfrecord_single.py`: python script to generate TFRecord files for the single dataset(without share vocabulary)
+- `write_tfrecord_single.py`: python script to generate the TFRecord files for the single dataset(without share vocabulary)
+- `write_tfrecord_predict.py`: python script to generate the TFRecord file for the given json file of the text to predict
 - `args_SSTb`: arguments for the dataset SSTb
 - `args_LMRD`: arguments for the dataset LMRD
 - `data/raw/`: downloaded/unzipped original data files
@@ -41,9 +42,14 @@ See `../../requirement.txt`
 2. run `setup.sh` to generate TFRecord files with merged vocabulary
 3. (optional)
     - modify arguments in `args_SSTb.json` or `args_LMRD.json`
-    - generate TFRecord files for the single datasetrun by
+    - generate TFRecord files for the single dataset by
         - `python ../scripts/write_tfrecords_single.py SSTb`
         - `python ../scripts/write_tfrecords_single.py LMRD`
+4. (optional)
+    - generate TFRecord file for the dataset by
+        - `python write_tfrecords_predict.py DATASET_NAME predict_json_path predict_tf_path tfrecord_dir`
+        - e.g. `python ../scripts/write_tfrecords_predict.py args_LMRD.json ../../tests/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_50_max_-1/ data/tf/single/LMRD/min_50_max_-1/`
+        - e.g. `python ../scripts/write_tfrecords_predict.py args_merged.json ../../tests/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_50_max_-1/LMRD/ data/tf/single/LMRD/min_50_max_-1/`
 
 ### arguments for datasets
 - `max_document_length`: maximum document length for the word id(-1 if not given, only useful when padding is true)

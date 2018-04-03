@@ -21,28 +21,32 @@ import sys
 
 from mtl.util.dataset import Dataset
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
   print("Usage: python write_tfrecords_predict.py DATASET_NAME "
-        "predict_json_path predict_tf_path tf_record_dir")
+        "predict_json_path predict_tf_path tfrecord_dir vocab_dir")
 
-with open('args_' + sys.argv[1] + '.json', 'rt') as file:
+dataset_args_path = sys.argv[1]
+predict_json_path = sys.argv[2]
+predict_tf_path = sys.argv[3]
+tfrecord_dir = sys.argv[4]
+vocab_dir = sys.argv[5]
+
+# args_DATASET.json or args_merged.json which has min_freq, max_freq,
+# max_document_length etc. information, which are used to further build
+# vocabulary
+with open(dataset_args_path, 'rt') as file:
   args_predict = json.load(file)
   file.close()
 
-predict_json_path = sys.argv[2]
-predict_tf_path = sys.argv[3]
-
-json_dir = sys.argv[1]
-
-tfrecord_dir = sys.argv[4]
-args_json_path = os.path.join(tfrecord_dir, 'args.json')
-with open(args_json_path) as file:
+# get max document length from the processed dataset folder
+tf_args_path = os.path.join(tfrecord_dir, 'args.json')
+with open(tf_args_path) as file:
   args = json.load(file)
   max_document_length = args['max_document_length']
 
-dataset = Dataset(json_dir=json_dir,
+dataset = Dataset(json_dir=None,
                   tfrecord_dir=tfrecord_dir,
-                  vocab_dir=tfrecord_dir,
+                  vocab_dir=vocab_dir,
                   max_document_length=max_document_length,
                   padding=args_predict['padding'],
                   write_bow=args_predict['write_bow'],
@@ -56,6 +60,3 @@ dataset = Dataset(json_dir=json_dir,
 
 # with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
 #   f.write(str(dataset.vocab_size))
-
-
-# TODO from plain text file

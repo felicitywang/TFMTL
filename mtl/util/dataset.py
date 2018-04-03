@@ -128,8 +128,6 @@ Args:
     self._write_bow = write_bow
     self._write_tfidf = write_tfidf
 
-    print("data in", json_dir)
-
     # with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt',
     #                encoding='utf-8') as file:
     #     data = json.load(file, encoding='utf-8')
@@ -139,6 +137,8 @@ Args:
       assert predict_json_path is not None
       data_file_name = predict_json_path
     else:
+      assert json_dir is not None
+      print("data in", json_dir)
       data_file_name = os.path.join(json_dir, 'data.json.gz')
 
     with gzip.open(data_file_name, mode='rt') as file:
