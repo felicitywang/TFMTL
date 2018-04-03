@@ -24,6 +24,7 @@ def get_multi_cell(cell_type, cell_size, num_layers):
 
 def lbirnn(inputs,
            lengths,
+           indices=None,
            num_layers=2,
            cell_type=tf.contrib.rnn.BasicLSTMCell,
            cell_size=64,
@@ -40,12 +41,19 @@ def lbirnn(inputs,
     cell_size: cell's output size
     initial_state_fwd: initial state for forward direction
     initial_state_bwd: initial state for backward direction
+    indices: which token index in each batch example should be output
+             shape: [batch_size] or [batch_size, 1]
 
   Outputs
   _______
-    If the input word vectors have dimension D, the output is a Tensor of size
-    [batch_size, batch_len, cell_size_fwd + cell_size_bwd]
-      = [batch_size, batch_len, 2*cell_size].
+    If the input word vectors have dimension D and indices is None,
+    the output is a Tensor of size
+      [batch_size, batch_len, cell_size_fwd + cell_size_bwd]
+        = [batch_size, batch_len, 2*cell_size].
+
+    If indices is not None, the output is a Tensor of size
+      [batch_size, cell_size_fwd + cell_size_bwd]
+        = [batch_size, 2*cell_size]
   """
 
   # TODO: does padding affect how we want to do the reversal?
@@ -78,5 +86,25 @@ def lbirnn(inputs,
                                               scope="rnn_bwd")
 
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=2)
+
+  if indices is not None:
+    # row index [[0], [1], ..., [N]]
+    r = tf.range(batch_size)
+    r = tf.expand_dims(r, 1)
+
+    # make sure indices are able to be concatenated with range
+    # i.e., of the form [[idx_0], [idx_1], ..., [idx_N]]
+    rank = len(indices.get_shape().as_list())
+    if rank == 1:
+      indices = tf.expand_dims(indices, 1)
+    elif rank == 2:
+      pass
+    else:
+      raise ValueError("indices doesn't have rank 1 or 2: rank=%d" % (rank))
+
+    idx = tf.concat([r, indices], axis=1)
+
+    # get the (indices[i])-th token's output from row i
+    outputs = tf.gather_nd(outputs, idx)
 
   return outputs

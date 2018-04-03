@@ -42,13 +42,21 @@ of tied/untied embedders and extractors are correct."""
 
       inputs1 = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
       lengths1 = tf.constant([3, 3, 3, 3])
-      output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1)
-      output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1)
+
+      k = dict()
+
+      ### COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
+      indices1 = tf.constant([1,1,2,0])
+      k = {'indices': indices1}
+      ###
+
+      output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
+      output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1, **k)
 
       inputs2 = tf.constant([[1, 1, 1], [2, 2, 0]])
       lengths2 = tf.constant([3, 2])
-      output_SSTb_2 = encoders['SSTb'](inputs=inputs2, lengths=lengths2)
-      output_LMRD_2 = encoders['LMRD'](inputs=inputs2, lengths=lengths2)
+      output_SSTb_2 = encoders['SSTb'](inputs=inputs2, lengths=lengths2, indices=None)
+      output_LMRD_2 = encoders['LMRD'](inputs=inputs2, lengths=lengths2, indices=None)
 
       all_variables = tf.global_variables()
       trainable_variables = tf.trainable_variables()
@@ -75,6 +83,9 @@ of tied/untied embedders and extractors are correct."""
         print(var)
 
       print(output_SSTb_1.eval())
+
+      print('SSTb_1 size: {}'.format(output_SSTb_1.get_shape().as_list()))
+      print('SSTb_2 size: {}'.format(output_SSTb_2.get_shape().as_list()))
 
 
 if __name__ == '__main__':
