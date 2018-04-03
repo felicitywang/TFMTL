@@ -56,8 +56,8 @@ of tied/untied embedders and extractors are correct."""
 
       inputs2 = tf.constant([[1, 1, 1], [2, 2, 0]])
       lengths2 = tf.constant([3, 2])
-      output_SSTb_2 = encoders['SSTb'](inputs=inputs2, lengths=lengths2, indices=None)
-      output_LMRD_2 = encoders['LMRD'](inputs=inputs2, lengths=lengths2, indices=None)
+      output_SSTb_2 = encoders['SSTb'](inputs=inputs2, lengths=lengths2)
+      output_LMRD_2 = encoders['LMRD'](inputs=inputs2, lengths=lengths2)
 
       all_variables = tf.global_variables()
       trainable_variables = tf.trainable_variables()
