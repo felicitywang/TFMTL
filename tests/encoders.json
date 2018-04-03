@@ -6,10 +6,9 @@
 
         "SSTb":
         {
-            "embed_fn": "embed_sequence",
+            "embed_fn": "no_op_embedding",
             "embed_kwargs":
             {
-                "embed_dim": 256
             },
             "extract_fn": "lbirnn",
             "extract_kwargs":
@@ -24,10 +23,9 @@
 
         "LMRD":
         {
-            "embed_fn": "embed_sequence",
+            "embed_fn": "no_op_embedding",
             "embed_kwargs":
             {
-                "embed_dim": 256
             },
             "extract_fn": "lbirnn",
             "extract_kwargs":

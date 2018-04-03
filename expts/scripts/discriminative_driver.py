@@ -628,7 +628,6 @@ def main():
 
             model = Mult(class_sizes=class_sizes,
                          dataset_order=dataset_order,
-                         vocab_size=vocab_size,
                          hps=hps,
                          args=args)
 

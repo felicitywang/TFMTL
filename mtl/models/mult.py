@@ -38,7 +38,6 @@ class Mult(object):
     def __init__(self,
                  class_sizes=None,
                  dataset_order=None,
-                 vocab_size=None,
                  # TODO keep one of hps and args only
                  hps=None,
                  args=None):
@@ -50,7 +49,6 @@ class Mult(object):
 
         assert class_sizes is not None
         assert dataset_order is not None
-        assert vocab_size is not None
         assert hps is not None
         assert args is not None
 
@@ -62,7 +60,7 @@ class Mult(object):
         # all feature names are present and consistent across data structures
         assert set(class_sizes.keys()) == set(dataset_order)
 
-        self._encoders = build_encoders(vocab_size, args)
+        self._encoders = build_encoders(args)
 
         self._mlps_shared = build_mlps(hps, is_shared=True)
         self._mlps_private = build_mlps(hps, is_shared=False)

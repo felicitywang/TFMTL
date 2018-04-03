@@ -70,7 +70,7 @@ def create_encoders(embedders, extractors, fully_shared, args):
   return encoders
 
 
-def build_encoders(vocab_size, args):
+def build_encoders(args):
   encoders = dict()
 
   # Read in architectures from config file
@@ -88,6 +88,12 @@ def build_encoders(vocab_size, args):
   embed_kwargs = {ds: architectures[arch][ds]['embed_kwargs']
                   for ds in architectures[arch]
                   if type(architectures[arch][ds]) is dict}
+  # Put 'vocab_size' into embedder_kwargs for all datasets
+  with open(args.vocab_path, 'r') as f:
+    line = f.readline().strip()
+    vocab_size = int(line)
+  for ds in embed_kwargs:
+    embed_kwargs[ds]['vocab_size'] = vocab_size
 
   extract_fns = {ds: architectures[arch][ds]['extract_fn']
                  for ds in architectures[arch]
@@ -102,7 +108,6 @@ def build_encoders(vocab_size, args):
 
   embedders = create_embedders(embed_fns,
                                tie_embedders,
-                               vocab_size=vocab_size,
                                args=args,
                                embedder_kwargs=embed_kwargs)
   extractors = create_extractors(extract_fns,
