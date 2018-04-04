@@ -35,7 +35,8 @@ path = dir + 'aclImdb/train/pos/'
 file_names = os.listdir(path)
 for file_name in file_names:
   file_name_split = re.split("[_.]", file_name)
-  with codecs.open(os.path.join(path, file_name), mode='r', encoding='utf-8') as file:
+  with codecs.open(os.path.join(path, file_name), mode='r',
+                   encoding='utf-8') as file:
     train_list.append({
       'index': index,
       'id': file_name_split[0],
@@ -50,7 +51,8 @@ path = dir + 'aclImdb/train/neg/'
 file_names = os.listdir(path)
 for file_name in file_names:
   file_name_split = re.split("[_.]", file_name)
-  with codecs.open(os.path.join(path, file_name), mode='r', encoding='utf-8') as file:
+  with codecs.open(os.path.join(path, file_name), mode='r',
+                   encoding='utf-8') as file:
     train_list.append({
       'index': index,
       'id': file_name_split[0],
@@ -65,7 +67,8 @@ path = dir + 'aclImdb/test/pos/'
 file_names = os.listdir(path)
 for file_name in file_names:
   file_name_split = re.split("[_.]", file_name)
-  with codecs.open(os.path.join(path, file_name), mode='r', encoding='utf-8') as file:
+  with codecs.open(os.path.join(path, file_name), mode='r',
+                   encoding='utf-8') as file:
     test_list.append({
       'index': index,
       'id': file_name_split[0],
@@ -80,7 +83,8 @@ path = dir + 'aclImdb/test/neg/'
 file_names = os.listdir(path)
 for file_name in file_names:
   file_name_split = re.split("[_.]", file_name)
-  with codecs.open(os.path.join(path, file_name), mode='r', encoding='utf-8') as file:
+  with codecs.open(os.path.join(path, file_name), mode='r',
+                   encoding='utf-8') as file:
     test_list.append({
       'index': index,
       'id': file_name_split[0],
@@ -96,7 +100,8 @@ path = dir + 'aclImdb/train/unsup/'
 file_names = os.listdir(path)
 for file_name in file_names:
   file_name_split = re.split("[_.]", file_name)
-  with codecs.open(os.path.join(path, file_name), mode='r', encoding='utf-8') as file:
+  with codecs.open(os.path.join(path, file_name), mode='r',
+                   encoding='utf-8') as file:
     unlabeled_list.append({
       'index': index,
       'id': file_name_split[0],
@@ -107,7 +112,9 @@ for file_name in file_names:
 # indices
 train_index = list(range(len(train_list)))
 test_index = list(range(len(train_list), len(train_list) + len(test_list)))
-unlabeled_index = list(range(len(train_list) + len(test_list), len(train_list) + len(test_list) + len(unlabeled_list)))
+unlabeled_index = list(range(len(train_list) + len(test_list),
+                             len(train_list) + len(test_list) + len(
+                               unlabeled_list)))
 index_dict = {
   'train': train_index,
   'test': test_index,
