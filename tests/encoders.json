@@ -1,40 +1,40 @@
 {
-    "paragram":
+    "example":
     {
         "embedders_tied": true,
-        "extractors_tied": true,
+        "extractors_tied": false,
 
         "SSTb":
         {
-            "embed_fn": "embed_sequence",
+            "embed_fn": "no_op_embedding",
             "embed_kwargs":
             {
-                "embed_dim": 256,
-                "vocab_size": 1000
             },
-            "extract_fn": "paragram",
+            "extract_fn": "lbirnn",
             "extract_kwargs":
             {
-                "reducer": "reduce_max_over_time",
-                "apply_activation": true,
-                "activation_fn": null
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.GRUCell",
+                "cell_size": 64,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
             }
         },
 
         "LMRD":
         {
-            "embed_fn": "embed_sequence",
+            "embed_fn": "no_op_embedding",
             "embed_kwargs":
             {
-                "embed_dim": 256,
-                "vocab_size": 1000
             },
-            "extract_fn": "paragram",
+            "extract_fn": "lbirnn",
             "extract_kwargs":
             {
-                "reducer": "reduce_max_over_time",
-                "apply_activation": true,
-                "activation_fn": null
+                "num_layers": 2,
+                "cell_type": "tf.contrib.rnn.BasicLSTMCell",
+                "cell_size": 64,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
             }
         }
     }
