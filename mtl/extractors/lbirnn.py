@@ -56,6 +56,7 @@ def lbirnn(inputs,
         = [batch_size, 2*cell_size]
   """
 
+  # reverse each batch example up through its length, maintaining right-padding
   inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
 
   cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
@@ -82,6 +83,7 @@ def lbirnn(inputs,
                                       initial_state=initial_state_bwd,
                                       time_major=False,
                                       scope="rnn_bwd")
+  # reverse backward-pass outputs so they align with the forward-pass outputs
   outputs_bwd = tf.reverse_sequence(tmp, lengths, batch_axis=0, seq_axis=1)
 
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=2)
