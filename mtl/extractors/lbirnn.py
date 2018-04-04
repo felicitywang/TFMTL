@@ -36,13 +36,13 @@ def lbirnn(inputs,
   _____
     inputs: batch of size [batch_size, batch_len, embed_size]
     lengths: batch of size [batch_size]
+    indices: which token index in each batch example should be output
+             shape: [batch_size] or [batch_size, 1]
     num_layers: number of stacked layers in the bi-RNN
     cell_type: type of RNN cell to use (e.g., LSTM, GRU)
     cell_size: cell's output size
     initial_state_fwd: initial state for forward direction
     initial_state_bwd: initial state for backward direction
-    indices: which token index in each batch example should be output
-             shape: [batch_size] or [batch_size, 1]
 
   Outputs
   _______
@@ -56,8 +56,8 @@ def lbirnn(inputs,
         = [batch_size, 2*cell_size]
   """
 
-  # TODO: does padding affect how we want to do the reversal?
-  inputs_rev = tf.reverse(inputs, [1])  # reverse along time axis
+  # reverse each batch example up through its length, maintaining right-padding
+  inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
 
   cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
   cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
@@ -77,13 +77,14 @@ def lbirnn(inputs,
                                               time_major=False,
                                               scope="rnn_fwd")
 
-  # TODO: does "lengths" have to change due to padding and reversal of inputs?
-  outputs_bwd, states_bwd = tf.nn.dynamic_rnn(cells_bwd,
-                                              inputs_rev,
-                                              sequence_length=lengths,
-                                              initial_state=initial_state_bwd,
-                                              time_major=False,
-                                              scope="rnn_bwd")
+  tmp, states_bwd = tf.nn.dynamic_rnn(cells_bwd,
+                                      inputs_rev,
+                                      sequence_length=lengths,
+                                      initial_state=initial_state_bwd,
+                                      time_major=False,
+                                      scope="rnn_bwd")
+  # reverse backward-pass outputs so they align with the forward-pass outputs
+  outputs_bwd = tf.reverse_sequence(tmp, lengths, batch_axis=0, seq_axis=1)
 
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=2)
 
