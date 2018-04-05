@@ -112,10 +112,10 @@ def parse_args():
   p.add_argument('--encoder_config_file', type=str,
                  help='Path of the args file of the architectures of the '
                       'experiment.')
-  p.add_argument('--shared_hidden_dims', nargs='+', type=int,
+  p.add_argument('--shared_hidden_dims', nargs='?', type=int,
                  default=[128, 128],
                  help='Sizes of the hidden layers shared by all datasets.')
-  p.add_argument('--private_hidden_dims', nargs='+', type=int, default=None,
+  p.add_argument('--private_hidden_dims', nargs='?', type=int, default=None,
                  help='Sizes of the hidden layers private to each dataset.')
   p.add_argument('--shared_mlp_layers', type=int, default=2,
                  help='Number of hidden layers of the MLP model shared between datasets.')
