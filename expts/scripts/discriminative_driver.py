@@ -50,10 +50,12 @@ def parse_args():
   p.add_argument('--mode', choices=['train', 'test', 'predict'],
                  required=True,
                  help='Whether to train, test or predict. \n'
-                      'train: train on train data and evaluate on valid data for certain epochs\n'
-                      'test: evaluate on held-out test data using the trained model. \n'
-                      'predict: predict the labels of the given text file using the trained model.')
-
+                      'train: train on train data and evaluate on valid data '
+                      'for certain epochs, saving the best models\n'
+                      'test: restore the saved model and evaluate on held-out '
+                      'test data. \n'
+                      'predict: restore the saved model and predict the '
+                      'labels of the given text file')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
                       'predict. Used in predict mode.')
@@ -103,12 +105,14 @@ def parse_args():
   p.add_argument('--datasets', nargs='+', type=str,
                  help='Key of the dataset(s) to train and evaluate on')
   p.add_argument('--dataset_paths', nargs='+', type=str,
-                 help="""Paths to the directory containing the TFRecord files (train.tf, valid.tf, test.tf)
-                 for the dataset(s) given by the --datasets flag (in the same order)""")
+                 help="""Paths to the directory containing the TFRecord files
+                  (train.tf, valid.tf, test.tf) for the dataset(s) given by 
+                  the --datasets flag (in the same order)""")
   p.add_argument('--vocab_path', type=str,
                  help='Path to the shared vocabulary for the datasets')
   p.add_argument('--architecture', type=str,
-                 help='Encoder architecture type (see encoder_factory.py for supported architectures)')
+                 help='Encoder architecture type (see encoder_factory.py for '
+                      'supported architectures)')
   p.add_argument('--encoder_config_file', type=str,
                  help='Path of the args file of the architectures of the '
                       'experiment.')
@@ -118,9 +122,11 @@ def parse_args():
   p.add_argument('--private_hidden_dims', nargs='?', type=int, default=None,
                  help='Sizes of the hidden layers private to each dataset.')
   p.add_argument('--shared_mlp_layers', type=int, default=2,
-                 help='Number of hidden layers of the MLP model shared between datasets.')
+                 help='Number of hidden layers of the MLP model shared between'
+                      ' datasets.')
   p.add_argument('--private_mlp_layers', type=int, default=0,
-                 help='Number of hidden layers of the MLP model private for each dataset.')
+                 help='Number of hidden layers of the MLP model private for '
+                      'each dataset.')
   p.add_argument('--num_filter', default=64, type=int,
                  help='Number of filters for the CNN model.')
   p.add_argument('--max_width', default=5, type=int,
@@ -132,9 +138,11 @@ def parse_args():
   p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
                  help='Directory to save the checkpoints.')
   p.add_argument('--input_keep_prob', type=float, default=1,
-                 help="Probability to keep of the dropout layer before the MLP(shared+private).")
+                 help="Probability to keep of the dropout layer before the MLP"
+                      "(shared+private).")
   p.add_argument('--output_keep_prob', type=float, default=0.5,
-                 help="Probability to keep of the dropout layer after the MLP(shared+private).")
+                 help="Probability to keep of the dropout layer after the MLP"
+                      "(shared+private).")
   p.add_argument('--token_lengths_key', type=str, default='tokens_length',
                  help='Key of the tokens lengths.')
   p.add_argument('--l2_weight', type=float, default=0.0,
@@ -207,7 +215,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
   # latest checkpoint
   # saves every several steps
-  # automatically done by tf.train.SingularMonitorSession with tf.train.CheckpoinSaverHook
+  # automatically done by tf.train.SingularMonitorSession with
+  # tf.train.CheckpoinSaverHook
   # TODO load from some checkpoint dif at the beginning(?)
   saver_hook = tf.train.CheckpointSaverHook(
     checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
@@ -250,7 +259,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           [global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v
-        # loss_v is sum over a batch from each dataset of the average loss *per training example*
+        # loss_v is sum over a batch from each dataset of the average loss *per
+        #  training example*
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
@@ -275,8 +285,6 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
         train_loss)
-      # str_ += '[epoch=%d/%d step=%d (%d s)] test_train_loss=%s (per batch)' % (
-      #     epoch, args.num_train_epochs, np.asscalar(step), elapsed, test_train_loss)
       for dataset_name in model_info:
         _num_eval_total = model_info[dataset_name]['valid_metrics'][
           'ntotal']
@@ -320,8 +328,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     #         file.write(" ")
     #     file.write("\n")
     #     for dataset, acc in best_eval_acc.items():
-    #         file.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
-    #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc, best_total_acc_epoch))
+    #         file.write('Best accuracy for dataset {}: {}\n'.format(
+    # dataset, acc))
+    #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(
+    # best_total_acc, best_total_acc_epoch))
 
 
 def test_model(model, dataset_info, args):
@@ -391,7 +401,8 @@ def predict(model, dataset_info, args):
 
   fill_pred_op_info(dataset_info, model, args, model_info)
 
-  str_ = 'Predictions of the given text data of dataset %s using different saved models:' % args.predict_dataset
+  str_ = 'Predictions of the given text data of dataset %s using different ' \
+         'saved models:' % args.predict_dataset
 
   saver = tf.train.Saver()
 
@@ -628,9 +639,11 @@ def main():
     #        args: dictionary that maps dataset -> training batch
     #        returns: total loss accumulated over all batches in the dictionary
     #  * get_predictions()
-    #        args: valid batch (with <batch_len> examples), name of feature to predict
+    #        args: valid batch (with <batch_len> examples),
+    #                 name of feature to predict
     #        returns: Tensor of size <batch_len> specifying the predicted label
-    #                 for the specified feature for each of the examples in the batch
+    #                 for the specified feature for each of the examples
+    #                 in the batch
 
     if args.model == 'mult':
       # hps = HParams()
@@ -716,7 +729,8 @@ def fill_info_dicts(dataset_info, args):
 
   # dataset_info: dict containing dataset-specific parameters/statistics
   #  e.g., number of classes, path to data
-  # model_info: dict containing dataset-specific information w.r.t. running the model
+  # model_info: dict containing dataset-specific information w.r.t. running
+  # the model
   #  e.g., data iterators, batches, prediction operations
 
   # use validation data for evaluation anyway

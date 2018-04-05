@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
+# =============================================================================
 
 # -*- coding: utf-8 -*-
 
@@ -174,7 +174,6 @@ Args:
 
     # get index
     if predict_mode:
-      # TODO
       self._predict_index = np.asarray(range(len(self._token_list)))
     else:
       print("Generating train/valid/test splits...")
@@ -238,7 +237,6 @@ Args:
       # self._tfidf_list = tfidf(self._token_list)
 
     if predict_mode:
-      # TODO
       self._predict_path = predict_tf_path
       print("Writing TFRecord file for the predicting file...")
       self.write_examples(self._predict_path, self._predict_index,
