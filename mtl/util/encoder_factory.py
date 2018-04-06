@@ -29,7 +29,13 @@ from mtl.util.hparams import dict2func
 
 
 def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
-  extr = embed_fn(inputs)
+  if isinstance(inputs, (list, tuple)):
+    extr = list()
+    for i in inputs:
+      emb = embed_fn(i)
+      extr += [emb]
+  else:
+    extr = embed_fn(inputs)
 
   # All extra arguments (kwargs) get passed into the extractor function
   enc = extract_fn(extr, lengths, **kwargs)
