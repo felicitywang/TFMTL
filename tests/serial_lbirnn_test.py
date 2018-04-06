@@ -22,28 +22,33 @@ import tensorflow as tf
 
 from mtl.extractors.lbirnn import serial_lbirnn
 
+
 class SerialLBiRNNTests(tf.test.TestCase):
   def test_template(self):
     with self.test_session() as sess:
 
-      i1 = tf.constant([[1,2,3],[4,5,6]], dtype=tf.float32)
-      i1 = tf.reshape(i1, [2,3,1])
-      l1 = tf.constant([3,3])
-      i2 = tf.constant([[7,8],[9,10]], dtype=tf.float32)
-      i2 = tf.reshape(i2, [2,2,1])
-      l2 = tf.constant([2,2])
-      i3 = tf.constant([[100],[101]], dtype=tf.float32)
-      i3 = tf.reshape(i3, [2,1,1])
-      l3 = tf.constant([1,1])
-      
+      i1 = tf.constant([[1, 2, 3], [4, 5, 6]], dtype=tf.float32)
+      i1 = tf.reshape(i1, [2, 3, 1])
+      l1 = tf.constant([3, 3])
+      i2 = tf.constant([[7, 8], [9, 10]], dtype=tf.float32)
+      i2 = tf.reshape(i2, [2, 2, 1])
+      l2 = tf.constant([2, 2])
+      i3 = tf.constant([[100], [101]], dtype=tf.float32)
+      i3 = tf.reshape(i3, [2, 1, 1])
+      l3 = tf.constant([1, 1])
+
       inputs = [i1, i2, i3]
       lengths = [l1, l2, l3]
+
       indices = None
-      #indices = tf.constant([0,0])
+      # indices = tf.constant([0,0])
+
       num_layers = 2
-      #num_layers = 1
+      # num_layers = 1
+
       cell_type = tf.contrib.rnn.GRUCell
-      #cell_type = tf.contrib.rnn.BasicLSTMCell
+      # cell_type = tf.contrib.rnn.BasicLSTMCell
+
       cell_size = 32
       initial_state_fwd = None
       initial_state_bwd = None

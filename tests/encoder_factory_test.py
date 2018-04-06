@@ -25,6 +25,7 @@ from mtl.util.encoder_factory import build_encoders
 
 serial_lbirnn = False
 
+
 class EncoderTests(tf.test.TestCase):
   def test_template(self):
     """Manually check that the variables created for various combinations
@@ -40,18 +41,25 @@ of tied/untied embedders and extractors are correct."""
     with self.test_session() as sess:
       if serial_lbirnn:
         encoders = build_encoders(args)
-        inputs1 = tf.constant([[1,2,3],[4,5,6],[7,8,9]])
-        lengths1 = tf.constant([3,3,3])
+        inputs1 = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        lengths1 = tf.constant([3, 3, 3])
 
-        inputs2 = tf.constant([[100,101,102,103],[104,105,106,107],[108,109,110,111]])
-        lengths2 = tf.constant([4,4,4])
+        inputs2 = tf.constant([[100, 101, 102, 103],
+                               [104, 105, 106, 107],
+                               [108, 109, 110, 111]])
+        lengths2 = tf.constant([4, 4, 4])
 
-        #indices = tf.constant([1,2,0])
+        # indices = tf.constant([1,2,0])
         indices = None
+
         inputs = [inputs1, inputs2]
         lengths = [lengths1, lengths2]
-        output_SSTb = encoders['SSTb'](inputs=inputs, lengths=lengths, indices=indices)
-        output_LMRD = encoders['LMRD'](inputs=inputs, lengths=lengths, indices=indices)
+        output_SSTb = encoders['SSTb'](inputs=inputs,
+                                       lengths=lengths,
+                                       indices=indices)
+        output_LMRD = encoders['LMRD'](inputs=inputs,
+                                       lengths=lengths,
+                                       indices=indices)
 
         all_variables = tf.global_variables()
         trainable_variables = tf.trainable_variables()
@@ -61,7 +69,7 @@ of tied/untied embedders and extractors are correct."""
         sess.run(init_ops)
 
         all_var, train_var, s, l = sess.run([all_variables,
-                                          trainable_variables,
+                                             trainable_variables,
                                              output_SSTb,
                                              output_LMRD])
 
@@ -78,10 +86,8 @@ of tied/untied embedders and extractors are correct."""
         print(output_SSTb.eval())
 
         print('SSTb output size: {}'.format(output_SSTb.get_shape().as_list()))
-        print('LMRD output size: {}'.format(output_LMRD.get_shape().as_list()))        
+        print('LMRD output size: {}'.format(output_LMRD.get_shape().as_list()))
 
-
-        
       else:
         encoders = build_encoders(args)
 
@@ -90,10 +96,10 @@ of tied/untied embedders and extractors are correct."""
 
         k = dict()
 
-        ### COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
-        indices1 = tf.constant([1,1,2,0])
+        # COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
+        indices1 = tf.constant([1, 1, 2, 0])
         k = {'indices': indices1}
-        ###
+        #
 
         output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
         output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1, **k)

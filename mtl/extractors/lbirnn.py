@@ -87,8 +87,16 @@ def _lbirnn_helper(inputs,
                                                                tf.float32)
     initial_state_bwd = tuple(initial_state_bwd)
 
-  assert len(initial_state_fwd) == num_layers, "length of initial_state_fwd must equal num_layers: got {}, num_layers={}".format(len(initial_state_fwd), num_layers)
-  assert len(initial_state_bwd) == num_layers, "length of initial_state_bwd must equal num_layers: got {}, num_layers={}".format(len(initial_state_bwd), num_layers)
+  assert len(initial_state_fwd) == num_layers, "length of initial_state_fwd " \
+                                               "must equal num_layers: " \
+                                               "got {}, num_layers={}".format(
+                                               len(initial_state_fwd),
+                                               num_layers)
+  assert len(initial_state_bwd) == num_layers, "length of initial_state_bwd " \
+                                               "must equal num_layers: " \
+                                               "got {}, num_layers={}".format(
+                                               len(initial_state_bwd),
+                                               num_layers)
 
   outputs_fwd, states_fwd = tf.nn.dynamic_rnn(cells_fwd,
                                               inputs,
@@ -138,15 +146,15 @@ def lbirnn(inputs,
            cell_size=64,
            initial_state_fwd=None,
            initial_state_bwd=None):
-  (outputs_fwd, outputs_bwd), (states_fwd, states_bwd) = _lbirnn_helper(inputs,
-                                   lengths,
-                                   indices=indices,
-                                   num_layers=num_layers,
-                                   cell_type=cell_type,
-                                   cell_size=cell_size,
-                                   initial_state_fwd=initial_state_fwd,
-                                   initial_state_bwd=initial_state_bwd)
-
+  o, _ = _lbirnn_helper(inputs,
+                        lengths,
+                        indices=indices,
+                        num_layers=num_layers,
+                        cell_type=cell_type,
+                        cell_size=cell_size,
+                        initial_state_fwd=initial_state_fwd,
+                        initial_state_bwd=initial_state_bwd)
+  (outputs_fwd, outputs_bwd) = o
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
   return outputs
 
@@ -161,9 +169,10 @@ def serial_lbirnn(inputs,
                   initial_state_bwd):
   """Serial stacked linear chain bi-directional RNN
 
-  If `indices` is specified for the last stage, the outputs of the tokens in the last stage
-  as specified by `indices` will be returned. If `indices` is None for the last stage, the encodings
-  for all tokens in the sequence are returned.
+  If `indices` is specified for the last stage, the outputs of the tokens
+  in the last stage as specified by `indices` will be returned.
+  If `indices` is None for the last stage, the encodings for all tokens
+  in the sequence are returned.
 
   Inputs
   _____
@@ -173,7 +182,7 @@ def serial_lbirnn(inputs,
 
     inputs (*): Tensor of size [batch_size, batch_len, embed_size]
     lengths (*): Tensor of size [batch_size]
-    indices: Tensor of which token index in each batch example should be output;
+    indices: Tensor of which token index in each batch item should be output;
              shape: [batch_size] or [batch_size, 1]
     num_layers: number of stacked layers in the bi-RNN
     cell_type: type of RNN cell to use (e.g., LSTM, GRU)
@@ -183,7 +192,7 @@ def serial_lbirnn(inputs,
 
   Outputs
   _______
-  If the input word vectors have dimension D and there are N stages in the series:
+  If the input word vectors have dimension D and the series has N stages:
   if `indices` is not None:
     the output is a Tensor of size [batch_size, cell_size]
   if `indices` is None:
@@ -196,7 +205,8 @@ def serial_lbirnn(inputs,
   if not all(len(l) == num_stages for l in it):
     raise ValueError("all list arguments must have the same length")
 
-  assert num_stages > 0, "must specify arguments for at least one stage of serial bi-RNN"
+  assert num_stages > 0, "must specify arguments for " \
+                         "at least one stage of serial bi-RNN"
 
   fwd_ = initial_state_fwd
   bwd_ = initial_state_bwd
@@ -204,11 +214,6 @@ def serial_lbirnn(inputs,
     with tf.variable_scope("serial_lbirnn_{}".format(i)):
       inputs_ = inputs[i]
       lengths_ = lengths[i]
-      #indices_ = indices[i]
-      #if indices is None and i != num_stages - 1:
-      #  # Use the last token if `indices` was left unspecified
-      #  # and there are more stages after this one
-      #  indices = lengths[i] - 1  # account for zero-indexing
       if i == num_stages - 1:
         # Use the user-specified indices on the last stage
         indices_ = indices
@@ -216,24 +221,23 @@ def serial_lbirnn(inputs,
         indices_ = None
 
       if fwd_ is not None:
-        if len(fwd_) != num_layers:
-          assert len(fwd_) == 1, "initial state for forward pass should have {} or {} components: got {}".format(1, num_layers, len(fwd_))
-          # make sure fwd_ has num_layers_ length
-          fwd_ = tuple(list(fwd_) + [None]*(num_layers - 1))
+        assert len(fwd_) == num_layers, "must specify initial state " \
+                                        "for forward pass for all layers " \
+                                        "of serial bi-RNN"
       if bwd_ is not None:
-        if len(bwd_) != num_layers:
-          assert len(bwd_) == 1, "initial state for backward pass should have {} or {} components: got {}".format(1, num_layers, len(bwd_))
-          # make sure bwd_ has num_layers_ length
-          bwd_ = tuple(list(bwd_) + [None]*(num_layers - 1))
+        assert len(bwd_) == num_layers, "must specify initial state " \
+                                        "for forward pass for all layers " \
+                                        "of serial bi-RNN"
 
-      (outputs_fwd, outputs_bwd), (states_fwd, states_bwd) = _lbirnn_helper(inputs_,
-                                                                            lengths_,
-                                                                            indices=indices_,
-                                                                            num_layers=num_layers,
-                                                                            cell_type=cell_type,
-                                                                            cell_size=cell_size,
-                                                                            initial_state_fwd=fwd_,
-                                                                            initial_state_bwd=bwd_)
+      o, s = _lbirnn_helper(inputs_,
+                            lengths_,
+                            indices=indices_,
+                            num_layers=num_layers,
+                            cell_type=cell_type,
+                            cell_size=cell_size,
+                            initial_state_fwd=fwd_,
+                            initial_state_bwd=bwd_)
+      (outputs_fwd, outputs_bwd), (states_fwd, states_bwd) = o, s
       # Update arguments for next stage
       fwd_ = states_fwd
       bwd_ = states_bwd
