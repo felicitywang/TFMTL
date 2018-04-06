@@ -88,8 +88,8 @@ class Dataset:
         max_frequency: maximum frequency to build the vocabulary,
             words that appear more than or equal to this number would be
             discarded
-        text_field_names: string of a list of text field names joined
-            with spaces, read from json_dir if None
+        text_field_names: list of strings of text field names,
+                          read from json_dir if None
         label_field_name: label field name(only 1), read from json_dir if None
         valid_ratio: how many data out of all data to use as valid
             data if not splits are given, or how many data out of train data to
@@ -143,17 +143,38 @@ class Dataset:
         #     self.text_list = df[text_field_names].astype(str).sum(
         #         axis=1).tolist()
 
-        self._token_list = [' '.join([item[text_field_name]])
-                            for text_field_name in text_field_names for
-                            item in data]
 
-        self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text
-                            in
-                            self._token_list]
+        self._examples = []
+        for item in data:
+          d = dict()
+          for text_field_name in text_field_names:
+            d[text_field_name] = item[text_field_name]
+          self._examples.append(d)
+        
+        #self._token_list = [' '.join([item[text_field_name]])
+        #                    for text_field_name in text_field_names for
+        #                    item in data]
+
+        for ex in self._examples:
+          for text_field_name in ex:
+            text = self._examples[text_field_name]
+            self._examples[text_field_name] = tweet_tokenizer.tokenize(text) + ['EOS']
+        
+        #self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text
+        #                    in
+        #                    self._token_list]
 
         # length of cleaned text (including EOS)
-        self._token_length_list = [len(text) for text in
-                                   self._token_list]
+        self._ex_lengths = []
+        for ex in self._examples:
+          d = dict()
+          for text_field_name in ex:
+            text = self._examples[text_field_name]
+            d[text_field_name] = len(text)
+          self._ex_lengths.append(d)
+        
+        #self._token_length_list = [len(text) for text in
+        #                           self._token_list]
         self._padding = padding
 
         # tokenize and reconstruct as string(which vocabulary processor
