@@ -137,13 +137,10 @@ def make_example_list(d, starting_index):
 
 
 if __name__ == "__main__":
-  try:
-    datafolder = sys.argv[1]
-  except:
-    datafolder = "./TOPIC2/"
+  datafolder = sys.argv[1]
 
   data_train, data_dev1, data_test = readTopicBased(datafolder=datafolder,
-                                                    debug=True,
+                                                    debug=False,
                                                     num_instances=20)
 
   index = 0
