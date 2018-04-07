@@ -23,6 +23,7 @@ import codecs
 import gzip
 import itertools
 import json
+import operator
 import os
 from pathlib import Path
 
@@ -55,7 +56,7 @@ class Dataset:
                vocab_dir,
                tfrecord_dir,
                vocab_name='vocab_freq.json',
-               max_document_length=float('inf'),
+               max_document_length=-1,
                max_vocab_size=None,
                min_frequency=0,
                max_frequency=-1,
@@ -186,7 +187,7 @@ Args:
                                            subsample_ratio)
 
     # only compute from training data
-    if max_document_length == float('inf'):
+    if max_document_length == -1:
 
       self._max_document_length = max(len(self._token_list[i]) for i in
                                       self._train_index)
@@ -386,10 +387,15 @@ Args:
 
     if self._load_vocab_name == 'vocab_freq.json':
       # used when to merge new vocabulary using the vocabulary given
+
+
+      print(os.path.join(self._vocab_dir, 'vocab_freq.json'))
+
       with codecs.open(os.path.join(self._vocab_dir, 'vocab_freq.json'),
                        mode='r', encoding='utf-8') as file:
         self._vocab_freq_dict = json.load(file)
         file.close()
+
       categorical_vocab = CategoricalVocabulary()
       for word in self._vocab_freq_dict:
         categorical_vocab.add(word, count=self._vocab_freq_dict[word])
@@ -410,11 +416,11 @@ Args:
       # used when to directly use the vocabulary given, e.g. in predict mode
       with codecs.open(os.path.join(self._vocab_dir, 'vocab_v2i.json'),
                        mode='r', encoding='utf-8') as file:
-        self._vocab_freq_dict = json.load(file)
+        self._vocab_v2i_dict = json.load(file)
         file.close()
       categorical_vocab = CategoricalVocabulary()
-      for word in self._vocab_freq_dict:
-        categorical_vocab.add(word, count=self._vocab_freq_dict[word])
+      for word in self._vocab_v2i_dict:
+        categorical_vocab.add(word)
       categorical_vocab.freeze()
 
       vocab_processor = VocabularyProcessor(
@@ -422,14 +428,14 @@ Args:
         max_document_length=self._max_document_length,
         tokenizer_fn=tokenizer)
 
-      if self._padding is True:
-        self._token_list = list(
-          vocab_processor.transform_pad(self._token_list))
-      else:
-        self._token_list = list(
-          vocab_processor.transform(self._token_list))
-      self._token_list = [list(i) for i in self._token_list]
-      return vocab_processor.vocabulary_
+    if self._padding is True:
+      self._token_list = list(
+        vocab_processor.transform_pad(self._token_list))
+    else:
+      self._token_list = list(
+        vocab_processor.transform(self._token_list))
+    self._token_list = [list(i) for i in self._token_list]
+    return vocab_processor.vocabulary_
 
   def write_examples(self, file_name, split_index, labeled):
     # write to TFRecord data file
@@ -630,6 +636,14 @@ def merge_save_vocab_dicts(vocab_paths, save_path):
       file.close()
       merged_vocab_dict = combine_dicts(merged_vocab_dict, vocab_dict)
 
+  # sort merged vocabulary according to frequency
+  merged_vocab_list = sorted(merged_vocab_dict.items(),
+                             key=operator.itemgetter(1),
+                             reverse=True)
+  merged_vocab_dict = dict()
+  for i in merged_vocab_list:
+    merged_vocab_dict[i[0]] = i[1]
+
   with codecs.open(save_path, mode='w', encoding='utf-8') as file:
     json.dump(merged_vocab_dict, file, ensure_ascii=False, indent=4)
     file.close()
@@ -670,7 +684,7 @@ def merge_dict_write_tfrecord(json_dirs,
     dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
                       vocab_dir=merged_dir,
                       max_document_length=-1,
-                      max_vocab_size=float('inf'),
+                      max_vocab_size=-1,
                       min_frequency=0,
                       max_frequency=-1,
                       generate_basic_vocab=True,
