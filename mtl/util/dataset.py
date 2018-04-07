@@ -54,7 +54,8 @@ class Dataset:
                generate_tf_record,
                vocab_dir,
                tfrecord_dir,
-               max_document_length=-1,
+               vocab_name='vocab_freq.json',
+               max_document_length=float('inf'),
                max_vocab_size=None,
                min_frequency=0,
                max_frequency=-1,
@@ -78,9 +79,10 @@ Args:
         located, and vocabulary/TFRecords built from the single
         datasets are to be saved
     vocab_given: True if to use the given vocabulary
+    tfrecord_dir: directory to save generated TFRecord files
     vocab_dir: directory to load the given (e.g. merged) vocabulary
         frequency dict json file or to save the self-generated vocabulary
-    tfrecord_dir: directory to save generated TFRecord files
+    vocab_name: 'vocab_freq.json' or 'vocab_v2i.json'
     max_document_length: maximum document length for the mapped
         word ids, computed as the maximum document length of all the
         training data if None
@@ -184,7 +186,7 @@ Args:
                                            subsample_ratio)
 
     # only compute from training data
-    if max_document_length == -1:
+    if max_document_length == float('inf'):
 
       self._max_document_length = max(len(self._token_list[i]) for i in
                                       self._train_index)
@@ -220,6 +222,8 @@ Args:
       print("Public vocabulary given. Use that to build vocabulary "
             "processor.")
       self._vocab_dir = vocab_dir
+      assert vocab_name == 'vocab_freq.json' or vocab_name == 'vocab_v2i.json'
+      self._load_vocab_name = vocab_name
       self._categorical_vocab = self.load_vocab()
 
     # save mapping/reverse mapping to the disk
@@ -379,34 +383,53 @@ Args:
 
   def load_vocab(self):
     make_dir(self._vocab_dir)
-    with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
-                     mode='r', encoding='utf-8') as file:
-      self._vocab_freq_dict = json.load(file)
-      file.close()
-    categorical_vocab = CategoricalVocabulary()
-    for word in self._vocab_freq_dict:
-      categorical_vocab.add(word, count=self._vocab_freq_dict[word])
-    categorical_vocab.trim(min_frequency=self._min_frequency,
-                           max_frequency=self._max_frequency,
-                           max_vocab_size=self._max_vocab_size)
-    categorical_vocab.freeze()
 
-    vocab_processor = VocabularyProcessor(
-      vocabulary=categorical_vocab,
-      max_document_length=self._max_document_length,
-      min_frequency=self._min_frequency,
-      max_frequency=self._max_frequency,
-      max_vocab_size=self._max_vocab_size,
-      tokenizer_fn=tokenizer)
+    if self._load_vocab_name == 'vocab_freq.json':
+      # used when to merge new vocabulary using the vocabulary given
+      with codecs.open(os.path.join(self._vocab_dir, 'vocab_freq.json'),
+                       mode='r', encoding='utf-8') as file:
+        self._vocab_freq_dict = json.load(file)
+        file.close()
+      categorical_vocab = CategoricalVocabulary()
+      for word in self._vocab_freq_dict:
+        categorical_vocab.add(word, count=self._vocab_freq_dict[word])
+      categorical_vocab.trim(min_frequency=self._min_frequency,
+                             max_frequency=self._max_frequency,
+                             max_vocab_size=self._max_vocab_size)
+      categorical_vocab.freeze()
 
-    if self._padding is True:
-      self._token_list = list(
-        vocab_processor.transform_pad(self._token_list))
+      vocab_processor = VocabularyProcessor(
+        vocabulary=categorical_vocab,
+        max_document_length=self._max_document_length,
+        min_frequency=self._min_frequency,
+        max_frequency=self._max_frequency,
+        max_vocab_size=self._max_vocab_size,
+        tokenizer_fn=tokenizer)
+
     else:
-      self._token_list = list(
-        vocab_processor.transform(self._token_list))
-    self._token_list = [list(i) for i in self._token_list]
-    return vocab_processor.vocabulary_
+      # used when to directly use the vocabulary given, e.g. in predict mode
+      with codecs.open(os.path.join(self._vocab_dir, 'vocab_v2i.json'),
+                       mode='r', encoding='utf-8') as file:
+        self._vocab_freq_dict = json.load(file)
+        file.close()
+      categorical_vocab = CategoricalVocabulary()
+      for word in self._vocab_freq_dict:
+        categorical_vocab.add(word, count=self._vocab_freq_dict[word])
+      categorical_vocab.freeze()
+
+      vocab_processor = VocabularyProcessor(
+        vocabulary=categorical_vocab,
+        max_document_length=self._max_document_length,
+        tokenizer_fn=tokenizer)
+
+      if self._padding is True:
+        self._token_list = list(
+          vocab_processor.transform_pad(self._token_list))
+      else:
+        self._token_list = list(
+          vocab_processor.transform(self._token_list))
+      self._token_list = [list(i) for i in self._token_list]
+      return vocab_processor.vocabulary_
 
   def write_examples(self, file_name, split_index, labeled):
     # write to TFRecord data file
@@ -485,25 +508,25 @@ Args:
     if not Path(index_path).exists():
       # no split given
       print("no split given")
-      train_ind, valid_ind, test_ind = self.random_split_train_valid_test(
-        len(self._token_list),
-        train_ratio, valid_ratio,
-        random_seed)
+      train_index, valid_index, test_index \
+        = self.random_split_train_valid_test(len(self._token_list),
+                                             train_ratio, valid_ratio,
+                                             random_seed)
       unlabeled_index = []
     else:
       with gzip.open(index_path, mode='rt') as file:
         index_dict = json.load(file, encoding='utf-8')
         file.close()
       assert 'train' in index_dict and 'test' in index_dict
-      train_ind = index_dict['train']
-      test_ind = index_dict['test']
+      train_index = index_dict['train']
+      test_index = index_dict['test']
       if 'valid' in index_dict:
         print("train/valid/test splits given")
-        valid_ind = index_dict['valid']
+        valid_index = index_dict['valid']
       else:
         print("train/test splits given")
-        train_ind, valid_ind = self.random_split_train_valid(
-          train_ind, valid_ratio, random_seed)
+        train_index, valid_index = self.random_split_train_valid(
+          train_index, valid_ratio, random_seed)
       if 'unlabeled' in index_dict:
         print("This dataset has unlabeled data.")
         unlabeled_index = index_dict['unlabeled']
@@ -512,41 +535,41 @@ Args:
         unlabeled_index = []
 
     # no intersection
-    assert (len(train_ind) == len(set(train_ind)))
-    assert (len(valid_ind) == len(set(valid_ind)))
-    assert (len(test_ind) == len(set(test_ind)))
+    assert (len(train_index) == len(set(train_index)))
+    assert (len(valid_index) == len(set(valid_index)))
+    assert (len(test_index) == len(set(test_index)))
     assert (len(unlabeled_index) == len(set(unlabeled_index)))
 
-    assert len([i for i in train_ind if i in valid_ind]) == 0
-    assert len([i for i in train_ind if i in test_ind]) == 0
-    assert len([i for i in valid_ind if i in test_ind]) == 0
-    assert len([i for i in train_ind if i in unlabeled_index]) == 0
-    assert len([i for i in valid_ind if i in unlabeled_index]) == 0
-    assert len([i for i in test_ind if i in unlabeled_index]) == 0
+    assert len([i for i in train_index if i in valid_index]) == 0
+    assert len([i for i in train_index if i in test_index]) == 0
+    assert len([i for i in valid_index if i in test_index]) == 0
+    assert len([i for i in train_index if i in unlabeled_index]) == 0
+    assert len([i for i in valid_index if i in unlabeled_index]) == 0
+    assert len([i for i in test_index if i in unlabeled_index]) == 0
 
     print("train : valid : test : unlabeled = %d : %d : %d : %d" %
-          (len(train_ind),
-           len(valid_ind),
-           len(test_ind),
+          (len(train_index),
+           len(valid_index),
+           len(test_index),
            len(unlabeled_index)))
 
     if subsample_ratio is not None and subsample_ratio < 1.0:
-      train_ind = self.subsample(
-        train_ind, random_seed, subsample_ratio)
-      valid_ind = self.subsample(
-        valid_ind, random_seed, subsample_ratio)
-      test_ind = self.subsample(
-        test_ind, random_seed, subsample_ratio)
+      train_index = self.subsample(
+        train_index, random_seed, subsample_ratio)
+      valid_index = self.subsample(
+        valid_index, random_seed, subsample_ratio)
+      test_index = self.subsample(
+        test_index, random_seed, subsample_ratio)
       unlabeled_index = self.subsample(
         unlabeled_index, random_seed, subsample_ratio)
 
       print("train : valid : test : unlabeled = %d : %d : %d : %d" %
-            (len(train_ind),
-             len(valid_ind),
-             len(test_ind),
+            (len(train_index),
+             len(valid_index),
+             len(test_index),
              len(unlabeled_index)))
 
-    return train_ind, valid_ind, test_ind, unlabeled_index
+    return train_index, valid_index, test_index, unlabeled_index
 
   @staticmethod
   def subsample(index, random_seed, subsample_ratio=0.1):

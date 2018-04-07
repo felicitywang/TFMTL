@@ -46,7 +46,8 @@ See `../../requirement.txt`
 - `scripts/`: scripts to run the experiments
     - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files
     - `write_tfrecord_single.py`: python script to generate the TFRecord files for the single dataset(without share vocabulary)
-    - `write_tfrecord_predict.py`: python script to generate the TFRecord file for the given json file of the text to predict
+    - `write_tfrecord_predict.py`: python script to generate the TFRecord file for the given json file of the unlabeled text to predict
+    - `write_tfrecord_test.py`: python script to generate the TFRecord file for the given json file of the labeled text to test
     - `convert_TEXT_to_JSON.py`: python script to convert to text to predict from plain text to gzipped json
     - `discriminative_driver.py`: driver script to run the MULT model
 
@@ -68,6 +69,8 @@ See `../../requirement.txt`
 - for single dataset
     1. modify arguments in `TASK/args_DATASET.json`, e.g. `sentiment_1/args_SSTb.json`
     2. use `scripts/write_tfrecords_single.py` to generate TFRecord files, e.g. in `sentiment_1/` run `python ../scripts/write_tfrecords_single.py SSTb`
+
+- if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
 
 ### 2. Train the model
 
@@ -96,6 +99,13 @@ See `../../requirement.txt`
         - `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_50_max_-1/LMRD/ data/tf/single/LMRD/min_50_max_-1/`
 - run `scripts/discriminative_driver.py` with `predict` mode, specifying path of the saved checkpoints, e.g., `sentiment_1/predict_single.sh`, `sentiment_1/predict_mult.sh`; see the source file for further hyper-parameter / argument explanation
 
+### 5. Test with the model
+
+- use the trained model to test other test data(except for the original test data)
+- input: json file of test data with texts and labels
+- run `scripts/write_tfrecords_test.py` to write TFRecord file for the data to test
+
+    - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, and `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`)
 
 ## Arguments to generate TFRecord files
 
