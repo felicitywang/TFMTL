@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-REQUIRED_PACKAGES = ['six', 'enum34']
+REQUIRED_PACKAGES = ['six', 'enum34', 'sklearn']
 
 setup(name='mtl',
       version='0.1',
