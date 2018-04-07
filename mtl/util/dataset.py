@@ -508,25 +508,25 @@ Args:
     if not Path(index_path).exists():
       # no split given
       print("no split given")
-      train_index, valid_index, test_index \
-        = self.random_split_train_valid_test(len(self._token_list),
-                                             train_ratio, valid_ratio,
-                                             random_seed)
+      train_ind, valid_ind, test_ind = self.random_split_train_valid_test(
+        len(self._token_list),
+        train_ratio, valid_ratio,
+        random_seed)
       unlabeled_index = []
     else:
       with gzip.open(index_path, mode='rt') as file:
         index_dict = json.load(file, encoding='utf-8')
         file.close()
       assert 'train' in index_dict and 'test' in index_dict
-      train_index = index_dict['train']
-      test_index = index_dict['test']
+      train_ind = index_dict['train']
+      test_ind = index_dict['test']
       if 'valid' in index_dict:
         print("train/valid/test splits given")
-        valid_index = index_dict['valid']
+        valid_ind = index_dict['valid']
       else:
         print("train/test splits given")
-        train_index, valid_index = self.random_split_train_valid(
-          train_index, valid_ratio, random_seed)
+        train_ind, valid_ind = self.random_split_train_valid(
+          train_ind, valid_ratio, random_seed)
       if 'unlabeled' in index_dict:
         print("This dataset has unlabeled data.")
         unlabeled_index = index_dict['unlabeled']
@@ -535,41 +535,41 @@ Args:
         unlabeled_index = []
 
     # no intersection
-    assert (len(train_index) == len(set(train_index)))
-    assert (len(valid_index) == len(set(valid_index)))
-    assert (len(test_index) == len(set(test_index)))
+    assert (len(train_ind) == len(set(train_ind)))
+    assert (len(valid_ind) == len(set(valid_ind)))
+    assert (len(test_ind) == len(set(test_ind)))
     assert (len(unlabeled_index) == len(set(unlabeled_index)))
 
-    assert len([i for i in train_index if i in valid_index]) == 0
-    assert len([i for i in train_index if i in test_index]) == 0
-    assert len([i for i in valid_index if i in test_index]) == 0
-    assert len([i for i in train_index if i in unlabeled_index]) == 0
-    assert len([i for i in valid_index if i in unlabeled_index]) == 0
-    assert len([i for i in test_index if i in unlabeled_index]) == 0
+    assert len([i for i in train_ind if i in valid_ind]) == 0
+    assert len([i for i in train_ind if i in test_ind]) == 0
+    assert len([i for i in valid_ind if i in test_ind]) == 0
+    assert len([i for i in train_ind if i in unlabeled_index]) == 0
+    assert len([i for i in valid_ind if i in unlabeled_index]) == 0
+    assert len([i for i in test_ind if i in unlabeled_index]) == 0
 
     print("train : valid : test : unlabeled = %d : %d : %d : %d" %
-          (len(train_index),
-           len(valid_index),
-           len(test_index),
+          (len(train_ind),
+           len(valid_ind),
+           len(test_ind),
            len(unlabeled_index)))
 
     if subsample_ratio is not None and subsample_ratio < 1.0:
-      train_index = self.subsample(
-        train_index, random_seed, subsample_ratio)
-      valid_index = self.subsample(
-        valid_index, random_seed, subsample_ratio)
-      test_index = self.subsample(
-        test_index, random_seed, subsample_ratio)
+      train_ind = self.subsample(
+        train_ind, random_seed, subsample_ratio)
+      valid_ind = self.subsample(
+        valid_ind, random_seed, subsample_ratio)
+      test_ind = self.subsample(
+        test_ind, random_seed, subsample_ratio)
       unlabeled_index = self.subsample(
         unlabeled_index, random_seed, subsample_ratio)
 
       print("train : valid : test : unlabeled = %d : %d : %d : %d" %
-            (len(train_index),
-             len(valid_index),
-             len(test_index),
+            (len(train_ind),
+             len(valid_ind),
+             len(test_ind),
              len(unlabeled_index)))
 
-    return train_index, valid_index, test_index, unlabeled_index
+    return train_ind, valid_ind, test_ind, unlabeled_index
 
   @staticmethod
   def subsample(index, random_seed, subsample_ratio=0.1):
