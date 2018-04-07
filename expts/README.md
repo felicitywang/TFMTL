@@ -104,8 +104,8 @@ See `../../requirement.txt`
 - use the trained model to test other test data(except for the original test data)
 - input: json file of test data with texts and labels
 - run `scripts/write_tfrecords_test.py` to write TFRecord file for the data to test
-
     - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, and `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`)
+- test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
 
 ## Arguments to generate TFRecord files
 
