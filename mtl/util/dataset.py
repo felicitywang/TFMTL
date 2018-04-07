@@ -388,7 +388,6 @@ Args:
     if self._load_vocab_name == 'vocab_freq.json':
       # used when to merge new vocabulary using the vocabulary given
 
-
       print(os.path.join(self._vocab_dir, 'vocab_freq.json'))
 
       with codecs.open(os.path.join(self._vocab_dir, 'vocab_freq.json'),
