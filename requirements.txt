@@ -9,3 +9,4 @@ pathlib
 pytreebank
 pytest
 pytest-runner
+sklearn
