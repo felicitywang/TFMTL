@@ -305,7 +305,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         # _metric = dataset_info[
         #   dataset_name]['metric']
         # _score = model_info[dataset_name]['valid_metrics'][_metric]
-        # TODO other metric
+        # TODO use other metric here for tuning
         _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
         _eval_align_acc = model_info[dataset_name]['valid_metrics'][
           'aligned_accuracy']
