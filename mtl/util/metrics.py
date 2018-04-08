@@ -103,16 +103,3 @@ def metric2func(metric_name):
     return METRIC2FUNC[metric_name]
   else:
     raise NotImplementedError('Metric %s is not implemented!' % metric_name)
-
-  if __name__ == '__main__':
-    y_true = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
-  y_pred = [0, 1, 1, 2, 2, 3, 3, 4, 4, 0]
-  labels = [0, 1, 2, 3, 4]
-
-  print(accuracy_score(y_trues=y_true, y_preds=y_pred))
-  print(accurate_number(y_trues=y_true, y_preds=y_pred))
-
-  print(mae_macro(y_trues=y_true, y_preds=y_pred))
-
-  print(recall_macro(y_trues=y_true, y_preds=y_pred, labels=labels))
-  print(f1_macro(y_trues=y_true, y_preds=y_pred, labels=labels))
