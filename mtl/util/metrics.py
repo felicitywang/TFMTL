@@ -62,7 +62,7 @@ def f1_macro(y_trues, y_preds, labels):
                                   )
 
 
-def mae_macro(y_trues, y_preds):
+def mae_macro(y_trues, y_preds, labels):
   """
   macro-averaged(unweighted mean) mean absolute error
 
@@ -74,6 +74,15 @@ def mae_macro(y_trues, y_preds):
                                              y_pred=y_preds,
                                              sample_weight=None,
                                              multioutput='uniform_average')
+
+
+def neg_mae_macro(y_true, y_preds, labels):
+  """
+  As for absolute error, lower is better
+  Thus use negative value in order to share the same interface when tuning
+  dev data with other metrics
+  """
+  return -mae_macro(y_true, y_preds, labels)
 
 
 def recall_macro(y_trues, y_preds, labels):

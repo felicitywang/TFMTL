@@ -65,6 +65,14 @@ class MetricTest(tf.test.TestCase):
       0.5
     )
 
+  def neg_mae_macro(self):
+    y_trues = [3, -0.5, 2, 7]
+    y_preds = [2.5, 0.0, 2, 8]
+    self.assertEqual(
+      mae_macro(y_trues=y_trues, y_preds=y_preds, labels=None),
+      -0.5
+    )
+
 
 if __name__ == '__main__':
   tf.test.main()
