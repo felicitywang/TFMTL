@@ -16,7 +16,8 @@
 # ============================================================================
 
 """Write test.tf with given test.json.gz"""
-
+import json
+import os
 import sys
 
 from mtl.util.dataset import Dataset
@@ -31,6 +32,21 @@ if len(sys.argv) != 6:
 json_dir = sys.argv[1]
 tfrecord_dir = sys.argv[2]
 vocab_dir = sys.argv[3]
+
+# compute max document length
+# max document length should be the max(max_document_lengths) for each
+# dataset used to generate the vocabulary, their max_document_length happens
+#  to be in vocab_dir/DATASET/args.json
+# otherwise, vocabulary comes from a single dataset, whose args.jon lies in
+# vocab_dir
+args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
+              os.listdir(vocab_dir) if
+              os.path.isdir(os.path.join(vocab_dir, folder))]
+if len(args_paths) == 0:
+  args_paths = [os.path.join(vocab_dir, 'args.json')]
+  max_document_lengths = [
+    json.load(open(args_path, 'r'))['max_document_length']
+    for args_path in args_paths]
 
 # # args_DATASET.json or args_merged.json which has min_freq, max_freq,
 # # max_document_length etc. information, which are used to further build
@@ -50,7 +66,7 @@ dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,
                   vocab_dir=vocab_dir,
                   vocab_name='vocab_v2i.json',
-                  max_document_length=1000000,
+                  max_document_length=max(max_document_lengths),
                   # max_document_length=max_document_length,
                   # padding=args_predict['padding'],
                   # write_bow=args_predict['write_bow'],

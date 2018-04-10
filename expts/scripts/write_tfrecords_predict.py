@@ -38,16 +38,25 @@ with open(dataset_args_path, 'rt') as file:
   args_predict = json.load(file)
   file.close()
 
-# get max document length from the processed dataset folder
-tf_args_path = os.path.join(tfrecord_dir, 'args.json')
-with open(tf_args_path) as file:
-  args = json.load(file)
-  max_document_length = args['max_document_length']
+# compute max document length
+# max document length should be the max(max_document_lengths) for each
+# dataset used to generate the vocabulary, their max_document_length happens
+#  to be in vocab_dir/DATASET/args.json
+# otherwise, vocabulary comes from a single dataset, whose args.jon lies in
+# vocab_dir
+args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
+              os.listdir(vocab_dir) if
+              os.path.isdir(os.path.join(vocab_dir, folder))]
+if len(args_paths) == 0:
+  args_paths = [os.path.join(vocab_dir, 'args.json')]
+  max_document_lengths = [
+    json.load(open(args_path, 'r'))['max_document_length']
+    for args_path in args_paths]
 
 dataset = Dataset(json_dir=None,
                   tfrecord_dir=tfrecord_dir,
                   vocab_dir=vocab_dir,
-                  max_document_length=max_document_length,
+                  max_document_length=max(max_document_lengths),
                   padding=args_predict['padding'],
                   write_bow=args_predict['write_bow'],
                   write_tfidf=args_predict['write_tfidf'],
