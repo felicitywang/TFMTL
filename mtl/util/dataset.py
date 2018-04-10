@@ -150,6 +150,7 @@ Args:
     self._label_list = [int(item[label_field_name])
                         if label_field_name in item else None for
                         item in data]
+    self._label_set = set(self._label_list)
     self._num_classes = len(set(self._label_list))
 
     # if sys.version_info[0] < 3:
@@ -298,7 +299,8 @@ Args:
         'unlabeled_path': os.path.abspath(
           self._unlabeled_path
         ) if self._unlabeled_path is not None else None,
-        'unlabeled_size': len(self._unlabeled_index)
+        'unlabeled_size': len(self._unlabeled_index),
+        'labels': list(self._label_set)
       }
       print(self._args)
       args_path = os.path.join(tfrecord_dir, "args.json")
