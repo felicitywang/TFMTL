@@ -49,9 +49,9 @@ args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
               os.path.isdir(os.path.join(vocab_dir, folder))]
 if len(args_paths) == 0:
   args_paths = [os.path.join(vocab_dir, 'args.json')]
-  max_document_lengths = [
-    json.load(open(args_path, 'r'))['max_document_length']
-    for args_path in args_paths]
+max_document_lengths = [
+  json.load(open(args_path, 'r'))['max_document_length']
+  for args_path in args_paths]
 
 dataset = Dataset(json_dir=None,
                   tfrecord_dir=tfrecord_dir,
