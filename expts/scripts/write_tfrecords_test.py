@@ -23,9 +23,9 @@ import sys
 from mtl.util.dataset import Dataset
 
 if len(sys.argv) != 6:
-    print(
-        "Usage: python write_tfrecords_test.py test_json_dir tfrecord_dir "
-        "vocab_dir")
+  print(
+    "Usage: python write_tfrecords_test.py test_json_dir tfrecord_dir "
+    "vocab_dir")
 
 # dataset_args_path = sys.argv[1]
 
@@ -44,10 +44,10 @@ args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
               os.path.isdir(os.path.join(vocab_dir, folder))]
 
 if len(args_paths) == 0:
-    args_paths = [os.path.join(vocab_dir, 'args.json')]
+  args_paths = [os.path.join(vocab_dir, 'args.json')]
 max_document_lengths = [
-    json.load(open(args_path, 'r'))['max_document_length']
-    for args_path in args_paths]
+  json.load(open(args_path, 'r'))['max_document_length']
+  for args_path in args_paths]
 
 # # args_DATASET.json or args_merged.json which has min_freq, max_freq,
 # # max_document_length etc. information, which are used to further build
