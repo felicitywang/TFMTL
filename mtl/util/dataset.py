@@ -33,7 +33,8 @@ from six.moves import xrange
 from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
-from mtl.util.data_prep import tweet_tokenizer
+from mtl.util.data_prep import (tweet_tokenizer,
+                                tweet_tokenizer_keep_handles)
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -71,7 +72,8 @@ class Dataset:
                write_tfidf=False,
                predict_mode=False,
                predict_json_path='predict.json.gz',
-               predict_tf_path='predict.tf'
+               predict_tf_path='predict.tf',
+               tokenizer_="tweet_tokenizer",
                ):
     """
 Args:
@@ -131,6 +133,13 @@ Args:
     self._write_bow = write_bow
     self._write_tfidf = write_tfidf
 
+    if tokenizer_ == "tweet_tokenizer":
+      self._tokenizer = tweet_tokenizer
+    elif tokenizer_ == "tweet_tokenizer_keep_handles":
+      self._tokenizer = tweet_tokenizer_keep_handles
+    else:
+      raise ValueError("unrecognized tokenizer: %s" % (tokenizer_))
+
     self._text_field_names = text_field_names
 
     if predict_mode:
@@ -177,7 +186,8 @@ Args:
       num_examples += 1
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
-        text = tweet_tokenizer.tokenize(text) + ['EOS']
+        text = self._tokenizer.tokenize(text) + ['EOS']
+        # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
         # length of cleaned text (including EOS)
         self._sequence_lengths[text_field_name].append(len(text))
@@ -492,6 +502,9 @@ Args:
         feature = dict()
 
         # Gather sequences and sequence statistics
+        feature['index'] = tf.train.Feature(
+          int64_list=tf.train.Int64List(
+            value=[index]))
         for text_field_name in self._text_field_names:
           feature[text_field_name] = tf.train.Feature(
             int64_list=tf.train.Int64List(
@@ -707,6 +720,7 @@ def merge_dict_write_tfrecord(json_dirs,
                               max_frequency=-1,
                               text_field_names=['text'],
                               label_field_name=['label'],
+                              tokenizer_="tweet_tokenizer",
                               train_ratio=TRAIN_RATIO,
                               valid_ratio=VALID_RATIO,
                               subsample_ratio=1,
@@ -738,6 +752,7 @@ def merge_dict_write_tfrecord(json_dirs,
                       max_frequency=-1,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
+                      tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
                       generate_tf_record=False)
@@ -790,7 +805,8 @@ def merge_dict_write_tfrecord(json_dirs,
                       subsample_ratio=subsample_ratio,
                       padding=padding,
                       write_bow=write_bow,
-                      write_tfidf=write_tfidf
+                      write_tfidf=write_tfidf,
+                      tokenizer_=tokenizer_
                       )
     vocab_v2i_dicts.append(dataset.mapping)
     vocab_i2v_lists.append(dataset.reverse_mapping)

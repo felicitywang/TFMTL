@@ -14,5 +14,6 @@
     "subsample_ratio": 1,
     "padding": false,
     "write_bow": false,
-    "write_tfidf": false
+    "write_tfidf": false,
+    "tokenizer": "tweet_tokenizer_keep_handles"
 }

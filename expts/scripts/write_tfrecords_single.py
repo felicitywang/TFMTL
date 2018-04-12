@@ -49,6 +49,7 @@ dataset = Dataset(json_dir=json_dir,
                   padding=args_single['padding'],
                   write_bow=args_single['write_bow'],
                   write_tfidf=args_single['write_tfidf'],
+                  tokenizer_=args_single['tokenizer'],
                   generate_basic_vocab=False,
                   vocab_given=False,
                   generate_tf_record=True)
