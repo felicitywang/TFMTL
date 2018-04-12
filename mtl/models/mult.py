@@ -18,6 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import os
+import json
 
 from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
@@ -68,18 +70,51 @@ class Mult(object):
     self._logits = build_logits(class_sizes)
 
   # Encoding (feature extraction)
-  def encode(self, inputs, dataset_name, lengths=None):
+  def encode(self, inputs, dataset_name, lengths=None, **kwargs):
     # if self._encoders[dataset_name] == 'no_op':
     #     return inputs
-    return self._encoders[dataset_name](inputs, lengths)
+    return self._encoders[dataset_name](inputs, lengths, **kwargs)
 
-  def get_predictions(self, batch, dataset_name):
+  def get_predictions(self, batch, batch_source, dataset_name):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
-    x = batch[self._hps.input_key]
-    input_lengths = batch[self._hps.token_lengths_key]
 
-    x = self.encode(x, dataset_name, lengths=input_lengths)
+    for dataset, dataset_path in zip(self._hps.datasets,
+                                     self._hps.dataset_paths):
+      if dataset == batch_source:
+        with open(os.path.join(dataset_path, 'args.json')) as f:
+          text_field_names = json.load(f)['text_field_names']
+
+    x = list()
+    input_lengths = list()
+    for text_field_name in text_field_names:
+      input_lengths.append(batch[text_field_name+'_length'])
+      if self._hps.input_key == 'tokens':
+        x.append(batch[text_field_name])
+      elif self._hps.input_key == 'bow':
+        x.append(batch[text_field_name+'_bow'])
+      elif self._hps.input_key == 'tfidf':
+        x.append(batch[text_field_name+'_tfidf'])
+      else:
+        raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      # Using serial-lbirnn
+      #   -use last token of last sequence as feature representation
+      indices = input_lengths[-1]
+      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+      kwargs = {'indices': indices}
+    else:
+      kwargs = {}
+
+    # Turn back into single value instead of list
+    if len(x) == 1:
+      x = x[0]
+    if len(input_lengths) == 1:
+      input_lengths = input_lengths[0]
+
+    x = self.encode(x, dataset_name, lengths=input_lengths, **kwargs)
 
     x = self._mlps_shared[dataset_name](x, is_training=False)
     x = self._mlps_private[dataset_name](x, is_training=False)
@@ -91,16 +126,53 @@ class Mult(object):
 
     return res
 
-  def get_loss(self, batch, dataset_name, features=None, is_training=True):
+  def get_loss(self,
+               batch,
+               batch_source,  # which dataset the batch is from
+               dataset_name,
+               features=None,
+               is_training=True):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
-    x = batch[self._hps.input_key]
-    input_lengths = batch[self._hps.token_lengths_key]
+
+    for dataset, dataset_path in zip(self._hps.datasets,
+                                     self._hps.dataset_paths):
+      if dataset == batch_source:
+        with open(os.path.join(dataset_path, 'args.json')) as f:
+          text_field_names = json.load(f)['text_field_names']
+
+    x = list()
+    input_lengths = list()
+    for text_field_name in text_field_names:
+      input_lengths.append(batch[text_field_name+'_length'])
+      if self._hps.input_key == 'tokens':
+        x.append(batch[text_field_name])
+      elif self._hps.input_key == 'bow':
+        x.append(batch[text_field_name+'_bow'])
+      elif self._hps.input_key == 'tfidf':
+        x.append(batch[text_field_name+'_tfidf'])
+      else:
+        raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      indices = input_lengths[-1]
+      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+      kwargs = {'indices': indices}
+    else:
+      kwargs = {}
+
+    # Turn back into single value instead of list
+    if len(x) == 1:
+      x = x[0]
+    if len(input_lengths) == 1:
+      input_lengths = input_lengths[0]
+
     labels = batch[self._hps.label_key]
 
     # TODO remove this?
     if features is None:
-      x = self.encode(x, dataset_name, lengths=input_lengths)
+      x = self.encode(x, dataset_name, lengths=input_lengths, **kwargs)
     else:
       x = features
 
@@ -139,8 +211,11 @@ class Mult(object):
       # same fields/features (given by the keys in the batch
       # accesses below)
       dataset_name, batch = dataset_batch
-      loss = self.get_loss(batch=batch, dataset_name=dataset_name,
-                           features=None, is_training=is_training)
+      loss = self.get_loss(batch=batch,
+                           batch_source=dataset_name,
+                           dataset_name=dataset_name,
+                           features=None,
+                           is_training=is_training)
       total_loss += alpha * loss
       losses[dataset_name] = loss
 

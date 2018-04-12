@@ -18,3 +18,6 @@ mv -f data/raw/Topic2/data.json.gz data/json/Topic2/
 mv -f data/raw/Topic2/index.json.gz data/json/Topic2/
 
 cp -f ../../datasets/sentiment/Topic2/label.json ./data/json/Topic2/label.json
+
+echo "Generating TFRecord files..."
+python ../scripts/write_tfrecords_single.py Topic2
