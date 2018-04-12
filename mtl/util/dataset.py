@@ -132,7 +132,7 @@ Args:
     self._write_tfidf = write_tfidf
 
     self._text_field_names = text_field_names
-    
+
     if predict_mode:
       assert predict_json_path is not None
       data_file_name = predict_json_path
@@ -150,7 +150,6 @@ Args:
     self._label_set = set(self._label_list)
     self._num_classes = len(set(self._label_list))
 
-
     # Iterate through data in the following order:
     #   -data example
     #   -type of sequence (e.g., "seq1", "seq2")
@@ -162,11 +161,11 @@ Args:
     #
     # When the training, validation, and test data are determined by choosing
     # the indices of the examples for each group, respectively, we can
-    # make sure that examples stay together by iterating over the text_field_names
-    # and selecting
+    # make sure that examples stay together by iterating over
+    # the text_field_names and selecting
     #   self._sequences[text_field_name][index_of_interest]
-    # for each text_field_name because the sequences for an example are indexed by the
-    # same number.
+    # for each text_field_name because the sequences for an example are
+    # indexed by the same number.
     num_examples = 0
     self._sequences = dict()
     self._sequence_lengths = dict()
@@ -180,29 +179,16 @@ Args:
         text = item[text_field_name]
         text = tweet_tokenizer.tokenize(text) + ['EOS']
         self._sequences[text_field_name].append(text)
-        self._sequence_lengths[text_field_name].append(len(text))  # length of cleaned text (including EOS)
-
-
-    
-    #num_examples = 0
-    #self._sequences = dict()
-    #self._sequence_lengths = dict()
-    #for text_field_name in text_field_names:
-    #  self._sequences[text_field_name] = list()
-    #  self._sequence_lengths[text_field_name] = list()
-    #  for item in data:
-    #    text = item[text_field_name]
-    #    text = tweet_tokenizer.tokenize(text) + ['EOS']
-    #    self._sequences[text_field_name].append(text)
-    #    self._sequence_lengths[text_field_name].append(len(text))  # length of cleaned text (including EOS)
-    #    num_examples += 1
+        # length of cleaned text (including EOS)
+        self._sequence_lengths[text_field_name].append(len(text))
 
     for text_field_name in text_field_names:
+      # Check that every example has every field
       assert len(self._sequences[text_field_name]) == num_examples
       assert len(self._sequence_lengths[text_field_name]) == num_examples
 
     self._num_examples = num_examples
-      
+
     # tokenize and reconstruct as string(which vocabulary processor
     # takes as input)
 
@@ -220,7 +206,8 @@ Args:
     # only compute from training data
     if max_document_length == -1:
       for text_field_name in text_field_names:
-        tmp_max = max(len(self._sequences[text_field_name][i]) for i in self._train_index)
+        tmp_max = max(len(self._sequences[text_field_name][i])
+                      for i in self._train_index)
         max_document_length = max(tmp_max, max_document_length)
       self._max_document_length = max_document_length
       print("max document length (computed) =",
@@ -270,7 +257,7 @@ Args:
     if write_tfidf:
       # TODO: determine if tfidf should be calculated based on each
       # sequence kind or on all sequences regardless of kind
-      raise NotImplementedError("tfidf not currently supported")
+      raise NotImplementedError("tfidf (%s) not currently supported" % (tfidf))
 
     if predict_mode:
       self._predict_path = predict_tf_path
@@ -356,7 +343,7 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
-        
+
     vocab_processor.fit(training_docs)
 
     if self._padding:
@@ -372,8 +359,10 @@ Args:
           vocab_processor.transform(self._sequences[text_field_name]))
 
     for text_field_name in self._text_field_names:
-      self._sequences[text_field_name] = [list(i) for i in self._sequences[text_field_name]]
-    
+      self._sequences[text_field_name] = [list(i)
+                                          for i
+                                          in self._sequences[text_field_name]]
+
     self._vocab_freq_dict = vocab_processor.vocabulary_.freq
 
     return vocab_processor.vocabulary_
@@ -489,7 +478,9 @@ Args:
           vocab_processor.transform(self._sequences[text_field_name]))
 
     for text_field_name in self._text_field_names:
-      self._sequences[text_field_name] = [list(i) for i in self._sequences[text_field_name]]
+      self._sequences[text_field_name] = [list(i)
+                                          for i
+                                          in self._sequences[text_field_name]]
 
     return vocab_processor.vocabulary_
 
@@ -509,7 +500,8 @@ Args:
             int64_list=tf.train.Int64List(
               value=[self._sequence_lengths[text_field_name][index]]))
 
-          types, counts = get_types_and_counts(self._sequences[text_field_name][index])  # including EOS
+          types, counts = get_types_and_counts(
+            self._sequences[text_field_name][index])  # including EOS
           assert len(types) == len(counts)
           assert len(types) > 0
           for t in types:
@@ -528,7 +520,8 @@ Args:
 
           if self._write_bow:
             # This assumes a single vocabulary shared among all sequence kinds
-            bow = bag_of_words(self._sequences[text_field_name][index], self._vocab_size).tolist()
+            bow = bag_of_words(self._sequences[text_field_name][index],
+                               self._vocab_size).tolist()
             feature[text_field_name+'_bow'] = tf.train.Feature(
               float_list=tf.train.FloatList(value=bow))
 
@@ -542,7 +535,6 @@ Args:
         else:
           label = self._label_list[index]
           assert label is None
-
 
         if self._write_tfidf:
           raise NotImplementedError("tfidf not supported")
@@ -734,7 +726,8 @@ def merge_dict_write_tfrecord(json_dirs,
   # the generated vocab freq dicts shall be saved at
   # json_dir/vocab_freq_dict.json
 
-  # Assumes that all datasets have the same text_field_names and label_field_name
+  # Assumes that all datasets have
+  # the same text_field_names and label_field_name
   max_document_lengths = []
   for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
     dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,

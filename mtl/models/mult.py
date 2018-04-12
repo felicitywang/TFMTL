@@ -79,7 +79,8 @@ class Mult(object):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
-    for dataset, dataset_path in zip(self._hps.datasets, self._hps.dataset_paths):
+    for dataset, dataset_path in zip(self._hps.datasets,
+                                     self._hps.dataset_paths):
       if dataset == batch_source:
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
@@ -97,15 +98,12 @@ class Mult(object):
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 
-    # x = batch[self._hps.input_key]
-    # input_lengths = batch[self._hps.token_lengths_key]
-
     if self._hps.experiment_name == "RUDER_NAACL_18":
-      # Using serial-lbirnn; use last token of last sequence as feature representation
+      # Using serial-lbirnn
+      #   -use last token of last sequence as feature representation
       indices = input_lengths[-1]
       ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-      #ones = tf.ones(self._hps.batch_size, dtype=tf.int64)
-      indices = tf.subtract(indices, ones)  # last token is at position length-1
+      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
       kwargs = {'indices': indices}
     else:
       kwargs = {}
@@ -128,16 +126,20 @@ class Mult(object):
 
     return res
 
-  def get_loss(self, batch, batch_source, dataset_name, features=None, is_training=True):
+  def get_loss(self,
+               batch,
+               batch_source,  # which dataset the batch is from
+               dataset_name,
+               features=None,
+               is_training=True):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
-    for dataset, dataset_path in zip(self._hps.datasets, self._hps.dataset_paths):
+    for dataset, dataset_path in zip(self._hps.datasets,
+                                     self._hps.dataset_paths):
       if dataset == batch_source:
-        print('Querying: {}'.format(os.path.join(dataset_path, 'args.json')))
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
-          print(text_field_names)
 
     x = list()
     input_lengths = list()
@@ -154,22 +156,18 @@ class Mult(object):
 
     if self._hps.experiment_name == "RUDER_NAACL_18":
       indices = input_lengths[-1]
-      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)      
-      #ones = tf.ones(self._hps.batch_size, dtype=tf.int64)      
-      indices = tf.subtract(indices, ones)  # last token is at position length-1
+      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
       kwargs = {'indices': indices}
     else:
       kwargs = {}
-      
+
     # Turn back into single value instead of list
     if len(x) == 1:
       x = x[0]
     if len(input_lengths) == 1:
       input_lengths = input_lengths[0]
 
-
-    # x = batch[self._hps.input_key]
-    # input_lengths = batch[self._hps.token_lengths_key]
     labels = batch[self._hps.label_key]
 
     # TODO remove this?
