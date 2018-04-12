@@ -22,7 +22,7 @@ from six.moves import xrange
 from scipy.optimize import linear_sum_assignment
 
 
-def accuracy(gold_labels, guess_labels):
+def aligned_accuracy(gold_labels, guess_labels):
   gold_label_set = set(gold_labels)
 
   # Number of examples

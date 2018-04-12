@@ -23,6 +23,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
+import json
 import os
 from time import time
 
@@ -33,7 +34,8 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.models.mult import Mult
-from mtl.util.clustering import accuracy
+from mtl.util.clustering import aligned_accuracy
+from mtl.util.metrics import accurate_number, metric2func
 from mtl.util.pipeline import Pipeline
 from mtl.util.util import make_dir
 
@@ -147,6 +149,13 @@ def parse_args():
                  help='Key of the tokens lengths.')
   p.add_argument('--l2_weight', type=float, default=0.0,
                  help='Weight of the l2 regularization.')
+  p.add_argument('--metrics', nargs='+', type=str, default=None,
+                 help='Evaluation metrics for each dataset to use. '
+                      'Supported metrics include:\n'
+                      'Acc: accuracy score;\n'
+                      'MAE_Macro: macro-averaged mean absolute error;\n'
+                      'F1_Macro:  macro-averaged F1 score;\n'
+                      'Recall_Macro: macro-averaged recall score.')
 
   return p.parse_args()
 
@@ -274,9 +283,14 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         _eval_labels = model_info[dataset_name]['valid_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['valid_iter']
-        _metrics = compute_held_out_performance(sess, _pred_op,
+        _metrics = compute_held_out_performance(sess,
+                                                _pred_op,
                                                 _eval_labels,
-                                                _eval_iter)
+                                                _eval_iter,
+                                                metric=dataset_info[
+                                                  dataset_name]['metric'],
+                                                labels=dataset_info[
+                                                  dataset_name]['labels'])
         model_info[dataset_name]['valid_metrics'] = _metrics
 
       end_time = time()
@@ -288,8 +302,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       for dataset_name in model_info:
         _num_eval_total = model_info[dataset_name]['valid_metrics'][
           'ntotal']
-        _eval_acc = model_info[dataset_name]['valid_metrics'][
-          'accuracy']
+        # _metric = dataset_info[
+        #   dataset_name]['metric']
+        # _score = model_info[dataset_name]['valid_metrics'][_metric]
+        # TODO use other metric here for tuning
+        _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
         _eval_align_acc = model_info[dataset_name]['valid_metrics'][
           'aligned_accuracy']
         str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
@@ -457,41 +474,59 @@ def get_all_predictions(session, pred_op, pred_iterator):
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
-                                 eval_iterator):
+                                 eval_iterator, metric, labels):
   # pred_op: predicted labels
   # eval_label: gold labels
 
   # Initializer eval iterator
   session.run(eval_iterator.initializer)
 
+  # # Accumulate predictions
+  # ys = []
+  # y_hats = []
+  # while True:
+  #   try:
+  #     y, y_hat = session.run([eval_label, pred_op])
+  #     assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
+  #     y_list = y.tolist()
+  #     y_hat_list = y_hat.tolist()
+  #     ys += y_list
+  #     y_hats += y_hat_list
+  #   except tf.errors.OutOfRangeError:
+  #     break
+  #
+  # assert len(ys) == len(y_hats)
+  #
+  # ntotal = len(ys)
+  # ncorrect = 0
+  # for i in xrange(len(ys)):
+  #   if ys[i] == y_hats[i]:
+  #     ncorrect += 1
+  # acc = float(ncorrect) / float(ntotal)
+
+  func = metric2func(metric)
+
   # Accumulate predictions
-  ys = []
-  y_hats = []
+  y_trues = []
+  y_preds = []
   while True:
     try:
-      y, y_hat = session.run([eval_label, pred_op])
-      assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
-      y_list = y.tolist()
-      y_hat_list = y_hat.tolist()
-      ys += y_list
-      y_hats += y_hat_list
+      y_true, y_pred = session.run([eval_label, pred_op])
+      assert y_true.shape == y_pred.shape
+      y_trues += y_true.tolist()
+      y_preds += y_pred.tolist()
     except tf.errors.OutOfRangeError:
       break
 
-  assert len(ys) == len(y_hats)
-
-  ntotal = len(ys)
-  ncorrect = 0
-  for i in xrange(len(ys)):
-    if ys[i] == y_hats[i]:
-      ncorrect += 1
-  acc = float(ncorrect) / float(ntotal)
+  ntotal = len(y_trues)
+  ncorrect = accurate_number(y_trues=y_trues, y_preds=y_preds)
+  score = func(y_trues, y_preds, labels)
 
   return {
     'ntotal': ntotal,
     'ncorrect': ncorrect,
-    'accuracy': acc,
-    'aligned_accuracy': accuracy(ys, y_hats),
+    'accuracy': score,  # TODO score name
+    'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
   }
 
 
@@ -521,6 +556,25 @@ def main():
   for order, dataset in enumerate(args.datasets):
     ordering[dataset] = order
 
+  # all the labels for each dataset
+  # used only in some evaluation metrics(e.g. f1, recall)
+  labels = dict()
+  # if args.metrics in ['F1_Macro', 'Recall_Macro']:
+  for dataset, dataset_path in zip(args.datasets, args.dataset_paths):
+    with open(os.path.join(dataset_path, 'args.json')) as file:
+      labels[dataset] = json.load(file)['labels']
+      file.close()
+
+  # evaluation metrics for each dataset
+  metrics = dict()
+  if args.metrics == None:
+    for dataset in args.datasets:
+      metrics[dataset] = 'Acc'
+  else:
+    assert len(args.metrics) == len(args.datasets)
+    for dataset, metric in zip(args.datasets, args.metrics):
+      metrics[dataset] = metric
+
   # Read data
   dataset_info = dict()
   for dataset_name in args.datasets:
@@ -531,7 +585,11 @@ def main():
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
+    dataset_info[dataset_name]['labels'] = labels[dataset_name]
+    dataset_info[dataset_name]['metric'] = metrics[dataset_name]
+
     _dir = dataset_info[dataset_name]['dir']
+
     # Set paths to TFRecord files
     _dataset_train_path = os.path.join(_dir, "train.tf")
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
