@@ -30,9 +30,10 @@ json_dirs = [os.path.join('data/json/', argv) for argv in sys.argv[1:]]
 print(json_dirs)
 
 tfrecord_dir = "data/tf/merged/"
-for argv in sys.argv[1:-1]:
+datasets = sorted(sys.argv[1:])
+for argv in datasets[:-1]:
   tfrecord_dir += argv + "_"
-tfrecord_dir += sys.argv[-1] + '/'
+tfrecord_dir += datasets[-1] + '/'
 
 # write to tf records
 make_dir(tfrecord_dir)

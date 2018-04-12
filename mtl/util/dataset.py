@@ -57,7 +57,7 @@ class Dataset:
                tfrecord_dir,
                vocab_name='vocab_freq.json',
                max_document_length=-1,
-               max_vocab_size=None,
+               max_vocab_size=-1,
                min_frequency=0,
                max_frequency=-1,
                text_field_names=['text'],
@@ -119,10 +119,10 @@ Args:
     predict_tf_path: File path of the TFRecord file of the text to predict
     """
 
-    if max_vocab_size:
-      self._max_vocab_size = max_vocab_size
-    else:
+    if max_vocab_size == -1:
       self._max_vocab_size = float('inf')
+    else:
+      self._max_vocab_size = max_vocab_size
 
     self._min_frequency = min_frequency
     self._max_frequency = max_frequency
@@ -130,11 +130,29 @@ Args:
     self._padding = padding
     self._write_bow = write_bow
     self._write_tfidf = write_tfidf
+    self._load_vocab_name = vocab_name
 
     # with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt',
     #                encoding='utf-8') as file:
     #     data = json.load(file, encoding='utf-8')
     #     file.close()
+
+    # used to generate word id mapping from word frequency dictionary and
+    # arguments(min_frequency, max_frequency, max_document_length)
+    if not generate_basic_vocab and not generate_tf_record and vocab_given \
+      and vocab_name == 'vocab_freq.json':
+      print("Generating word id mapping using given word frequency "
+            "dictionary...")
+      if max_document_length == -1:
+        self._max_document_length = float('inf')
+      else:
+        self._max_document_length = max_document_length
+      self._vocab_dir = vocab_dir
+      self._categorical_vocab = self.load_make_vocab()
+      self._vocab_size = len(self._categorical_vocab.mapping)
+      print("used vocab size =", self._vocab_size)
+      return
+      # TODO
 
     if predict_mode:
       assert predict_json_path is not None
@@ -225,7 +243,6 @@ Args:
             "processor.")
       self._vocab_dir = vocab_dir
       assert vocab_name == 'vocab_freq.json' or vocab_name == 'vocab_v2i.json'
-      self._load_vocab_name = vocab_name
       self._categorical_vocab = self.load_vocab()
 
     # save mapping/reverse mapping to the disk
@@ -361,7 +378,7 @@ Args:
       file.close()
 
   def build_save_basic_vocab(self):
-    """Bulid vocabulary with min_frequency=0 for this dataset'
+    """Build vocabulary with min_frequency=0 for this dataset'
 
     training data only and save to the directory
     minimum frequency is always 0 so that all the words of this dataset(
@@ -384,13 +401,33 @@ Args:
       json.dump(vocab_freq_dict, file, ensure_ascii=False, indent=4)
       file.close()
 
+  def load_make_vocab(self):
+    """Load word frequency vocabulary and generate word id mapping"""
+    make_dir(self._vocab_dir)
+    print('Use word frequency dictionary:',
+          os.path.join(self._vocab_dir, 'vocab_freq.json'))
+    with codecs.open(os.path.join(self._vocab_dir, 'vocab_freq.json'),
+                     mode='r', encoding='utf-8') as file:
+      self._vocab_freq_dict = json.load(file)
+      file.close()
+
+    categorical_vocab = CategoricalVocabulary()
+    for word in self._vocab_freq_dict:
+      categorical_vocab.add(word, count=self._vocab_freq_dict[word])
+    categorical_vocab.trim(min_frequency=self._min_frequency,
+                           max_frequency=self._max_frequency,
+                           max_vocab_size=self._max_vocab_size)
+    categorical_vocab.freeze()
+    return categorical_vocab
+
   def load_vocab(self):
     make_dir(self._vocab_dir)
 
     if self._load_vocab_name == 'vocab_freq.json':
       # used when to merge new vocabulary using the vocabulary given
 
-      print(os.path.join(self._vocab_dir, 'vocab_freq.json'))
+      print('Use word frequency dictionary:',
+            os.path.join(self._vocab_dir, 'vocab_freq.json'))
 
       with codecs.open(os.path.join(self._vocab_dir, 'vocab_freq.json'),
                        mode='r', encoding='utf-8') as file:
@@ -419,15 +456,16 @@ Args:
                        mode='r', encoding='utf-8') as file:
         self._vocab_v2i_dict = json.load(file)
         file.close()
-      categorical_vocab = CategoricalVocabulary()
-      for word in self._vocab_v2i_dict:
-        categorical_vocab.add(word)
-      categorical_vocab.freeze()
-
+      # categorical_vocab = CategoricalVocabulary()
+      # for word in self._vocab_v2i_dict:
+      #   categorical_vocab.add(word)
+      # categorical_vocab.freeze()
+      categorical_vocab = CategoricalVocabulary(mapping=self._vocab_v2i_dict)
       vocab_processor = VocabularyProcessor(
         vocabulary=categorical_vocab,
         max_document_length=self._max_document_length,
         tokenizer_fn=tokenizer)
+      assert categorical_vocab.mapping == self._vocab_v2i_dict
 
     if self._padding is True:
       self._token_list = list(
@@ -659,7 +697,7 @@ def merge_dict_write_tfrecord(json_dirs,
                               tfrecord_dirs,
                               merged_dir,
                               max_document_length=-1,
-                              max_vocab_size=None,
+                              max_vocab_size=-1,
                               min_frequency=0,
                               max_frequency=-1,
                               train_ratio=TRAIN_RATIO,
@@ -668,30 +706,37 @@ def merge_dict_write_tfrecord(json_dirs,
                               padding=False,
                               write_bow=False,
                               write_tfidf=False):
-  """
-  1. generate and save vocab dictionary which contains all the words(
-  cleaned) for each dataset
-  2. merge the vocabulary
-  3. generate and save TFRecord files for each dataset using the merged vocab
-  :param json_dirs: list of dataset directories
+  """Merge all the dictionaries for each dataset and write TFRecord files
+
+  1. generate word frequency dictionary for each dataset
+  2. add them up to a new word frequency dictionary
+  3. generate the word id mapping using arguments
+  4. use the same word id mapping to generate TFRecord files for each dataset
+
+  :param json_dirs: list of dataset(in json.gz) directories
+  :param tfrecord_dirs: list of directories to save the TFRecord files
   :param merged_dir: new directory to save all the data
   :return: args_dicts: list of args(dict) of each dataset
   """
+
   # generate vocab for every dataset without writing their own TFRecord files
   # the generated vocab freq dicts shall be saved at
   # json_dir/vocab_freq_dict.json
-  max_document_lengths = []
-  for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
-    dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
-                      vocab_dir=merged_dir,
-                      max_document_length=-1,
-                      max_vocab_size=-1,
-                      min_frequency=0,
-                      max_frequency=-1,
-                      generate_basic_vocab=True,
-                      vocab_given=False,
-                      generate_tf_record=False)
-    max_document_lengths.append(dataset.max_document_length)
+
+  if max_document_length == -1:
+    max_document_lengths = []
+    for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
+      dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
+                        vocab_dir=merged_dir,
+                        max_document_length=-1,
+                        max_vocab_size=-1,
+                        min_frequency=0,
+                        max_frequency=-1,
+                        generate_basic_vocab=True,
+                        vocab_given=False,
+                        generate_tf_record=False)
+      max_document_lengths.append(dataset.max_document_length)
+      max_document_length = max(max_document_lengths)
 
   # new data dir based all the datasets' names
   data_names = [os.path.basename(os.path.normpath(json_dir)) for json_dir
@@ -708,18 +753,50 @@ def merge_dict_write_tfrecord(json_dirs,
   merge_save_vocab_dicts(vocab_paths, os.path.join(merged_dir,
                                                    "vocab_freq.json"))
 
-  print("merged public vocabulary saved to path", os.path.join(
-    merged_dir, "vocab_freq.json"))
+  print("merged public word frequency dictionary saved to path",
+        os.path.join(merged_dir, "vocab_freq.json"))
 
-  # write TFRecords
-  vocab_i2v_lists = []
-  vocab_v2i_dicts = []
-  vocab_sizes = []
+  # generate word id mapping, which is then used as the merged vocabulary
+  # for all the datasets
+  dataset = Dataset(json_dir=None,
+                    tfrecord_dir=None,  # TODO
+                    vocab_dir=merged_dir,
+                    generate_basic_vocab=False,
+                    vocab_given=True,
+                    vocab_name='vocab_freq.json',
+                    generate_tf_record=False,
+                    max_document_length=max_document_length,
+                    min_frequency=min_frequency,
+                    max_frequency=max_frequency,
+                    max_vocab_size=max_vocab_size
+                    # train_ratio=train_ratio,
+                    # valid_ratio=valid_ratio,
+                    # subsample_ratio=subsample_ratio,
+                    # padding=padding,
+                    # write_bow=write_bow,
+                    # write_tfidf=write_tfidf
+                    )
+  with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
+                   mode='w', encoding='utf-8') as file:
+    json.dump(dataset.mapping, file, ensure_ascii=False, indent=4)
+    file.close()
+
+  print("???", len(dataset.mapping))
+
+  vocab_i2v_dict = dict()
+  for i in range(len(dataset.reverse_mapping)):
+    vocab_i2v_dict[i] = dataset.reverse_mapping[i]
+  with codecs.open(os.path.join(merged_dir, 'vocab_i2v.json'),
+                   mode='w', encoding='utf-8') as file:
+    json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
+    file.close()
+
+  with open(os.path.join(merged_dir, "vocab_size.txt"), "w") as file:
+    file.write(str(dataset.vocab_size))
+    file.close()
+
+  # write TFRecords for each dataset with the same word id mapping
   args_dicts = []
-
-  # max_document_length is only useful when padding is True
-  if max_document_length is None:
-    max_document_length = max(max_document_lengths)
   for json_dir in json_dirs:
     tfrecord_dir = os.path.join(merged_dir, os.path.basename(
       os.path.normpath(json_dir)))
@@ -728,6 +805,7 @@ def merge_dict_write_tfrecord(json_dirs,
                       vocab_dir=merged_dir,
                       generate_basic_vocab=False,
                       vocab_given=True,
+                      vocab_name='vocab_v2i.json',
                       generate_tf_record=True,
                       max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
@@ -740,32 +818,7 @@ def merge_dict_write_tfrecord(json_dirs,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf
                       )
-    vocab_v2i_dicts.append(dataset.mapping)
-    vocab_i2v_lists.append(dataset.reverse_mapping)
-    vocab_sizes.append(dataset.vocab_size)
     args_dicts.append(dataset.args)
-
-  # tested
-  # assert all(x == vocab_i2v_list[0] for x in vocab_i2v_list)
-  # assert all(x == vocab_v2i_dict[0] for x in vocab_v2i_dict)
-  # assert all(x == vocab_sizes[0] for x in vocab_sizes)
-
-  with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
-                   mode='w', encoding='utf-8') as file:
-    json.dump(vocab_v2i_dicts[0], file, ensure_ascii=False, indent=4)
-    file.close()
-
-  vocab_i2v_dict = dict()
-  for i in range(len(vocab_i2v_lists[0])):
-    vocab_i2v_dict[i] = vocab_i2v_lists[0][i]
-  with codecs.open(os.path.join(merged_dir, 'vocab_i2v.json'),
-                   mode='w', encoding='utf-8') as file:
-    json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
-    file.close()
-
-  with open(os.path.join(merged_dir, "vocab_size.txt"), "w") as file:
-    file.write(str(vocab_sizes[0]))
-    file.close()
 
   return args_dicts
 

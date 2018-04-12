@@ -385,9 +385,14 @@ def test_model(model, dataset_info, args):
         _eval_labels = model_info[dataset_name]['test_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['test_iter']
-        _metrics = compute_held_out_performance(sess, _pred_op,
+        _metrics = compute_held_out_performance(sess,
+                                                _pred_op,
                                                 _eval_labels,
-                                                _eval_iter)
+                                                _eval_iter,
+                                                metric=dataset_info[
+                                                  dataset_name]['metric'],
+                                                labels=dataset_info[
+                                                  dataset_name]['labels'])
         model_info[dataset_name]['test_metrics'] = _metrics
 
         _num_eval_total = model_info[dataset_name]['test_metrics'][
