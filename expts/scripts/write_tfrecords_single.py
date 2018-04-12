@@ -37,6 +37,8 @@ make_dir(tfrecord_dir)
 dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,
                   vocab_dir=tfrecord_dir,
+                  text_field_names=args_single['text_field_names'],
+                  label_field_name=args_single['label_field_name'],
                   max_document_length=args_single['max_document_length'],
                   max_vocab_size=args_single['max_vocab_size'],
                   min_frequency=args_single['min_frequency'],

@@ -117,6 +117,7 @@ def _lbirnn_helper(inputs,
   if indices is not None:
     # row index [[0], [1], ..., [N]]
     r = tf.range(batch_size)
+    r = tf.cast(r, dtype=tf.int64)
     r = tf.expand_dims(r, 1)
 
     # make sure indices are able to be concatenated with range
@@ -161,12 +162,12 @@ def lbirnn(inputs,
 
 def serial_lbirnn(inputs,
                   lengths,
-                  indices,
-                  num_layers,
-                  cell_type,
-                  cell_size,
-                  initial_state_fwd,
-                  initial_state_bwd):
+                  indices=None,
+                  num_layers=2,
+                  cell_type=tf.contrib.rnn.GRUCell,
+                  cell_size=64,
+                  initial_state_fwd=None,
+                  initial_state_bwd=None):
   """Serial stacked linear chain bi-directional RNN
 
   If `indices` is specified for the last stage, the outputs of the tokens

@@ -58,6 +58,10 @@ def parse_args():
                       'test data. \n'
                       'predict: restore the saved model and predict the '
                       'labels of the given text file')
+  p.add_argument('--experiment_name', default='', type=str,
+                 help='Name of experiment.')
+  p.add_argument('--tuning_metric', default='Acc', type=str,
+                 help='Metric used to tune hyper-parameters')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
                       'predict. Used in predict mode.')
@@ -67,12 +71,14 @@ def parse_args():
                  help='Folder to save the predictions using each model.')
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
-  p.add_argument('--eval_batch_size', default=256, type=int,
+  p.add_argument('--eval_batch_size', default=128, type=int,
                  help='Size of evaluation batch.')
   p.add_argument('--word_embed_dim', default=128, type=int,
                  help='Word embedding size')
   p.add_argument('--share_decoders', action='store_true', default=False,
                  help='Whether decoders are shared across datasets')
+  p.add_argument('--optimizer', default='adam', type=str,
+                 help='Name of optimization algorithm to use')
   p.add_argument('--lr0', default=0.0001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
@@ -201,7 +207,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   lr = get_learning_rate(args.lr0)
   tvars, grads = get_var_grads(loss)
   train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
-                          global_step_tensor, name='train_op')
+                          global_step_tensor, args.optimizer, name='train_op')
   init_ops = [tf.global_variables_initializer(),
               tf.local_variables_initializer()]
   config = get_proto_config(args)
@@ -287,8 +293,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                 _pred_op,
                                                 _eval_labels,
                                                 _eval_iter,
-                                                metric=dataset_info[
-                                                  dataset_name]['metric'],
+                                                metrics=dataset_info[
+                                                  dataset_name]['metrics'],
                                                 labels=dataset_info[
                                                   dataset_name]['labels'])
         model_info[dataset_name]['valid_metrics'] = _metrics
@@ -306,15 +312,22 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         #   dataset_name]['metric']
         # _score = model_info[dataset_name]['valid_metrics'][_metric]
         # TODO use other metric here for tuning
-        _eval_acc = model_info[dataset_name]['valid_metrics']['accuracy']
+        _eval_acc = model_info[dataset_name]['valid_metrics']['Acc']
         _eval_align_acc = model_info[dataset_name]['valid_metrics'][
           'aligned_accuracy']
-        str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-          dataset_name,
-          _num_eval_total,
-          _eval_acc,
-          _eval_align_acc)
+        str_ += '\n(%s) ' % (dataset_name)
+        for m, s in model_info[dataset_name]['valid_metrics'].items():
+          if m == args.tuning_metric:
+            str_ += '*%s=%f* ' % (m, s)
+          else:
+            str_ += '%s=%f ' % (m, s)
+        #str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
+        #  dataset_name,
+        #  _num_eval_total,
+        #  _eval_acc,
+        #  _eval_align_acc)
 
+        # Track best-performing epoch for each dataset
         if _eval_acc > best_eval_acc[dataset_name]["acc"]:
           best_eval_acc[dataset_name]["acc"] = _eval_acc
           best_eval_acc[dataset_name]["epoch"] = epoch
@@ -324,6 +337,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
         total_acc += _eval_acc
 
+      # Track best-performing epoch for collection of datasets
       if total_acc > best_total_acc:
         best_total_acc = total_acc
         best_total_acc_epoch = epoch
@@ -393,7 +407,7 @@ def test_model(model, dataset_info, args):
         _num_eval_total = model_info[dataset_name]['test_metrics'][
           'ntotal']
         _eval_acc = model_info[dataset_name]['test_metrics'][
-          'accuracy']
+          'Acc']
         _eval_align_acc = model_info[dataset_name]['test_metrics'][
           'aligned_accuracy']
         str_ += '\n'
@@ -401,11 +415,17 @@ def test_model(model, dataset_info, args):
           str_ += '(*)'
         else:
           str_ += '( )'
-        str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-          dataset_name,
-          _num_eval_total,
-          _eval_acc,
-          _eval_align_acc)
+        str_ += '(%s)' % (dataset_name)
+        for m, s in model_info[dataset_name]['test_metrics'].items():
+          if m == args.tuning_metric:
+            str_ += '*%s=%f* ' % (m, s)
+          else:
+            str_ += '%s=%f ' % (m, s)
+        #str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
+        #  dataset_name,
+        #  _num_eval_total,
+        #  _eval_acc,
+        #  _eval_align_acc)
 
   logging.info(str_)
 
@@ -474,7 +494,7 @@ def get_all_predictions(session, pred_op, pred_iterator):
 
 
 def compute_held_out_performance(session, pred_op, eval_label,
-                                 eval_iterator, metric, labels):
+                                 eval_iterator, metrics, labels):
   # pred_op: predicted labels
   # eval_label: gold labels
 
@@ -504,8 +524,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
   #     ncorrect += 1
   # acc = float(ncorrect) / float(ntotal)
 
-  func = metric2func(metric)
-
   # Accumulate predictions
   y_trues = []
   y_preds = []
@@ -520,14 +538,26 @@ def compute_held_out_performance(session, pred_op, eval_label,
 
   ntotal = len(y_trues)
   ncorrect = accurate_number(y_trues=y_trues, y_preds=y_preds)
-  score = func(y_trues, y_preds, labels)
 
-  return {
-    'ntotal': ntotal,
-    'ncorrect': ncorrect,
-    'accuracy': score,  # TODO score name
-    'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
-  }
+  scores = dict()
+  for metric in metrics:
+    func = metric2func(metric)  
+    scores[metric] = func(y_trues, y_preds, labels)
+
+  res = dict()
+  res['ntotal'] = ntotal
+  res['ncorrect'] = ncorrect
+  for score in scores:
+    res[score] = scores[score]
+  res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
+
+  return res
+  #return {
+  #  'ntotal': ntotal,
+  #  'ncorrect': ncorrect,
+  #  'accuracy': score,  # TODO score name
+  #  'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
+  #}
 
 
 def main():
@@ -567,14 +597,16 @@ def main():
 
   # evaluation metrics for each dataset
   metrics = dict()
-  if args.metrics == None:
-    for dataset in args.datasets:
-      metrics[dataset] = 'Acc'
-  else:
-    assert len(args.metrics) == len(args.datasets)
-    for dataset, metric in zip(args.datasets, args.metrics):
-      metrics[dataset] = metric
-
+  #if args.metrics == None:
+  #  for dataset in args.datasets:
+  #    metrics[dataset] = 'Acc'
+  #else:
+  #  assert len(args.metrics) == len(args.datasets)
+  #  for dataset, metric in zip(args.datasets, args.metrics):
+  #    metrics[dataset] = metric
+  for dataset in args.datasets:
+    metrics[dataset] = ['Acc', 'MAE_Macro', 'F1_Macro', 'Recall_Macro']
+  
   # Read data
   dataset_info = dict()
   for dataset_name in args.datasets:
@@ -586,7 +618,7 @@ def main():
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     dataset_info[dataset_name]['labels'] = labels[dataset_name]
-    dataset_info[dataset_name]['metric'] = metrics[dataset_name]
+    dataset_info[dataset_name]['metrics'] = metrics[dataset_name]
 
     _dir = dataset_info[dataset_name]['dir']
 
@@ -617,22 +649,43 @@ def main():
 
   # This defines ALL the features that ANY model possibly needs access
   # to. That is, some models will only need a subset of these features.
-  FEATURES = {
-    'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
-    # 'types': tf.VarLenFeature(dtype=tf.int64),
-    # 'type_counts': tf.VarLenFeature(dtype=tf.int64),
-    # 'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-  }
-  if args.input_key == 'tokens':
-    FEATURES['tokens'] = tf.VarLenFeature(dtype=tf.int64)
-  elif args.input_key == 'bow':
-    FEATURES['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  elif args.input_key == 'tfidf':
-    FEATURES['tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  else:
-    raise ValueError("Input key %s not supported!" % args.input_key)
-  if args.mode == 'train' or args.mode == 'test':
+  FEATURES = dict()
+  for dataset, dataset_path in zip(args.datasets, args.dataset_paths):
+    with open(os.path.join(dataset_path, 'args.json')) as f:
+      json_config = json.load(f)      
+      text_field_names = json_config['text_field_names']
+      for text_field_name in text_field_names:
+        FEATURES[text_field_name+'_length'] = tf.FixedLenFeature([], dtype=tf.int64)
+        if args.input_key == 'tokens':
+          FEATURES[text_field_name] = tf.VarLenFeature(dtype=tf.int64)
+        elif args.input_key == 'bow':
+          FEATURES[text_field_name+'_bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+        elif args.input_key == 'tfidf':
+          FEATURES[text_field_name+'_tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+        else:
+          raise ValueError("Input key %s not supported!" % (args.input_key))
+
+  if args.mode in ['train', 'test']:
     FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
+            
+
+
+  #FEATURES = {
+  #  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
+  #  # 'types': tf.VarLenFeature(dtype=tf.int64),
+  #  # 'type_counts': tf.VarLenFeature(dtype=tf.int64),
+  #  # 'types_length': tf.FixedLenFeature([], dtype=tf.int64),
+  #}
+  #if args.input_key == 'tokens':
+  #  FEATURES['tokens'] = tf.VarLenFeature(dtype=tf.int64)
+  #elif args.input_key == 'bow':
+  #  FEATURES['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+  #elif args.input_key == 'tfidf':
+  #  FEATURES['tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+  #else:
+  #  raise ValueError("Input key %s not supported!" % args.input_key)
+  #if args.mode == 'train' or args.mode == 'test':
+  #  FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default():
@@ -760,13 +813,23 @@ def get_learning_rate(learning_rate):
   return tf.constant(learning_rate)
 
 
-def get_train_op(tvars, grads, learning_rate, max_grad_norm, step,
+def get_train_op(tvars, grads, learning_rate, max_grad_norm, step, alg,
                  name=None):
   with tf.name_scope(name):
-    opt = tf.train.AdamOptimizer(learning_rate,
-                                 epsilon=1e-6,
-                                 beta1=0.85,
-                                 beta2=0.997)
+    if alg == "adam":
+      opt = tf.train.AdamOptimizer(learning_rate,
+                                   epsilon=1e-6,
+                                   beta1=0.85,
+                                   beta2=0.997)
+    elif alg == "rmsprop":
+      opt = tf.train.RMSPropOptimizer(learning_rate,
+                                      decay=0.9,
+                                      momentum=0.0,
+                                      epsilon=1e-10,
+                                      use_locking=False,
+                                      centered=False)
+    else:
+      raise ValueError("unrecognized optimization algorithm: %s" % (alg))
     grads, _ = tf.clip_by_global_norm(grads, max_grad_norm)
     return opt.apply_gradients(zip(grads, tvars), global_step=step)
 
@@ -866,18 +929,18 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
   for dataset_name in model_info:
     if args.mode == 'train':
       _valid_pred_op = model.get_predictions(
-        model_info[dataset_name]['valid_batch'], dataset_info[
-          dataset_name]['dataset_name'])
+        model_info[dataset_name]['valid_batch'], dataset_name,
+        dataset_info[dataset_name]['dataset_name'])
       model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
     elif args.mode == 'test':
       _test_pred_op = model.get_predictions(
-        model_info[dataset_name]['test_batch'], dataset_info[
-          dataset_name]['dataset_name'])
+        model_info[dataset_name]['test_batch'], dataset_name,
+        dataset_info[dataset_name]['dataset_name'])
       model_info[dataset_name]['test_pred_op'] = _test_pred_op
     elif args.mode == 'predict':
       _pred_pred_op = model.get_predictions(
-        model_info[dataset_name]['pred_batch'], dataset_info[
-          dataset_name]['dataset_name'])
+        model_info[dataset_name]['pred_batch'], dataset_name,
+        dataset_info[dataset_name]['dataset_name'])
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
 
 

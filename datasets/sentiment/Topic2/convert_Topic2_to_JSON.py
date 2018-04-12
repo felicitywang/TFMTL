@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
   index_dict = {
     'train': train_index,
-    'dev': dev_index,
+    'valid': dev_index,
     'test': test_index
   }
 
