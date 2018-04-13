@@ -579,7 +579,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
   scores = dict()
   for metric in metrics:
     func = metric2func(metric)  
-    scores[metric] = func(y_trues, y_preds, labels)
+    scores[metric] = func(y_trues, y_preds, labels, y_topics)
 
   res = dict()
   res['ntotal'] = ntotal

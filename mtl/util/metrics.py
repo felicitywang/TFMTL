@@ -31,7 +31,7 @@ http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 import sklearn.metrics
 
 
-def accuracy_score(y_trues, y_preds, labels):
+def accuracy_score(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
                                         y_pred=y_preds,
                                         normalize=True  # return fraction
@@ -45,7 +45,7 @@ def accurate_number(y_trues, y_preds):
                                         )
 
 
-def f1_macro(y_trues, y_preds, labels):
+def f1_macro(y_trues, y_preds, labels, topics):
   """
   macro-averaged(unweighted mean) f1 score of all classes
 
@@ -62,7 +62,7 @@ def f1_macro(y_trues, y_preds, labels):
                                   )
 
 
-def mae_macro(y_trues, y_preds, labels):
+def mae_macro(y_trues, y_preds, labels, topics):
   """
   macro-averaged(unweighted mean) mean absolute error
 
@@ -85,20 +85,43 @@ def neg_mae_macro(y_true, y_preds, labels):
   return -mae_macro(y_true, y_preds, labels)
 
 
-def recall_macro(y_trues, y_preds, labels):
+def recall_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) recall score of all classes
+  macro-averaged(unweighted mean) over topics of recall score of all classes
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
   :param labels: labels for each class in a list, must specify
   :return: float
   """
-  return sklearn.metrics.recall_score(y_true=y_trues,
-                                      y_pred=y_preds,
-                                      labels=labels,
-                                      average='macro')
+  topics_set = set(topics)
+  print('{} topics'.format(len(topics_set)))
 
+  preds = list(zip(*[y_trues, y_preds, topics]))
+  recalls = dict()
+  preds_by_topic = dict()  
+  for topic in topics_set:
+    preds_by_topic[topic] = []
+
+  # group predictions by topic
+  for pred in preds:
+    preds_by_topic[pred[2]].append(pred)
+
+  for topic, preds in preds_by_topic.items():
+    y_true = [p[0] for p in preds]
+    y_pred = [p[1] for p in preds]
+    
+    r = sklearn.metrics.recall_score(y_true=y_true,
+                                     y_pred=y_pred,
+                                     average='macro')
+    recalls[topic] = r
+
+  for topic, recall in recalls.items():
+    print('{}: recall={}'.format(topic, recall))
+    
+  # simple mean of recalls over topics
+  return sum(recalls.values()) / len(recalls.values())
+    
 
 def metric2func(metric_name):
   METRIC2FUNC = {
