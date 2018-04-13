@@ -3,7 +3,7 @@ import json
 import gzip
 import sys
 
-from constants import TOPIC_LABELS
+TOPIC_LABELS = ['negative', 'positive']
 
 
 def readTopicBased(datafolder="./data/", debug=True, num_instances=20):
