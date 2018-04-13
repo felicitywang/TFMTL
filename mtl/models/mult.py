@@ -176,8 +176,8 @@ class Mult(object):
     else:
       x = features
 
-    x = self._mlps_shared[dataset_name](x, is_training)
-    x = self._mlps_private[dataset_name](x, is_training)
+    x = self._mlps_shared[dataset_name](x, is_training=is_training)
+    x = self._mlps_private[dataset_name](x, is_training=is_training)
 
     x = self._logits[dataset_name](x)
 
@@ -186,13 +186,7 @@ class Mult(object):
       tf.nn.sparse_softmax_cross_entropy_with_logits(
         logits=x, labels=tf.cast(labels, dtype=tf.int32)))
 
-    # l2 regularization
-    variables = tf.trainable_variables()
-    l2_weight_penalty = tf.add_n([
-      tf.nn.l2_loss(v) for v in variables if 'bias' not in v.name
-    ]) * self._hps.l2_weight
-
-    loss = tf.reduce_mean(ce) + l2_weight_penalty
+    loss = tf.reduce_mean(ce)  # average loss per training example
 
     return loss
 
@@ -218,6 +212,14 @@ class Mult(object):
                            is_training=is_training)
       total_loss += alpha * loss
       losses[dataset_name] = loss
+
+    # l2 regularization
+    variables = tf.trainable_variables()
+    l2_weight_penalty = tf.add_n([
+      tf.nn.l2_loss(v) for v in variables if 'bias' not in v.name
+    ]) * self._hps.l2_weight
+
+    total_loss += l2_weight_penalty
 
     return total_loss
 
