@@ -97,7 +97,7 @@ of tied/untied embedders and extractors are correct."""
         k = dict()
 
         # COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
-        indices1 = tf.constant([1, 1, 2, 0])
+        indices1 = tf.constant([1, 1, 2, 0], dtype=tf.int64)
         k = {'indices': indices1}
         #
 

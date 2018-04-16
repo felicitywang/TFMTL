@@ -137,7 +137,7 @@ class CategoricalVocabulary(object):
     if self._support_reverse:
       self._reverse_mapping = [self._unknown_token]
     idx = 1
-    vocab_size = 0
+    vocab_size = 1
     for category, count in self._freq:
       if 0 < max_frequency <= count:
         continue

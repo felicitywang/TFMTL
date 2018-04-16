@@ -3,7 +3,7 @@ import json
 import gzip
 import sys
 
-from constants import TOPIC_LABELS
+TOPIC_LABELS = ['negative', 'positive']
 
 
 def readTopicBased(datafolder="./data/", debug=True, num_instances=20):
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
   index_dict = {
     'train': train_index,
-    'dev': dev_index,
+    'valid': dev_index,
     'test': test_index
   }
 

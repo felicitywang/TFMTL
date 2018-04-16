@@ -33,7 +33,8 @@ from six.moves import xrange
 from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
-from mtl.util.data_prep import tweet_tokenizer
+from mtl.util.data_prep import (tweet_tokenizer,
+                                tweet_tokenizer_keep_handles)
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -71,7 +72,8 @@ class Dataset:
                write_tfidf=False,
                predict_mode=False,
                predict_json_path='predict.json.gz',
-               predict_tf_path='predict.tf'
+               predict_tf_path='predict.tf',
+               tokenizer_="tweet_tokenizer",
                ):
     """
 Args:
@@ -132,10 +134,15 @@ Args:
     self._write_tfidf = write_tfidf
     self._load_vocab_name = vocab_name
 
-    # with gzip.open(os.path.join(json_dir, "data.json.gz"), mode='rt',
-    #                encoding='utf-8') as file:
-    #     data = json.load(file, encoding='utf-8')
-    #     file.close()
+    if tokenizer_ == "tweet_tokenizer":
+      self._tokenizer = tweet_tokenizer
+    elif tokenizer_ == "tweet_tokenizer_keep_handles":
+      self._tokenizer = tweet_tokenizer_keep_handles
+    else:
+      raise ValueError("unrecognized tokenizer: %s" % (tokenizer_))
+
+    self._text_field_names = text_field_names
+    self._label_field_name = label_field_name
 
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
@@ -150,7 +157,7 @@ Args:
       self._vocab_dir = vocab_dir
       self._categorical_vocab = self.load_make_vocab()
       self._vocab_size = len(self._categorical_vocab.mapping)
-      print("used vocab size =", self._vocab_size)
+      print("Vocabulary size =", self._vocab_size)
       return
       # TODO
 
@@ -159,44 +166,68 @@ Args:
       data_file_name = predict_json_path
     else:
       assert json_dir is not None
-      print("data in", json_dir)
       data_file_name = os.path.join(json_dir, 'data.json.gz')
 
+    print('Loading data from', data_file_name)
     with gzip.open(data_file_name, mode='rt') as file:
       data = json.load(file, encoding='utf-8')
       file.close()
+
+    print('Generating label list...')
     self._label_list = [int(item[label_field_name])
                         if label_field_name in item else None for
-                        item in data]
+                        item in tqdm(data)]
     self._label_set = set(self._label_list)
     self._num_classes = len(set(self._label_list))
 
-    # if sys.version_info[0] < 3:
-    #     self.text_list = df[text_field_names].astype(unicode).sum(
-    #         axis=1).tolist()
-    # else:
-    #     self.text_list = df[text_field_names].astype(str).sum(
-    #         axis=1).tolist()
+    # Iterate through data in the following order:
+    #   -data example
+    #   -type of sequence (e.g., "seq1", "seq2")
+    # This makes it easy to keep the various sequences from a given example
+    # "in line" with each other, meaning that, e.g.:
+    #   self._sequences["seq1"][37]
+    #   self._sequences["seq2"][37]
+    # are from the same example in the data
+    #
+    # When the training, validation, and test data are determined by choosing
+    # the indices of the examples for each group, respectively, we can
+    # make sure that examples stay together by iterating over
+    # the text_field_names and selecting
+    #   self._sequences[text_field_name][index_of_interest]
+    # for each text_field_name because the sequences for an example are
+    # indexed by the same number.
 
-    self._token_list = [' '.join([item[text_field_name]])
-                        for text_field_name in text_field_names for
-                        item in data]
+    num_examples = 0
+    self._sequences = dict()
+    self._sequence_lengths = dict()
+    for text_field_name in self._text_field_names:
+      self._sequences[text_field_name] = list()
+      self._sequence_lengths[text_field_name] = list()
 
-    self._token_list = [tweet_tokenizer.tokenize(text) + ['EOS'] for text
-                        in
-                        self._token_list]
+    print("Generating text lists...")
+    for item in tqdm(data):
+      num_examples += 1
+      for text_field_name in self._text_field_names:
+        text = item[text_field_name]
+        text = self._tokenizer.tokenize(text) + ['EOS']
+        # print('{}: {} ({})'.format(item['index'], text, text_field_name))
+        self._sequences[text_field_name].append(text)
+        # length of cleaned text (including EOS)
+        self._sequence_lengths[text_field_name].append(len(text))
 
-    # length of cleaned text (including EOS)
-    self._token_length_list = [len(text) for text in
-                               self._token_list]
-    self._padding = padding
+    for text_field_name in text_field_names:
+      # Check that every example has every field
+      assert len(self._sequences[text_field_name]) == num_examples
+      assert len(self._sequence_lengths[text_field_name]) == num_examples
+
+    self._num_examples = num_examples
 
     # tokenize and reconstruct as string(which vocabulary processor
     # takes as input)
 
     # get index
     if predict_mode:
-      self._predict_index = np.asarray(range(len(self._token_list)))
+      self._predict_index = np.asarray(range(num_examples))
     else:
       print("Generating train/valid/test splits...")
       index_path = os.path.join(json_dir, "index.json.gz")
@@ -207,15 +238,17 @@ Args:
 
     # only compute from training data
     if max_document_length == -1:
-
-      self._max_document_length = max(len(self._token_list[i]) for i in
-                                      self._train_index)
-      print("max document length (computed) =",
-            self._max_document_length)
+      print('Maximum document length not given, computing from training '
+            'data..')
+      for text_field_name in tqdm(text_field_names):
+        tmp_max = max(len(self._sequences[text_field_name][i])
+                      for i in self._train_index)
+        max_document_length = max(tmp_max, max_document_length)
+      self._max_document_length = max_document_length
+      print("Max document length computed =", self._max_document_length)
     else:
       self._max_document_length = max_document_length
-      print("max document length (given) =", self._max_document_length)
-    print(self._max_document_length)
+      print('Maximum document length given:', max_document_length)
 
     self._vocab_dict = None
     self._categorical_vocab = None
@@ -255,9 +288,9 @@ Args:
 
     # generate tfidf list if write_tfidf is True
     if write_tfidf:
-      self._tfidf_list = tfidf(self._token_list,
-                               set(self.mapping.values()))
-      # self._tfidf_list = tfidf(self._token_list)
+      # TODO: determine if tfidf should be calculated based on each
+      # sequence kind or on all sequences regardless of kind
+      raise NotImplementedError("tfidf (%s) not currently supported" % (tfidf))
 
     if predict_mode:
       self._predict_path = predict_tf_path
@@ -303,23 +336,28 @@ Args:
         'num_classes': self._num_classes,
         'max_document_length': self._max_document_length,
         'vocab_size': self._vocab_size,
+        'max_vocab_size_allowed': self._max_vocab_size,
         'min_frequency': min_frequency,
         'max_frequency': max_frequency,
+        'text_field_names': self._text_field_names,
+        'label_field_name': self._label_field_name,
         'random_seed': random_seed,
-        'train_path': os.path.abspath(self._train_path),
-        'valid_path': os.path.abspath(self._valid_path),
-        'test_path': os.path.abspath(self._test_path),
         'train_size': len(self._train_index),
         'valid_size': len(self._valid_index),
         'test_size': len(self._test_index),
+        'train_path': os.path.abspath(self._train_path),
+        'valid_path': os.path.abspath(self._valid_path),
+        'test_path': os.path.abspath(self._test_path),
         'has_unlabeled': self._has_unlabeled,
+        'unlabeled_size': len(self._unlabeled_index),
         'unlabeled_path': os.path.abspath(
           self._unlabeled_path
         ) if self._unlabeled_path is not None else None,
-        'unlabeled_size': len(self._unlabeled_index),
         'labels': list(self._label_set)
       }
-      print(self._args)
+      print('Arguments for dataset %s:')
+      for k, v in self._args.items():
+        print(k, ':', v)
       args_path = os.path.join(tfrecord_dir, "args.json")
       with codecs.open(args_path, mode='w', encoding='utf-8') as file:
         json.dump(self._args, file, ensure_ascii=False, indent=4)
@@ -339,15 +377,29 @@ Args:
       tokenizer_fn=tokenizer)
 
     # build vocabulary only according to training data
-    vocab_processor.fit([self._token_list[i] for i in self._train_index])
+    training_docs = [self._sequences[text_field_name][i]
+                     for text_field_name in self._text_field_names
+                     for i in self._train_index]
 
-    if self._padding is True:
-      self._token_list = list(
-        vocab_processor.transform_pad(self._token_list))
+    vocab_processor.fit(training_docs)
+
+    if self._padding:
+      # TODO: update implementation of transform_pad() to take a max length
+      # as different kinds of sequences within a single example will have
+      # different max lengths
+      for text_field_name in self._text_field_names:
+        self._sequences[text_field_name] = list(
+          vocab_processor.transform_pad(self._sequences[text_field_name]))
     else:
-      self._token_list = list(
-        vocab_processor.transform(self._token_list))
-    self._token_list = [list(i) for i in self._token_list]
+      for text_field_name in self._text_field_names:
+        self._sequences[text_field_name] = list(
+          vocab_processor.transform(self._sequences[text_field_name]))
+
+    for text_field_name in self._text_field_names:
+      self._sequences[text_field_name] = [list(i)
+                                          for i
+                                          in self._sequences[text_field_name]]
+
     self._vocab_freq_dict = vocab_processor.vocabulary_.freq
 
     return vocab_processor.vocabulary_
@@ -390,7 +442,11 @@ Args:
       tokenizer_fn=tokenizer)
 
     # build vocabulary only according to training data
-    vocab_processor.fit([self._token_list[i] for i in self._train_index])
+    training_docs = [self._sequences[text_field_name][i]
+                     for text_field_name in self._text_field_names
+                     for i in self._train_index]
+
+    vocab_processor.fit(training_docs)
 
     vocab_freq_dict = vocab_processor.vocabulary_.freq
     print("total word size =", len(vocab_freq_dict))
@@ -467,13 +523,23 @@ Args:
         tokenizer_fn=tokenizer)
       assert categorical_vocab.mapping == self._vocab_v2i_dict
 
-    if self._padding is True:
-      self._token_list = list(
-        vocab_processor.transform_pad(self._token_list))
+    if self._padding:
+      # TODO: update implementation of transform_pad() to take a max length
+      # as different kinds of sequences within a single example will have
+      # different max lengths
+      for text_field_name in self._text_field_names:
+        self._sequences[text_field_name] = list(
+          vocab_processor.transform_pad(self._sequences[text_field_name]))
     else:
-      self._token_list = list(
-        vocab_processor.transform(self._token_list))
-    self._token_list = [list(i) for i in self._token_list]
+      for text_field_name in self._text_field_names:
+        self._sequences[text_field_name] = list(
+          vocab_processor.transform(self._sequences[text_field_name]))
+
+    for text_field_name in self._text_field_names:
+      self._sequences[text_field_name] = [list(i)
+                                          for i
+                                          in self._sequences[text_field_name]]
+
     return vocab_processor.vocabulary_
 
   def write_examples(self, file_name, split_index, labeled):
@@ -481,14 +547,46 @@ Args:
     tf.logging.info("Writing to: %s", file_name)
     with tf.python_io.TFRecordWriter(file_name) as writer:
       for index in tqdm(split_index):
-        feature = {
-          'tokens': tf.train.Feature(
+        feature = dict()
+
+        # Gather sequences and sequence statistics
+        feature['index'] = tf.train.Feature(
+          int64_list=tf.train.Int64List(
+            value=[index]))
+        for text_field_name in self._text_field_names:
+          feature[text_field_name] = tf.train.Feature(
             int64_list=tf.train.Int64List(
-              value=self._token_list[index])),
-          'tokens_length': tf.train.Feature(
+              value=self._sequences[text_field_name][index]))
+          feature[text_field_name + '_length'] = tf.train.Feature(
             int64_list=tf.train.Int64List(
-              value=[self._token_length_list[index]]))
-        }
+              value=[self._sequence_lengths[text_field_name][index]]))
+
+          types, counts = get_types_and_counts(
+            self._sequences[text_field_name][index])  # including EOS
+          assert len(types) == len(counts)
+          assert len(types) > 0
+          for t in types:
+            assert t >= 0
+            assert t < self._vocab_size
+          for c in counts:
+            assert c > 0
+            assert c <= len(self._sequences[text_field_name][index])
+
+          feature[text_field_name + '_types'] = tf.train.Feature(
+            int64_list=tf.train.Int64List(value=types))
+          feature[text_field_name + '_type_counts'] = tf.train.Feature(
+            int64_list=tf.train.Int64List(value=counts))
+          feature[text_field_name + '_types_length'] = tf.train.Feature(
+            int64_list=tf.train.Int64List(value=[len(types)]))
+
+          if self._write_bow:
+            # This assumes a single vocabulary shared among all sequence kinds
+            bow = bag_of_words(self._sequences[text_field_name][index],
+                               self._vocab_size).tolist()
+            feature[text_field_name + '_bow'] = tf.train.Feature(
+              float_list=tf.train.FloatList(value=bow))
+
+        # Gather label
         if labeled:
           label = self._label_list[index]
           assert label is not None
@@ -499,45 +597,13 @@ Args:
           label = self._label_list[index]
           assert label is None
 
-        types, counts = get_types_and_counts(
-          self._token_list[index])  # including EOS
-
-        assert len(types) == len(counts)
-        assert len(types) > 0
-
-        for t in types:
-          assert t >= 0
-          assert t < self._vocab_size
-        for c in counts:
-          assert c > 0
-          assert c <= len(self._token_list[index])
-
-        feature['types'] = tf.train.Feature(
-          int64_list=tf.train.Int64List(value=types))
-        feature['type_counts'] = tf.train.Feature(
-          int64_list=tf.train.Int64List(value=counts))
-        feature['types_length'] = tf.train.Feature(
-          int64_list=tf.train.Int64List(value=[len(types)]))
-
-        if self._write_bow:
-          # print("???", type(bag_of_words(
-          #     self._token_list[index],
-          #     self._vocab_size).tolist()))
-          # print(len(bag_of_words(
-          #     self._token_list[index],
-          #     self._vocab_size).tolist()))
-          feature['bow'] = tf.train.Feature(
-            float_list=tf.train.FloatList(
-              value=bag_of_words(
-                self._token_list[index],
-                self._vocab_size).tolist()))
-
         if self._write_tfidf:
-          feature['tfidf'] = tf.train.Feature(
-            float_list=tf.train.FloatList(
-              value=self._tfidf_list[index]
-            )
-          )
+          raise NotImplementedError("tfidf not supported")
+          # feature['tfidf'] = tf.train.Feature(
+          #   float_list=tf.train.FloatList(
+          #     value=self._tfidf_list[index]
+          #   )
+          # )
 
         example = tf.train.Example(
           features=tf.train.Features(
@@ -554,10 +620,10 @@ Args:
       # no split given
       print("no split given")
       train_ind, valid_ind, test_ind = self.random_split_train_valid_test(
-        len(self._token_list),
+        self._num_examples,
         train_ratio, valid_ratio,
         random_seed)
-      unlabeled_index = []
+      unlabeled_ind = []
     else:
       with gzip.open(index_path, mode='rt') as file:
         index_dict = json.load(file, encoding='utf-8')
@@ -566,37 +632,44 @@ Args:
       train_ind = index_dict['train']
       test_ind = index_dict['test']
       if 'valid' in index_dict:
-        print("train/valid/test splits given")
+        print("Train/valid/test splits given. Use the default split.")
         valid_ind = index_dict['valid']
       else:
-        print("train/test splits given")
+        print("Train/test splits given. Split train into train/valid.")
         train_ind, valid_ind = self.random_split_train_valid(
           train_ind, valid_ratio, random_seed)
       if 'unlabeled' in index_dict:
         print("This dataset has unlabeled data.")
-        unlabeled_index = index_dict['unlabeled']
+        unlabeled_ind = index_dict['unlabeled']
       else:
         print("This dataset doesn't have unlabeled data.")
-        unlabeled_index = []
+        unlabeled_ind = []
 
-    # no intersection
-    assert (len(train_ind) == len(set(train_ind)))
-    assert (len(valid_ind) == len(set(valid_ind)))
-    assert (len(test_ind) == len(set(test_ind)))
-    assert (len(unlabeled_index) == len(set(unlabeled_index)))
+    train_ind_set = set(train_ind)
+    valid_ind_set = set(valid_ind)
+    test_ind_set = set(test_ind)
+    unlabeled_ind_set = set(unlabeled_ind)
 
-    assert len([i for i in train_ind if i in valid_ind]) == 0
-    assert len([i for i in train_ind if i in test_ind]) == 0
-    assert len([i for i in valid_ind if i in test_ind]) == 0
-    assert len([i for i in train_ind if i in unlabeled_index]) == 0
-    assert len([i for i in valid_ind if i in unlabeled_index]) == 0
-    assert len([i for i in test_ind if i in unlabeled_index]) == 0
+    print("Checking index duplications...")
+    assert len(train_ind) == len(train_ind_set)
+    assert len(valid_ind) == len(valid_ind_set)
+    assert len(test_ind) == len(test_ind_set)
+    assert len(unlabeled_ind) == len(unlabeled_ind_set)
 
-    print("train : valid : test : unlabeled = %d : %d : %d : %d" %
+    print("Checking index intersections...")
+    assert len(train_ind_set.intersection(valid_ind_set)) == 0
+    assert len(train_ind_set.intersection(test_ind_set)) == 0
+    assert len(train_ind_set.intersection(unlabeled_ind_set)) == 0
+    assert len(valid_ind_set.intersection(test_ind_set)) == 0
+    assert len(valid_ind_set.intersection(unlabeled_ind_set)) == 0
+    assert len(test_ind_set.intersection(unlabeled_ind_set)) == 0
+
+    print("Before subsampling: train : valid : test : unlabeled = %d : %d : "
+          "%d : %d" %
           (len(train_ind),
            len(valid_ind),
            len(test_ind),
-           len(unlabeled_index)))
+           len(unlabeled_ind)))
 
     if subsample_ratio is not None and subsample_ratio < 1.0:
       train_ind = self.subsample(
@@ -605,16 +678,19 @@ Args:
         valid_ind, random_seed, subsample_ratio)
       test_ind = self.subsample(
         test_ind, random_seed, subsample_ratio)
-      unlabeled_index = self.subsample(
-        unlabeled_index, random_seed, subsample_ratio)
+      unlabeled_ind = self.subsample(
+        unlabeled_ind, random_seed, subsample_ratio)
 
-      print("train : valid : test : unlabeled = %d : %d : %d : %d" %
+      print("After subsampling, train : valid : test : unlabeled = %d : %d : "
+            "%d : %d" %
             (len(train_ind),
              len(valid_ind),
              len(test_ind),
-             len(unlabeled_index)))
+             len(unlabeled_ind)))
+    else:
+      print('No subsampling.')
 
-    return train_ind, valid_ind, test_ind, unlabeled_index
+    return train_ind, valid_ind, test_ind, unlabeled_ind
 
   @staticmethod
   def subsample(index, random_seed, subsample_ratio=0.1):
@@ -700,6 +776,9 @@ def merge_dict_write_tfrecord(json_dirs,
                               max_vocab_size=-1,
                               min_frequency=0,
                               max_frequency=-1,
+                              text_field_names=['text'],
+                              label_field_name='label',
+                              tokenizer_="tweet_tokenizer",
                               train_ratio=TRAIN_RATIO,
                               valid_ratio=VALID_RATIO,
                               subsample_ratio=1,
@@ -724,6 +803,8 @@ def merge_dict_write_tfrecord(json_dirs,
   # json_dir/vocab_freq_dict.json
 
   if max_document_length == -1:
+    # Assumes that all datasets have
+    # the same text_field_names and label_field_name
     max_document_lengths = []
     for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
       dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
@@ -732,11 +813,13 @@ def merge_dict_write_tfrecord(json_dirs,
                         max_vocab_size=-1,
                         min_frequency=0,
                         max_frequency=-1,
+                        text_field_names=text_field_names,
+                        label_field_name=label_field_name,
+                        tokenizer_=tokenizer_,
                         generate_basic_vocab=True,
                         vocab_given=False,
                         generate_tf_record=False)
       max_document_lengths.append(dataset.max_document_length)
-      max_document_length = max(max_document_lengths)
 
   # new data dir based all the datasets' names
   data_names = [os.path.basename(os.path.normpath(json_dir)) for json_dir
@@ -781,8 +864,6 @@ def merge_dict_write_tfrecord(json_dirs,
     json.dump(dataset.mapping, file, ensure_ascii=False, indent=4)
     file.close()
 
-  print("???", len(dataset.mapping))
-
   vocab_i2v_dict = dict()
   for i in range(len(dataset.reverse_mapping)):
     vocab_i2v_dict[i] = dataset.reverse_mapping[i]
@@ -807,6 +888,8 @@ def merge_dict_write_tfrecord(json_dirs,
                       vocab_given=True,
                       vocab_name='vocab_v2i.json',
                       generate_tf_record=True,
+                      text_field_names=text_field_names,
+                      label_field_name=label_field_name,
                       max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
                       min_frequency=min_frequency,
@@ -816,7 +899,8 @@ def merge_dict_write_tfrecord(json_dirs,
                       subsample_ratio=subsample_ratio,
                       padding=padding,
                       write_bow=write_bow,
-                      write_tfidf=write_tfidf
+                      write_tfidf=write_tfidf,
+                      tokenizer_=tokenizer_
                       )
     args_dicts.append(dataset.args)
 

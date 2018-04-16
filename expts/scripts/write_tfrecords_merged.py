@@ -39,7 +39,8 @@ tfrecord_dir += datasets[-1] + '/'
 make_dir(tfrecord_dir)
 
 tfrecord_dir += "min_" + str(args_merged['min_frequency']) + \
-                "_max_" + str(args_merged['max_frequency'])
+                "_max_" + str(args_merged['max_frequency']) + \
+                "_vocab_" + str(args_merged['max_vocab_size']) + "/"
 
 tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
 
@@ -51,8 +52,11 @@ merge_dict_write_tfrecord(json_dirs=json_dirs,
                           max_vocab_size=args_merged['max_vocab_size'],
                           min_frequency=args_merged['min_frequency'],
                           max_frequency=args_merged['max_frequency'],
+                          text_field_names=args_merged['text_field_names'],
+                          label_field_name=args_merged['label_field_name'],
                           train_ratio=args_merged['train_ratio'],
                           valid_ratio=args_merged['valid_ratio'],
+                          tokenizer_=args_merged['tokenizer'],
                           subsample_ratio=args_merged['subsample_ratio'],
                           padding=args_merged['padding'],
                           write_bow=args_merged['write_bow'],

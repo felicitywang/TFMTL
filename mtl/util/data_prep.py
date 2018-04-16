@@ -36,6 +36,9 @@ def stem_tokens(tokens, porter_stemmer):
 tweet_tokenizer = TweetTokenizer(strip_handles=True,
                                  preserve_case=False,
                                  reduce_len=True)  # e.g. waaaayyyyyy -> waayyy
+tweet_tokenizer_keep_handles = TweetTokenizer(strip_handles=False,
+                                              preserve_case=False,
+                                              reduce_len=True)
 
 
 def tweet_clean(text):
