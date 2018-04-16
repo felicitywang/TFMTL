@@ -403,8 +403,8 @@ def test_model(model, dataset_info, args):
                                                 _pred_op,
                                                 _eval_labels,
                                                 _eval_iter,
-                                                metric=dataset_info[
-                                                  dataset_name]['metric'],
+                                                metrics=dataset_info[
+                                                  dataset_name]['metrics'],
                                                 labels=dataset_info[
                                                   dataset_name]['labels'])
         model_info[dataset_name]['test_metrics'] = _metrics
@@ -600,8 +600,9 @@ def main():
       # for datasets with unlabeled data, labels could contain None
       labels[dataset] = json.load(file)['labels']
       if None in labels[dataset]:
-
-        labels[dataset] = list(set(labels[dataset]).remove(None))
+        tmp_labels = set(labels[dataset])
+        tmp_labels.remove(None)
+        labels[dataset] = list(tmp_labels)
       file.close()
 
   # evaluation metrics for each dataset

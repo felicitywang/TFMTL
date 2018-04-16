@@ -25,7 +25,7 @@ from mtl.util.dataset import Dataset
 if len(sys.argv) != 6:
   print(
     "Usage: python write_tfrecords_test.py test_json_dir tfrecord_dir "
-    "vocab_dir")
+    "vocab_dir args_test_json_path")
 
 # dataset_args_path = sys.argv[1]
 

@@ -28,7 +28,7 @@ See `../../requirement.txt`
         - `data/raw/`: downloaded/unzipped original data files
         - `data/json/`: converted json data and basic vocabulary of the dataset
         - `data/tf/`: TFRecord files
-                - `data/tf/merged/DATASETXXX_DATASETYYY/min_(min_freq)_max_(max_freq)/`: generated data for the given min/max vocab frequency, e.g. `data/tf/merged/LMRD_SSTb/min_50_max_-1/`
+                - `data/tf/merged/DATASETXXX_DATASETYYY/min_(min_freq)_max_(max_freq)_vocab_(max_vocab_size)/`: generated data for the given min/max vocab frequency, e.g. `data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000/`
                     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
                     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
                     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -36,7 +36,7 @@ See `../../requirement.txt`
                         - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                         - `unlabeled.tf`: unlabeled TFRecord file(if there is unlabeled data)
                         - `args.json`: arguments used to generate the TFRecord files
-                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency for the single dataset, e.g., `data/tf/single/LMRD/min_50_max_-1/`
+                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency and limited maximum vocabulary size for the single dataset, e.g., `data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
                     - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                     - `unlabeled.tf`: unlabeled TFRecord files(if there is unlabeled data)
                     - `args.json`: arguments used to generate the TFRecord files
@@ -95,8 +95,8 @@ See `../../requirement.txt`
     - e.g., in each task, `python ../scripts/write_tfrecords_predict.py DATASET_NAME predict_json_path predict_tf_path tfrecord_dir`
     - e.g., in `sentiment_1/`, run
 
-        - `python ../scripts/write_tfrecords_predict.py args_LMRD.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_50_max_-1/ data/tf/single/LMRD/min_50_max_-1/`
-        - `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_50_max_-1/LMRD/ data/tf/single/LMRD/min_50_max_-1/`
+        - `python ../scripts/write_tfrecords_predict.py args_LMRD.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_0_max_-1_vocab_10000/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
+        - `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000/LMRD/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
 - run `scripts/discriminative_driver.py` with `predict` mode, specifying path of the saved checkpoints, e.g., `sentiment_1/predict_single.sh`, `sentiment_1/predict_mult.sh`; see the source file for further hyper-parameter / argument explanation
 
 ### 5. Test with the model
@@ -104,7 +104,7 @@ See `../../requirement.txt`
 - use the trained model to test other test data(except for the original test data)
 - input: json file of test data with texts and labels
 - run `scripts/write_tfrecords_test.py` to write TFRecord file for the data to test
-    - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, and `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`)
+    - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir args_test_json_path` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`), adn `args_test_json_path` is the path to the json config file for the extra test data
 - test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
 
 ## Arguments to generate TFRecord files
