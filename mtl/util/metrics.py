@@ -31,6 +31,7 @@ http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 import sklearn.metrics
 import numpy as np
 
+
 def accuracy_score(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
                                         y_pred=y_preds,
@@ -64,8 +65,8 @@ def f1_macro(y_trues, y_preds, labels, topics):
 
 def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
   assert labels is not None
-  f1_scores = sklearn.metrics.f1_score(y_true=y_true,
-                                       y_pred=y_pred,
+  f1_scores = sklearn.metrics.f1_score(y_true=y_trues,
+                                       y_pred=y_preds,
                                        labels=labels,
                                        average=None
                                        )
@@ -99,25 +100,25 @@ def mae_macro(y_trues, y_preds, labels, topics):
     y_true = [p[0] for p in preds]
     y_pred = [p[1] for p in preds]
 
-    mae = sklearn.metrics.recall_score(y_true=y_true,
-                                       y_pred=y_pred,
-                                       multioutput='uniform_average')
+    mae = sklearn.metrics.mean_absolute_error(y_true=y_true,
+                                              y_pred=y_pred,
+                                              multioutput='uniform_average')
     maes[topic] = mae
 
-  for topic, mae in maes.items():
-    print('{}: mae={}'.format(topic, mae))
+  # for topic, mae in maes.items():
+  #   print('{}: mae={}'.format(topic, mae))
 
   # simple mean of maes over topics
   return sum(maes.values()) / len(maes.values())
 
 
-def neg_mae_macro(y_true, y_preds, labels):
+def neg_mae_macro(y_trues, y_preds, labels, topics):
   """
   As for absolute error, lower is better
   Thus use negative value in order to share the same interface when tuning
   dev data with other metrics
   """
-  return -mae_macro(y_true, y_preds, labels)
+  return -mae_macro(y_trues, y_preds, labels, topics)
 
 
 def recall_macro(y_trues, y_preds, labels, topics):
@@ -133,7 +134,7 @@ def recall_macro(y_trues, y_preds, labels, topics):
   # print('{} topics'.format(len(topics_set)))
 
   preds = list(zip(*[y_trues, y_preds, topics]))
-  preds_by_topic = dict()  
+  preds_by_topic = dict()
   for topic in topics_set:
     preds_by_topic[topic] = []
 
@@ -145,18 +146,18 @@ def recall_macro(y_trues, y_preds, labels, topics):
   for topic, preds in preds_by_topic.items():
     y_true = [p[0] for p in preds]
     y_pred = [p[1] for p in preds]
-    
+
     r = sklearn.metrics.recall_score(y_true=y_true,
                                      y_pred=y_pred,
                                      average='macro')
     recalls[topic] = r
 
-  for topic, recall in recalls.items():
-    print('{}: recall={}'.format(topic, recall))
-    
+  # for topic, recall in recalls.items():
+  #   print('{}: recall={}'.format(topic, recall))
+
   # simple mean of recalls over topics
   return sum(recalls.values()) / len(recalls.values())
-    
+
 
 def metric2func(metric_name):
   METRIC2FUNC = {

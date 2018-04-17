@@ -17,8 +17,12 @@
 
 import tensorflow as tf
 
-from mtl.util.metrics import accuracy_score, accurate_number, recall_macro, \
-  f1_macro, mae_macro
+from mtl.util.metrics import (accuracy_score,
+                              accurate_number,
+                              recall_macro,
+                              f1_macro,
+                              mae_macro,
+                              neg_mae_macro)
 
 
 class MetricTest(tf.test.TestCase):
@@ -26,8 +30,12 @@ class MetricTest(tf.test.TestCase):
     y_trues = [0, 1, 2, 3]
     y_preds = [0, 2, 1, 3]
     labels = [0, 1, 2, 3]
+    topics = [0, 0, 0, 0]
     self.assertEqual(
-      accuracy_score(y_trues=y_trues, y_preds=y_preds, labels=labels),
+      accuracy_score(y_trues=y_trues,
+                     y_preds=y_preds,
+                     labels=labels,
+                     topics=topics),
       0.5
     )
 
@@ -43,8 +51,12 @@ class MetricTest(tf.test.TestCase):
     y_trues = [0, 1, 2, 0, 1, 2]
     y_preds = [0, 2, 1, 0, 0, 1]
     labels = [0, 1, 2]
+    topics = [0, 0, 0, 0, 0, 0]
     self.assertAlmostEqual(
-      recall_macro(y_trues=y_trues, y_preds=y_preds, labels=labels),
+      recall_macro(y_trues=y_trues,
+                   y_preds=y_preds,
+                   labels=labels,
+                   topics=topics),
       1 / 3
     )
 
@@ -52,24 +64,36 @@ class MetricTest(tf.test.TestCase):
     y_trues = [0, 1, 2, 0, 1, 2]
     y_preds = [0, 2, 1, 0, 0, 1]
     labels = [0, 1, 2]
+    topics = [0, 0, 0, 0, 0, 0]
     self.assertAllEqual(
-      f1_macro(y_trues=y_trues, y_preds=y_preds, labels=labels),
+      f1_macro(y_trues=y_trues,
+               y_preds=y_preds,
+               labels=labels,
+               topics=topics),
       4 / 15
     )
 
-  def mae_macro(self):
+  def test_mae_macro(self):
     y_trues = [3, -0.5, 2, 7]
     y_preds = [2.5, 0.0, 2, 8]
+    topics = [0, 0, 0, 0]
     self.assertEqual(
-      mae_macro(y_trues=y_trues, y_preds=y_preds, labels=None),
+      mae_macro(y_trues=y_trues,
+                y_preds=y_preds,
+                labels=None,
+                topics=topics),
       0.5
     )
 
-  def neg_mae_macro(self):
+  def test_neg_mae_macro(self):
     y_trues = [3, -0.5, 2, 7]
     y_preds = [2.5, 0.0, 2, 8]
+    topics = [0, 0, 0, 0]
     self.assertEqual(
-      mae_macro(y_trues=y_trues, y_preds=y_preds, labels=None),
+      neg_mae_macro(y_trues=y_trues,
+                    y_preds=y_preds,
+                    labels=None,
+                    topics=topics),
       -0.5
     )
 
