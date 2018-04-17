@@ -29,7 +29,7 @@ http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 """
 
 import sklearn.metrics
-
+import numpy as np
 
 def accuracy_score(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
@@ -60,6 +60,19 @@ def f1_macro(y_trues, y_preds, labels, topics):
                                   labels=labels,
                                   average='macro'
                                   )
+
+
+def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
+  assert labels is not None
+  f1_scores = sklearn.metrics.f1_score(y_true=y_true,
+                                       y_pred=y_pred,
+                                       labels=labels,
+                                       average=None
+                                       )
+  # Assumes that POS and NEG-like labels are in positions 0 and 1
+  # and that any NONE-like labels are in position 2 onwards
+  # (and will be ignored)
+  return np.mean([f1_scores[0], f1_scores[1]])
 
 
 def mae_macro(y_trues, y_preds, labels, topics):
