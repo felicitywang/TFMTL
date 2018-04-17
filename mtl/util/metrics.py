@@ -47,7 +47,7 @@ def accurate_number(y_trues, y_preds):
 
 def f1_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) f1 score of all classes
+  macro-averaged (unweighted mean) f1 score of all classes
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
@@ -64,16 +64,38 @@ def f1_macro(y_trues, y_preds, labels, topics):
 
 def mae_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) mean absolute error
+  macro-averaged (unweighted mean) over topics of mean absolute error
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
   :return: float
   """
-  return sklearn.metrics.mean_absolute_error(y_true=y_trues,
-                                             y_pred=y_preds,
-                                             sample_weight=None,
-                                             multioutput='uniform_average')
+  topics_set = set(topics)
+
+  preds = list(zip(*[y_trues, y_preds, topics]))
+  preds_by_topic = dict()
+  for topic in topics_set:
+    preds_by_topic[topic] = []
+
+  # group predictions by topic
+  for pred in preds:
+    preds_by_topic[pred[2]].append(pred)
+
+  maes = dict()
+  for topic, preds in preds_by_topic.items():
+    y_true = [p[0] for p in preds]
+    y_pred = [p[1] for p in preds]
+
+    mae = sklearn.metrics.recall_score(y_true=y_true,
+                                       y_pred=y_pred,
+                                       multioutput='uniform_average')
+    maes[topic] = mae
+
+  for topic, mae in maes.items():
+    print('{}: mae={}'.format(topic, mae))
+
+  # simple mean of maes over topics
+  return sum(maes.values()) / len(maes.values())
 
 
 def neg_mae_macro(y_true, y_preds, labels):
@@ -87,7 +109,7 @@ def neg_mae_macro(y_true, y_preds, labels):
 
 def recall_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) over topics of recall score of all classes
+  macro-averaged (unweighted mean) over topics of recall score of all classes
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
@@ -95,10 +117,9 @@ def recall_macro(y_trues, y_preds, labels, topics):
   :return: float
   """
   topics_set = set(topics)
-  print('{} topics'.format(len(topics_set)))
+  # print('{} topics'.format(len(topics_set)))
 
   preds = list(zip(*[y_trues, y_preds, topics]))
-  recalls = dict()
   preds_by_topic = dict()  
   for topic in topics_set:
     preds_by_topic[topic] = []
@@ -107,6 +128,7 @@ def recall_macro(y_trues, y_preds, labels, topics):
   for pred in preds:
     preds_by_topic[pred[2]].append(pred)
 
+  recalls = dict()
   for topic, preds in preds_by_topic.items():
     y_true = [p[0] for p in preds]
     y_pred = [p[1] for p in preds]
