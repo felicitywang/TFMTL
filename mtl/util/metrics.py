@@ -103,22 +103,30 @@ def mae_macro(y_trues, y_preds, labels, topics):
     y_true = [p[0] for p in preds]
     y_pred = [p[1] for p in preds]
 
-    # macro-average over labels as well as over topics
-    # following code released for: https://arxiv.org/abs/1802.09913
-    tmp_maes = []
-    for label in labels:
-      true_pred_pairs = [(y_t, y_p) for y_t, y_p in
-                         zip(*[y_true, y_pred])
-                         if y_t == label]
-      if len(true_pred_pairs) == 0:
-        continue
-      tmp_y_true, tmp_y_pred = zip(*true_pred_pairs)
-      tmp_mae = sklearn.metrics.mean_absolute_error(y_true=tmp_y_true,
-                                                    y_pred=tmp_y_pred,
-                                                    multioutput='uniform_average')
-      tmp_maes.append(tmp_mae)
+    if labels:
+      # macro-average over labels as well as over topics
+      # following code released for: https://arxiv.org/abs/1802.09913
+      tmp_maes = []
+      for label in labels:
+        true_pred_pairs = [(y_t, y_p) for y_t, y_p in
+                           zip(*[y_true, y_pred])
+                           if y_t == label]
+        if len(true_pred_pairs) == 0:
+          continue
+        tmp_y_true, tmp_y_pred = zip(*true_pred_pairs)
 
-    mae = np.mean(tmp_maes)
+        mean_absolute_error = sklearn.metrics.mean_absolute_error
+        tmp_mae = mean_absolute_error(y_true=tmp_y_true,
+                                      y_pred=tmp_y_pred,
+                                      multioutput='uniform_average')
+        tmp_maes.append(tmp_mae)
+
+      mae = np.mean(tmp_maes)
+    else:
+      # macro-average over topics but not labels
+      mae = sklearn.metrics.mean_absolute_error(y_true=y_true,
+                                                y_pred=y_pred,
+                                                multioutput='uniform_average')
     maes[topic] = mae
 
   # simple mean of maes over topics

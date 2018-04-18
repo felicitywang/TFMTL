@@ -81,11 +81,12 @@ class MetricTest(tf.test.TestCase):
   def test_mae_macro(self):
     y_trues = [3, -0.5, 2, 7]
     y_preds = [2.5, 0.0, 2, 8]
+    labels = [3, -0.5, 2, 7, 15]
     topics = [0, 0, 0, 0]
     self.assertEqual(
       mae_macro(y_trues=y_trues,
                 y_preds=y_preds,
-                labels=None,
+                labels=labels,
                 topics=topics),
       0.5
     )
@@ -93,11 +94,12 @@ class MetricTest(tf.test.TestCase):
   def test_neg_mae_macro(self):
     y_trues = [3, -0.5, 2, 7]
     y_preds = [2.5, 0.0, 2, 8]
+    labels = [3, -0.5, 2, 7, 15]
     topics = [0, 0, 0, 0]
     self.assertEqual(
       neg_mae_macro(y_trues=y_trues,
                     y_preds=y_preds,
-                    labels=None,
+                    labels=labels,
                     topics=topics),
       -0.5
     )
