@@ -403,7 +403,7 @@ def test_model(model, dataset_info, args):
 
       for dataset_name in model_info:
         _pred_op = model_info[dataset_name]['test_pred_op']
-        _get_topic_op = model_info[dataset_name]['test_topic_op']
+        _get_topic_op = model_info[dataset_name].get('test_topic_op', None)
         _eval_labels = model_info[dataset_name]['test_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['test_iter']
