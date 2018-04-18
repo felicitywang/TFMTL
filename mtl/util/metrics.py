@@ -39,7 +39,7 @@ def accuracy_score(y_trues, y_preds, labels, topics):
                                         )
 
 
-def accurate_number(y_trues, y_preds):
+def accurate_number(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
                                         y_pred=y_preds,
                                         normalize=False  # return number
@@ -84,6 +84,9 @@ def mae_macro(y_trues, y_preds, labels, topics):
   :param y_preds: list of predicted labels
   :return: float
   """
+  if len(topics) == 0:
+    return float('inf')
+
   topics_set = set(topics)
 
   preds = list(zip(*[y_trues, y_preds, topics]))
@@ -130,6 +133,9 @@ def recall_macro(y_trues, y_preds, labels, topics):
   :param labels: labels for each class in a list, must specify
   :return: float
   """
+  if len(topics) == 0:
+    return float('-inf')
+
   topics_set = set(topics)
   # print('{} topics'.format(len(topics_set)))
 

@@ -42,8 +42,13 @@ class MetricTest(tf.test.TestCase):
   def test_accurate_number(self):
     y_trues = [0, 1, 2, 3]
     y_preds = [0, 2, 1, 3]
+    labels = [0, 1, 2, 3]
+    topics = [0, 0, 0, 0]
     self.assertAllEqual(
-      accurate_number(y_trues=y_trues, y_preds=y_preds),
+      accurate_number(y_trues=y_trues,
+                      y_preds=y_preds,
+                      labels=labels,
+                      topics=topics),
       2
     )
 
