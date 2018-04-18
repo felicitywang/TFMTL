@@ -88,6 +88,7 @@ def str2func(s):
     "tf.nn.elu": tf.nn.elu,
 
     "tf.contrib.rnn.BasicLSTMCell": tf.contrib.rnn.BasicLSTMCell,
+    "tf.contrib.rnn.LSTMCell": tf.contrib.rnn.LSTMCell,
     "tf.contrib.rnn.GRUCell": tf.contrib.rnn.GRUCell,
   }
 

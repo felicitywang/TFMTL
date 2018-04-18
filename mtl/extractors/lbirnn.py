@@ -18,7 +18,16 @@ from six.moves import xrange
 
 
 def get_multi_cell(cell_type, cell_size, num_layers):
-  cells = [cell_type(cell_size) for _ in xrange(num_layers)]
+  if cell_type == tf.contrib.rnn.GRUCell:
+    cells = [cell_type(cell_size,
+                       kernel_initializer=tf.contrib.layers.xavier_initializer())
+             for _ in xrange(num_layers)]
+  elif cell_type == tf.contrib.rnn.LSTMCell:
+    cells = [cell_type(cell_size,
+                       initializer=tf.contrib.layers.xavier_initializer())
+             for _ in xrange(num_layers)]
+  else:
+    cells = [cell_type(cell_size) for _ in xrange(num_layers)]
   return tf.contrib.rnn.MultiRNNCell(cells)
 
 
@@ -26,10 +35,11 @@ def _lbirnn_helper(inputs,
                    lengths,
                    indices=None,
                    num_layers=2,
-                   cell_type=tf.contrib.rnn.BasicLSTMCell,
+                   cell_type=tf.contrib.rnn.LSTMCell,
                    cell_size=64,
                    initial_state_fwd=None,
-                   initial_state_bwd=None):
+                   initial_state_bwd=None,
+                   **kwargs):
   """Stacked linear chain bi-directional RNN
 
   Inputs
@@ -62,6 +72,21 @@ def _lbirnn_helper(inputs,
   cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
   cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
 
+  if "output_keep_prob" in kwargs and kwargs["output_keep_prob"] < 1.0:
+    cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
+                                              output_keep_prob=kwargs["output_keep_prob"])
+    cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
+                                              output_keep_prob=kwargs["output_keep_prob"])
+
+  if "attention" in kwargs and kwargs["attention"] == True:
+    if "attn_length" in kwargs:
+      attn_length = kwargs["attn_length"]
+    else:
+      attn_length = 10
+    cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
+    cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
+
+
   batch_size = tf.shape(inputs)[0]
   if initial_state_fwd is None:
     initial_state_fwd = cells_fwd.zero_state(batch_size,
@@ -86,17 +111,6 @@ def _lbirnn_helper(inputs,
         initial_state_bwd[i] = cell_type(cell_size).zero_state(batch_size,
                                                                tf.float32)
     initial_state_bwd = tuple(initial_state_bwd)
-
-  assert len(initial_state_fwd) == num_layers, "length of initial_state_fwd " \
-                                               "must equal num_layers: " \
-                                               "got {}, num_layers={}".format(
-                                               len(initial_state_fwd),
-                                               num_layers)
-  assert len(initial_state_bwd) == num_layers, "length of initial_state_bwd " \
-                                               "must equal num_layers: " \
-                                               "got {}, num_layers={}".format(
-                                               len(initial_state_bwd),
-                                               num_layers)
 
   outputs_fwd, states_fwd = tf.nn.dynamic_rnn(cells_fwd,
                                               inputs,
@@ -143,10 +157,11 @@ def lbirnn(inputs,
            lengths,
            indices=None,
            num_layers=2,
-           cell_type=tf.contrib.rnn.BasicLSTMCell,
+           cell_type=tf.contrib.rnn.LSTMCell,
            cell_size=64,
            initial_state_fwd=None,
-           initial_state_bwd=None):
+           initial_state_bwd=None,
+           **kwargs):
   o, _ = _lbirnn_helper(inputs,
                         lengths,
                         indices=indices,
@@ -154,7 +169,8 @@ def lbirnn(inputs,
                         cell_type=cell_type,
                         cell_size=cell_size,
                         initial_state_fwd=initial_state_fwd,
-                        initial_state_bwd=initial_state_bwd)
+                        initial_state_bwd=initial_state_bwd,
+                        **kwargs)
   (outputs_fwd, outputs_bwd) = o
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
   return outputs
@@ -167,7 +183,8 @@ def serial_lbirnn(inputs,
                   cell_type=tf.contrib.rnn.GRUCell,
                   cell_size=64,
                   initial_state_fwd=None,
-                  initial_state_bwd=None):
+                  initial_state_bwd=None,
+                  **kwargs):
   """Serial stacked linear chain bi-directional RNN
 
   If `indices` is specified for the last stage, the outputs of the tokens
@@ -221,15 +238,6 @@ def serial_lbirnn(inputs,
       else:
         indices_ = None
 
-      if fwd_ is not None:
-        assert len(fwd_) == num_layers, "must specify initial state " \
-                                        "for forward pass for all layers " \
-                                        "of serial bi-RNN"
-      if bwd_ is not None:
-        assert len(bwd_) == num_layers, "must specify initial state " \
-                                        "for forward pass for all layers " \
-                                        "of serial bi-RNN"
-
       o, s = _lbirnn_helper(inputs_,
                             lengths_,
                             indices=indices_,
@@ -237,7 +245,8 @@ def serial_lbirnn(inputs,
                             cell_type=cell_type,
                             cell_size=cell_size,
                             initial_state_fwd=fwd_,
-                            initial_state_bwd=bwd_)
+                            initial_state_bwd=bwd_,
+                            **kwargs)
       (outputs_fwd, outputs_bwd), (states_fwd, states_bwd) = o, s
       # Update arguments for next stage
       fwd_ = states_fwd
