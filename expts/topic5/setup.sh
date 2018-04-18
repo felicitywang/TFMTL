@@ -14,12 +14,12 @@ unzip semeval2016_task4c_topic-based_sentiment.zip -d semeval2016-task4c-topic-b
 rm semeval2016_task4c_topic-based_sentiment.zip
 mv -f semeval2016-task4c-topic-based-sentiment data/raw/Topic5
 
-#echo "Converting the Topic-5 data to json..."
-#python3 ../../datasets/sentiment/Topic5/convert_Topic5_to_JSON.py ./data/raw/Topic5/
-#mv -f data/raw/Topic5/data.json.gz data/json/Topic5/
-#mv -f data/raw/Topic5/index.json.gz data/json/Topic5/
-#
-#cp -f ../../datasets/sentiment/Topic5/label.json ./data/json/Topic5/label.json
-#
-#echo "Generating TFRecord files..."
-#python ../scripts/write_tfrecords_single.py Topic5
+echo "Converting the Topic-5 data to json..."
+python3 ../../datasets/sentiment/Topic5/convert_Topic5_to_JSON.py ./data/raw/Topic5/
+mv -f data/raw/Topic5/data.json.gz data/json/Topic5/
+mv -f data/raw/Topic5/index.json.gz data/json/Topic5/
+
+cp -f ../../datasets/sentiment/Topic5/label.json ./data/json/Topic5/label.json
+
+echo "Generating TFRecord files..."
+python ../scripts/write_tfrecords_single.py Topic5
