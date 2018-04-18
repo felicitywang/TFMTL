@@ -1,0 +1,9 @@
+[
+    {
+        "-2.0": "very negative",
+        "-1.0": "negative",
+        "0.0": "neutral",
+        "1.0": "positive",
+        "2.0": "very positive"
+    }
+]
