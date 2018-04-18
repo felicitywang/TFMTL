@@ -348,6 +348,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       if total_acc > best_total_acc:
         best_total_acc = total_acc
         best_total_acc_epoch = epoch
+        best_epoch_results = str_
         if len(args.datasets) > 1:
           saver.save(sess.raw_session(),
                      os.path.join(args.checkpoint_dir, 'MULT',
@@ -358,6 +359,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     print(best_eval_acc)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
+    print(best_epoch_results)
 
     # TODO write(add) the result to a common report file
     # with open('report.txt', 'a') as file:
