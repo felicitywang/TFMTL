@@ -574,7 +574,10 @@ def compute_held_out_performance(session, pred_op, eval_label,
       print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
 
   ntotal = len(y_trues)
-  ncorrect = accurate_number(y_trues=y_trues, y_preds=y_preds)
+  ncorrect = accurate_number(y_trues=y_trues,
+                             y_preds=y_preds,
+                             labels=labels,
+                             topics=y_topics)
 
   scores = dict()
   for metric in metrics:
