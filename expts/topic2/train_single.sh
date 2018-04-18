@@ -1,1 +1,22 @@
-python ../scripts/discriminative_driver.py --datasets Topic2 --dataset_paths /home/sebner/tfmtl/expts/topic2/data/tf/single/Topic2/min_1_max_-1 --class_sizes 2 --vocab_path data/tf/single/Topic2/min_1_max_-1/vocab_size.txt --encoder_config_file encoders.json --model mult --alphas 1 --architecture serial-birnn --mode train --num_train_epochs 50 --checkpoint_dir ./data/ckpt/Topic2/ --experiment_name RUDER_NAACL_18 --optimizer rmsprop --lr0 0.001 --tuning_metric Acc
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 50 \
+       --checkpoint_dir ./data/ckpt/Topic2/ \
+       --experiment_name RUDER_NAACL_18 \
+       --datasets Topic2 \
+       --dataset_paths data/tf/single/Topic2/min_0_max_-1_vocab_50000 \
+       --class_sizes 2 \
+       --vocab_size_file data/tf/single/Topic2/min_0_max_-1_vocab_50000/vocab_size.txt \
+       --encoder_config_file encoders.json \
+       --architecture serial-birnn \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 64 \
+       --alphas 1 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --tuning_metric Acc \
+       --topics_path data/json/Topic2/data.json.gz \
+       --seed 42

@@ -23,6 +23,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
+import gzip
 import json
 import os
 from time import time
@@ -69,6 +70,8 @@ def parse_args():
                  help='The dataset the text to predict belongs to.')
   p.add_argument('--predict_output_folder', type=str,
                  help='Folder to save the predictions using each model.')
+  p.add_argument('--topics_path', default='', type=str,
+                 help='Path to file mapping example index to its topic')
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
   p.add_argument('--eval_batch_size', default=128, type=int,
@@ -114,10 +117,10 @@ def parse_args():
                  help='Key of the dataset(s) to train and evaluate on')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help="""Paths to the directory containing the TFRecord files
-                  (train.tf, valid.tf, test.tf) for the dataset(s) given by 
+                  (train.tf, valid.tf, test.tf) for the dataset(s) given by
                   the --datasets flag (in the same order)""")
-  p.add_argument('--vocab_path', type=str,
-                 help='Path to the shared vocabulary for the datasets')
+  p.add_argument('--vocab_size_file', type=str,
+                 help='Path to the file containing the vocabulary size')
   p.add_argument('--architecture', type=str,
                  help='Encoder architecture type (see encoder_factory.py for '
                       'supported architectures)')
@@ -217,6 +220,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   #
 
   fill_pred_op_info(dataset_info, model, args, model_info)
+  fill_topic_op(args, model_info)
 
   print("All the variables after defining valid/test accuracy:")
   all_variables = tf.global_variables()
@@ -289,6 +293,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         _eval_labels = model_info[dataset_name]['valid_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['valid_iter']
+        _get_topic_op = model_info[dataset_name]['valid_topic_op']
         _metrics = compute_held_out_performance(sess,
                                                 _pred_op,
                                                 _eval_labels,
@@ -296,7 +301,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                 metrics=dataset_info[
                                                   dataset_name]['metrics'],
                                                 labels=dataset_info[
-                                                  dataset_name]['labels'])
+                                                  dataset_name]['labels'],
+                                                args=args,
+                                                get_topic_op=_get_topic_op)
         model_info[dataset_name]['valid_metrics'] = _metrics
 
       end_time = time()
@@ -311,11 +318,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         # _metric = dataset_info[
         #   dataset_name]['metric']
         # _score = model_info[dataset_name]['valid_metrics'][_metric]
-        # TODO use other metric here for tuning
         _eval_acc = model_info[dataset_name]['valid_metrics']['Acc']
         _eval_align_acc = model_info[dataset_name]['valid_metrics'][
           'aligned_accuracy']
-        str_ += '\n(%s) ' % (dataset_name)
+        str_ += '\n(%s) ' % dataset_name
         for m, s in model_info[dataset_name]['valid_metrics'].items():
           if m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
@@ -372,6 +378,7 @@ def test_model(model, dataset_info, args):
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
   fill_pred_op_info(dataset_info, model, args, model_info)
+  fill_topic_op(args, model_info)
 
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
@@ -396,6 +403,7 @@ def test_model(model, dataset_info, args):
 
       for dataset_name in model_info:
         _pred_op = model_info[dataset_name]['test_pred_op']
+        _get_topic_op = model_info[dataset_name]['test_topic_op']
         _eval_labels = model_info[dataset_name]['test_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['test_iter']
@@ -406,31 +414,33 @@ def test_model(model, dataset_info, args):
                                                 metrics=dataset_info[
                                                   dataset_name]['metrics'],
                                                 labels=dataset_info[
-                                                  dataset_name]['labels'])
+                                                  dataset_name]['labels'],
+                                                args=args,
+                                                get_topic_op=_get_topic_op)
         model_info[dataset_name]['test_metrics'] = _metrics
 
-        _num_eval_total = model_info[dataset_name]['test_metrics'][
-          'ntotal']
-        _eval_acc = model_info[dataset_name]['test_metrics'][
-          'Acc']
-        _eval_align_acc = model_info[dataset_name]['test_metrics'][
-          'aligned_accuracy']
+        # _num_eval_total = model_info[dataset_name]['test_metrics'][
+        #   'ntotal']
+        # _eval_acc = model_info[dataset_name]['test_metrics'][
+        #   'Acc']
+        # _eval_align_acc = model_info[dataset_name]['test_metrics'][
+        #   'aligned_accuracy']
         str_ += '\n'
         if dataset_name == model_name:
           str_ += '(*)'
         else:
           str_ += '( )'
-        str_ += '(%s)' % (dataset_name)
+        str_ += '(%s)' % dataset_name
         for m, s in model_info[dataset_name]['test_metrics'].items():
           if m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
-            # str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-            #  dataset_name,
-            #  _num_eval_total,
-            #  _eval_acc,
-            #  _eval_align_acc)
+            # str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' \
+            #         % (dataset_name,
+            #            _num_eval_total,
+            #            _eval_acc,
+            #            _eval_align_acc)
 
   logging.info(str_)
 
@@ -442,6 +452,7 @@ def predict(model, dataset_info, args):
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
   fill_pred_op_info(dataset_info, model, args, model_info)
+  # fill_topic_op(args, model_info)
 
   str_ = 'Predictions of the given text data of dataset %s using different ' \
          'saved models:' % args.predict_dataset
@@ -498,8 +509,13 @@ def get_all_predictions(session, pred_op, pred_iterator):
   return predictions
 
 
+def get_topic(batch):
+  return batch['index']
+
+
 def compute_held_out_performance(session, pred_op, eval_label,
-                                 eval_iterator, metrics, labels):
+                                 eval_iterator, metrics, labels,
+                                 args, get_topic_op):
   # pred_op: predicted labels
   # eval_label: gold labels
 
@@ -529,25 +545,52 @@ def compute_held_out_performance(session, pred_op, eval_label,
   #     ncorrect += 1
   # acc = float(ncorrect) / float(ntotal)
 
+  if args.topics_path != '':
+    with gzip.open(args.topics_path, mode='rt') as f:
+      d = json.load(f, encoding='utf-8')
+  index2topic = dict()
+  for item in d:
+    index2topic[item['index']] = item['seq1']
+
   # Accumulate predictions
   y_trues = []
   y_preds = []
+  y_indexes = []
+  y_topics = []
   while True:
     try:
-      y_true, y_pred = session.run([eval_label, pred_op])
+      if args.experiment_name == "RUDER_NAACL_18":
+        y_true, y_pred, y_index = session.run(
+          [eval_label, pred_op, get_topic_op])
+        y_index = y_index.tolist()  # index of example in data.json
+        y_topic = [index2topic[idx] for idx in
+                   y_index]  # topic for each example so we can macro-average
+        #  across topics
+        y_indexes += y_index
+        y_topics += y_topic
+      else:
+        y_true, y_pred = session.run([eval_label, pred_op])
       assert y_true.shape == y_pred.shape
       y_trues += y_true.tolist()
       y_preds += y_pred.tolist()
     except tf.errors.OutOfRangeError:
       break
 
+  if args.experiment_name == "RUDER_NAACL_18":
+    for y_index, y_topic, y_t, y_p in zip(
+      *[y_indexes, y_topics, y_trues, y_preds]):
+      print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
+
   ntotal = len(y_trues)
-  ncorrect = accurate_number(y_trues=y_trues, y_preds=y_preds)
+  ncorrect = accurate_number(y_trues=y_trues,
+                             y_preds=y_preds,
+                             labels=labels,
+                             topics=y_topics)
 
   scores = dict()
   for metric in metrics:
     func = metric2func(metric)
-    scores[metric] = func(y_trues, y_preds, labels)
+    scores[metric] = func(y_trues, y_preds, labels, y_topics)
 
   res = dict()
   res['ntotal'] = ntotal
@@ -557,12 +600,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
   res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
 
   return res
-  # return {
-  #  'ntotal': ntotal,
-  #  'ncorrect': ncorrect,
-  #  'accuracy': score,  # TODO score name
-  #  'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
-  # }
 
 
 def main():
@@ -648,7 +685,7 @@ def main():
     else:
       raise ValueError('No such mode!')
 
-  vocab_size = get_vocab_size(args.vocab_path)
+  vocab_size = get_vocab_size(args.vocab_size_file)
 
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for
                  dataset_name in dataset_info}
@@ -678,6 +715,7 @@ def main():
         else:
           raise ValueError("Input key %s not supported!" % (args.input_key))
 
+  FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
   if args.mode in ['train', 'test']:
     FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
@@ -953,6 +991,22 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         model_info[dataset_name]['pred_batch'], dataset_name,
         dataset_info[dataset_name]['dataset_name'])
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
+
+
+def fill_topic_op(args, model_info):
+  if args.experiment_name == "RUDER_NAACL_18":
+    for dataset_name in model_info:
+      if args.mode == 'train':
+        _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
+        model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
+      elif args.mode == 'test':
+        _test_topic_op = get_topic(model_info[dataset_name]['test_batch'])
+        model_info[dataset_name]['test_topic_op'] = _test_topic_op
+      elif args.mode == 'predict':
+        _pred_topic_op = get_topic(model_info[dataset_name]['pred_batch'])
+        model_info[dataset_name]['pred_topic_op'] = _pred_topic_op
+  else:
+    pass
 
 
 def build_input_dataset(tfrecord_path, batch_features, batch_size,

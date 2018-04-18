@@ -29,25 +29,26 @@ http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 """
 
 import sklearn.metrics
+import numpy as np
 
 
-def accuracy_score(y_trues, y_preds, labels):
+def accuracy_score(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
                                         y_pred=y_preds,
                                         normalize=True  # return fraction
                                         )
 
 
-def accurate_number(y_trues, y_preds):
+def accurate_number(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
                                         y_pred=y_preds,
                                         normalize=False  # return number
                                         )
 
 
-def f1_macro(y_trues, y_preds, labels):
+def f1_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) f1 score of all classes
+  macro-averaged (unweighted mean) f1 score of all classes
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
@@ -62,42 +63,106 @@ def f1_macro(y_trues, y_preds, labels):
                                   )
 
 
-def mae_macro(y_trues, y_preds, labels):
+def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
+  assert labels is not None
+  f1_scores = sklearn.metrics.f1_score(y_true=y_trues,
+                                       y_pred=y_preds,
+                                       labels=labels,
+                                       average=None
+                                       )
+  # Assumes that POS and NEG-like labels are in positions 0 and 1
+  # and that any NONE-like labels are in position 2 onwards
+  # (and will be ignored)
+  return np.mean([f1_scores[0], f1_scores[1]])
+
+
+def mae_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) mean absolute error
+  macro-averaged (unweighted mean) over topics of mean absolute error
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
   :return: float
   """
-  return sklearn.metrics.mean_absolute_error(y_true=y_trues,
-                                             y_pred=y_preds,
-                                             sample_weight=None,
-                                             multioutput='uniform_average')
+  if len(topics) == 0:
+    return float('inf')
+
+  topics_set = set(topics)
+
+  preds = list(zip(*[y_trues, y_preds, topics]))
+  preds_by_topic = dict()
+  for topic in topics_set:
+    preds_by_topic[topic] = []
+
+  # group predictions by topic
+  for pred in preds:
+    preds_by_topic[pred[2]].append(pred)
+
+  maes = dict()
+  for topic, preds in preds_by_topic.items():
+    y_true = [p[0] for p in preds]
+    y_pred = [p[1] for p in preds]
+
+    mae = sklearn.metrics.mean_absolute_error(y_true=y_true,
+                                              y_pred=y_pred,
+                                              multioutput='uniform_average')
+    maes[topic] = mae
+
+  # for topic, mae in maes.items():
+  #   print('{}: mae={}'.format(topic, mae))
+
+  # simple mean of maes over topics
+  return sum(maes.values()) / len(maes.values())
 
 
-def neg_mae_macro(y_true, y_preds, labels):
+def neg_mae_macro(y_trues, y_preds, labels, topics):
   """
   As for absolute error, lower is better
   Thus use negative value in order to share the same interface when tuning
   dev data with other metrics
   """
-  return -mae_macro(y_true, y_preds, labels)
+  return -mae_macro(y_trues, y_preds, labels, topics)
 
 
-def recall_macro(y_trues, y_preds, labels):
+def recall_macro(y_trues, y_preds, labels, topics):
   """
-  macro-averaged(unweighted mean) recall score of all classes
+  macro-averaged (unweighted mean) over topics of recall score of all classes
 
   :param y_trues: list of ground truth labels
   :param y_preds: list of predicted labels
   :param labels: labels for each class in a list, must specify
   :return: float
   """
-  return sklearn.metrics.recall_score(y_true=y_trues,
-                                      y_pred=y_preds,
-                                      labels=labels,
-                                      average='macro')
+  if len(topics) == 0:
+    return float('-inf')
+
+  topics_set = set(topics)
+  # print('{} topics'.format(len(topics_set)))
+
+  preds = list(zip(*[y_trues, y_preds, topics]))
+  preds_by_topic = dict()
+  for topic in topics_set:
+    preds_by_topic[topic] = []
+
+  # group predictions by topic
+  for pred in preds:
+    preds_by_topic[pred[2]].append(pred)
+
+  recalls = dict()
+  for topic, preds in preds_by_topic.items():
+    y_true = [p[0] for p in preds]
+    y_pred = [p[1] for p in preds]
+
+    r = sklearn.metrics.recall_score(y_true=y_true,
+                                     y_pred=y_pred,
+                                     average='macro')
+    recalls[topic] = r
+
+  # for topic, recall in recalls.items():
+  #   print('{}: recall={}'.format(topic, recall))
+
+  # simple mean of recalls over topics
+  return sum(recalls.values()) / len(recalls.values())
 
 
 def metric2func(metric_name):
