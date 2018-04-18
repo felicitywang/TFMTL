@@ -95,7 +95,7 @@ def build_encoders(args):
                   for ds in architectures[arch]
                   if type(architectures[arch][ds]) is dict}
   # Put 'vocab_size' into embedder_kwargs for all datasets
-  with open(args.vocab_path, 'r') as f:
+  with open(args.vocab_size_file, 'r') as f:
     line = f.readline().strip()
     vocab_size = int(line)
   for ds in embed_kwargs:
