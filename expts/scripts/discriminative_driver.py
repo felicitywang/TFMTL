@@ -293,7 +293,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
         _eval_labels = model_info[dataset_name]['valid_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['valid_iter']
-        _get_topic_op = model_info[dataset_name]['valid_topic_op']
+        _get_topic_op = model_info[dataset_name].get('valid_topic_op', None)
         _metrics = compute_held_out_performance(sess,
                                                 _pred_op,
                                                 _eval_labels,
@@ -545,12 +545,13 @@ def compute_held_out_performance(session, pred_op, eval_label,
   #     ncorrect += 1
   # acc = float(ncorrect) / float(ntotal)
 
+  index2topic = dict()
   if args.topics_path != '':
     with gzip.open(args.topics_path, mode='rt') as f:
       d = json.load(f, encoding='utf-8')
-  index2topic = dict()
-  for item in d:
-    index2topic[item['index']] = item['seq1']
+      f.close()
+    for item in d:
+      index2topic[item['index']] = item['seq1']
 
   # Accumulate predictions
   y_trues = []
