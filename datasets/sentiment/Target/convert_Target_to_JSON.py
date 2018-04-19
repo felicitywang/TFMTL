@@ -30,60 +30,62 @@ test_list = []
 index = 0
 
 with codecs.open(
-        os.path.join(dir, 'train.raw'), mode='r', encoding='utf-8') as file:
-    lines = file.readlines()
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-        target = lines[i + 1].strip()
-        label = int(lines[i + 2].strip())
-        train_list.append({
-            'index': index,
-            'old_text': line,
-            'text': line.replace('$T$', target),
-            'target': target,
-            'label': label + 1,
-            'start_index': line.find('$T$'),
-            'target_length': len(target.split())
-        })
-        i += 3
-        index += 1
-    file.close()
+  os.path.join(dir, 'train.raw'), mode='r', encoding='utf-8') as file:
+  lines = file.readlines()
+  i = 0
+  while i < len(lines):
+    line = lines[i].strip()
+    target = lines[i + 1].strip()
+    label = int(lines[i + 2].strip())
+    train_list.append({
+      'index': index,
+      'old_text': line,
+      'seq2': line.replace('$T$', target),
+      'target': target,
+      'label': label + 1,
+      # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
+      # function expects labels to be in the range [0, num_classes)
+      'start_index': line.find('$T$'),
+      'target_length': len(target.split())
+    })
+    i += 3
+    index += 1
 
 with codecs.open(
-        os.path.join(dir, 'test.raw'), mode='r', encoding='utf-8') as file:
-    lines = file.readlines()
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-        target = lines[i + 1].strip()
-        label = int(lines[i + 2].strip())
-        test_list.append({
-            'index': index,
-            'old_text': line,
-            'text': line.replace('$T$', target),
-            'target': target,
-            'label': label + 1,
-            'start_index': line.find('$T$'),
-            'target_length': len(target.split())
-        })
-        i += 3
-        index += 1
-    file.close()
+  os.path.join(dir, 'test.raw'), mode='r', encoding='utf-8') as file:
+  lines = file.readlines()
+  i = 0
+  while i < len(lines):
+    line = lines[i].strip()
+    target = lines[i + 1].strip()
+    label = int(lines[i + 2].strip())
+    test_list.append({
+      'index': index,
+      'old_text': line,
+      'seq2': line.replace('$T$', target),
+      'target': target,
+      'label': label + 1,
+      # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
+      # function expects labels to be in the range [0, num_classes)
+      'start_index': line.find('$T$'),
+      'target_length': len(target.split())
+    })
+    i += 3
+    index += 1
 
 # indices
 train_index = list(range(len(train_list)))
 test_index = list(range(len(train_list), len(train_list) + len(test_list)))
 index_dict = {
-    'train': train_index,
-    'test': test_index,
+  'train': train_index,
+  'test': test_index,
 }
 assert len(set(index_dict['train']).intersection(index_dict['test'])) == 0
 
 with gzip.open('index.json.gz', mode='wt') as file:
-    json.dump(index_dict, file, ensure_ascii=False)
+  json.dump(index_dict, file, ensure_ascii=False)
 
 train_list.extend(test_list)
 
 with gzip.open('data.json.gz', mode='wt') as file:
-    json.dump(train_list, file, ensure_ascii=False)
+  json.dump(train_list, file, ensure_ascii=False)
