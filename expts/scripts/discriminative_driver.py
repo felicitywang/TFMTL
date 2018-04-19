@@ -347,6 +347,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       if total_acc > best_total_acc:
         best_total_acc = total_acc
         best_total_acc_epoch = epoch
+        best_epoch_results = str_
         if len(args.datasets) > 1:
           saver.save(sess.raw_session(),
                      os.path.join(args.checkpoint_dir, 'MULT',
@@ -357,6 +358,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     print(best_eval_acc)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
+    print(best_epoch_results)
 
     # TODO write(add) the result to a common report file
     # with open('report.txt', 'a') as file:
@@ -489,7 +491,6 @@ def predict(model, dataset_info, args):
                 'w') as file:
         for i in _predictions:
           file.write(str(i) + '\n')
-        file.close
 
   logging.info(str_)
 
@@ -549,7 +550,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
   if args.topics_path != '':
     with gzip.open(args.topics_path, mode='rt') as f:
       d = json.load(f, encoding='utf-8')
-      f.close()
     for item in d:
       index2topic[item['index']] = item['seq1']
 
@@ -641,7 +641,6 @@ def main():
         tmp_labels = set(labels[dataset])
         tmp_labels.remove(None)
         labels[dataset] = list(tmp_labels)
-      file.close()
 
   # evaluation metrics for each dataset
   metrics = dict()
