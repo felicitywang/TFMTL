@@ -98,6 +98,7 @@ See `../../requirement.txt`
         - `python ../scripts/write_tfrecords_predict.py args_LMRD.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_0_max_-1_vocab_10000/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
         - `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000/LMRD/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
 - run `scripts/discriminative_driver.py` with `predict` mode, specifying path of the saved checkpoints, e.g., `sentiment_1/predict_single.sh`, `sentiment_1/predict_mult.sh`; see the source file for further hyper-parameter / argument explanation
+- note that in the commands' arguments in the predict mode, `--datasets DATASET` means you're using the DATASET part of the trained model(private layers + output layer + the parameters that perform the best on the DATASET's valid data), thus the class sizes of the dataset to predict should be the same as DATASET, and the real TFRecord dataset name and data you predict using the saved model are passed in with `--predict_dataset` and `--predict_tfrecord_path`
 
 ### 5. Test with the model
 
@@ -106,6 +107,7 @@ See `../../requirement.txt`
 - run `scripts/write_tfrecords_test.py` to write TFRecord file for the data to test
     - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir args_test_json_path` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`), adn `args_test_json_path` is the path to the json config file for the extra test data
 - test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
+- similar to the predict mode, when testing some extra dataset other than the datasets used to train the model(e.g. testing `TGts` with the model trained with `SWts` and `LMRD`), the `--datasets DATASET` argument refers to which part of the trained model to use; the real data are passed with `--dataset_paths`(e.g. in this example, the arguments should be `--dataset SWts --dataset_paths path_to_TGts_data`, meaning you're using the SWts' part of the model to evaluate TGts' test data)
 
 ## Arguments to generate TFRecord files
 
