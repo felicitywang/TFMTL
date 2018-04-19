@@ -41,7 +41,7 @@ with codecs.open(
       'index': index,
       'old_text': line,
       'seq2': line.replace('$T$', target),
-      'target': target,
+      'seq1': target,
       'label': label + 1,
       # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
       # function expects labels to be in the range [0, num_classes)
@@ -63,7 +63,7 @@ with codecs.open(
       'index': index,
       'old_text': line,
       'seq2': line.replace('$T$', target),
-      'target': target,
+      'seq1': target,
       'label': label + 1,
       # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
       # function expects labels to be in the range [0, num_classes)
