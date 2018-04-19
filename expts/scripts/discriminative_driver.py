@@ -70,8 +70,9 @@ def parse_args():
                  help='The dataset the text to predict belongs to.')
   p.add_argument('--predict_output_folder', type=str,
                  help='Folder to save the predictions using each model.')
-  p.add_argument('--topics_path', default='', type=str,
-                 help='Path to file mapping example index to its topic')
+  p.add_argument('--topics_paths', nargs='+', type=str,
+                 help="""Paths to files mapping example index
+                 to its topic (often data.json.gz)""")
   p.add_argument('--batch_size', default=128, type=int,
                  help='Size of batch.')
   p.add_argument('--eval_batch_size', default=128, type=int,
@@ -303,7 +304,9 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                 labels=dataset_info[
                                                   dataset_name]['labels'],
                                                 args=args,
-                                                get_topic_op=_get_topic_op)
+                                                get_topic_op=_get_topic_op,
+                                                topic_path=dataset_info[
+                                                  dataset_name]['topic_path'])
         model_info[dataset_name]['valid_metrics'] = _metrics
 
       end_time = time()
@@ -516,7 +519,7 @@ def get_topic(batch):
 
 def compute_held_out_performance(session, pred_op, eval_label,
                                  eval_iterator, metrics, labels,
-                                 args, get_topic_op):
+                                 args, get_topic_op, topic_path):
   # pred_op: predicted labels
   # eval_label: gold labels
 
@@ -547,8 +550,8 @@ def compute_held_out_performance(session, pred_op, eval_label,
   # acc = float(ncorrect) / float(ntotal)
 
   index2topic = dict()
-  if args.topics_path != '':
-    with gzip.open(args.topics_path, mode='rt') as f:
+  if topic_path != '' and topic_path is not None:
+        with gzip.open(topic_path, mode='rt') as f:
       d = json.load(f, encoding='utf-8')
     for item in d:
       index2topic[item['index']] = item['seq1']
@@ -577,10 +580,9 @@ def compute_held_out_performance(session, pred_op, eval_label,
     except tf.errors.OutOfRangeError:
       break
 
-  if args.experiment_name == "RUDER_NAACL_18":
-    for y_index, y_topic, y_t, y_p in zip(
-      *[y_indexes, y_topics, y_trues, y_preds]):
-      print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
+  # if args.experiment_name == "RUDER_NAACL_18":
+    # for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
+    #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
 
   ntotal = len(y_trues)
   ncorrect = accurate_number(y_trues=y_trues,
@@ -618,6 +620,10 @@ def main():
   _dirs = zip(args.datasets, args.dataset_paths)
   for ds, path in _dirs:
     dirs[ds] = path
+
+  topic_paths = dict()
+  for ds, topic_path in zip(args.datasets, args.topics_paths):
+    topic_paths[ds] = topic_path
 
   # Number of label types in each dataset
   class_sizes = dict()
@@ -662,6 +668,7 @@ def main():
     dataset_info[dataset_name][
       'dataset_name'] = dataset_name  # feature name is just dataset name
     dataset_info[dataset_name]['dir'] = dirs[dataset_name]
+    dataset_info[dataset_name]['topic_path'] = topic_paths[dataset_name]
     dataset_info[dataset_name]['class_size'] = class_sizes[dataset_name]
     dataset_info[dataset_name]['ordering'] = ordering[dataset_name]
     dataset_info[dataset_name]['labels'] = labels[dataset_name]
