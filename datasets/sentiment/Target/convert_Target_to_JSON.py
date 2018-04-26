@@ -16,7 +16,7 @@
 """Convert original Target files to json format"""
 
 # -*- coding: utf-8 -*-
-
+import codecs
 import gzip
 import json
 import os
@@ -29,7 +29,8 @@ train_list = []
 test_list = []
 index = 0
 
-with open(os.path.join(dir, 'train.raw')) as file:
+with codecs.open(
+  os.path.join(dir, 'train.raw'), mode='r', encoding='utf-8') as file:
   lines = file.readlines()
   i = 0
   while i < len(lines):
@@ -39,17 +40,19 @@ with open(os.path.join(dir, 'train.raw')) as file:
     train_list.append({
       'index': index,
       'old_text': line,
-      'text': line.replace('$T$', target),
-      'target': target,
-      'label': label,
+      'seq2': line.replace('$T$', target),
+      'seq1': target,
+      'label': label + 1,
+      # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
+      # function expects labels to be in the range [0, num_classes)
       'start_index': line.find('$T$'),
       'target_length': len(target.split())
     })
     i += 3
     index += 1
-  file.close()
 
-with open(os.path.join(dir, 'test.raw')) as file:
+with codecs.open(
+  os.path.join(dir, 'test.raw'), mode='r', encoding='utf-8') as file:
   lines = file.readlines()
   i = 0
   while i < len(lines):
@@ -59,16 +62,16 @@ with open(os.path.join(dir, 'test.raw')) as file:
     test_list.append({
       'index': index,
       'old_text': line,
-      'text': line.replace('$T$', target),
-      'target': target,
-      'label': label,
+      'seq2': line.replace('$T$', target),
+      'seq1': target,
+      'label': label + 1,
+      # labels are mapped from [-1, 0, 1] to [0, 1, 2] because the loss
+      # function expects labels to be in the range [0, num_classes)
       'start_index': line.find('$T$'),
       'target_length': len(target.split())
     })
     i += 3
     index += 1
-  file.close()
-
 
 # indices
 train_index = list(range(len(train_list)))
@@ -79,10 +82,10 @@ index_dict = {
 }
 assert len(set(index_dict['train']).intersection(index_dict['test'])) == 0
 
-with gzip.open(dir + 'index.json.gz', mode='wt') as file:
+with gzip.open('index.json.gz', mode='wt') as file:
   json.dump(index_dict, file, ensure_ascii=False)
 
-train_list.append(test_list)
+train_list.extend(test_list)
 
-with gzip.open(os.path.join(dir, 'data.json.gz'), mode='wt') as file:
+with gzip.open('data.json.gz', mode='wt') as file:
   json.dump(train_list, file, ensure_ascii=False)

@@ -17,6 +17,7 @@ sentiment|Yelp_Review_Polarity|598,000|2|paragraph|Yelp reviews
 sentiment|Twitter_Sentiment_Corpus|5,513|4|paragraph|Sentiment tweets on 4 topics
 sentiment|Yelp_Challenge|4,736,897|5|paragraph|Yelp review
 sentiment|Sentiment140|1,600,498|3|paragraph|Sentiment tweets on different brands/products/topics
+sentiment|Target|6,248|3|sentence|Sentiment tweets towards some entity
 politics|FGPS|766|5|sentence|Political propositions
 politics|POLT|318,761|2|paragraph|Political tweets
 topic|AG_News|127,600|4|document|AG's news
