@@ -107,10 +107,17 @@ def make_example_list(d, starting_index):
 
 if __name__ == "__main__":
   datafolder = sys.argv[1]
+  try:
+    debug = True if (sys.argv[2].lower() == 'true') else False
+    num_inst = int(sys.argv[3])
+    print('Downsampling MultiNLI to {} examples.'.format(num_inst))
+  except:
+    debug = False
+    num_inst = 20  # this value doesn't matter
 
   data_train, data_dev1, data_test = readMultinliData(datafolder=datafolder,
-                                                      debug=False,
-                                                      num_instances=20)
+                                                      debug=debug,
+                                                      num_instances=num_inst)
 
   index = 0
   train_list, index, train_index = make_example_list(data_train, index)
