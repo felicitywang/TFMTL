@@ -13,7 +13,8 @@ rm multinli_0.9.zip
 mv -f multinli_0.9 data/raw/MultiNLI
 
 echo "Converting the MultiNLI data to json..."
-python3 ../../datasets/nli/MultiNLI/convert_MultiNLI_to_JSON.py ./data/raw/MultiNLI/
+# Downsample MultiNLI to 10K examples (according to Isabelle Augenstein, personal correspondence)
+python3 ../../datasets/nli/MultiNLI/convert_MultiNLI_to_JSON.py ./data/raw/MultiNLI/ True 10000
 mv -f data/raw/MultiNLI/data.json.gz data/json/MultiNLI/
 mv -f data/raw/MultiNLI/index.json.gz data/json/MultiNLI/
 
