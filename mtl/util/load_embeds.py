@@ -38,7 +38,7 @@ def load_Glove(glove_path, train_vocab_list):
       row = splitted[1:]
       dims = len(row)
     # Convert to float and add to dict
-    assert (last_dims == None or dims ==
+    assert (last_dims is None or dims ==
             last_dims), "Dim mismatch parsing line {}:\n{}".format(
       line_count + 1, line)
     last_dims = dims
@@ -67,8 +67,8 @@ def load_Glove(glove_path, train_vocab_list):
     embeds.append(word2embed[word])
   file.close()
   print('Finished loading {} embeddings.'.format(len(embeds)))
-  return np.asarray(embeds, dtype=np.float32), \
-         {w: i for i, w in enumerate(train_vocab_list + remaining)}
+  return np.asarray(embeds, dtype=np.float32), {w: i for i, w in enumerate(
+    train_vocab_list + remaining)}
 
 
 if __name__ == '__name__':

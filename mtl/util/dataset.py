@@ -565,8 +565,8 @@ Args:
           train_vocab_list = self.get_vocab()
           # TODO other pre-trained word embedding
           glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
-          word_embeddings, self._vocab_v2i_dict = \
-            load_Glove(glove_path, train_vocab_list)
+          word_embeddings, self._vocab_v2i_dict = load_Glove(glove_path,
+                                                             train_vocab_list)
         else:
           # use the pretrained word embeddings' dictionary solely
           glove_embedding = glove.Glove.load_stanford(os.path.join(
@@ -856,7 +856,6 @@ def merge_dict_write_tfrecord(json_dirs,
   # generate vocab for every dataset without writing their own TFRecord files
   # the generated vocab freq dicts shall be saved at
   # json_dir/vocab_freq_dict.json
-
 
   # Assumes that all datasets have
   # the same text_field_names and label_field_name TODO
