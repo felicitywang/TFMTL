@@ -68,7 +68,7 @@ See `../../requirement.txt`
     2. run `TASK/setup.sh` to generate TFRecord files with merged vocabulary
 - for single dataset
     1. modify arguments in `TASK/args_DATASET.json`, e.g. `sentiment_1/args_SSTb.json`
-    2. use `scripts/write_tfrecords_single.py` to generate TFRecord files, e.g. in `sentiment_1/` run `python ../scripts/write_tfrecords_single.py SSTb`
+    2. use `scripts/write_tfrecords_single.py` to generate TFRecord files, e.g. in `sentiment_1/` run `python ../scripts/write_tfrecords_single.py SSTb` or `python ../scripts/write_tfrecords_single.py SSTb args_LMRD.json`, the latter will let you use particular args file, otherwise the program will find `args_SSTb.json` itself
 
 - if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
 

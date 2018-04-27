@@ -15,6 +15,12 @@
 # limitations under the License.
 # ============================================================================
 
+"""Write TFRecord Files for the single dataset.
+
+Usage: python write_tfrecords_single.py DATASET [config file name]
+If config name not given, this would automatically search for args_DATASET.json
+"""
+
 import json
 import os
 import sys
