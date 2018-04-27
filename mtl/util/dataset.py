@@ -51,6 +51,8 @@ TRAIN_RATIO = 0.8  # train out of all
 VALID_RATIO = 0.1  # valid out of all / valid out of train
 RANDOM_SEED = 42
 
+LINEBRAKES = ['<br /><br />', '\n']
+
 vocab_names = [
   'vocab_freq.json',
   'vocab_v2i.json',
@@ -235,12 +237,10 @@ Args:
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
 
+        for LINEBREAK in LINEBRAKES:
+          text = text.replace(LINEBREAK, ' LINEBREAK ')
 
-<< << << < HEAD
-        text = self._tokenizer.tokenize(text) + ['eos']
-== == == =
-        text = self._tokenizer(text) + ['EOS']
->>>>>> > 6168fd7afb5a29224bfc29fd39c8f0161afc4b0c
+        text = self._tokenizer(text) + ['eos']
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
         # length of cleaned text (including EOS)
