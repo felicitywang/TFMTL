@@ -55,6 +55,7 @@ def str2func(s):
   # for functions using, e.g., dense_layer()
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
+  from mtl.embedders.pretrained import glove_only
 
   from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import conv_and_pool
@@ -71,7 +72,7 @@ def str2func(s):
   functions = {
     "embed_sequence": embed_sequence,
     "no_op_embedding": no_op_embedding,
-
+    "glove_only": glove_only,
     "paragram": paragram_phrase,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,

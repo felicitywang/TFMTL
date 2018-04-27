@@ -71,10 +71,3 @@ def load_Glove(glove_path, train_vocab_list):
   print('Finished loading {} embeddings.'.format(len(embeds)))
   return np.asarray(embeds, dtype=np.float32), {w: i for i, w in enumerate(
     train_vocab_list + remaining)}
-
-
-if __name__ == '__name__':
-  import json
-
-  vocab = json.load(open('vocab_v2i.json'))
-  a, b = load_Glove('glove.6B.50d.txt', vocab)

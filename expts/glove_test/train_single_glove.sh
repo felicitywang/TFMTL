@@ -1,0 +1,23 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 50 \
+       --checkpoint_dir ./data/ckpt/Topic2_glove/ \
+       --experiment_name RUDER_NAACL_18 \
+       --datasets Topic2 \
+       --dataset_paths data/tf/single/Topic2/glove.6B.50d \
+       --class_sizes 2 \
+       --vocab_size_file data/tf/single/Topic2/glove.6B.50d/vocab_size.txt \
+       --encoder_config_file encoders.json \
+       --architecture serial-birnn-glove \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 64 \
+       --alphas 1 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --tuning_metric Acc \
+       --topics_path data/json/Topic2/data.json.gz \
+       --seed 42 \
+       --log_file glove.log

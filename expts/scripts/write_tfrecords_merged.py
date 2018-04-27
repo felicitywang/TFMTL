@@ -19,12 +19,14 @@ import json
 import os
 import sys
 
-from mtl.util.dataset import merge_dict_write_tfrecord, Dataset, \
+from mtl.util.dataset import merge_dict_write_tfrecord, \
   merge_pretrain_write_tfrecord
+from mtl.util.util import make_dir
+
+# TODO other args_xx.json
 
 with open('args_merged.json', 'rt') as file:
   args_merged = json.load(file)
-  file.close()
 
 json_dirs = [os.path.join('data/json/', argv) for argv in sys.argv[1:]]
 print(json_dirs)
@@ -97,6 +99,8 @@ if 'pretrained' not in args_merged or not args_merged['pretrained']:
                               "_max_" + str(args_merged['max_frequency']) + \
                               "_vocab_" + str(args_merged['max_vocab_size']))
   tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
+  for i in tfrecord_dirs:
+    make_dir(i)
   merge_dict_write_tfrecord(json_dirs=json_dirs,
                             tfrecord_dirs=tfrecord_dirs,
                             merged_dir=tfrecord_dir,
@@ -121,7 +125,11 @@ else:
   tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
     '.txt')])
   tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
-
+  for i in tfrecord_dirs:
+    make_dir(i)
+  combine_pretrain_train = False
+  if 'combine_pretrain_train' in args_merged:
+    combine_pretrain_train = args_merged['combine_pretrain_train']
   merge_pretrain_write_tfrecord(json_dirs=json_dirs,
                                 tfrecord_dirs=tfrecord_dirs,
                                 merged_dir=tfrecord_dir,
@@ -131,7 +139,8 @@ else:
                                   'text_field_names'],
                                 label_field_name=args_merged[
                                   'label_field_name'],
-                                max_document_length=args_merged['max_document_length'],
+                                max_document_length=args_merged[
+                                  'max_document_length'],
                                 # max_vocab_size=args_merged['max_vocab_size'],
                                 # min_frequency=args_merged['min_frequency'],
                                 # max_frequency=args_merged['max_frequency'],
@@ -141,4 +150,5 @@ else:
                                 padding=args_merged['padding'],
                                 write_bow=args_merged['write_bow'],
                                 write_tfidf=args_merged['write_tfidf'],
-                                tokenizer_=args_merged['tokenizer'])
+                                tokenizer_=args_merged['tokenizer'],
+                                combine_pretrain_train=combine_pretrain_train)

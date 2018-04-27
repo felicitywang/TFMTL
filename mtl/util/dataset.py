@@ -481,6 +481,7 @@ Args:
                      for i in self._train_index]
 
     vocab_processor.fit(training_docs)
+    self._categorical_vocab = vocab_processor.vocabulary_
 
     vocab_freq_dict = vocab_processor.vocabulary_.freq
     print("total word size =", len(vocab_freq_dict))
@@ -1054,14 +1055,14 @@ def merge_pretrain_write_tfrecord(json_dirs,
                         generate_basic_vocab=True,
                         vocab_given=False,
                         generate_tf_record=False)
-      vocab_train.add(set(dataset.mapping.keys()))
+      vocab_train = vocab_train.union(set(dataset.mapping))
       if padding:
         max_document_lengths.append(max_document_length)
     if padding:
       max_document_length = max(max_document_lengths)
 
     # TODO other word embeddings
-    word_embeddings, vocab_v2i_all = load_Glove(glove_path, vocab_train)
+    word_embeddings, vocab_v2i_all = load_Glove(glove_path, list(vocab_train))
     # TODO more specific name?
     # TODO no remaining vocab?
     # TODO save remaining words?
@@ -1073,8 +1074,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
     json.dump(vocab_v2i_all, file, ensure_ascii=False, indent=4)
 
   vocab_i2v_dict = dict()
-  for i in range(len(vocab_v2i_all)):
-    vocab_i2v_dict[i] = vocab_v2i_all[i]
+  for v, i in vocab_v2i_all.items():
+    vocab_i2v_dict[i] = v
   with codecs.open(os.path.join(merged_dir, 'vocab_i2v.json'),
                    mode='w', encoding='utf-8') as file:
     json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)

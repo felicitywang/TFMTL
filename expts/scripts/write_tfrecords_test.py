@@ -52,7 +52,6 @@ max_document_lengths = [
 
 with open(args_test_path)as file:
   args_test = json.load(file)
-  file.close()
 
 dataset = Dataset(json_dir=json_dir,
                   tfrecord_dir=tfrecord_dir,

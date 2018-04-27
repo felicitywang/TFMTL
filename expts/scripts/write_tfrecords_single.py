@@ -21,9 +21,13 @@ import sys
 
 from mtl.util.dataset import Dataset
 
-with open('args_' + sys.argv[1] + '.json', 'rt') as file:
+if len(sys.argv) == 2:
+  args_name = 'args_' + sys.argv[1] + '.json'
+else:
+  args_name = sys.argv[2]
+
+with open(args_name, 'rt') as file:
   args_single = json.load(file)
-  file.close()
 
 json_dir = "data/json/" + sys.argv[1]
 

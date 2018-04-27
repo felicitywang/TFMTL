@@ -36,7 +36,6 @@ vocab_dir = sys.argv[5]
 # vocabulary
 with open(dataset_args_path, 'rt') as file:
   args_predict = json.load(file)
-  file.close()
 
 # compute max document length
 # max document length should be the max(max_document_lengths) for each

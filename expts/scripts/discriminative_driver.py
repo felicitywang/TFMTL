@@ -168,6 +168,9 @@ def parse_args():
                       'MAE_Macro: macro-averaged mean absolute error;\n'
                       'F1_Macro:  macro-averaged F1 score;\n'
                       'Recall_Macro: macro-averaged recall score.')
+  # p.add_argument('--word_embedding_file', type=str,
+  #                help='Path to the pre-trained word embedding file(either '
+  #                     '.txt or .npy)')
 
   return p.parse_args()
 
@@ -372,8 +375,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     print(best_epoch_results)
 
     with open(args.log_file, 'a') as f:
-      #f.write(best_eval_acc + '\n')
-      #f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
+      # f.write(best_eval_acc + '\n')
+      # f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
       #                                                     best_total_acc_epoch))
       f.write('\nBest single-epoch performance of each dataset\n')
       f.write(best_epoch_results + '\n\n')
@@ -426,6 +429,7 @@ def test_model(model, dataset_info, args):
         _eval_labels = model_info[dataset_name]['test_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['test_iter']
+        _get_topic_op = model_info[dataset_name].get('test_topic_op', None)
         _metrics = compute_held_out_performance(sess,
                                                 _pred_op,
                                                 _eval_labels,
@@ -435,7 +439,9 @@ def test_model(model, dataset_info, args):
                                                 labels=dataset_info[
                                                   dataset_name]['labels'],
                                                 args=args,
-                                                get_topic_op=_get_topic_op)
+                                                get_topic_op=_get_topic_op,
+                                                topic_path=dataset_info[
+                                                  dataset_name]['topic_path'])
         model_info[dataset_name]['test_metrics'] = _metrics
 
         # _num_eval_total = model_info[dataset_name]['test_metrics'][
@@ -567,7 +573,6 @@ def compute_held_out_performance(session, pred_op, eval_label,
   #   if ys[i] == y_hats[i]:
   #     ncorrect += 1
   # acc = float(ncorrect) / float(ntotal)
-
 
   index2topic = dict()
   if topic_path != '' and topic_path is not None:
