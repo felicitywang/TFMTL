@@ -1046,7 +1046,7 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size,
                   )
   else:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
-                  num_epochs=1)
+                  num_epochs=1, shuffle=False)
 
   # We return the class because we might need to access the
   # initializer op for TESTING, while training only requires the
