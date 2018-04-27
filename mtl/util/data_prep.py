@@ -41,6 +41,17 @@ tweet_tokenizer_keep_handles = TweetTokenizer(strip_handles=False,
                                               reduce_len=True)
 
 
+def ruder_tokenizer(xs, pattern="([\s'\-\.\,\!])", preserve_case=False):
+  """Splits sentences into tokens by regex over punctuation: ( -.,!])["""
+  tok = [x for x in re.split(pattern, xs)
+         if not re.match("\s", x) and x != ""]
+  if preserve_case:
+    pass
+  else:
+    tok = list(map(str.lower, tok))
+  return tok
+
+
 def tweet_clean(text):
     tokens = tweet_tokenizer.tokenize(text)
     return ' '.join(tokens)

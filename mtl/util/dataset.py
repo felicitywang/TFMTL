@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import codecs
+import functools
 import gzip
 import itertools
 import json
@@ -35,7 +36,8 @@ from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
 from mtl.util.data_prep import (tweet_tokenizer,
-                                tweet_tokenizer_keep_handles)
+                                tweet_tokenizer_keep_handles,
+                                ruder_tokenizer)
 from mtl.util.load_embeds import load_Glove
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -157,9 +159,11 @@ Args:
     self._load_vocab_name = vocab_name
 
     if tokenizer_ == "tweet_tokenizer":
-      self._tokenizer = tweet_tokenizer
+      self._tokenizer = tweet_tokenizer.tokenize
     elif tokenizer_ == "tweet_tokenizer_keep_handles":
-      self._tokenizer = tweet_tokenizer_keep_handles
+      self._tokenizer = tweet_tokenizer_keep_handles.tokenize
+    elif tokenizer_ == "ruder_tokenizer":
+      self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
     else:
       raise ValueError("unrecognized tokenizer: %s" % tokenizer_)
 
@@ -230,7 +234,13 @@ Args:
       num_examples += 1
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
+
+
+<< << << < HEAD
         text = self._tokenizer.tokenize(text) + ['eos']
+== == == =
+        text = self._tokenizer(text) + ['EOS']
+>>>>>> > 6168fd7afb5a29224bfc29fd39c8f0161afc4b0c
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
         # length of cleaned text (including EOS)

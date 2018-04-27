@@ -149,6 +149,8 @@ def parse_args():
                  help='Number of classes for each dataset.')
   p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
                  help='Directory to save the checkpoints.')
+  p.add_argument('--log_file', type=str,
+                 help='File where results are stored.')
   p.add_argument('--input_keep_prob', type=float, default=1,
                  help="Probability to keep of the dropout layer before the MLP"
                       "(shared+private).")
@@ -265,6 +267,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
     best_total_acc_epoch = -1
 
     # Do training
+    with open(args.log_file, 'a') as f:
+      f.write('VALIDATION RESULTS\n')
     for epoch in xrange(1, args.num_train_epochs + 1):
       start_time = time()
 
@@ -358,22 +362,32 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
       logging.info(str_)
 
+      # Log dev results in a file
+      with open(args.log_file, 'a') as f:
+        f.write(str_ + '\n')
+
     print(best_eval_acc)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
     print(best_epoch_results)
 
-    # TODO write(add) the result to a common report file
-    # with open('report.txt', 'a') as file:
-    #     for dataset in best_eval_acc.keys():
-    #         file.write(str(dataset))
-    #         file.write(" ")
-    #     file.write("\n")
-    #     for dataset, acc in best_eval_acc.items():
-    #         file.write('Best accuracy for dataset {}: {}\n'.format(
-    # dataset, acc))
-    #     file.write('Best total accuracy: {} at epoch {}\n\n'.format(
-    # best_total_acc, best_total_acc_epoch))
+    with open(args.log_file, 'a') as f:
+      #f.write(best_eval_acc + '\n')
+      #f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
+      #                                                     best_total_acc_epoch))
+      f.write('\nBest single-epoch performance of each dataset\n')
+      f.write(best_epoch_results + '\n\n')
+
+    # Write (add) the result to a common report file
+    with open(args.log_file, 'a') as f:
+      for dataset in best_eval_acc.keys():
+        f.write(str(dataset))
+        f.write(" ")
+      f.write("\n")
+      for dataset, acc in best_eval_acc.items():
+        f.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
+      f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
+                                                               best_total_acc_epoch))
 
 
 def test_model(model, dataset_info, args):
@@ -448,6 +462,11 @@ def test_model(model, dataset_info, args):
             #            _eval_align_acc)
 
   logging.info(str_)
+
+  # Log test results in a file
+  with open(args.log_file, 'a') as f:
+    f.write('TEST RESULTS\n')
+    f.write(str_ + '\n')
 
 
 def predict(model, dataset_info, args):
