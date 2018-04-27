@@ -26,8 +26,9 @@
         "Topic2": {
             "embed_fn": "glove_only",
             "embed_kwargs": {
-                "embed_dim": 50,
-                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.50d.txt"
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
             },
             "extract_fn": "serial_lbirnn",
             "extract_kwargs": {

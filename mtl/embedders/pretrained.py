@@ -27,16 +27,16 @@ import tensorflow as tf
 # TODO other word embeddings
 # TODO pretrained+train
 
-def glove_only(x, vocab_size, embed_dim, glove_path):
+def glove_only(x, vocab_size, embed_dim, glove_path, trainable):
   """Use pre-trained Glove word embedding only, embeddings not to be trained
 
   :param x: list of word ids
   :param vocab_size: size of the vocabulary given in the config file
   :param embed_dim: dimension of the embeddings given in the config file
   :param glove_path: path to the pre-trained word embedding file
+  :param trainable: whether to train the pred-trained word embeddings
   :return: embed lookup layer
   """
-  # TODO other word embeddings
   tf.logging.info('Loading glove embeddings from %s' % glove_path)
   word_embedding_matrix = glove.Glove.load_stanford(
     glove_path).word_vectors
@@ -56,7 +56,7 @@ def glove_only(x, vocab_size, embed_dim, glove_path):
     initializer=tf.constant_initializer(np.float32(word_embedding_matrix)),
     dtype=tf.float32,
     shape=[vocab_size, embed_dim],
-    trainable=False)
+    trainable=trainable)
 
   return tf.nn.embedding_lookup(word_embedding_lookup,
                                 x)

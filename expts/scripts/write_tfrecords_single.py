@@ -33,7 +33,7 @@ json_dir = "data/json/" + sys.argv[1]
 
 tfrecord_dir = os.path.join("data/tf/single/", sys.argv[1])
 
-if 'pretrained' not in args_single or not args_single['pretrained']:
+if 'pretrained_file' not in args_single or not args_single['pretrained_file']:
   tfrecord_dir = os.path.join(tfrecord_dir,
                               "min_" + str(args_single['min_frequency']) + \
                               "_max_" + str(args_single['max_frequency']) + \
@@ -58,7 +58,7 @@ if 'pretrained' not in args_single or not args_single['pretrained']:
                     vocab_given=False,
                     generate_tf_record=True)
 else:
-  vocab_path = args_single['pretrained']
+  vocab_path = args_single['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
   vocab_name = os.path.basename(vocab_path)
   tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
