@@ -1,4 +1,4 @@
-image: python:3.5-slim
+image: python:3.5
 
 basic:
   stage: test
