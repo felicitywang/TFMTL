@@ -549,9 +549,10 @@ def compute_held_out_performance(session, pred_op, eval_label,
   #     ncorrect += 1
   # acc = float(ncorrect) / float(ntotal)
 
+
   index2topic = dict()
   if topic_path != '' and topic_path is not None:
-        with gzip.open(topic_path, mode='rt') as f:
+    with gzip.open(topic_path, mode='rt') as f:
       d = json.load(f, encoding='utf-8')
     for item in d:
       index2topic[item['index']] = item['seq1']
@@ -580,9 +581,9 @@ def compute_held_out_performance(session, pred_op, eval_label,
     except tf.errors.OutOfRangeError:
       break
 
-  # if args.experiment_name == "RUDER_NAACL_18":
-    # for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
-    #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
+      # if args.experiment_name == "RUDER_NAACL_18":
+      # for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
+      #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
 
   ntotal = len(y_trues)
   ncorrect = accurate_number(y_trues=y_trues,
@@ -622,6 +623,8 @@ def main():
     dirs[ds] = path
 
   topic_paths = dict()
+  if not args.topics_paths:
+    args.topics_paths = [None] * len(args.datasets)
   for ds, topic_path in zip(args.datasets, args.topics_paths):
     topic_paths[ds] = topic_path
 
