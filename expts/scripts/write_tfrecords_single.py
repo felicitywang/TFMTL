@@ -59,6 +59,9 @@ else:
   vocab_name = os.path.basename(vocab_path)
   tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
     '.txt')])
+  combine_pretrain_train = False
+  if 'combine_pretrain_train' in args_single:
+    combine_pretrain_train = args_single['combine_pretrain_train']
   dataset = Dataset(json_dir=json_dir,
                     tfrecord_dir=tfrecord_dir,
                     vocab_given=True,
@@ -78,7 +81,8 @@ else:
                     write_tfidf=args_single['write_tfidf'],
                     tokenizer_=args_single['tokenizer'],
                     generate_basic_vocab=False,
-                    generate_tf_record=True)
+                    generate_tf_record=True,
+                    combine_pretrain_train=combine_pretrain_train)
 
 with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
   f.write(str(dataset.vocab_size))

@@ -26,6 +26,7 @@ import itertools
 import json
 import operator
 import os
+import pathlib
 from pathlib import Path
 
 import numpy as np
@@ -96,7 +97,7 @@ class Dataset:
                predict_json_path='predict.json.gz',
                predict_tf_path='predict.tf',
                tokenizer_="tweet_tokenizer",
-               combine_pretrain_train=False,
+               combine_pretrain_train=False
                ):
     """
 Args:
@@ -269,12 +270,12 @@ Args:
 
     # only compute from training data
     if max_document_length == -1:
-      print('Maximum document length not given, computing from training '
-            'data..')
-      for text_field_name in tqdm(text_field_names):
-        tmp_max = max(len(self._sequences[text_field_name][i])
-                      for i in self._train_index)
       if padding:
+        print('Maximum document length not given, computing from training '
+              'data..')
+        for text_field_name in tqdm(text_field_names):
+          tmp_max = max(len(self._sequences[text_field_name][i])
+                        for i in self._train_index)
         self._max_document_length = max(tmp_max, max_document_length)
         print("Max document length computed =", self._max_document_length)
       else:
@@ -303,13 +304,15 @@ Args:
       print("No vocabulary given. Generate a new one.")
       self._categorical_vocab = self.build_vocab()
       self._vocab_dir = tfrecord_dir
-      self.save_vocab()
+      self.save_vocab(self._vocab_dir)
 
     else:
       print("Public vocabulary given. Use that to build vocabulary "
             "processor.")
-      self._vocab_dir = vocab_dir
       assert vocab_name in vocab_names
+      self._vocab_dir = vocab_dir
+      self._tfrecord_dir = tfrecord_dir  # used to save the combined
+      # vocabulary when loading pretrained word embeddings
       self._combine_pretrain_train = combine_pretrain_train
       self._categorical_vocab = self.load_vocab()
 
@@ -390,7 +393,7 @@ Args:
         ) if self._unlabeled_path is not None else None,
         'labels': list(self._label_set)
       }
-      print('Arguments for dataset %s:')
+      print('Arguments for the dataset:')
       for k, v in self._args.items():
         print(k, ':', v)
       args_path = os.path.join(tfrecord_dir, "args.json")
@@ -438,17 +441,17 @@ Args:
 
     return vocab_processor.vocabulary_
 
-  def save_vocab(self):
+  def save_vocab(self, save_vocab_dir):
 
     # save the built vocab to the disk for future use
-    make_dir(self._vocab_dir)
+    make_dir(save_vocab_dir)
 
-    with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
+    with codecs.open(os.path.join(save_vocab_dir, "vocab_freq.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(self._vocab_freq_dict, file,
                 ensure_ascii=False, indent=4)
 
-    with codecs.open(os.path.join(self._vocab_dir, "vocab_v2i.json"),
+    with codecs.open(os.path.join(save_vocab_dir, "vocab_v2i.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(self._categorical_vocab.mapping, file,
                 ensure_ascii=False, indent=4)
@@ -456,7 +459,7 @@ Args:
     vocab_i2v_dict = dict()
     for i in range(len(self._categorical_vocab.reverse_mapping)):
       vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
-    with codecs.open(os.path.join(self._vocab_dir, "vocab_i2v.json"),
+    with codecs.open(os.path.join(save_vocab_dir, "vocab_i2v.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
 
@@ -505,7 +508,7 @@ Args:
     categorical_vocab.freeze()
     return categorical_vocab
 
-  def get_vocab(self):
+  def get_train_vocab_list(self):
     """Get all the word types in the training docs
 
     :param doc_list: a list of documents
@@ -559,6 +562,7 @@ Args:
       # used when to directly use the vocabulary given
       # e.g. in predict/test extra mode or use pretrained word embeddings
       if self._load_vocab_name == 'vocab_v2i.json':
+        print('Use self-generated vocab mapping.')
         # this vocabulary mapping is generated solely on the training data
         with codecs.open(os.path.join(self._vocab_dir, 'vocab_v2i.json'),
                          mode='r', encoding='utf-8') as file:
@@ -566,18 +570,34 @@ Args:
       else:
         # use the pretrained word embeddings' dictionary
         if self._combine_pretrain_train:
+          print('Combine pre-trained word embeddings\' vocabulary mapping '
+                'with all the word types appering in the training data.')
           # TODO separate pre-train and train words for training
           # TODO multiple training data for merged vocabulary
-          raise NotImplementedError('Combine pre-trained word embedding '
-                                    'and training data dictionary Not '
-                                    'Implemented!')
+          # raise NotImplementedError('Combine pre-trained word embedding '
+          #                           'and training data dictionary Not '
+          #                           'Implemented!')
           # vocab_all = union(vocab_pretrained, vocab_train)
-          train_vocab_list = self.get_vocab()
+          train_vocab_list = self.get_train_vocab_list()
           # TODO other pre-trained word embedding
           glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
           word_embeddings, self._vocab_v2i_dict = load_Glove(glove_path,
                                                              train_vocab_list)
+
+          self._vocab_size = len(self._vocab_v2i_dict)
+
+          # save the combined vocab to the disk for future use
+          make_dir(self._tfrecord_dir)
+          with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
+                           mode='w', encoding='utf-8') as file:
+            json.dump(self._vocab_v2i_dict, file,
+                      ensure_ascii=False, indent=4)
+
+          np.save(str(pathlib.Path(self._tfrecord_dir, 'word_embeddings.npy')),
+                  word_embeddings)
+
         else:
+          print('Use pre-trained word embeddings\' vocabulary mapping only.')
           # use the pretrained word embeddings' dictionary solely
           glove_embedding = glove.Glove.load_stanford(os.path.join(
             self._vocab_dir, self._load_vocab_name))
@@ -590,6 +610,11 @@ Args:
         max_document_length=self._max_document_length,
         tokenizer_fn=tokenizer)
       assert categorical_vocab.mapping == self._vocab_v2i_dict
+
+    # save the vocab if using pre-trained word embeddings
+    if not self._load_vocab_name == 'vocab_v2i.json':
+      self._categorical_vocab = categorical_vocab
+      self.save_vocab(self._tfrecord_dir)
 
     if self._padding:
       # TODO: update implementation of transform_pad() to take a max length
@@ -1038,8 +1063,10 @@ def merge_pretrain_write_tfrecord(json_dirs,
     # TODO other word embeddings
     word_embeddings, vocab_v2i_all = load_Glove(glove_path, vocab_train)
     # TODO more specific name?
-    with open(os.path.join(merged_dir, 'word_embeddings.npy'), 'w') as file:
-      np.save(file, word_embeddings)
+    # TODO no remaining vocab?
+    # TODO save remaining words?
+    np.save(str(pathlib.Path(merged_dir, 'word_embeddings.npy')),
+            word_embeddings)
 
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:

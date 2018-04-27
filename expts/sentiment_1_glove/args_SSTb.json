@@ -15,5 +15,6 @@
     "write_bow": false,
     "write_tfidf": false,
     "tokenizer": "tweet_tokenizer",
-    "pretrained": "../../pretrained_word_embeddings/glove/glove.6B.50d.txt"
+    "pretrained": "../../pretrained_word_embeddings/glove/glove.6B.50d.txt",
+    "combine_pretrain_train": true
 }

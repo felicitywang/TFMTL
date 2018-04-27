@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import random
 
 import numpy as np
+from tqdm import tqdm
 
 
 def load_Glove(glove_path, train_vocab_list):
@@ -15,13 +16,13 @@ def load_Glove(glove_path, train_vocab_list):
   :param train_vocab_list: list, all the word types in the training data
   :return: word embedding numpy matrix and v2i mapping
   """
-  print('Loading embeddings from {}...'.format(glove_path), end='')
+  print('Loading embeddings from {}...\n'.format(glove_path), end='')
   print('{} original vocabulary from training.'.format(len(train_vocab_list)))
   word2embed = {}
   file = open(glove_path, 'rb')
   found = 0
   last_dims = None
-  for line_count, line in enumerate(file.readlines()):
+  for line_count, line in tqdm(enumerate(file.readlines())):
     #        print(line)
     line = line.decode('utf-8').rstrip()
     # Google / w2v with tab separating word and vec
@@ -62,6 +63,7 @@ def load_Glove(glove_path, train_vocab_list):
     else:
       embeds.append(oov_vector)
 
+  # TODO save remainings
   remaining = list(set(word2embed.keys()) - set(train_vocab_list))
   for word in remaining:
     embeds.append(word2embed[word])
