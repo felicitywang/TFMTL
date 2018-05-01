@@ -1,0 +1,50 @@
+{
+    "venv": "source /home/sebner/anaconda3/bin/activate inference",
+    "root": "/home/sebner/tfmtl/expts/scripts/",
+    "module": "discriminative_driver",
+    "jobs_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/jobs",
+    "results_dir": "/export/a11/sebner/tfmtl_results/results/<expt_setup_name>",
+
+    "email": "seth@cs.jhu.edu",
+    "username": "sebner",
+
+    "total_slots": 100,
+    "slots_per_job": 2,
+    "mem_ram": 2,
+
+    "num_intra_threads": 1,
+    "num_inter_threads": 1,
+
+    "expt_setup": [{"expt_setup_name": "MultiNLI_single",
+                    "datasets": "MultiNLI",
+                    "dataset_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/single/MultiNLI/min_0_max_-1",
+                    "class_sizes": "3",
+                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/single/MultiNLI/min_0_max_-1/vocab_size.txt",
+                    "alphas": "1",
+                    "topics_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/json/MultiNLI/data.json.gz",
+                    "embedders_tied": [true],
+                    "extractors_tied": [true]
+                   }],
+
+
+    "model": "mult",
+    "mode": "train",
+    "num_train_epochs": 50,
+    "checkpoint_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/ckpt",
+    "log_file": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/<mode>_results.log",
+    "experiment_name": "RUDER_NAACL_18",
+    "encoder_config_file": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/encoders.json",
+    "architecture": "arch",
+    "shared_mlp": [{"shared_mlp_layers": 0, "shared_hidden_dims": 0},
+                   {"shared_mlp_layers": 1, "shared_hidden_dims": 16},
+                   {"shared_mlp_layers": 1, "shared_hidden_dims": 64}],
+    "private_mlp_layers": 1,
+    "private_hidden_dims": [1, 8, 32],
+    "optimizer": [{"optimizer": "rmsprop",
+                   "lr0": [0.001]}
+                 ],
+
+    "tuning_metric": "Acc",
+    "seed": [42]
+
+}
