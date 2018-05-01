@@ -15,5 +15,5 @@
     "padding": false,
     "write_bow": false,
     "write_tfidf": false,
-    "tokenizer": "tweet_tokenizer_keep_handles"
+    "tokenizer": "ruder_tokenizer"
 }

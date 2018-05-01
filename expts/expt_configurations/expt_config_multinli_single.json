@@ -1,9 +1,9 @@
 {
-    "venv": "inference",
+    "venv": "source /home/sebner/anaconda3/bin/activate inference",
     "root": "/home/sebner/tfmtl/expts/scripts/",
     "module": "discriminative_driver",
-    "jobs_dir": "/export/a11/sebner/tfmtl_results/jobs/<expt_setup>",
-    "results_dir": "/export/a11/sebner/tfmtl_results/results/<expt_setup>",
+    "jobs_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/jobs",
+    "results_dir": "/export/a11/sebner/tfmtl_results/results/<expt_setup_name>",
 
     "email": "seth@cs.jhu.edu",
     "username": "sebner",
@@ -17,11 +17,11 @@
 
     "expt_setup": [{"expt_setup_name": "MultiNLI_single",
                     "datasets": "MultiNLI",
-                    "dataset_paths": "path-to-multinli path-to-topic5",
+                    "dataset_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/single/MultiNLI/min_0_max_-1",
                     "class_sizes": "3",
-                    "vocab_size_file": "path-to-vocab-size-file",
+                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/single/MultiNLI/min_0_max_-1/vocab_size.txt",
                     "alphas": "1",
-                    "topics_paths": "path-to-topics-multinli path-to-topics-topic5",
+                    "topics_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/json/MultiNLI/data.json.gz",
                     "embedders_tied": [true],
                     "extractors_tied": [true]
                    }],

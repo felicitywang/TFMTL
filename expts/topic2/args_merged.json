@@ -1,7 +1,7 @@
 {
     "max_document_length": -1,
-    "max_vocab_size": null,
-    "min_frequency": 0,
+    "max_vocab_size": 50000,
+    "min_frequency": 1,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
