@@ -1,13 +1,15 @@
 python ../scripts/discriminative_driver.py \
        --model mult \
        --mode train \
-       --num_train_epochs 10 \
-       --checkpoint_dir ./data/ckpt/MultiNLI_Topic5/ \
+       --num_train_epochs 2 \
+       --checkpoint_dir ./train_mult_ckpt/MultiNLI_Topic5/ \
+       --summaries_dir ./train_mult_summaries/MultiNLI_Topic5/ \
+       --log_file mult_log.log \
        --experiment_name RUDER_NAACL_18 \
        --datasets MultiNLI Topic5 \
-       --dataset_paths data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI/ data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5/ \
+       --dataset_paths /export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI /export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5 \
        --class_sizes 3 5 \
-       --vocab_size_file data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt \
+       --vocab_size_file /export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt \
        --encoder_config_file encoders.json \
        --architecture serial-birnn \
        --shared_mlp_layers 0 \
@@ -18,5 +20,5 @@ python ../scripts/discriminative_driver.py \
        --optimizer rmsprop \
        --lr0 0.001 \
        --tuning_metric Acc \
-       --topics_paths data/json/MultiNLI/data.json.gz data/json/Topic5/data.json.gz \
+       --topics_paths /export/a11/sebner/tfmtl_data/MultiNLI/data/json/MultiNLI/data.json.gz /export/a11/sebner/tfmtl_data/MultiNLI/data/json/Topic5/data.json.gz \
        --seed 42
