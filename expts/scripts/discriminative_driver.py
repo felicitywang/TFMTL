@@ -149,6 +149,8 @@ def parse_args():
                  help='Number of classes for each dataset.')
   p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
                  help='Directory to save the checkpoints.')
+  p.add_argument('--summaries_dir', type=str, default='./data/summ/',
+                 help='Directory to save the Tensorboard summaries.')
   p.add_argument('--log_file', type=str,
                  help='File where results are stored.')
   p.add_argument('--input_keep_prob', type=float, default=1,
@@ -186,24 +188,28 @@ def get_vocab_size(vocab_file_path):
   return vocab_size
 
 
-def train_model(model, dataset_info, steps_per_epoch, args):
+def train_model(model,
+                dataset_info,
+                steps_per_epoch,
+                args):
   """
   Train the model for certain epochs;
   Evaluate on valid data after each epoch;
   Save the model the performs the best on the validation epoch.
   """
+  if args.mode != 'train':
+    raise ValueError("train_model() called when in %s mode" % (args.mode))
+
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
-  train_batches = {name: model_info[name]['train_batch'] for name in
-                   model_info}
+  train_batches = {name: model_info[name]['train_batch']
+                   for name in model_info}
   loss = model.get_multi_task_loss(train_batches, is_training=True)
+
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
-  # test_loss = model.get_multi_task_loss(train_batches, is_training=False)
 
-  # TODO valid loss
   # TODO loss on each dataset
-  # TODO summary and tensorboard
 
   # Done building compute graph; set up training ops.
 
@@ -222,6 +228,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
   #   1. A dict of { dataset_key: dataset_iterator }
   #
 
+  fill_eval_loss_op(args, model, dataset_info, model_info)
   fill_pred_op_info(dataset_info, model, args, model_info)
   fill_topic_op(args, model_info)
 
@@ -255,13 +262,18 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
     sess.run(init_ops)
 
-    best_eval_acc = dict()
+    train_file_writer = tf.summary.FileWriter(os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
+    valid_file_writer = tf.summary.FileWriter(os.path.join(args.summaries_dir, 'valid'), graph=sess.graph)
+
+    best_eval_performance = dict()
     for dataset_name in model_info:
       _train_init_op = model_info[dataset_name]['train_init_op']
-      sess.run(_train_init_op)
-      best_eval_acc[dataset_name] = {"epoch": -1,
-                                     "acc": float('-inf'),
-                                     }
+      _valid_init_op = model_info[dataset_name]['valid_init_op']
+      sess.run([_train_init_op, _valid_init_op])
+      best_eval_performance[dataset_name] = {"epoch": -1,
+                                             "acc": float('-inf'),
+                                             "performance": None
+                                             }
 
     best_total_acc = float('-inf')
     best_total_acc_epoch = -1
@@ -276,19 +288,22 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
       # Take steps_per_epoch gradient steps
       total_loss = 0
-      # test_total_loss = 0
       num_iter = 0
       for _ in tqdm(xrange(steps_per_epoch)):
         step, loss_v, _ = sess.run(
           [global_step_tensor, loss, train_op])
         num_iter += 1
         total_loss += loss_v
+
         # loss_v is sum over a batch from each dataset of the average loss *per
         #  training example*
       assert num_iter > 0
 
       # average loss per batch (which is in turn averaged across examples)
       train_loss = float(total_loss) / float(num_iter)
+
+      train_loss_summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
+      train_file_writer.add_summary(train_loss_summary, global_step=step)
 
       # Evaluate held-out accuracy
       # if not args.test:  # Validation mode
@@ -299,6 +314,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
           args.label_key]
         _eval_iter = model_info[dataset_name]['valid_iter']
         _get_topic_op = model_info[dataset_name]['valid_topic_op']
+        _loss_op = model_info[dataset_name]['valid_loss_op']
         _metrics = compute_held_out_performance(sess,
                                                 _pred_op,
                                                 _eval_labels,
@@ -310,41 +326,50 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                 args=args,
                                                 get_topic_op=_get_topic_op,
                                                 topic_path=dataset_info[
-                                                  dataset_name]['topic_path'])
+                                                  dataset_name]['topic_path'],
+                                                eval_loss_op=_loss_op)
         model_info[dataset_name]['valid_metrics'] = _metrics
 
       end_time = time()
       elapsed = end_time - start_time
+
+      # Manually compute the validation loss since each dataset is iterated through once
+      # in a serial manner and not "in parallel" (i.e., a batch from each)
+      valid_loss = 0.0
+      for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
+        valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics']['eval_loss']
+
+      valid_loss_summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
+      valid_file_writer.add_summary(valid_loss_summary, global_step=step)
+      main_task_acc = model_info[args.datasets[0]]['valid_metrics']['Acc']
+      valid_main_task_accuracy_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
+      valid_file_writer.add_summary(valid_main_task_accuracy_summary, global_step=step)
+
       # Log performance(s)
-      str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s (per batch)' % (
+      str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
-        train_loss)
+        train_loss, valid_loss)
+
       for dataset_name in model_info:
         _num_eval_total = model_info[dataset_name]['valid_metrics'][
           'ntotal']
-        # _metric = dataset_info[
-        #   dataset_name]['metric']
-        # _score = model_info[dataset_name]['valid_metrics'][_metric]
         # TODO use other metric here for tuning
         _eval_acc = model_info[dataset_name]['valid_metrics']['Acc']
-        _eval_align_acc = model_info[dataset_name]['valid_metrics'][
-          'aligned_accuracy']
+        #_eval_align_acc = model_info[dataset_name]['valid_metrics'][
+        #  'aligned_accuracy']
+
         str_ += '\n(%s) ' % (dataset_name)
         for m, s in model_info[dataset_name]['valid_metrics'].items():
           if m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
-        #str_ += '\n(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
-        #  dataset_name,
-        #  _num_eval_total,
-        #  _eval_acc,
-        #  _eval_align_acc)
 
         # Track best-performing epoch for each dataset
-        if _eval_acc > best_eval_acc[dataset_name]["acc"]:
-          best_eval_acc[dataset_name]["acc"] = _eval_acc
-          best_eval_acc[dataset_name]["epoch"] = epoch
+        if _eval_acc > best_eval_performance[dataset_name]["acc"]:
+          best_eval_performance[dataset_name]["acc"] = _eval_acc
+          best_eval_performance[dataset_name]["performance"] = model_info[dataset_name]['valid_metrics'].copy()
+          best_eval_performance[dataset_name]["epoch"] = epoch
           # save best model
           saver.save(sess.raw_session(),
                      model_info[dataset_name]['checkpoint_path'])
@@ -367,7 +392,7 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       with open(args.log_file, 'a') as f:
         f.write(str_ + '\n')
 
-    print(best_eval_acc)
+    print(best_eval_performance)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
     print(best_epoch_results)
@@ -376,19 +401,23 @@ def train_model(model, dataset_info, steps_per_epoch, args):
       #f.write(best_eval_acc + '\n')
       #f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
       #                                                     best_total_acc_epoch))
-      f.write('\nBest single-epoch performance of each dataset\n')
+      f.write('\nBest single-epoch performance across all datasets\n')
       f.write(best_epoch_results + '\n\n')
 
     # Write (add) the result to a common report file
     with open(args.log_file, 'a') as f:
-      for dataset in best_eval_acc.keys():
+      for dataset in best_eval_performance.keys():
         f.write(str(dataset))
         f.write(" ")
       f.write("\n")
-      for dataset, acc in best_eval_acc.items():
-        f.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
+      for dataset, values in best_eval_performance.items():
+        f.write('Metrics on highest-accuracy epoch for dataset {}: {}\n'.format(dataset, values))
+
       f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
                                                                best_total_acc_epoch))
+
+    train_file_writer.close()
+    valid_file_writer.close()
 
 
 def test_model(model, dataset_info, args):
@@ -397,6 +426,7 @@ def test_model(model, dataset_info, args):
   """
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
+  #fill_eval_loss_op(???)
   fill_pred_op_info(dataset_info, model, args, model_info)
   fill_topic_op(args, model_info)
 
@@ -438,8 +468,8 @@ def test_model(model, dataset_info, args):
           'ntotal']
         _eval_acc = model_info[dataset_name]['test_metrics'][
           'Acc']
-        _eval_align_acc = model_info[dataset_name]['test_metrics'][
-          'aligned_accuracy']
+        #_eval_align_acc = model_info[dataset_name]['test_metrics'][
+        #  'aligned_accuracy']
         str_ += '\n'
         if dataset_name == model_name:
           str_ += '(*)'
@@ -535,7 +565,8 @@ def get_topic(batch):
 
 def compute_held_out_performance(session, pred_op, eval_label,
                                  eval_iterator, metrics, labels,
-                                 args, get_topic_op, topic_path):
+                                 args, get_topic_op, topic_path,
+                                 eval_loss_op):
   # pred_op: predicted labels
   # eval_label: gold labels
 
@@ -577,21 +608,30 @@ def compute_held_out_performance(session, pred_op, eval_label,
   y_preds = []
   y_indexes = []
   y_topics = []
+  total_eval_loss = 0
+  num_eval_iter = 0
   while True:
     try:
       if args.experiment_name == "RUDER_NAACL_18":
-        y_true, y_pred, y_index = session.run([eval_label, pred_op, get_topic_op])
+        y_true, y_pred, y_index, eval_loss_v = session.run([eval_label, pred_op, get_topic_op, eval_loss_op])
+        num_eval_iter += 1
+        total_eval_loss += eval_loss_v
         y_index = y_index.tolist()  # index of example in data.json
         y_topic = [index2topic[idx] for idx in y_index]  # topic for each example so we can macro-average across topics
         y_indexes += y_index
         y_topics += y_topic
       else:
-        y_true, y_pred = session.run([eval_label, pred_op])
+        y_true, y_pred, eval_loss_v = session.run([eval_label, pred_op, eval_loss_op])
+        num_eval_iter += 1
+        total_eval_loss += eval_loss_v
       assert y_true.shape == y_pred.shape
       y_trues += y_true.tolist()
       y_preds += y_pred.tolist()
     except tf.errors.OutOfRangeError:
       break
+
+  assert num_eval_iter > 0
+  evaluation_loss = float(total_eval_loss) / float(num_eval_iter)
 
   #if args.experiment_name == "RUDER_NAACL_18":
     #for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
@@ -615,6 +655,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
     res[score] = scores[score]
   res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
 
+  res['eval_loss'] = evaluation_loss
   return res
   #return {
   #  'ntotal': ntotal,
@@ -758,7 +799,7 @@ def main():
   #  FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   logging.info("Creating computation graph...")
-  with tf.Graph().as_default():
+  with tf.Graph().as_default() as graph:
 
     # Creating the batch input pipelines.  These will load & batch
     # examples from serialized TF record files.
@@ -839,7 +880,10 @@ def main():
 
       # Do training
       if args.mode == 'train':
-        train_model(model, dataset_info, steps_per_epoch, args)
+        train_model(model,
+                    dataset_info,
+                    steps_per_epoch,
+                    args)
       elif args.mode == 'test':
         test_model(model, dataset_info, args)
       elif args.mode == 'predict':
@@ -956,8 +1000,10 @@ def fill_info_dicts(dataset_info, args):
       # Held-out valid data, iterator, batch, and prediction operation
       _valid_dataset = dataset_info[dataset_name]['valid_dataset']
       _valid_iter = _valid_dataset.iterator
+      _valid_init_op = _valid_dataset.init_op
       _valid_batch = _valid_dataset.batch
       model_info[dataset_name]['valid_iter'] = _valid_iter
+      model_info[dataset_name]['valid_init_op'] = _valid_init_op
       model_info[dataset_name]['valid_batch'] = _valid_batch
 
     elif args.mode == 'test':
@@ -1012,6 +1058,20 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         model_info[dataset_name]['pred_batch'], dataset_name,
         dataset_info[dataset_name]['dataset_name'])
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
+
+
+def fill_eval_loss_op(args, model, dataset_info, model_info):
+  for dataset_name in model_info:
+    if args.mode == 'train':
+      _valid_loss_op = model.get_loss(
+        model_info[dataset_name]['valid_batch'], dataset_name,
+        dataset_info[dataset_name]['dataset_name'], is_training=False)
+      model_info[dataset_name]['valid_loss_op'] = _valid_loss_op
+    elif args.mode == 'test':
+      _test_loss_op = model.get_loss(
+        model_info[dataset_name]['test_batch'], dataset_name,
+        dataset_info[dataset_name]['dataset_name'], is_training=False)
+      model_info[dataset_name]['test_loss_op'] = _test_loss_op
 
 
 def fill_topic_op(args, model_info):

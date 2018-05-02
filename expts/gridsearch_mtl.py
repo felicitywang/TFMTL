@@ -284,7 +284,7 @@ def run_single_experiment(meta_config,
     # Fill out any arguments that depend on other fields' values
     # res_dir = complete_path_name(meta_config.results_dir, exp_params_comb)
     jobs_dir = complete_path_name(meta_config.jobs_dir, exp_params_comb)
-    for field in ['checkpoint_dir', 'log_file', 'encoder_config_file']:
+    for field in ['checkpoint_dir', 'log_file', 'summaries_dir', 'encoder_config_file']:
       exp_params_comb[field] = complete_path_name(exp_params_comb[field],
                                                   exp_params_comb)
 
