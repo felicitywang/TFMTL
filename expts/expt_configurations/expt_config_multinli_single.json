@@ -1,5 +1,5 @@
 {
-    1;95;0c    "venv": "source /home/sebner/anaconda3/bin/activate inference",
+    "venv": "source /home/sebner/anaconda3/bin/activate inference",
     "root": "/home/sebner/tfmtl/expts/scripts/",
     "module": "discriminative_driver",
     "jobs_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/jobs",
