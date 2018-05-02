@@ -122,14 +122,12 @@ def conv_block(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
 
 
 def conv_block_wn(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
-  """A block of standard 2d convolutions."""
   return conv_block_internal(conv_wn, inputs, filters,
                              dilation_rates_and_kernel_sizes,
                              use_layer_norm=False, **kwargs)
 
 
 def conv1d_block(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
-  """A block of standard 1d convolutions."""
   return conv_block_internal(conv1d, inputs, filters,
                              dilation_rates_and_kernel_sizes, **kwargs)
 
@@ -141,25 +139,9 @@ def conv_block_internal(conv_fn,
                         initial_nonlinearity=True,
                         nonlinearity=tf.nn.relu,
                         use_layer_norm=True,
+                        global_conditioning=None,
                         separabilities=None,
                         **kwargs):
-  """A block of convolutions.
-
-  Args:
-    conv_fn: convolution function, e.g. conv or separable_conv.
-    inputs: a Tensor
-    filters: an Integer
-    dilation_rates_and_kernel_sizes: a list of tuples (dilation, (k_w, k_h))
-    initial_nonlinearity: initial activation (defaults to True)
-    nonlinearity: activation function
-    use_layer_norm: Use layer normalization (defaults to True)
-    separabilities: list of separability factors (per-layer).
-    **kwargs: additional arguments (e.g., pooling)
-
-  Returns:
-     a Tensor.
-  """
-
   name = kwargs.pop("name") if "name" in kwargs else None
   mask = kwargs.pop("mask") if "mask" in kwargs else None
 
@@ -168,6 +150,9 @@ def conv_block_internal(conv_fn,
     norm = lambda x, name: layer_norm(x, filters, name=name)
   else:
     use_normalizer_fn = False
+
+  if global_conditioning is None:
+    global_conditioning = tf.constant(0.0)
 
   with tf.variable_scope(name, "conv_block", [inputs]):
     cur, counter = inputs, -1
@@ -179,7 +164,7 @@ def conv_block_internal(conv_fn,
         cur *= mask
       if separabilities:
         cur = conv_fn(
-            cur,
+            cur + global_conditioning,
             filters,
             kernel_size,
             dilation_rate=dilation_rate,
@@ -189,7 +174,7 @@ def conv_block_internal(conv_fn,
             **kwargs)
       else:
         cur = conv_fn(
-            cur,
+            cur + global_conditioning,
             filters,
             kernel_size,
             dilation_rate=dilation_rate,
@@ -218,11 +203,13 @@ def layer_norm(x, filters=None, epsilon=1e-6, name=None, reuse=None):
       result = layer_norm_compute_python(x, epsilon, scale, bias)
     return result
 
+
 def flatten4d3d(x):
   """Flatten a 4d-tensor into a 3d-tensor by joining width and height."""
   xshape = shape_list(x)
   result = tf.reshape(x, [xshape[0], xshape[1] * xshape[2], xshape[3]])
   return result
+
 
 def layer_norm_compute_python(x, epsilon, scale, bias):
   """Layer norm raw computation."""

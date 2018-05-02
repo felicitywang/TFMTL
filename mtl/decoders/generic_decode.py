@@ -19,8 +19,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
-from tensorflow.contrib.training import HParams
-from mtl.decoders import *
+from mtl.layers.timing import add_timing_signal_1d
 from mtl.layers.t2t import conv_wn
 import mtl.util.registry as registry
 
@@ -33,11 +32,11 @@ def shift_right(x, pad_value=None):
   return shifted_targets
 
 
-def decode(targets, lengths, vocab_size, global_conditioning=None,
-           decoder='resnet', hparams='resnet_default', embed_fn=None,
-           embed_dim=None, embed_l2_scale=0.0,
-           initializer_stddev=0.01, average_across_timesteps=False,
-           average_across_batch=False):
+def decode(targets, lengths, vocab_size, is_training,
+           global_conditioning=None, decoder='resnet',
+           hparams='resnet_default', embed_fn=None, embed_dim=None,
+           embed_l2_scale=0.0, initializer_stddev=0.01, add_timing=True,
+           average_across_timesteps=False, average_across_batch=False):
   inputs = shift_right(targets)
   if embed_fn is None:
     assert embed_dim is not None
@@ -53,19 +52,27 @@ def decode(targets, lengths, vocab_size, global_conditioning=None,
     x = tf.nn.embedding_lookup(embed_matrix, inputs)
   else:
     x = embed_fn(inputs)
+  if add_timing:
+    x = add_timing_signal_1d(x)
   decoder_fn = registry.decoder(decoder)
-  x = tf.expand_dims(x, axis=2)
-  x = decoder_fn(x, lengths, hp=registry.hparams(hparams))
-  k = (1, 1)
-  x = conv_wn(x, vocab_size, k, padding='LEFT')
-  logits = tf.squeeze(x, axis=2)
+  if 'rnn' in decoder:
+    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                   global_conditioning=global_conditioning)
+    logits = tf.layers.dense(x, vocab_size, use_bias=False)
+  else:
+    x = tf.expand_dims(x, axis=2)
+    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                   global_conditioning=global_conditioning)
+    k = (1, 1)
+    x = conv_wn(x, vocab_size, k, padding='LEFT')
+    logits = tf.squeeze(x, axis=2)
   batch_size = tf.shape(targets)[0]
   batch_len = tf.shape(targets)[1]
   if lengths is None:
     mask = tf.ones([batch_size, batch_len])
   else:
     mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
-  loss = tf.contrib.seq2seq.sequence_loss(
+  loss = sequence_loss(
     logits, targets, mask, average_across_timesteps=average_across_timesteps,
     average_across_batch=average_across_batch)
   return loss

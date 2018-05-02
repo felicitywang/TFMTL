@@ -30,8 +30,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-
 import re
 
 _DECODERS = {}
@@ -80,7 +78,7 @@ def register_decoder(name=None):
   """Register a decoder. name defaults to function name snake-cased."""
 
   def decorator(decoder_fn, registration_name=None):
-    """Registers & returns decoder_fn with registration_name or default name."""
+    """Register & return decoder_fn with registration_name or default name."""
     decoder_name = registration_name or default_name(decoder_fn)
     if decoder_name in _DECODERS:
       raise LookupError("Decoder %s already registered." % decoder_name)
