@@ -67,11 +67,18 @@ else:
   vocab_path = args_single['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
   vocab_name = os.path.basename(vocab_path)
-  tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-    '.txt')])
+
   combine_pretrain_train = False
   if 'combine_pretrain_train' in args_single:
     combine_pretrain_train = args_single['combine_pretrain_train']
+
+  if combine_pretrain_train:
+    tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+      '.txt')] + '_and_train')
+  else:
+    tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+      '.txt')] + '_only')
+
   dataset = Dataset(json_dir=json_dir,
                     tfrecord_dir=tfrecord_dir,
                     vocab_given=True,

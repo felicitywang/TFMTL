@@ -26,7 +26,7 @@ import itertools
 import json
 import operator
 import os
-import pathlib
+import re
 from pathlib import Path
 
 import numpy as np
@@ -39,7 +39,7 @@ from mtl.util.categorical_vocabulary import CategoricalVocabulary
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer)
-from mtl.util.load_embeds import load_Glove
+from mtl.util.load_embeds import load_glove
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -176,7 +176,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if (not generate_basic_vocab and not generate_tf_record and vocab_given and
-            vocab_name == 'vocab_freq.json'):
+      vocab_name == 'vocab_freq.json'):
       print("Generating word id mapping using given word frequency "
             "dictionary...")
       if max_document_length == -1:
@@ -238,10 +238,15 @@ Args:
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
 
+        # remove urls
+        text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
+        # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
+
         for LINEBREAK in LINEBRAKES:
           text = text.replace(LINEBREAK, ' LINEBREAK ')
 
         text = self._tokenizer(text) + ['eos']
+
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
         # length of cleaned text (including EOS)
@@ -509,7 +514,7 @@ Args:
     categorical_vocab.freeze()
     return categorical_vocab
 
-  def get_train_vocab_list(self):
+  def get_train_vocab_set(self):
     """Get all the word types in the training docs
 
     :param doc_list: a list of documents
@@ -528,7 +533,7 @@ Args:
                      for i in self._train_index]
 
     vocab_processor.fit(training_docs)
-    return list(vocab_processor.vocabulary_.freq)
+    return set(vocab_processor.vocabulary_.freq)
 
   def load_vocab(self):
     make_dir(self._vocab_dir)
@@ -579,11 +584,11 @@ Args:
           #                           'and training data dictionary Not '
           #                           'Implemented!')
           # vocab_all = union(vocab_pretrained, vocab_train)
-          train_vocab_list = self.get_train_vocab_list()
+          train_vocab_set = self.get_train_vocab_set()
           # TODO other pre-trained word embedding
           glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
-          word_embeddings, self._vocab_v2i_dict = load_Glove(glove_path,
-                                                             train_vocab_list)
+          self._vocab_v2i_dict, vocab_extra = load_glove(glove_path,
+                                                         train_vocab_set)
 
           self._vocab_size = len(self._vocab_v2i_dict)
 
@@ -593,10 +598,13 @@ Args:
                            mode='w', encoding='utf-8') as file:
             json.dump(self._vocab_v2i_dict, file,
                       ensure_ascii=False, indent=4)
+            # TODO save vocab_extra
 
-          np.save(str(pathlib.Path(self._tfrecord_dir, 'word_embeddings.npy')),
-                  word_embeddings)
-
+          with codecs.open(os.path.join(self._tfrecord_dir,
+                                        "vocab_extra_v2i.json"),
+                           mode='w', encoding='utf-8') as file:
+            json.dump(vocab_extra, file,
+                      ensure_ascii=False, indent=4)
         else:
           print('Use pre-trained word embeddings\' vocabulary mapping only.')
           # use the pretrained word embeddings' dictionary solely
@@ -1038,7 +1046,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
     # get the vocab from the training data of each dataset
     # Assumes that all datasets have
     # the same text_field_names and label_field_name
-    vocab_train = set()
+    train_vocab_set = set()
     if padding:
       max_document_lengths = []
     for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
@@ -1055,19 +1063,17 @@ def merge_pretrain_write_tfrecord(json_dirs,
                         generate_basic_vocab=True,
                         vocab_given=False,
                         generate_tf_record=False)
-      vocab_train = vocab_train.union(set(dataset.mapping))
+      train_vocab_set = train_vocab_set.union(set(dataset.mapping))
       if padding:
         max_document_lengths.append(max_document_length)
     if padding:
       max_document_length = max(max_document_lengths)
 
     # TODO other word embeddings
-    word_embeddings, vocab_v2i_all = load_Glove(glove_path, list(vocab_train))
+    vocab_v2i_all, vocab_extra = load_glove(glove_path, train_vocab_set)
     # TODO more specific name?
     # TODO no remaining vocab?
     # TODO save remaining words?
-    np.save(str(pathlib.Path(merged_dir, 'word_embeddings.npy')),
-            word_embeddings)
 
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:

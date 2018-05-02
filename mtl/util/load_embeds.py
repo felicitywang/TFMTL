@@ -1,73 +1,53 @@
+# Copyright 2018 Johns Hopkins University. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =============================================================================
+
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
-import random
-
-import numpy as np
+import glove
 from tqdm import tqdm
 
 
-def load_Glove(glove_path, train_vocab_list):
-  """combine Glove vocabulary and training-data vocabulary, randomly
+def load_glove(glove_path, train_vocab_set):
+  """Combine Glove vocabulary and training-data vocabulary, modified from
 
-  initialize the latter
-  Modified from
   https://gitlab.hltcoe.jhu.edu/research/tf-ner/blob/master/ner/embeds.py
+
   :param glove_path: path to the Glove file
-  :param train_vocab_list: list, all the word types in the training data
-  :return: word embedding numpy matrix and v2i mapping
+  :param train_vocab_set: set, all the word types in the training data
+  :return: glove vocab + training vocab
   """
+  glove_vocab_dict = glove.Glove.load_stanford(glove_path).dictionary  # used
+  #  to create the final vocab and keep order
+  glove_vocab_set = set(glove_vocab_dict)  # used to look for train vocab
+
   print('Loading embeddings from {}...\n'.format(glove_path), end='')
-  print('{} original vocabulary from training.'.format(len(train_vocab_list)))
-  word2embed = {}
-  file = open(glove_path, 'rb')
-  found = 0
-  last_dims = None
-  for line_count, line in tqdm(enumerate(file.readlines())):
-    #        print(line)
-    line = line.decode('utf-8').rstrip()
-    # Google / w2v with tab separating word and vec
-    # TODO compatible with other formats?
-    if '\t' in line:
-      splitted = line.split('\t')
-      word = splitted[0]
-      row = splitted[1].split(' ')
-      dims = len(row)
-    # GLoVe space-delim style file
-    else:
-      splitted = line.split(' ')
-      word = splitted[0]
-      row = splitted[1:]
-      dims = len(row)
-    # Convert to float and add to dict
-    assert (last_dims is None or dims ==
-            last_dims), "Dim mismatch parsing line {}:\n{}".format(
-      line_count + 1, line)
-    last_dims = dims
-    if word in train_vocab_list:
-      found += 1
-    word2embed[word] = [float(f) for f in row]
-  print("Embeddings found for {} words from train set.".format(found))
+  print('{} original vocabulary from training.'.format(len(train_vocab_set)))
+  print('{} original vocabulary from glove.'.format(len(glove_vocab_dict)))
 
-  embeds = []
+  extra_vocab = set()
+  for v in tqdm(train_vocab_set):
+    if v not in glove_vocab_set:
+      extra_vocab.add(v)
+  extra_vocab = list(extra_vocab)
 
-  # Setup the UNK vector
-  if '<unk>' in word2embed.keys():
-    oov_vector = word2embed['<unk>']
-  else:
-    oov_vector = [random.uniform(-1.0, 1.0) for _ in range(dims)]
+  print('{} words in training vocab not in pre-trained word embedding '
+        'dictionary.'.format(len(extra_vocab)))
 
-  # Setup the numpy embedding matrix
-  for word in train_vocab_list:
-    if word in word2embed:
-      embeds.append(word2embed[word])
-    else:
-      embeds.append(oov_vector)
+  combined_vocab = {w: i for i, w in
+                    enumerate(list(glove_vocab_dict) + extra_vocab)}
 
-  # TODO save remainings
-  remaining = list(set(word2embed.keys()) - set(train_vocab_list))
-  for word in remaining:
-    embeds.append(word2embed[word])
-  file.close()
-  print('Finished loading {} embeddings.'.format(len(embeds)))
-  return np.asarray(embeds, dtype=np.float32), {w: i for i, w in enumerate(
-    train_vocab_list + remaining)}
+  return combined_vocab, extra_vocab

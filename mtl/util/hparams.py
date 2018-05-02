@@ -19,6 +19,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from mtl.embedders.pretrained import glove_and_train
+
 
 def get_activation_fn(s):
   if s == 'elu':
@@ -73,6 +75,7 @@ def str2func(s):
     "embed_sequence": embed_sequence,
     "no_op_embedding": no_op_embedding,
     "glove_only": glove_only,
+    "glove_and_train": glove_and_train,
     "paragram": paragram_phrase,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,
