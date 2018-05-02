@@ -66,14 +66,20 @@ else:
   vocab_path = args_merged['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
   vocab_name = os.path.basename(vocab_path)
-  tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-    '.txt')])
-  tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
-  for i in tfrecord_dirs:
-    make_dir(i)
   combine_pretrain_train = False
   if 'combine_pretrain_train' in args_merged:
     combine_pretrain_train = args_merged['combine_pretrain_train']
+
+  if combine_pretrain_train:
+    tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+      '.txt')] + '_and_train')
+  else:
+    tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+      '.txt')] + '_only')
+  tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
+  for i in tfrecord_dirs:
+    make_dir(i)
+
   merge_pretrain_write_tfrecord(json_dirs=json_dirs,
                                 tfrecord_dirs=tfrecord_dirs,
                                 merged_dir=tfrecord_dir,

@@ -126,7 +126,7 @@ class CategoricalVocabulary(object):
     """
     # Sort by alphabet then reversed frequency.
     if not max_vocab_size:
-      max_vocab_size = int('inf')
+      max_vocab_size = float('inf')
     self._freq = sorted(
       sorted(
         six.iteritems(self._freq),
