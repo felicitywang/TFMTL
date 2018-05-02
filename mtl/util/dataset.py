@@ -175,10 +175,10 @@ Args:
 
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
-    if (not generate_basic_vocab and not generate_tf_record and vocab_given and
-      vocab_name == 'vocab_freq.json'):
-      print("Generating word id mapping using given word frequency "
-            "dictionary...")
+    if not generate_basic_vocab and not generate_tf_record \
+       and vocab_given and vocab_name == 'vocab_freq.json':
+      print(
+        "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
         self._max_document_length = float('inf')
       else:
