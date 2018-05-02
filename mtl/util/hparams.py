@@ -69,7 +69,8 @@ def str2func(s):
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
                                  reduce_max_over_time,
-                                 reduce_min_over_time)
+                                 reduce_min_over_time,
+                                 reduce_over_time)
 
   functions = {
     "embed_sequence": embed_sequence,
@@ -87,6 +88,7 @@ def str2func(s):
     "reduce_max_over_time": reduce_max_over_time,
     "reduce_avg_over_time": reduce_avg_over_time,
     "reduce_var_over_time": reduce_var_over_time,
+    "reduce_over_time": reduce_over_time,
 
     "tf.nn.relu": tf.nn.relu,
     "tf.nn.elu": tf.nn.elu,
