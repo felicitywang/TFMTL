@@ -1,0 +1,23 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 50 \
+       --checkpoint_dir ./data/ckpt/Target/ \
+       --experiment_name RUDER_NAACL_18 \
+       --datasets Target \
+       --dataset_paths data/tf/single/Target/min_0_max_-1_vocab_None \
+       --class_sizes 3 \
+       --vocab_size_file data/tf/single/Target/min_0_max_-1_vocab_None/vocab_size.txt \
+       --encoder_config_file encoders.json \
+       --architecture serial-birnn \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 64 \
+       --alphas 1 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --tuning_metric Acc \
+       --topics_path data/json/Target/data.json.gz \
+       --seed 42 \
+       --log_file Target.log
