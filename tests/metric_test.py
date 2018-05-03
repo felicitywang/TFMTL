@@ -22,7 +22,7 @@ from mtl.util.metrics import (accuracy_score,
                               recall_macro,
                               f1_macro,
                               mae_macro,
-                              neg_mae_macro)
+                              neg_mae_macro, precision_macro)
 
 
 class MetricTest(tf.test.TestCase):
@@ -102,6 +102,19 @@ class MetricTest(tf.test.TestCase):
                     labels=labels,
                     topics=topics),
       -0.5
+    )
+
+  def test_precision_macro(self):
+    y_trues = [0, 1, 2, 0, 1, 2]
+    y_preds = [0, 2, 1, 0, 0, 1]
+    labels = [0, 1, 2]
+    topics = [0, 0, 0]
+    self.assertAlmostEqual(
+      precision_macro(y_trues=y_trues,
+                      y_preds=y_preds,
+                      labels=labels,
+                      topics=topics),
+      4 / 15
     )
 
 

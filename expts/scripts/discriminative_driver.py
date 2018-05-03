@@ -23,9 +23,9 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
+import gzip
 import json
 import os
-import gzip
 from time import time
 
 import numpy as np
@@ -169,7 +169,8 @@ def parse_args():
                       'Acc: accuracy score;\n'
                       'MAE_Macro: macro-averaged mean absolute error;\n'
                       'F1_Macro:  macro-averaged F1 score;\n'
-                      'Recall_Macro: macro-averaged recall score.')
+                      'Recall_Macro: macro-averaged recall score;\n'
+                      'Precision_Macro: macro-averaged precision score.')
 
   return p.parse_args()
 
@@ -262,8 +263,10 @@ def train_model(model,
 
     sess.run(init_ops)
 
-    train_file_writer = tf.summary.FileWriter(os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
-    valid_file_writer = tf.summary.FileWriter(os.path.join(args.summaries_dir, 'valid'), graph=sess.graph)
+    train_file_writer = tf.summary.FileWriter(
+      os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
+    valid_file_writer = tf.summary.FileWriter(
+      os.path.join(args.summaries_dir, 'valid'), graph=sess.graph)
 
     best_eval_performance = dict()
     for dataset_name in model_info:
@@ -302,7 +305,8 @@ def train_model(model,
       # average loss per batch (which is in turn averaged across examples)
       train_loss = float(total_loss) / float(num_iter)
 
-      train_loss_summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
+      train_loss_summary = tf.Summary(
+        value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
       train_file_writer.add_summary(train_loss_summary, global_step=step)
 
       # Evaluate held-out accuracy
@@ -337,13 +341,17 @@ def train_model(model,
       # in a serial manner and not "in parallel" (i.e., a batch from each)
       valid_loss = 0.0
       for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
-        valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics']['eval_loss']
+        valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics'][
+          'eval_loss']
 
-      valid_loss_summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
+      valid_loss_summary = tf.Summary(
+        value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
       valid_file_writer.add_summary(valid_loss_summary, global_step=step)
       main_task_acc = model_info[args.datasets[0]]['valid_metrics']['Acc']
-      valid_main_task_accuracy_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
-      valid_file_writer.add_summary(valid_main_task_accuracy_summary, global_step=step)
+      valid_main_task_accuracy_summary = tf.Summary(value=[
+        tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
+      valid_file_writer.add_summary(valid_main_task_accuracy_summary,
+                                    global_step=step)
 
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
@@ -355,7 +363,7 @@ def train_model(model,
           'ntotal']
         # TODO use other metric here for tuning
         _eval_acc = model_info[dataset_name]['valid_metrics']['Acc']
-        #_eval_align_acc = model_info[dataset_name]['valid_metrics'][
+        # _eval_align_acc = model_info[dataset_name]['valid_metrics'][
         #  'aligned_accuracy']
 
         str_ += '\n(%s) ' % (dataset_name)
@@ -368,7 +376,8 @@ def train_model(model,
         # Track best-performing epoch for each dataset
         if _eval_acc > best_eval_performance[dataset_name]["acc"]:
           best_eval_performance[dataset_name]["acc"] = _eval_acc
-          best_eval_performance[dataset_name]["performance"] = model_info[dataset_name]['valid_metrics'].copy()
+          best_eval_performance[dataset_name]["performance"] = \
+            model_info[dataset_name]['valid_metrics'].copy()
           best_eval_performance[dataset_name]["epoch"] = epoch
           # save best model
           saver.save(sess.raw_session(),
@@ -398,8 +407,8 @@ def train_model(model,
     print(best_epoch_results)
 
     with open(args.log_file, 'a') as f:
-      #f.write(best_eval_acc + '\n')
-      #f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
+      # f.write(best_eval_acc + '\n')
+      # f.write('Best total accuracy: {} at epoch {}'.format(best_total_acc,
       #                                                     best_total_acc_epoch))
       f.write('\nBest single-epoch performance across all datasets\n')
       f.write(best_epoch_results + '\n\n')
@@ -411,7 +420,9 @@ def train_model(model,
         f.write(" ")
       f.write("\n")
       for dataset, values in best_eval_performance.items():
-        f.write('Metrics on highest-accuracy epoch for dataset {}: {}\n'.format(dataset, values))
+        f.write(
+          'Metrics on highest-accuracy epoch for dataset {}: {}\n'.format(
+            dataset, values))
 
       f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
                                                                best_total_acc_epoch))
@@ -426,7 +437,7 @@ def test_model(model, dataset_info, args):
   """
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
-  #fill_eval_loss_op(???)
+  # fill_eval_loss_op(???)
   fill_pred_op_info(dataset_info, model, args, model_info)
   fill_topic_op(args, model_info)
 
@@ -468,7 +479,7 @@ def test_model(model, dataset_info, args):
           'ntotal']
         _eval_acc = model_info[dataset_name]['test_metrics'][
           'Acc']
-        #_eval_align_acc = model_info[dataset_name]['test_metrics'][
+        # _eval_align_acc = model_info[dataset_name]['test_metrics'][
         #  'aligned_accuracy']
         str_ += '\n'
         if dataset_name == model_name:
@@ -481,7 +492,7 @@ def test_model(model, dataset_info, args):
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
-        #str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
+        # str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
         #  dataset_name,
         #  _num_eval_total,
         #  _eval_acc,
@@ -613,15 +624,18 @@ def compute_held_out_performance(session, pred_op, eval_label,
   while True:
     try:
       if args.experiment_name == "RUDER_NAACL_18":
-        y_true, y_pred, y_index, eval_loss_v = session.run([eval_label, pred_op, get_topic_op, eval_loss_op])
+        y_true, y_pred, y_index, eval_loss_v = session.run(
+          [eval_label, pred_op, get_topic_op, eval_loss_op])
         num_eval_iter += 1
         total_eval_loss += eval_loss_v
         y_index = y_index.tolist()  # index of example in data.json
-        y_topic = [index2topic[idx] for idx in y_index]  # topic for each example so we can macro-average across topics
+        y_topic = [index2topic[idx] for idx in
+                   y_index]  # topic for each example so we can macro-average across topics
         y_indexes += y_index
         y_topics += y_topic
       else:
-        y_true, y_pred, eval_loss_v = session.run([eval_label, pred_op, eval_loss_op])
+        y_true, y_pred, eval_loss_v = session.run(
+          [eval_label, pred_op, eval_loss_op])
         num_eval_iter += 1
         total_eval_loss += eval_loss_v
       assert y_true.shape == y_pred.shape
@@ -633,9 +647,9 @@ def compute_held_out_performance(session, pred_op, eval_label,
   assert num_eval_iter > 0
   evaluation_loss = float(total_eval_loss) / float(num_eval_iter)
 
-  #if args.experiment_name == "RUDER_NAACL_18":
-    #for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
-    #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
+  # if args.experiment_name == "RUDER_NAACL_18":
+  # for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
+  #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
 
   ntotal = len(y_trues)
   ncorrect = accurate_number(y_trues=y_trues,
@@ -645,7 +659,7 @@ def compute_held_out_performance(session, pred_op, eval_label,
 
   scores = dict()
   for metric in metrics:
-    func = metric2func(metric)  
+    func = metric2func(metric)
     scores[metric] = func(y_trues, y_preds, labels, y_topics)
 
   res = dict()
@@ -657,12 +671,12 @@ def compute_held_out_performance(session, pred_op, eval_label,
 
   res['eval_loss'] = evaluation_loss
   return res
-  #return {
+  # return {
   #  'ntotal': ntotal,
   #  'ncorrect': ncorrect,
   #  'accuracy': score,  # TODO score name
   #  'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
-  #}
+  # }
 
 
 def main():
@@ -706,16 +720,20 @@ def main():
 
   # evaluation metrics for each dataset
   metrics = dict()
-  #if args.metrics == None:
+  # if args.metrics == None:
   #  for dataset in args.datasets:
   #    metrics[dataset] = 'Acc'
-  #else:
+  # else:
   #  assert len(args.metrics) == len(args.datasets)
   #  for dataset, metric in zip(args.datasets, args.metrics):
   #    metrics[dataset] = metric
   for dataset in args.datasets:
-    metrics[dataset] = ['Acc', 'MAE_Macro', 'F1_Macro', 'Recall_Macro']
-  
+    metrics[dataset] = ['Acc',
+                        'MAE_Macro',
+                        'F1_Macro',
+                        'Recall_Macro',
+                        'Precision_Macro']
+
   # Read data
   dataset_info = dict()
   for dataset_name in args.datasets:
@@ -762,40 +780,41 @@ def main():
   FEATURES = dict()
   for dataset, dataset_path in zip(args.datasets, args.dataset_paths):
     with open(os.path.join(dataset_path, 'args.json')) as f:
-      json_config = json.load(f)      
+      json_config = json.load(f)
       text_field_names = json_config['text_field_names']
       for text_field_name in text_field_names:
-        FEATURES[text_field_name+'_length'] = tf.FixedLenFeature([], dtype=tf.int64)
+        FEATURES[text_field_name + '_length'] = tf.FixedLenFeature([],
+                                                                   dtype=tf.int64)
         if args.input_key == 'tokens':
           FEATURES[text_field_name] = tf.VarLenFeature(dtype=tf.int64)
         elif args.input_key == 'bow':
-          FEATURES[text_field_name+'_bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+          FEATURES[text_field_name + '_bow'] = tf.FixedLenFeature([vocab_size],
+                                                                  dtype=tf.float32)
         elif args.input_key == 'tfidf':
-          FEATURES[text_field_name+'_tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
+          FEATURES[text_field_name + '_tfidf'] = tf.FixedLenFeature(
+            [vocab_size], dtype=tf.float32)
         else:
           raise ValueError("Input key %s not supported!" % (args.input_key))
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
   if args.mode in ['train', 'test']:
     FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
-            
 
-
-  #FEATURES = {
+  # FEATURES = {
   #  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
   #  # 'types': tf.VarLenFeature(dtype=tf.int64),
   #  # 'type_counts': tf.VarLenFeature(dtype=tf.int64),
   #  # 'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-  #}
-  #if args.input_key == 'tokens':
+  # }
+  # if args.input_key == 'tokens':
   #  FEATURES['tokens'] = tf.VarLenFeature(dtype=tf.int64)
-  #elif args.input_key == 'bow':
+  # elif args.input_key == 'bow':
   #  FEATURES['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  #elif args.input_key == 'tfidf':
+  # elif args.input_key == 'tfidf':
   #  FEATURES['tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  #else:
+  # else:
   #  raise ValueError("Input key %s not supported!" % args.input_key)
-  #if args.mode == 'train' or args.mode == 'test':
+  # if args.mode == 'train' or args.mode == 'test':
   #  FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   logging.info("Creating computation graph...")
