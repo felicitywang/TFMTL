@@ -40,10 +40,11 @@
 
     "private_mlp": [{"private_mlp_layers": 0, "private_hidden_dims": 0},
                     {"private_mlp_layers": 1, "private_hidden_dims": 1},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 4},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 8},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 16},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 32}],
+                    {"private_mlp_layers": 1, "private_hidden_dims": 32},
+                    {"private_mlp_layers": 1, "private_hidden_dims": 64},
+                    {"private_mlp_layers": 1, "private_hidden_dims": 128},
+                    {"private_mlp_layers": 1, "private_hidden_dims": 256},
+                    {"private_mlp_layers": 1, "private_hidden_dims": 512}],
     "optimizer": [{"optimizer": "rmsprop",
                    "lr0": [0.001]}
                  ],
