@@ -5,7 +5,7 @@
 The DBPedia ontology classification dataset is constructed from DBPedia, a large-scale, multilingual knowledge base extracted from Wikipedia.
 
 **Basic stats:**
-+ \# items = 63,000
++ \# items = 630,000
 + \# label = 14
     - 1: Company
     - 2: EducationalInstitution
@@ -66,6 +66,8 @@ The DBPedia ontology classification dataset is constructed from DBPedia, a large
 **License: **
 the Creative Commons Attribution-ShareAlike License and the GNU Free Documentation License
 
-[**Webpage**](https://github.com/bazakoskon/labels-on-Amazon-movie-reviews-dataset)
+[**Author Webpage**](http://xzh.me/)
 
-[**Webpage**](http://dbpedia.org)
+[**DBPedia.org**](http://dbpedia.org)
+
+[**Download link**](http://goo.gl/JyCnZq)
