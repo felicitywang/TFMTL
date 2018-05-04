@@ -42,7 +42,11 @@ The Amazon reviews polarity dataset is constructed from the Amazon reviews datas
   bibsource = {dblp computer science bibliography, http://dblp.org}
 }
 ```
+
 [**Webpage**](https://snap.stanford.edu/data/web-Movies.html)
 
-
 [**Webpage**](https://github.com/bazakoskon/labels-on-Amazon-movie-reviews-dataset)
+
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)

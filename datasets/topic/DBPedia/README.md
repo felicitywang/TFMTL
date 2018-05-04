@@ -66,8 +66,8 @@ The DBPedia ontology classification dataset is constructed from DBPedia, a large
 **License: **
 the Creative Commons Attribution-ShareAlike License and the GNU Free Documentation License
 
-[**Author Webpage**](http://xzh.me/)
-
-[**DBPedia.org**](http://dbpedia.org)
+[**Webpage**](http://xzh.me/)
 
 [**Download link**](http://goo.gl/JyCnZq)
+
+[**DBPedia.org**](http://dbpedia.org)
