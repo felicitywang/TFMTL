@@ -21,23 +21,24 @@ from six.moves import xrange
 
 import numpy as np
 import tensorflow as tf
+from mtl.layers.rnn import stacked_rnn_cell
 import mtl.util.registry
 
 
 @registry.register_hparams
-def birnn_default():
+def simple_birnn_default():
   hp = tf.contrib.training.HParams(
     cell='lstm',
     size=256,
     depth=1,
     combine='concat',
-    keep_prob=0.5
+    keep_prob=1.0
   )
   return hp
 
 
 @registry.register_encoder
-def birnn(inputs, length, hp=None, is_training=True):
+def simple_birnn(inputs, length, hp=None, is_training=True):
   assert len(inputs.get_shape().as_list()) == 3
   batch_size = tf.shape(inputs)[0]
   keep_prob = hp.keep_prob if is_training else 1.0

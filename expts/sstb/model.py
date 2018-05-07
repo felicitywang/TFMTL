@@ -24,9 +24,9 @@ import tensorflow as tf
 
 from mtl.optim import AdafactorOptimizer
 from mtl.util.pipeline import Pipeline
-from mtl.extractors.lbirnn import lbirnn
-from mtl.decoders import decode
 import mtl.util.registry
+from mtl.extractors import encode
+from mtl.decoders import decode
 
 VOCAB_SIZE = 8242
 NUM_LABELS = 5
@@ -97,15 +97,38 @@ def model_fn(mode, batch, hp):
   else:
     raise ValueError("unrecognized mode: %s" % (mode))
 
+  regularizer = None
+  if embed_l2_scale > 0.0:
+    regularizer = tf.contrib.layers.l2_regularizer(embed_l2_scale)
+  initializer = tf.truncated_normal_initializer(mean=0.0,
+                                                stddev=initializer_stddev)
+  with tf.variable_scope("input_embedding", reuse=tf.AUTO_REUSE):
+    embed_matrix = tf.get_variable("embed_matrix", [VOCAB_SIZE, hp.embed_dim],
+                                   regularizer=regularizer,
+                                   initializer=initializer)
+
   def embedder(x):
+    x = tf.nn.embedding_lookup(embed_matrix, x)
+
+  code = encode(batch[TOKENS_FIELD],
+                batch[LEN_FIELD],
+                mode == TRAIN,
+                encoder=hp.encoder,
 
 
-  losses = decode(batch[TOKENS_FIELD], batch[LEN_FIELD], VOCAB_SIZE,
-                  mode == TRAIN, decoder=hp.decoder,
-                  hparams=hp.decoder_hparams, embed_dim=hp.embed_dim,
-                  average_across_timesteps=False,
-                  average_across_batch=False,
-                  global_conditioning=None)
+  # TODO
+  #classification_error =
+
+  avg_reconstruction_error = decode(batch[TOKENS_FIELD],
+                                    batch[LEN_FIELD],
+                                    VOCAB_SIZE,
+                                    mode == TRAIN,
+                                    embed_fn=embedder,
+                                    decoder=hp.decoder,
+                                    hparams=hp.decoder_hparams,
+                                    average_across_timesteps=True,
+                                    average_across_batch=False,
+                                    global_conditioning=code)
 
   loss = tf.reduce_sum(losses, axis=1)
   global_step_tensor = tf.train.get_or_create_global_step()
