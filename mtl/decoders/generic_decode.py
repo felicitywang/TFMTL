@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
-from mtl.layers.timing import add_timing_signal_1d
 from mtl.layers.t2t import conv_wn
 import mtl.util.registry as registry
 
@@ -35,9 +34,17 @@ def shift_right(x, pad_value=None):
 def decode(targets, lengths, vocab_size, is_training,
            global_conditioning=None, decoder='resnet',
            hparams='resnet_default', embed_fn=None, embed_dim=None,
-           embed_l2_scale=0.0, initializer_stddev=0.01, add_timing=True,
+           embed_l2_scale=0.0, initializer_stddev=0.001, add_timing=False,
            average_across_timesteps=False, average_across_batch=False):
+  # Shift targets right to get inputs
   inputs = shift_right(targets)
+
+  print('inputs:')
+  print(inputs)
+  print('targets:')
+  print(targets)
+
+  # Project integer inputs to vectors via an embedding
   if embed_fn is None:
     assert embed_dim is not None
     regularizer = None
@@ -52,27 +59,39 @@ def decode(targets, lengths, vocab_size, is_training,
     x = tf.nn.embedding_lookup(embed_matrix, inputs)
   else:
     x = embed_fn(inputs)
-  if add_timing:
-    x = add_timing_signal_1d(x)
+
+  print('Embedded inputs:')
+  print(x)
+
   decoder_fn = registry.decoder(decoder)
-  if 'rnn' in decoder:
-    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
-                   global_conditioning=global_conditioning)
-    logits = tf.layers.dense(x, vocab_size, use_bias=False)
-  else:
-    x = tf.expand_dims(x, axis=2)
-    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
-                   global_conditioning=global_conditioning)
-    k = (1, 1)
-    x = conv_wn(x, vocab_size, k, padding='LEFT')
-    logits = tf.squeeze(x, axis=2)
+
+  # Get predictions for each target
+  #assert_op = tf.Assert(tf.greater_equal(tf.shape(x)[1], 1), [x])
+  #with tf.control_dependencies([assert_op]):
+  if True:
+    if 'rnn' in decoder:
+      x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                     global_conditioning=global_conditioning)
+      logits = tf.layers.dense(x, vocab_size, use_bias=False)
+    else:
+      x = tf.expand_dims(x, axis=2)
+      x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                     global_conditioning=global_conditioning)
+      k = (1, 1)
+      x = conv_wn(x, vocab_size, k, padding='LEFT')
+      logits = tf.squeeze(x, axis=2)
+
+  # Mask for variable length targets
   batch_size = tf.shape(targets)[0]
   batch_len = tf.shape(targets)[1]
   if lengths is None:
     mask = tf.ones([batch_size, batch_len])
   else:
     mask = tf.to_float(tf.sequence_mask(lengths, maxlen=batch_len))
+
+  # Compute loss
   loss = sequence_loss(
     logits, targets, mask, average_across_timesteps=average_across_timesteps,
     average_across_batch=average_across_batch)
+
   return loss
