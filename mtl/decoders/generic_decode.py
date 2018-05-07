@@ -39,11 +39,6 @@ def decode(targets, lengths, vocab_size, is_training,
   # Shift targets right to get inputs
   inputs = shift_right(targets)
 
-  print('inputs:')
-  print(inputs)
-  print('targets:')
-  print(targets)
-
   # Project integer inputs to vectors via an embedding
   if embed_fn is None:
     assert embed_dim is not None
@@ -60,26 +55,20 @@ def decode(targets, lengths, vocab_size, is_training,
   else:
     x = embed_fn(inputs)
 
-  print('Embedded inputs:')
-  print(x)
-
   decoder_fn = registry.decoder(decoder)
 
   # Get predictions for each target
-  #assert_op = tf.Assert(tf.greater_equal(tf.shape(x)[1], 1), [x])
-  #with tf.control_dependencies([assert_op]):
-  if True:
-    if 'rnn' in decoder:
-      x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
-                     global_conditioning=global_conditioning)
-      logits = tf.layers.dense(x, vocab_size, use_bias=False)
-    else:
-      x = tf.expand_dims(x, axis=2)
-      x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
-                     global_conditioning=global_conditioning)
-      k = (1, 1)
-      x = conv_wn(x, vocab_size, k, padding='LEFT')
-      logits = tf.squeeze(x, axis=2)
+  if 'rnn' in decoder:
+    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                   global_conditioning=global_conditioning)
+    logits = tf.layers.dense(x, vocab_size, use_bias=False)
+  else:
+    x = tf.expand_dims(x, axis=2)
+    x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
+                   global_conditioning=global_conditioning)
+    k = (1, 1)
+    x = conv_wn(x, vocab_size, k, padding='LEFT')
+    logits = tf.squeeze(x, axis=2)
 
   # Mask for variable length targets
   batch_size = tf.shape(targets)[0]

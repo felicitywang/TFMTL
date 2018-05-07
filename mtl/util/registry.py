@@ -15,6 +15,11 @@
 # limitations under the License.
 
 """
+For encoders:
+  * Register: `registry.register_encoder`
+  * List: `registry.list_encoders`
+  * Retrieve by name: `registry.encoder`
+
 For decoders:
   * Register: `registry.register_decoder`
   * List: `registry.list_decoders`
@@ -32,6 +37,7 @@ from __future__ import print_function
 
 import re
 
+_ENCODERS = {}
 _DECODERS = {}
 _HPARAMS = {}
 
@@ -72,6 +78,22 @@ def register_hparams(name=None):
     return decorator(hp_fn, registration_name=default_name(hp_fn))
 
   return lambda hp_fn: decorator(hp_fn, name)
+
+
+def register_encoder(name=None):
+  def decorator(fn, registration_name=None):
+    name = registration_name or default_name(fn)
+    if name in _ENCODERS:
+      raise LookupError("Encoder %s already registered." % name)
+    _ENCODERS[name] = fn
+    return fn
+
+  # Handle if decorator was used without parens
+  if callable(name):
+    fn = name
+    return decorator(fn, registration_name=default_name(fn))
+
+  return lambda fn: decorator(fn, name)
 
 
 def register_decoder(name=None):
@@ -116,6 +138,15 @@ def hparams(name):
   return _HPARAMS[name]
 
 
+def encoder(name):
+  if name not in _ENCODERS:
+    error_msg = "Encoder %s never registered. Encoders registered:\n%s"
+    raise LookupError(
+      error_msg % (name,
+                   display_list_by_prefix(list_decoders(), starting_spaces=4)))
+  return _ENCODERS[name]
+
+
 def decoder(name):
   if name not in _DECODERS:
     error_msg = "Decoder %s never registered. Decoders registered:\n%s"
@@ -127,6 +158,10 @@ def decoder(name):
 
 def list_hparams():
   return list(_HPARAMS)
+
+
+def list_encoders():
+  return list(_ENCODERS)
 
 
 def list_decoders():

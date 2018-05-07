@@ -24,6 +24,7 @@ import tensorflow as tf
 
 from mtl.optim import AdafactorOptimizer
 from mtl.util.pipeline import Pipeline
+from mtl.extractors.lbirnn import lbirnn
 from mtl.decoders import decode
 import mtl.util.registry
 
@@ -96,7 +97,8 @@ def model_fn(mode, batch, hp):
   else:
     raise ValueError("unrecognized mode: %s" % (mode))
 
-  print(batch)
+  def embedder(x):
+
 
   losses = decode(batch[TOKENS_FIELD], batch[LEN_FIELD], VOCAB_SIZE,
                   mode == TRAIN, decoder=hp.decoder,
