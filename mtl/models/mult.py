@@ -73,12 +73,14 @@ class Mult(object):
   def encode(self,
              inputs,
              dataset_name,
+             #is_training,
              lengths=None,
              additional_extractor_kwargs=dict()):
     # Also apply arguments that aren't `inputs` or `lengths`
     # (such as `indices` for the serial bi-RNN extractor)
     return self._encoders[dataset_name](inputs,
                                         lengths,
+                                        #is_training,
                                         **additional_extractor_kwargs[
                                           dataset_name])
 
@@ -117,6 +119,7 @@ class Mult(object):
 
     x = self.encode(x,
                     dataset_name,
+                    #is_training=False,
                     lengths=input_lengths,
                     additional_extractor_kwargs=additional_extractor_kwargs)
 
@@ -171,6 +174,7 @@ class Mult(object):
     if features is None:
       x = self.encode(x,
                       dataset_name,
+                      #is_training=is_training,
                       lengths=input_lengths,
                       additional_extractor_kwargs=additional_extractor_kwargs)
     else:
