@@ -263,7 +263,7 @@ def serial_lbirnn(inputs,
 
 
 @registry.register_hparams
-def serial_lbirnn_RUDER_NAACL18():
+def RUDER_NAACL18_HPARAMS():
   hp = tf.contrib.training.HParams(
     cell_type='lstm',
     cell_size=256,
