@@ -31,7 +31,6 @@ from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
-from glove import glove
 from six.moves import xrange
 from tqdm import tqdm
 
@@ -39,7 +38,7 @@ from mtl.util.categorical_vocabulary import CategoricalVocabulary
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer)
-from mtl.util.load_embeds import load_glove
+from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -52,7 +51,7 @@ TRAIN_RATIO = 0.8  # train out of all
 VALID_RATIO = 0.1  # valid out of all / valid out of train
 RANDOM_SEED = 42
 
-LINEBRAKES = ['<br /><br />', '\n']
+LINEBREAKS = ['<br /><br />', '\n']
 
 vocab_names = [
   'vocab_freq.json',
@@ -67,11 +66,11 @@ vocab_names = [
   'glove.twitter.27B.50d.txt',
   'glove.twitter.27B.100d.txt',
   'glove.twitter.27B.200d.txt'
-
 ]
 
 
 class Dataset:
+
   def __init__(self,
                json_dir,
                vocab_given,
@@ -97,7 +96,7 @@ class Dataset:
                predict_json_path='predict.json.gz',
                predict_tf_path='predict.tf',
                tokenizer_="tweet_tokenizer",
-               combine_pretrain_train=False
+               expand_vocab=False
                ):
     """
 Args:
@@ -143,9 +142,8 @@ Args:
     predict_json_path: File path of the gzipped json file of the text to
     predict
     predict_tf_path: File path of the TFRecord file of the text to predict
-    combine_pretrain_train: when using the pretrained word embeddings,
-    False if to use the pretrained word embeddings' vocabulary only,
-    otherwise union the words in the training data
+    expand_vocab: whether to expand the training vocab with pre-trained
+    word embeddings' vocab
     """
 
     if max_vocab_size == -1:
@@ -176,7 +174,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
@@ -242,10 +240,10 @@ Args:
         text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
         # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
 
-        for LINEBREAK in LINEBRAKES:
+        for LINEBREAK in LINEBREAKS:
           text = text.replace(LINEBREAK, ' LINEBREAK ')
 
-        text = self._tokenizer(text) + ['eos']
+        text = self._tokenizer(text) + ['<EOS>']
 
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
@@ -318,7 +316,7 @@ Args:
       self._vocab_dir = vocab_dir
       self._tfrecord_dir = tfrecord_dir  # used to save the combined
       # vocabulary when loading pretrained word embeddings
-      self._combine_pretrain_train = combine_pretrain_train
+      self._expand_vocab = expand_vocab
       self._categorical_vocab = self.load_vocab()
 
     # save mapping/reverse mapping to the disk
@@ -514,12 +512,13 @@ Args:
     categorical_vocab.freeze()
     return categorical_vocab
 
-  def get_train_vocab_set(self):
+  def get_train_vocab_list(self):
     """Get all the word types in the training docs
 
     :param doc_list: a list of documents
-    :return: list, all the word types in the docs
+    :return: list, all the word types in the docs; use list to keep order
     """
+
     vocab_processor = VocabularyProcessor(
       max_document_length=self._max_document_length,
       max_vocab_size=self._max_vocab_size,
@@ -533,7 +532,8 @@ Args:
                      for i in self._train_index]
 
     vocab_processor.fit(training_docs)
-    return set(vocab_processor.vocabulary_.freq)
+
+    return vocab_processor.vocabulary_.reverse_mapping
 
   def load_vocab(self):
     make_dir(self._vocab_dir)
@@ -575,20 +575,23 @@ Args:
           self._vocab_v2i_dict = json.load(file)
       else:
         # use the pretrained word embeddings' dictionary
-        if self._combine_pretrain_train:
+
+        train_vocab_list = self.get_train_vocab_list()
+
+        if self._expand_vocab:
           print('Combine pre-trained word embeddings\' vocabulary mapping '
                 'with all the word types appering in the training data.')
-          # TODO separate pre-train and train words for training
           # TODO multiple training data for merged vocabulary
           # raise NotImplementedError('Combine pre-trained word embedding '
           #                           'and training data dictionary Not '
           #                           'Implemented!')
           # vocab_all = union(vocab_pretrained, vocab_train)
-          train_vocab_set = self.get_train_vocab_set()
+          # train_vocab_list = self.get_train_vocab_list()
+
           # TODO other pre-trained word embedding
           glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
-          self._vocab_v2i_dict, vocab_extra = load_glove(glove_path,
-                                                         train_vocab_set)
+          self._vocab_v2i_dict, vocab_extra = combine_vocab(glove_path,
+                                                            train_vocab_list)
 
           self._vocab_size = len(self._vocab_v2i_dict)
 
@@ -606,11 +609,35 @@ Args:
             json.dump(vocab_extra, file,
                       ensure_ascii=False, indent=4)
         else:
-          print('Use pre-trained word embeddings\' vocabulary mapping only.')
-          # use the pretrained word embeddings' dictionary solely
-          glove_embedding = glove.Glove.load_stanford(os.path.join(
-            self._vocab_dir, self._load_vocab_name))
-          self._vocab_v2i_dict = glove_embedding.dictionary
+          # # use pre-trained word embeddings' dictionary + EOS + OOV + LINEBREAK
+          # print('Use pre-trained word embeddings\' vocabulary mapping only.')
+          # # use the pretrained word embeddings' dictionary solely
+          # glove_embedding = glove.Glove.load_stanford(os.path.join(
+          #   self._vocab_dir, self._load_vocab_name))
+          # reverse_mapping = ['<UNK>', '<EOS>', 'LINEBREAK'] + list(
+          #   glove_embedding.dictionary)
+          # self._vocab_v2i_dict = {w: i for i, w in enumerate(reverse_mapping)}
+
+          # use training vocab only, reorder vocab to [not in glove, in glove]
+          print('Use training vocab only.')
+
+          # TODO other pre-trained word embedding
+          glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
+          random_size, self._vocab_v2i_dict = reorder_vocab(glove_path,
+                                                            train_vocab_list)
+
+          self._vocab_size = len(self._vocab_v2i_dict)
+
+          # save the new vocab to the disk for future use
+          make_dir(self._tfrecord_dir)
+          with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
+                           mode='w', encoding='utf-8') as file:
+            json.dump(self._vocab_v2i_dict, file,
+                      ensure_ascii=False, indent=4)
+
+          with open(os.path.join(self._tfrecord_dir, "random_size.txt"),
+                    "w") as file:
+            file.write(str(random_size))
 
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(mapping=self._vocab_v2i_dict)
@@ -1013,7 +1040,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   padding=False,
                                   write_bow=False,
                                   write_tfidf=False,
-                                  combine_pretrain_train=False):
+                                  expand_vocab=False):
   """Use the dictionary of the pre-trained word embedding, combine the words
 
   from the training data of all the datasets if necessary
@@ -1035,18 +1062,34 @@ def merge_pretrain_write_tfrecord(json_dirs,
   # json_dir/vocab_freq_dict.json
 
   glove_path = os.path.join(vocab_dir, vocab_name)
-  if not combine_pretrain_train:
-    vocab_v2i_all = glove.Glove.load_stanford(glove_path).dictionary
+  if not expand_vocab:
+    print('Use training vocab only.')
+
+    # TODO other pre-trained word embedding
+    glove_path = os.path.join(vocab_dir, load_vocab_name)
+    random_size, self._vocab_v2i_dict = reorder_vocab(glove_path,
+                                                      train_vocab_list)
+
+    self._vocab_size = len(self._vocab_v2i_dict)
+
+    # save the new vocab to the disk for future use
+    make_dir(self._tfrecord_dir)
+    with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
+                     mode='w', encoding='utf-8') as file:
+      json.dump(self._vocab_v2i_dict, file,
+                ensure_ascii=False, indent=4)
+
+    with open(os.path.join(self._tfrecord_dir, "random_size.txt"),
+              "w") as file:
+      file.write(str(random_size))
+
+
   else:
-    # TODO uncomment after test
-    # raise NotImplementedError('Combine pre-trained word embedding '
-    #                           'and training data dictionary Not '
-    #                           'Implemented!')
 
     # get the vocab from the training data of each dataset
     # Assumes that all datasets have
     # the same text_field_names and label_field_name
-    train_vocab_set = set()
+    train_vocab_list = []
     if padding:
       max_document_lengths = []
     for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
@@ -1063,14 +1106,14 @@ def merge_pretrain_write_tfrecord(json_dirs,
                         generate_basic_vocab=True,
                         vocab_given=False,
                         generate_tf_record=False)
-      train_vocab_set = train_vocab_set.union(set(dataset.mapping))
+      train_vocab_list = train_vocab_list.union(set(dataset.mapping))
       if padding:
         max_document_lengths.append(max_document_length)
     if padding:
       max_document_length = max(max_document_lengths)
 
     # TODO other word embeddings
-    vocab_v2i_all, vocab_extra = load_glove(glove_path, train_vocab_set)
+    vocab_v2i_all, vocab_extra = combine_vocab(glove_path, train_vocab_list)
     # TODO more specific name?
     # TODO no remaining vocab?
     # TODO save remaining words?
@@ -1128,8 +1171,7 @@ def get_types_and_counts(token_list):
 def tokenizer(iterator):
   """Tokenizer generator.
 
-  Tokenize each string with nltk's tweet_tokenizer, and add an 'eos' at
-  the end.
+  Tokenize each string with the given tokenizer.
 
   Args:
     iterator: Input iterator with strings.

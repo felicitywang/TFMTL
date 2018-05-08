@@ -35,7 +35,7 @@ class CategoricalVocabulary(object):
   tensorflow.contrib.learn.python.learn.preprocessing.categorical_vocabulary
   """
 
-  def __init__(self, unknown_token="<UNK>", support_reverse=True,
+  def __init__(self, unknown_token='<UNK>', support_reverse=True,
                mapping=None):
     """Generate categorical vocabulary
 

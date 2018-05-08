@@ -66,16 +66,16 @@ else:
   vocab_path = args_merged['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
   vocab_name = os.path.basename(vocab_path)
-  combine_pretrain_train = False
-  if 'combine_pretrain_train' in args_merged:
-    combine_pretrain_train = args_merged['combine_pretrain_train']
+  expand_vocab = False
+  if 'expand_vocab' in args_merged:
+    expand_vocab = args_merged['expand_vocab']
 
-  if combine_pretrain_train:
+  if expand_vocab:
     tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-      '.txt')] + '_and_train')
+      '.txt')] + '_expand')
   else:
     tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-      '.txt')] + '_only')
+      '.txt')] + '_init')
   tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in sys.argv[1:]]
   for i in tfrecord_dirs:
     make_dir(i)
@@ -101,4 +101,4 @@ else:
                                 write_bow=args_merged['write_bow'],
                                 write_tfidf=args_merged['write_tfidf'],
                                 tokenizer_=args_merged['tokenizer'],
-                                combine_pretrain_train=combine_pretrain_train)
+                                expand_vocab=expand_vocab)

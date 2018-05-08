@@ -19,8 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.embedders.pretrained import glove_and_train
-
 
 def get_activation_fn(s):
   if s == 'elu':
@@ -57,7 +55,8 @@ def str2func(s):
   # for functions using, e.g., dense_layer()
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
-  from mtl.embedders.pretrained import glove_only
+  from mtl.embedders.pretrained import (init_glove,
+                                        expand_glove)
 
   from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import conv_and_pool
@@ -75,8 +74,8 @@ def str2func(s):
   functions = {
     "embed_sequence": embed_sequence,
     "no_op_embedding": no_op_embedding,
-    "glove_only": glove_only,
-    "glove_and_train": glove_and_train,
+    "init_glove": init_glove,
+    "expand_glove": expand_glove,
     "paragram": paragram_phrase,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,

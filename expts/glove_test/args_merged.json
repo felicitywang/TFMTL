@@ -17,5 +17,5 @@
     "write_tfidf": false,
     "tokenizer": "tweet_tokenizer",
     "pretrained_file": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
-    "combine_pretrain_train": false
+    "expand_vocab": true
 }

@@ -21,33 +21,67 @@ import glove
 from tqdm import tqdm
 
 
-def load_glove(glove_path, train_vocab_set):
-  """Combine Glove vocabulary and training-data vocabulary, modified from
+def combine_vocab(glove_path, train_vocab_list):
+  """Expand the training vocab with all the words in Glove. Modified from
 
   https://gitlab.hltcoe.jhu.edu/research/tf-ner/blob/master/ner/embeds.py
 
   :param glove_path: path to the Glove file
-  :param train_vocab_set: set, all the word types in the training data
+  :param train_vocab_list: list, all the word types in the training data
   :return: glove vocab + training vocab
   """
+  print('Loading embeddings from {}...\n'.format(glove_path), end='')
   glove_vocab_dict = glove.Glove.load_stanford(glove_path).dictionary  # used
   #  to create the final vocab and keep order
   glove_vocab_set = set(glove_vocab_dict)  # used to look for train vocab
 
-  print('Loading embeddings from {}...\n'.format(glove_path), end='')
-  print('{} original vocabulary from training.'.format(len(train_vocab_set)))
+  print('{} original vocabulary from training.'.format(len(train_vocab_list)))
   print('{} original vocabulary from glove.'.format(len(glove_vocab_dict)))
 
-  extra_vocab = set()
+  train_vocab_set = set(train_vocab_list)
+
+  extra_vocab_set = set()
   for v in tqdm(train_vocab_set):
     if v not in glove_vocab_set:
-      extra_vocab.add(v)
-  extra_vocab = list(extra_vocab)
+      extra_vocab_set.add(v)
+
+  if '<UNK>' in extra_vocab_set:
+    extra_vocab_list = [v for v in tqdm(train_vocab_list) if
+                        v in extra_vocab_set]
+  else:
+    extra_vocab_list = ['<UNK>'] + [v for v in tqdm(train_vocab_list) if
+                                    v in extra_vocab_set]
+
+  assert extra_vocab_list[0] == '<UNK>'
 
   print('{} words in training vocab not in pre-trained word embedding '
-        'dictionary.'.format(len(extra_vocab)))
+        'dictionary.'.format(len(extra_vocab_set)))
 
   combined_vocab = {w: i for i, w in
-                    enumerate(list(glove_vocab_dict) + extra_vocab)}
+                    enumerate(extra_vocab_list + list(glove_vocab_dict))}
 
-  return combined_vocab, extra_vocab
+  return combined_vocab, extra_vocab_list
+
+
+def reorder_vocab(glove_path, training_vocab_list):
+  """Reorder training vocab to [not in Glove, in Glove]
+
+  :param glove_path: path to the Glove file
+  :param train_vocab_list: list, all the word types in the training data
+  :return: reordered vocab
+  """
+  print('Loading embeddings from {}...\n'.format(glove_path), end='')
+  glove_vocab_set = set(glove.Glove.load_stanford(glove_path).dictionary)
+
+  not_in_glove = []
+  in_glove = []
+
+  for v in training_vocab_list:
+    if v in glove_vocab_set:
+      in_glove.append(v)
+    else:
+      not_in_glove.append(v)
+
+  # len(not_in_glove) is the size of word embeddings to be randomly initialized
+  return len(not_in_glove), {w: i for i, w in
+                             enumerate(not_in_glove + in_glove)}

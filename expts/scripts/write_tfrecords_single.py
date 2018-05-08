@@ -68,16 +68,16 @@ else:
   vocab_dir = os.path.dirname(vocab_path)
   vocab_name = os.path.basename(vocab_path)
 
-  combine_pretrain_train = False
-  if 'combine_pretrain_train' in args_single:
-    combine_pretrain_train = args_single['combine_pretrain_train']
+  expand_vocab = False
+  if 'expand_vocab' in args_single:
+    expand_vocab = args_single['expand_vocab']
 
-  if combine_pretrain_train:
+  if expand_vocab:
     tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-      '.txt')] + '_and_train')
+      '.txt')] + '_expand')
   else:
     tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-      '.txt')] + '_only')
+      '.txt')] + '_init')
 
   dataset = Dataset(json_dir=json_dir,
                     tfrecord_dir=tfrecord_dir,
@@ -86,10 +86,10 @@ else:
                     vocab_name=vocab_name,
                     text_field_names=args_single['text_field_names'],
                     label_field_name=args_single['label_field_name'],
-                    # max_document_length=args_single['max_document_length'],
-                    # max_vocab_size=args_single['max_vocab_size'],
-                    # min_frequency=args_single['min_frequency'],
-                    # max_frequency=args_single['max_frequency'],
+                    max_document_length=args_single['max_document_length'],
+                    max_vocab_size=args_single['max_vocab_size'],
+                    min_frequency=args_single['min_frequency'],
+                    max_frequency=args_single['max_frequency'],
                     train_ratio=args_single['train_ratio'],
                     valid_ratio=args_single['valid_ratio'],
                     subsample_ratio=args_single['subsample_ratio'],
@@ -99,7 +99,7 @@ else:
                     tokenizer_=args_single['tokenizer'],
                     generate_basic_vocab=False,
                     generate_tf_record=True,
-                    combine_pretrain_train=combine_pretrain_train)
+                    expand_vocab=expand_vocab)
 
 with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
   f.write(str(dataset.vocab_size))
