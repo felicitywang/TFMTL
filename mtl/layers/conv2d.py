@@ -21,8 +21,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.eager import context
-from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.layers import base
 from tensorflow.python.layers import utils
@@ -52,7 +50,7 @@ class _Conv(base.Layer):
       Specifying any stride value != 1 is incompatible with specifying
       any `dilation_rate` value != 1.
     padding: One of `"valid"` or `"same"` (case-insensitive).
-    data_format: A string, one of `channels_last` (default) or `channels_first`.
+    data_format: String, one of `channels_last` (default) or `channels_first`.
       The ordering of the dimensions in the inputs.
       `channels_last` corresponds to inputs with shape
       `(batch, ..., channels)` while `channels_first` corresponds to
@@ -258,7 +256,7 @@ class Conv2D(_Conv):
       Specifying any stride value != 1 is incompatible with specifying
       any `dilation_rate` value != 1.
     padding: One of `"valid"` or `"same"` (case-insensitive).
-    data_format: A string, one of `channels_last` (default) or `channels_first`.
+    data_format: String, one of `channels_last` (default) or `channels_first`.
       The ordering of the dimensions in the inputs.
       `channels_last` corresponds to inputs with shape
       `(batch, height, width, channels)` while `channels_first` corresponds to
@@ -331,7 +329,6 @@ class Conv2D(_Conv):
         name=name, **kwargs)
 
 
-
 def conv2d(inputs,
            filters,
            kernel_size,
@@ -374,7 +371,7 @@ def conv2d(inputs,
       Specifying any stride value != 1 is incompatible with specifying
       any `dilation_rate` value != 1.
     padding: One of `"valid"` or `"same"` (case-insensitive).
-    data_format: A string, one of `channels_last` (default) or `channels_first`.
+    data_format: String, one of `channels_last` (default) or `channels_first`.
       The ordering of the dimensions in the inputs.
       `channels_last` corresponds to inputs with shape
       `(batch, height, width, channels)` while `channels_first` corresponds to

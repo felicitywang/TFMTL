@@ -22,6 +22,7 @@ import tensorflow as tf
 import numpy as np
 from planar.t2t import shape_list
 from six.moves import xrange  # pylint: disable=redefined-builtin
+import math
 
 
 def get_timing_signal_1d(length,

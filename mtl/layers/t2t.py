@@ -54,8 +54,8 @@ def conv_internal(conv_fn, inputs, filters, kernel_size, **kwargs):
     raise ValueError("Inputs to conv must have statically known rank 4. "
                      "Shape: " + str(static_shape))
   # Add support for left padding.
-  if (kwargs.get("padding").upper() == "LEFT" or
-      kwargs.get("padding").upper() == "CAUSAL"):
+  padding = kwargs.get("padding").upper()
+  if padding == "LEFT" or padding == "CAUSAL":
     dilation_rate = (1, 1)
     if "dilation_rate" in kwargs:
       dilation_rate = kwargs["dilation_rate"]
@@ -147,7 +147,9 @@ def conv_block_internal(conv_fn,
 
   if use_layer_norm is True:
     use_normalizer_fn = True
-    norm = lambda x, name: layer_norm(x, filters, name=name)
+
+    def norm(x, name):
+      return layer_norm(x, filters, name=name)
   else:
     use_normalizer_fn = False
 
@@ -200,17 +202,13 @@ def layer_norm(x, filters=None, epsilon=1e-6, name=None, reuse=None):
   """Layer normalize the tensor x, averaging over the last dimension."""
   if filters is None:
     filters = shape_list(x)[-1]
-  with tf.variable_scope(
-      name, default_name="layer_norm", values=[x], reuse=reuse):
+  with tf.variable_scope(name, default_name="layer_norm", values=[x],
+                         reuse=reuse):
     scale = tf.get_variable(
         "layer_norm_scale", [filters], initializer=tf.ones_initializer())
     bias = tf.get_variable(
         "layer_norm_bias", [filters], initializer=tf.zeros_initializer())
-    if allow_defun:
-      result = layer_norm_compute(x, tf.constant(epsilon), scale, bias)
-      result.set_shape(x.get_shape())
-    else:
-      result = layer_norm_compute_python(x, epsilon, scale, bias)
+    result = layer_norm_compute_python(x, epsilon, scale, bias)
     return result
 
 

@@ -84,5 +84,4 @@ def rnn(x, is_training, global_conditioning=None,
                                  initial_state=initial_state,
                                  time_major=False)
 
-
   return outputs

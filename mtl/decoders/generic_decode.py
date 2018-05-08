@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
-from mtl.layers.t2t import conv_wn
 import mtl.util.registry as registry
 
 
@@ -62,18 +61,10 @@ def decode(targets, lengths, vocab_size, is_training,
     x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
                    global_conditioning=global_conditioning)
   else:
-    print('pre-expand', x)
     x = tf.expand_dims(x, axis=2)
-    print('post-expand', x)
     x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
                    global_conditioning=global_conditioning)
-    print('post-decode', x)
     x = tf.squeeze(x, axis=2)
-    print('post-squeeze', x)
-#    k = (1, 1)
-#    with tf.variable_scope("output_projection"):
-#      x = conv_wn(x, vocab_size, k, padding='LEFT')
-#    logits = tf.squeeze(x, axis=2)
 
   with tf.variable_scope("output_projection"):
     logits = tf.layers.dense(x, vocab_size, use_bias=False)
