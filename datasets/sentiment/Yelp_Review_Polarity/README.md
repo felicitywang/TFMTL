@@ -37,3 +37,6 @@ The Yelp reviews dataset consists of reviews from Yelp. It is extracted from the
 
 [**Webpage**](http://www.yelp.com/dataset_challenge)
 
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)

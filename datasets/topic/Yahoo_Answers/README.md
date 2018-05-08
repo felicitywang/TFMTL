@@ -45,3 +45,6 @@ The Yahoo! Answers topic classification dataset is constructed by Xiang Zhang (x
 
 [**Webpage**](https://webscope.sandbox.yahoo.com/catalog.php?datatype=l)
 
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)
