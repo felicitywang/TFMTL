@@ -13,8 +13,13 @@
 # limitations under the License.
 # ============================================================================
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import tensorflow as tf
 from six.moves import xrange
+import mtl.util.registry as registry
 
 
 def get_multi_cell(cell_type, cell_size, num_layers):
@@ -255,3 +260,46 @@ def serial_lbirnn(inputs,
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
 
   return outputs
+
+
+@registry.register_hparams
+def RUDER_NAACL18_HPARAMS():
+  hp = tf.contrib.training.HParams(
+    cell_type='lstm',
+    cell_size=256,
+    num_layers=1,
+    keep_prob=0.5
+  )
+  return hp
+
+
+@registry.register_encoder
+def ruder_encoder(inputs, lengths, is_training, hp=None):
+  assert type(inputs) is list
+  assert type(lengths) is list
+  assert len(inputs) == len(lengths)
+  assert len(inputs) == 2
+  assert hp is not None
+
+  num_input_dim = len(inputs[0].get_shape().as_list())
+  assert num_input_dim == 3  # BATCH X TIME X EMBED
+  num_length_dim = len(lengths[0].get_shape().as_list())
+  assert num_length_dim == 1
+  
+  if hp.cell_type == 'gru':
+    cell_type = tf.contrib.rnn.GRUCell
+  elif hp.cell_type == 'lstm':
+    cell_type = tf.contrib.rnn.LSTMCell
+  else:
+    raise ValueError(hp.cell_type)
+  
+  keep_prob = hp.keep_prob if is_training else 1.0
+
+  code = serial_lbirnn(inputs,
+                       lengths,
+                       num_layers=hp.num_layers,
+                       cell_type=cell_type,
+                       cell_size=hp.cell_size)
+
+  assert len(code.get_shape().as_list()) == 2
+  return code

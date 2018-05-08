@@ -25,6 +25,7 @@ import gzip
 import itertools
 import json
 import operator
+import sys
 import os
 import re
 from pathlib import Path
@@ -231,6 +232,7 @@ Args:
       self._sequence_lengths[text_field_name] = list()
 
     print("Generating text lists...")
+    min_seq_len = sys.maxsize
     for item in tqdm(data):
       num_examples += 1
       for text_field_name in self._text_field_names:
@@ -245,10 +247,16 @@ Args:
 
         text = self._tokenizer(text) + ['<EOS>']
 
+        assert len(text) >= 1, text
+        if len(text) < min_seq_len:
+          min_seq_len = len(text)
+
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
         # length of cleaned text (including EOS)
         self._sequence_lengths[text_field_name].append(len(text))
+
+    print('Minimum sequence length: %d' % min_seq_len)
 
     for text_field_name in text_field_names:
       # Check that every example has every field

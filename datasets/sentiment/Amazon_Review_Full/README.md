@@ -43,3 +43,7 @@ The Amazon reviews full score dataset is constructed from the Amazon reviews dat
 
 
 [**Webpage**](https://github.com/bazakoskon/labels-on-Amazon-movie-reviews-dataset)
+
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)

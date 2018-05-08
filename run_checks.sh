@@ -9,6 +9,7 @@ flake8 mtl/util
 flake8 mtl/mlvae
 flake8 mtl/hparams.py
 flake8 mtl/io.py
+flake8 mtl/layers
 
 pytest
 

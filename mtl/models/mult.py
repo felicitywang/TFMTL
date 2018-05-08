@@ -71,12 +71,23 @@ class Mult(object):
     self._logits = build_logits(class_sizes)
 
   # Encoding (feature extraction)
-  def encode(self, inputs, dataset_name, lengths=None, **kwargs):
-    # if self._encoders[dataset_name] == 'no_op':
-    #     return inputs
-    return self._encoders[dataset_name](inputs, lengths, **kwargs)
+  def encode(self,
+             inputs,
+             dataset_name,
+             lengths=None,
+             additional_extractor_kwargs=dict()):
+    # Also apply arguments that aren't `inputs` or `lengths`
+    # (such as `indices` for the serial bi-RNN extractor)
+    return self._encoders[dataset_name](inputs,
+                                        lengths,
+                                        **additional_extractor_kwargs[
+                                          dataset_name])
 
-  def get_predictions(self, batch, batch_source, dataset_name):
+  def get_predictions(self,
+                      batch,
+                      batch_source,
+                      dataset_name,
+                      additional_extractor_kwargs=dict()):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
@@ -99,23 +110,16 @@ class Mult(object):
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 
-    if self._hps.experiment_name == "RUDER_NAACL_18":
-      # Using serial-lbirnn
-      #   -use last token of last sequence as feature representation
-      indices = input_lengths[-1]
-      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
-      kwargs = {'indices': indices}
-    else:
-      kwargs = {}
-
     # Turn back into single value instead of list
     if len(x) == 1:
       x = x[0]
     if len(input_lengths) == 1:
       input_lengths = input_lengths[0]
 
-    x = self.encode(x, dataset_name, lengths=input_lengths, **kwargs)
+    x = self.encode(x,
+                    dataset_name,
+                    lengths=input_lengths,
+                    additional_extractor_kwargs=additional_extractor_kwargs)
 
     x = self._mlps_shared[dataset_name](x, is_training=False)
     x = self._mlps_private[dataset_name](x, is_training=False)
@@ -131,6 +135,7 @@ class Mult(object):
                batch,
                batch_source,  # which dataset the batch is from
                dataset_name,
+               additional_extractor_kwargs=dict(),
                features=None,
                is_training=True):
     # Returns most likely label given conditioning variables (only
@@ -155,14 +160,6 @@ class Mult(object):
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 
-    if self._hps.experiment_name == "RUDER_NAACL_18":
-      indices = input_lengths[-1]
-      ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-      indices = tf.subtract(indices, ones)  # last token is at pos. length-1
-      kwargs = {'indices': indices}
-    else:
-      kwargs = {}
-
     # Turn back into single value instead of list
     if len(x) == 1:
       x = x[0]
@@ -173,7 +170,10 @@ class Mult(object):
 
     # TODO remove this?
     if features is None:
-      x = self.encode(x, dataset_name, lengths=input_lengths, **kwargs)
+      x = self.encode(x,
+                      dataset_name,
+                      lengths=input_lengths,
+                      additional_extractor_kwargs=additional_extractor_kwargs)
     else:
       x = features
 
@@ -191,7 +191,10 @@ class Mult(object):
 
     return loss
 
-  def get_multi_task_loss(self, dataset_batches, is_training):
+  def get_multi_task_loss(self,
+                          dataset_batches,
+                          is_training,
+                          additional_extractor_kwargs=dict()):
     # dataset_batches: map from dataset names to training batches
     # (one batch per dataset); we assume only one dataset's labels
     # are observed; the rest are unobserved
@@ -209,6 +212,8 @@ class Mult(object):
       loss = self.get_loss(batch=batch,
                            batch_source=dataset_name,
                            dataset_name=dataset_name,
+                           additional_extractor_kwargs=
+                           additional_extractor_kwargs,
                            features=None,
                            is_training=is_training)
       total_loss += alpha * loss

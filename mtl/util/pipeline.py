@@ -27,13 +27,18 @@ from tensorflow.python.ops import parsing_ops
 class Pipeline(object):
   def __init__(self, tfrecord_file, feature_map, batch_size=32,
                num_threads=4, prefetch_buffer_size=1,
-               shuffle_buffer_size=10000, shuffle=True,
-               num_epochs=None, one_shot=False, bucket_info=None):
+               static_max_length=None, shuffle_buffer_size=10000,
+               shuffle=True, num_epochs=None, one_shot=False):
     self._feature_map = feature_map
     self._batch_size = batch_size
+    self._static_max_length = static_max_length
 
     # Initialize the dataset
     dataset = tf.data.TFRecordDataset(tfrecord_file)
+
+    # Maybe randomize
+    if shuffle:
+      dataset = dataset.shuffle(shuffle_buffer_size)
 
     # Maybe repeat
     if num_epochs is None:
@@ -41,37 +46,9 @@ class Pipeline(object):
     elif num_epochs > 1:
       dataset = dataset.repeat(count=num_epochs)
 
-    # Maybe randomize
-    if shuffle:
-      dataset = dataset.shuffle(shuffle_buffer_size)
-
-    if bucket_info is None:
-      dataset = dataset.batch(batch_size)
-      dataset = dataset.map(self.parse_example,
-                            num_parallel_calls=num_threads)
-    else:
-      # Bucket before batching. There's some copying here
-      def _parse_single_example(serialized):
-        parsed = parsing_ops.parse_single_example(serialized,
-                                                  feature_map)
-        result = []
-        for key in sorted(self._feature_map.keys()):
-          val = parsed[key]
-          if isinstance(val, sparse_tensor_lib.SparseTensor):
-            dense_tensor = tf.sparse_tensor_to_dense(val)
-            result.append(dense_tensor)
-          else:
-            result.append(val)
-        return tuple(result)
-
-      dataset = dataset.map(_parse_single_example,
-                            num_parallel_calls=num_threads)
-      dataset = dataset.apply(
-        tf.contrib.data.group_by_window(key_func=bucket_info.func,
-                                        reduce_func=lambda k, x: x,
-                                        window_size=30 * batch_size))
-      dataset = dataset.padded_batch(batch_size,
-                                     padded_shapes=bucket_info.pads)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.map(self.parse_example,
+                          num_parallel_calls=num_threads)
 
     # Pre-fetch a batch for faster processing
     dataset = dataset.prefetch(prefetch_buffer_size)
@@ -94,6 +71,14 @@ class Pipeline(object):
       index += 1
     self._result = result
 
+  def pad(self, t):
+    s = tf.shape(t)
+    paddings = [[0, 0], [0, self._static_max_length-s[1]]]
+    x = tf.pad(t, paddings, 'CONSTANT', constant_values=0)
+    x = tf.reshape(x, [s[0], self._static_max_length])
+    assert x.get_shape().as_list()[1] is self._static_max_length
+    return x
+
   def parse_example(self, serialized):
     parsed = parsing_ops.parse_example(serialized, self._feature_map)
     result = []
@@ -101,6 +86,8 @@ class Pipeline(object):
       val = parsed[key]
       if isinstance(val, sparse_tensor_lib.SparseTensor):
         dense_tensor = tf.sparse_tensor_to_dense(val)
+        if self._static_max_length is not None:
+          dense_tensor = self.pad(dense_tensor)
         result.append(dense_tensor)
       else:
         result.append(val)

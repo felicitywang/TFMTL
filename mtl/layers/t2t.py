@@ -1,5 +1,6 @@
 # coding=utf-8
 # Copyright 2017 The Tensor2Tensor Authors.
+# Copyright 2018 Johns Hopkins University.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +20,11 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from mtl.layers.conv2d import conv2d as conv2d_wn
 from six.moves import xrange  # pylint: disable=redefined-builtin
+
+
+allow_defun = False
 
 
 def shape_list(x):
@@ -49,8 +54,8 @@ def conv_internal(conv_fn, inputs, filters, kernel_size, **kwargs):
     raise ValueError("Inputs to conv must have statically known rank 4. "
                      "Shape: " + str(static_shape))
   # Add support for left padding.
-  if (kwargs.get("padding").upper() == "LEFT" or
-      kwargs.get("padding").upper() == "CAUSAL"):
+  padding = kwargs.get("padding").upper()
+  if padding == "LEFT" or padding == "CAUSAL":
     dilation_rate = (1, 1)
     if "dilation_rate" in kwargs:
       dilation_rate = kwargs["dilation_rate"]
@@ -91,6 +96,16 @@ def conv(inputs, filters, kernel_size, dilation_rate=1, **kwargs):
       **kwargs)
 
 
+def conv_wn(inputs, filters, kernel_size, dilation_rate=(1, 1), **kwargs):
+  return conv_internal(
+      conv2d_wn,
+      inputs,
+      filters,
+      kernel_size,
+      dilation_rate=dilation_rate,
+      **kwargs)
+
+
 def conv1d(inputs, filters, kernel_size, dilation_rate=1, **kwargs):
   return tf.squeeze(
       conv(
@@ -98,3 +113,116 @@ def conv1d(inputs, filters, kernel_size, dilation_rate=1, **kwargs):
           filters, (kernel_size, 1),
           dilation_rate=(dilation_rate, 1),
           **kwargs), 2)
+
+
+def conv_block(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
+  """A block of standard 2d convolutions."""
+  return conv_block_internal(conv, inputs, filters,
+                             dilation_rates_and_kernel_sizes, **kwargs)
+
+
+def conv_block_wn(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
+  return conv_block_internal(conv_wn, inputs, filters,
+                             dilation_rates_and_kernel_sizes,
+                             use_layer_norm=False, **kwargs)
+
+
+def conv1d_block(inputs, filters, dilation_rates_and_kernel_sizes, **kwargs):
+  return conv_block_internal(conv1d, inputs, filters,
+                             dilation_rates_and_kernel_sizes, **kwargs)
+
+
+def conv_block_internal(conv_fn,
+                        inputs,
+                        filters,
+                        dilation_rates_and_kernel_sizes,
+                        initial_nonlinearity=True,
+                        nonlinearity=tf.nn.relu,
+                        use_layer_norm=True,
+                        global_conditioning=None,
+                        separabilities=None,
+                        **kwargs):
+  name = kwargs.pop("name") if "name" in kwargs else None
+  mask = kwargs.pop("mask") if "mask" in kwargs else None
+
+  if use_layer_norm is True:
+    use_normalizer_fn = True
+
+    def norm(x, name):
+      return layer_norm(x, filters, name=name)
+  else:
+    use_normalizer_fn = False
+
+  batch_size = tf.shape(inputs)[0]
+  batch_len = tf.shape(inputs)[1]
+
+  if global_conditioning is None:
+    global_conditioning = tf.zeros([batch_size, batch_len])
+
+  h = global_conditioning
+  final_dim = tf.shape(h)[-1]
+  h = tf.expand_dims(h, axis=1)
+  h = tf.expand_dims(h, axis=2)
+  h = tf.tile(h, [1, batch_len, 1, 1])
+  h = tf.reshape(h, (batch_size, batch_len, 1, final_dim))
+
+  with tf.variable_scope(name, "conv_block", [inputs]):
+    cur, counter = inputs, -1
+    for dilation_rate, kernel_size in dilation_rates_and_kernel_sizes:
+      counter += 1
+      if initial_nonlinearity or counter > 0:
+        cur = nonlinearity(cur)
+      if mask is not None:
+        cur *= mask
+      if separabilities:
+        cur = conv_fn(
+            cur + h,
+            filters,
+            kernel_size,
+            dilation_rate=dilation_rate,
+            name="conv_block_%d" % counter,
+            use_bias=use_layer_norm is False,
+            separability=separabilities[counter],
+            **kwargs)
+      else:
+        cur = conv_fn(
+            cur + h,
+            filters,
+            kernel_size,
+            dilation_rate=dilation_rate,
+            name="conv_block_%d" % counter,
+            use_bias=use_layer_norm is False,
+            **kwargs)
+      if use_normalizer_fn:
+        cur = norm(cur, name="conv_block_norm_%d" % counter)
+    return cur
+
+
+def layer_norm(x, filters=None, epsilon=1e-6, name=None, reuse=None):
+  """Layer normalize the tensor x, averaging over the last dimension."""
+  if filters is None:
+    filters = shape_list(x)[-1]
+  with tf.variable_scope(name, default_name="layer_norm", values=[x],
+                         reuse=reuse):
+    scale = tf.get_variable(
+        "layer_norm_scale", [filters], initializer=tf.ones_initializer())
+    bias = tf.get_variable(
+        "layer_norm_bias", [filters], initializer=tf.zeros_initializer())
+    result = layer_norm_compute_python(x, epsilon, scale, bias)
+    return result
+
+
+def flatten4d3d(x):
+  """Flatten a 4d-tensor into a 3d-tensor by joining width and height."""
+  xshape = shape_list(x)
+  result = tf.reshape(x, [xshape[0], xshape[1] * xshape[2], xshape[3]])
+  return result
+
+
+def layer_norm_compute_python(x, epsilon, scale, bias):
+  """Layer norm raw computation."""
+  epsilon, scale, bias = [tf.cast(t, x.dtype) for t in [epsilon, scale, bias]]
+  mean = tf.reduce_mean(x, axis=[-1], keep_dims=True)
+  variance = tf.reduce_mean(tf.square(x - mean), axis=[-1], keep_dims=True)
+  norm_x = (x - mean) * tf.rsqrt(variance + epsilon)
+  return norm_x * scale + bias
