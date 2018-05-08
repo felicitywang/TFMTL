@@ -6,7 +6,7 @@ python ../scripts/discriminative_driver.py \
        --experiment_name RUDER_NAACL_18 \
        --datasets Target Topic2 \
        --dataset_paths data/tf/merged/Target_Topic2/glove.6B.100d_init/Target/ data/tf/merged/Target_Topic2/glove.6B.100d_init/Topic2/ \
-       --class_sizes 2 3 \
+       --class_sizes 3 2 \
        --vocab_size_file data/tf/single/Topic2/glove.6B.100d_expand/vocab_size.txt \
        --encoder_config_file encoders.json \
        --architecture serial-birnn-init-glove-mult \
