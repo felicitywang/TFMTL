@@ -1030,6 +1030,9 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   merged_dir,
                                   vocab_dir,
                                   vocab_name,
+                                  min_frequency,
+                                  max_frequency,
+                                  max_vocab_size,
                                   max_document_length=-1,
                                   text_field_names=['text'],
                                   label_field_name='label',
@@ -1062,61 +1065,58 @@ def merge_pretrain_write_tfrecord(json_dirs,
   # json_dir/vocab_freq_dict.json
 
   glove_path = os.path.join(vocab_dir, vocab_name)
+
+  # get the vocab from the training data of each dataset
+  # Assumes that all datasets have
+  # the same text_field_names and label_field_name
+  train_vocab_set = set()  # use list to keep order
+  if padding:
+    max_document_lengths = []
+  for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
+    dataset = Dataset(json_dir,
+                      tfrecord_dir=tfrecord_dir,
+                      vocab_dir=merged_dir,
+                      max_document_length=-1,
+                      max_vocab_size=max_vocab_size,
+                      min_frequency=min_frequency,
+                      max_frequency=max_frequency,
+                      text_field_names=text_field_names,
+                      label_field_name=label_field_name,
+                      tokenizer_=tokenizer_,
+                      generate_basic_vocab=True,
+                      vocab_given=False,
+                      generate_tf_record=False)
+    train_vocab_set = train_vocab_set.union(set(dataset.mapping))
+    if padding:
+      max_document_lengths.append(max_document_length)
+  if padding:
+    max_document_length = max(max_document_lengths)
+  specials = ['<UNK>', '<EOS>', 'LINEBREAK']
+  train_vocab_set.difference_update(set(specials))
+  train_vocab_list = specials + list(train_vocab_set)
+
   if not expand_vocab:
     print('Use training vocab only.')
 
     # TODO other pre-trained word embedding
-    glove_path = os.path.join(vocab_dir, load_vocab_name)
-    random_size, self._vocab_v2i_dict = reorder_vocab(glove_path,
-                                                      train_vocab_list)
+    random_size, vocab_v2i_all = reorder_vocab(glove_path,
+                                               train_vocab_list)
 
-    self._vocab_size = len(self._vocab_v2i_dict)
-
-    # save the new vocab to the disk for future use
-    make_dir(self._tfrecord_dir)
-    with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
-                     mode='w', encoding='utf-8') as file:
-      json.dump(self._vocab_v2i_dict, file,
-                ensure_ascii=False, indent=4)
-
-    with open(os.path.join(self._tfrecord_dir, "random_size.txt"),
+    with open(os.path.join(merged_dir, "random_size.txt"),
               "w") as file:
       file.write(str(random_size))
 
 
   else:
 
-    # get the vocab from the training data of each dataset
-    # Assumes that all datasets have
-    # the same text_field_names and label_field_name
-    train_vocab_list = []
-    if padding:
-      max_document_lengths = []
-    for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
-      dataset = Dataset(json_dir,
-                        tfrecord_dir=tfrecord_dir,
-                        vocab_dir=merged_dir,
-                        max_document_length=-1,
-                        max_vocab_size=-1,
-                        min_frequency=0,
-                        max_frequency=-1,
-                        text_field_names=text_field_names,
-                        label_field_name=label_field_name,
-                        tokenizer_=tokenizer_,
-                        generate_basic_vocab=True,
-                        vocab_given=False,
-                        generate_tf_record=False)
-      train_vocab_list = train_vocab_list.union(set(dataset.mapping))
-      if padding:
-        max_document_lengths.append(max_document_length)
-    if padding:
-      max_document_length = max(max_document_lengths)
-
     # TODO other word embeddings
     vocab_v2i_all, vocab_extra = combine_vocab(glove_path, train_vocab_list)
-    # TODO more specific name?
-    # TODO no remaining vocab?
-    # TODO save remaining words?
+
+    with codecs.open(os.path.join(merged_dir,
+                                  "vocab_extra_v2i.json"),
+                     mode='w', encoding='utf-8') as file:
+      json.dump(vocab_extra, file,
+                ensure_ascii=False, indent=4)
 
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:

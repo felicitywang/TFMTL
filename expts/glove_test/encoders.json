@@ -37,6 +37,52 @@
             }
         }
     },
+    "serial-birnn-init-glove-mult": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "reverse_vocab_path": "data/tf/merged/Target_Topic2/glove.6B.100d_init/vocab_i2v.json",
+                "random_size_path": "data/tf/merged/Target_Topic2/glove.6B.100d_init/random_size.txt",
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 0.5,
+                "attention": false,
+                "attn_length": 3,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "reverse_vocab_path": "data/tf/merged/Target_Topic2/glove.6B.100d_init/vocab_i2v.json",
+                "random_size_path": "data/tf/merged/Target_Topic2/glove.6B.100d_init/random_size.txt",
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 0.5,
+                "attention": false,
+                "attn_length": 3,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    },
     "serial-birnn-init-glove": {
         "embedders_tied": true,
         "extractors_tied": true,

@@ -91,9 +91,9 @@ else:
                                   'label_field_name'],
                                 max_document_length=args_merged[
                                   'max_document_length'],
-                                # max_vocab_size=args_merged['max_vocab_size'],
-                                # min_frequency=args_merged['min_frequency'],
-                                # max_frequency=args_merged['max_frequency'],
+                                max_vocab_size=args_merged['max_vocab_size'],
+                                min_frequency=args_merged['min_frequency'],
+                                max_frequency=args_merged['max_frequency'],
                                 train_ratio=args_merged['train_ratio'],
                                 valid_ratio=args_merged['valid_ratio'],
                                 subsample_ratio=args_merged['subsample_ratio'],
