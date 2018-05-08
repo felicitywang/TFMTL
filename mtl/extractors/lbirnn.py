@@ -428,4 +428,3 @@ def ruder_encoder(inputs, lengths, is_training, hp=None):
 
   assert len(code.get_shape().as_list()) == 2
   return code
->>>>>>> 2acb2375e82622b09ff11fb9ee06466c4da17e13
