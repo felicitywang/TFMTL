@@ -294,7 +294,7 @@ def serial_lbirnn(inputs,
 
 def _lbirnn_stock(inputs,
                   lengths,
-                  is_training=False,
+                  is_training,
                   num_layers=2,
                   cell_type=tf.contrib.rnn.GRUCell,
                   cell_size=64,

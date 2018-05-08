@@ -210,12 +210,17 @@ def train_model(model,
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = train_batches[dataset_name]['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
   loss = model.get_multi_task_loss(train_batches,
@@ -1084,12 +1089,17 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
       batch = model_info[dataset_name]['pred_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
@@ -1130,12 +1140,17 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
       batch = model_info[dataset_name]['test_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
