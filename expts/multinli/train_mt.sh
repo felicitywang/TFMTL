@@ -1,0 +1,22 @@
+python ../scripts/generative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 10 \
+       --checkpoint_dir ./data/ckpt/MultiNLI_Topic5/ \
+       --experiment_name RUDER_NAACL_18 \
+       --datasets MultiNLI Topic5 \
+       --dataset_paths data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI/ data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5/ \
+       --class_sizes 3 5 \
+       --vocab_size_file data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt \
+       --encoder_config_file encoders.json \
+       --architecture serial-birnn \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 16 \
+       --alphas 0.5 0.5 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --tuning_metric Acc \
+       --topics_paths data/json/MultiNLI/data.json.gz data/json/Topic5/data.json.gz \
+       --seed 42
