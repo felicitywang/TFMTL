@@ -19,26 +19,32 @@ from six.moves import xrange
 
 def get_multi_cell(cell_type, cell_size, num_layers):
   if cell_type == tf.contrib.rnn.GRUCell:
-    cells = [cell_type(cell_size,
-                       kernel_initializer=tf.contrib.layers.xavier_initializer())
-             for _ in xrange(num_layers)]
+    cell = cell_type(cell_size,
+                     kernel_initializer=tf.contrib.layers.xavier_initializer())
+
   elif cell_type == tf.contrib.rnn.LSTMCell:
-    cells = [cell_type(cell_size,
-                       initializer=tf.contrib.layers.xavier_initializer())
-             for _ in xrange(num_layers)]
+    cell = cell_type(cell_size,
+                     initializer=tf.contrib.layers.xavier_initializer())
+
   else:
-    cells = [cell_type(cell_size) for _ in xrange(num_layers)]
-  return tf.contrib.rnn.MultiRNNCell(cells)
+    cell = cell_type(cell_size)
+
+  if num_layers > 1:
+    return tf.contrib.rnn.MultiRNNCell([cell] * num_layers)
+  else:
+    return cell
 
 
 def _lbirnn_helper(inputs,
                    lengths,
+                   is_training,
                    indices=None,
                    num_layers=2,
                    cell_type=tf.contrib.rnn.LSTMCell,
                    cell_size=64,
                    initial_state_fwd=None,
                    initial_state_bwd=None,
+                   scope=None,
                    **kwargs):
   """Stacked linear chain bi-directional RNN
 
@@ -66,95 +72,105 @@ def _lbirnn_helper(inputs,
         = [batch_size, 2*cell_size]
   """
 
-  # reverse each batch example up through its length, maintaining right-padding
-  inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
-
-  cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
-  cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
-
-  if "output_keep_prob" in kwargs and kwargs["output_keep_prob"] < 1.0:
-    cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
-                                              output_keep_prob=kwargs["output_keep_prob"])
-    cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
-                                              output_keep_prob=kwargs["output_keep_prob"])
-
-  if "attention" in kwargs and kwargs["attention"] == True:
-    if "attn_length" in kwargs:
-      attn_length = kwargs["attn_length"]
-    else:
-      attn_length = 10
-    cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
-    cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
-
-
-  batch_size = tf.shape(inputs)[0]
-  if initial_state_fwd is None:
-    initial_state_fwd = cells_fwd.zero_state(batch_size,
-                                             tf.float32)
+  if scope is not None:
+    scope_name = scope
   else:
-    # replace None values with zero states
-    initial_state_fwd = list(initial_state_fwd)
-    for i, c in enumerate(initial_state_fwd):
-      if c is None:
-        initial_state_fwd[i] = cell_type(cell_size).zero_state(batch_size,
-                                                               tf.float32)
-    initial_state_fwd = tuple(initial_state_fwd)
+    scope_name = "lbirnn"
+  with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as varscope:
+    #print("_lbirnn_helper scope={}".format(varscope))
+    # reverse each batch example up through its length, maintaining right-padding
+    inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
 
-  if initial_state_bwd is None:
-    initial_state_bwd = cells_bwd.zero_state(batch_size,
-                                             tf.float32)
-  else:
-    # replace None values with zero states
-    initial_state_bwd = list(initial_state_bwd)
-    for i, c in enumerate(initial_state_bwd):
-      if c is None:
-        initial_state_bwd[i] = cell_type(cell_size).zero_state(batch_size,
-                                                               tf.float32)
-    initial_state_bwd = tuple(initial_state_bwd)
+    cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
+    cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
 
-  outputs_fwd, states_fwd = tf.nn.dynamic_rnn(cells_fwd,
-                                              inputs,
-                                              sequence_length=lengths,
-                                              initial_state=initial_state_fwd,
-                                              time_major=False,
-                                              scope="rnn_fwd")
-
-  tmp, states_bwd = tf.nn.dynamic_rnn(cells_bwd,
-                                      inputs_rev,
-                                      sequence_length=lengths,
-                                      initial_state=initial_state_bwd,
-                                      time_major=False,
-                                      scope="rnn_bwd")
-  # reverse backward-pass outputs so they align with the forward-pass outputs
-  outputs_bwd = tf.reverse_sequence(tmp, lengths, batch_axis=0, seq_axis=1)
-
-  if indices is not None:
-    # row index [[0], [1], ..., [N]]
-    r = tf.range(batch_size)
-    r = tf.cast(r, dtype=tf.int64)
-    r = tf.expand_dims(r, 1)
-
-    # make sure indices are able to be concatenated with range
-    # i.e., of the form [[idx_0], [idx_1], ..., [idx_N]]
-    rank = len(indices.get_shape().as_list())
-    if rank == 1:
-      indices = tf.expand_dims(indices, 1)
-    elif rank == 2:
-      pass
+    if is_training and ("output_keep_prob" in kwargs) and (kwargs["output_keep_prob"] < 1.0):
+      print("is_training={} --> using dropout in lbirnn (scope={})".format(is_training, scope_name))
+      cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
+                                                output_keep_prob=kwargs["output_keep_prob"])
+      cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
+                                                output_keep_prob=kwargs["output_keep_prob"])
     else:
-      raise ValueError("indices doesn't have rank 1 or 2: rank=%d" % (rank))
+      print("not using dropout in lbirnn (is_training={}, scope={})".format(is_training, scope_name))
 
-    idx = tf.concat([r, indices], axis=1)
+    if "attention" in kwargs and kwargs["attention"] == True:
+      if "attn_length" in kwargs:
+        attn_length = kwargs["attn_length"]
+      else:
+        attn_length = 10
+      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
+      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
 
-    # get the (indices[i])-th token's output from row i
-    outputs_fwd = tf.gather_nd(outputs_fwd, idx)
-    outputs_bwd = tf.gather_nd(outputs_bwd, idx)
 
-  return (outputs_fwd, outputs_bwd), (states_fwd, states_bwd)
+    batch_size = tf.shape(inputs)[0]
+    if initial_state_fwd is None:
+      initial_state_fwd = cells_fwd.zero_state(batch_size,
+                                               tf.float32)
+    else:
+      # replace None values with zero states
+      initial_state_fwd = list(initial_state_fwd)
+      for i, c in enumerate(initial_state_fwd):
+        if c is None:
+          initial_state_fwd[i] = cell_type(cell_size).zero_state(batch_size,
+                                                                 tf.float32)
+      initial_state_fwd = tuple(initial_state_fwd)
+
+    if initial_state_bwd is None:
+      initial_state_bwd = cells_bwd.zero_state(batch_size,
+                                               tf.float32)
+    else:
+      # replace None values with zero states
+      initial_state_bwd = list(initial_state_bwd)
+      for i, c in enumerate(initial_state_bwd):
+        if c is None:
+          initial_state_bwd[i] = cell_type(cell_size).zero_state(batch_size,
+                                                                 tf.float32)
+      initial_state_bwd = tuple(initial_state_bwd)
+
+    outputs_fwd, last_state_fwd = tf.nn.dynamic_rnn(cells_fwd,
+                                                    inputs,
+                                                    sequence_length=lengths,
+                                                    initial_state=initial_state_fwd,
+                                                    time_major=False,
+                                                    scope="rnn_fwd")
+
+    tmp, last_state_bwd = tf.nn.dynamic_rnn(cells_bwd,
+                                            inputs_rev,
+                                            sequence_length=lengths,
+                                            initial_state=initial_state_bwd,
+                                            time_major=False,
+                                            scope="rnn_bwd")
+    # reverse backward-pass outputs so they align with the forward-pass outputs
+    outputs_bwd = tf.reverse_sequence(tmp, lengths, batch_axis=0, seq_axis=1)
+
+    if indices is not None:
+      # row index [[0], [1], ..., [N]]
+      r = tf.range(batch_size)
+      r = tf.cast(r, dtype=tf.int64)
+      r = tf.expand_dims(r, 1)
+
+      # make sure indices are able to be concatenated with range
+      # i.e., of the form [[idx_0], [idx_1], ..., [idx_N]]
+      rank = len(indices.get_shape().as_list())
+      if rank == 1:
+        indices = tf.expand_dims(indices, 1)
+      elif rank == 2:
+        pass
+      else:
+        raise ValueError("indices doesn't have rank 1 or 2: rank=%d" % (rank))
+
+      idx = tf.concat([r, indices], axis=1)
+
+      # get the (indices[i])-th token's output from row i
+      outputs_fwd = tf.gather_nd(outputs_fwd, idx)
+      outputs_bwd = tf.gather_nd(outputs_bwd, idx)
+
+    return (outputs_fwd, outputs_bwd), (last_state_fwd, last_state_bwd)
 
 
 def lbirnn(inputs,
            lengths,
+           is_training=False,
            indices=None,
            num_layers=2,
            cell_type=tf.contrib.rnn.LSTMCell,
@@ -162,22 +178,26 @@ def lbirnn(inputs,
            initial_state_fwd=None,
            initial_state_bwd=None,
            **kwargs):
-  o, _ = _lbirnn_helper(inputs,
-                        lengths,
-                        indices=indices,
-                        num_layers=num_layers,
-                        cell_type=cell_type,
-                        cell_size=cell_size,
-                        initial_state_fwd=initial_state_fwd,
-                        initial_state_bwd=initial_state_bwd,
-                        **kwargs)
-  (outputs_fwd, outputs_bwd) = o
-  outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
-  return outputs
+  with tf.variable_scope("single-stage-lbirnn", reuse=tf.AUTO_REUSE) as varscope:
+    o, _ = _lbirnn_helper(inputs,
+                          lengths,
+                          is_training=is_training,
+                          indices=indices,
+                          num_layers=num_layers,
+                          cell_type=cell_type,
+                          cell_size=cell_size,
+                          initial_state_fwd=initial_state_fwd,
+                          initial_state_bwd=initial_state_bwd,
+                          scope=varscope,
+                          **kwargs)
+    (outputs_fwd, outputs_bwd) = o
+    outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
+    return outputs
 
 
 def serial_lbirnn(inputs,
                   lengths,
+                  is_training=False,
                   indices=None,
                   num_layers=2,
                   cell_type=tf.contrib.rnn.GRUCell,
@@ -228,8 +248,14 @@ def serial_lbirnn(inputs,
 
   fwd_ = initial_state_fwd
   bwd_ = initial_state_bwd
+
+  prev_scope = None
   for i in xrange(num_stages):
-    with tf.variable_scope("serial_lbirnn_{}".format(i)):
+    #with tf.variable_scope("serial_lbirnn", reuse=tf.AUTO_REUSE) as varscope:
+    with tf.variable_scope("serial_lbirnn_{}".format(i)) as varscope:
+      if prev_scope is not None:
+        #print("Previous scope={}".format(prev_scope))
+        prev_scope.reuse_variables()
       inputs_ = inputs[i]
       lengths_ = lengths[i]
       if i == num_stages - 1:
@@ -238,20 +264,119 @@ def serial_lbirnn(inputs,
       else:
         indices_ = None
 
+      print("calling _lbirnn_helper() from serial_lbirnn()")
       o, s = _lbirnn_helper(inputs_,
                             lengths_,
+                            is_training=is_training,
                             indices=indices_,
                             num_layers=num_layers,
                             cell_type=cell_type,
                             cell_size=cell_size,
                             initial_state_fwd=fwd_,
                             initial_state_bwd=bwd_,
+                            scope=varscope,
                             **kwargs)
-      (outputs_fwd, outputs_bwd), (states_fwd, states_bwd) = o, s
+      (outputs_fwd, outputs_bwd), (last_state_fwd, last_state_bwd) = o, s
       # Update arguments for next stage
-      fwd_ = states_fwd
-      bwd_ = states_bwd
+      fwd_ = last_state_fwd
+      bwd_ = last_state_bwd
+      prev_scope = varscope
 
   outputs = tf.concat([outputs_fwd, outputs_bwd], axis=-1)
 
   return outputs
+
+
+def _lbirnn_stock(inputs,
+                  lengths,
+                  is_training=False,
+                  num_layers=2,
+                  cell_type=tf.contrib.rnn.GRUCell,
+                  cell_size=64,
+                  initial_state_fwd=None,
+                  initial_state_bwd=None,
+                  scope=None,
+                  **kwargs):
+
+  scope_name = scope if scope is not None else "stock-lbirnn"
+  with tf.variable_scope(scope_name) as varscope:
+    cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
+    cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
+
+    if is_training and ("output_keep_prob" in kwargs) and (kwargs["output_keep_prob"] < 1.0):
+      print("is_training={} --> using dropout in stock lbirnn (scope={})".format(is_training, scope_name))
+      cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
+                                                output_keep_prob=kwargs["output_keep_prob"])
+      cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
+                                                output_keep_prob=kwargs["output_keep_prob"])
+    else:
+      print("not using dropout in stock lbirnn (is_training={}, scope={})".format(is_training, scope_name))
+
+    if "attention" in kwargs and kwargs["attention"] == True:
+      if "attn_length" in kwargs:
+        attn_length = kwargs["attn_length"]
+      else:
+        attn_length = 10
+      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
+      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
+
+    outputs, last_states = tf.nn.bidirectional_dynamic_rnn(cells_fwd,
+                                                           cells_bwd,
+                                                           inputs,
+                                                           sequence_length=lengths,
+                                                           initial_state_fw=initial_state_fwd,
+                                                           initial_state_bw=initial_state_bwd,
+                                                           dtype=tf.float32)
+
+    return outputs, last_states
+
+  
+def serial_lbirnn_stock(inputs,
+                        lengths,
+                        is_training=False,
+                        num_layers=2,
+                        cell_type=tf.contrib.rnn.GRUCell,
+                        cell_size=64,
+                        initial_state_fwd=None,
+                        initial_state_bwd=None,
+                        **kwargs):
+
+  lists = [inputs, lengths]
+  it = iter(lists)
+  num_stages = len(next(it))
+  if not all(len(l) == num_stages for l in it):
+    raise ValueError("all list arguments must have the same length")
+
+  assert num_stages > 0, "must specify arguments for " \
+                         "at least one stage of serial bi-RNN"
+
+  with tf.variable_scope("stock-lbirnn-seq1") as varscope1:
+    _, seq1_states = _lbirnn_stock(inputs[0],
+                                   lengths[0],
+                                   is_training=is_training,
+                                   num_layers=num_layers,
+                                   cell_type=cell_type,
+                                   cell_size=cell_size,
+                                   initial_state_fwd=initial_state_fwd,
+                                   initial_state_bwd=initial_state_bwd,
+                                   scope=varscope1)
+
+  with tf.variable_scope("stock-lbirnn-seq2") as varscope2:
+    varscope1.reuse_variables()
+    outputs, states = _lbirnn_stock(inputs[1],
+                                    lengths[1],
+                                    is_training=is_training,
+                                    num_layers=num_layers,
+                                    cell_type=cell_type,
+                                    cell_size=cell_size,
+                                    initial_state_fwd=seq1_states[0],
+                                    initial_state_bwd=seq1_states[1],
+                                    scope=varscope2)
+
+  # concatenate hx_fwd and hx_bwd of top layer
+  if num_layers > 1:
+    output = tf.concat([states[0][-1][1], states[1][-1][1]], 1)
+  else:
+    output = tf.concat([states[0][1], states[1][1]], 1)
+
+  return output

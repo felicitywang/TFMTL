@@ -17,13 +17,13 @@
     // mem_ram in GB
 
     // GPU
-    "gpu": 1,
-    "total_slots": 5,
-    "slots_per_job": 1,
+    //"gpu": 1,
+    //"total_slots": 5,
+    //"slots_per_job": 1,
 
     // CPU
-    //"total_slots": 100,
-    //"slots_per_job": 2,
+    "total_slots": 100,
+    "slots_per_job": 2,
 
     "mem_ram": 3,
 
@@ -31,32 +31,34 @@
     "num_inter_threads": 1,
 
     // experimental hyperparameters
-    "expt_setup": [{"expt_setup_name": "MultiNLI_mult",
-                    "datasets": "MultiNLI Topic5",
-                    "dataset_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI /export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5",
-                    "class_sizes": "3 5",
-                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt",
-                    "alphas": "0.5 0.5",
-                    "topics_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/json/MultiNLI/data.json.gz /export/a11/sebner/tfmtl_data/MultiNLI/data/json/Topic5/data.json.gz",
+
+    "expt_setup": [{"expt_setup_name": "Topic5_single",
+                    "datasets": "Topic5",
+                    "dataset_paths": "/export/a11/sebner/tfmtl_data/Topic5/data/tf/single/Topic5/min_0_max_-1",
+                    "class_sizes": "5",
+                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/Topic5/data/tf/single/Topic5/min_0_max_-1/vocab_size.txt",
+                    "alphas": "1",
+                    "topics_paths": "/export/a11/sebner/tfmtl_data/Topic5/data/json/Topic5/data.json.gz",
                     "embedders_tied": [true],
                     "extractors_tied": [true]
                    }],
 
-
     "model": "mult",
     "mode": "train",
-    "num_train_epochs": 30,
+    "num_train_epochs": 20,
+    "patience": 3,
+    "early_stopping_acc_threshold": [0.0, 1.0],
     "checkpoint_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/ckpt",
     "summaries_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/summ",
     "log_file": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/<mode>_results.log",
     "experiment_name": "RUDER_NAACL_18",
     "encoder_config_file": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/encoders.json",
     "architecture": "arch",
-    
+
     "shared_mlp": [{"shared_mlp_layers": 0, "shared_hidden_dims": 0}],
 
     "private_mlp": [{"private_mlp_layers": 0, "private_hidden_dims": 0},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 32},
+                    {"private_mlp_layers": 1, "private_hidden_dims": 32},                    
                     {"private_mlp_layers": 1, "private_hidden_dims": 64},
                     {"private_mlp_layers": 1, "private_hidden_dims": 128},
                     {"private_mlp_layers": 1, "private_hidden_dims": 256}
@@ -69,7 +71,7 @@
                  ],
 
     "tuning_metric": "Acc",
-    "reporting_metric": "Acc",
+    "reporting_metric": "MAE_Macro",
     "seed": [42]
 
 }

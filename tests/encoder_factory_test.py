@@ -96,9 +96,13 @@ of tied/untied embedders and extractors are correct."""
 
         k = dict()
 
-        # COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
+        # COMMENT THESE LINES OUT IF NOT USING L-BIRNN or SERIAL L-BIRNN EXTRACTOR
         indices1 = tf.constant([1, 1, 2, 0], dtype=tf.int64)
         k = {'indices': indices1}
+        #
+
+        # COMMENT THESE LINES OUT IF NOT USING L-BIRNN or SERIAL L-BIRNN EXTRACTOR
+        k['is_training'] = False
         #
 
         output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)

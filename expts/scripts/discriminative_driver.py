@@ -63,6 +63,8 @@ def parse_args():
                  help='Name of experiment.')
   p.add_argument('--tuning_metric', default='Acc', type=str,
                  help='Metric used to tune hyper-parameters')
+  p.add_argument('--reporting_metric', default='Acc', type=str,
+                 help='Metric to report')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
                       'predict. Used in predict mode.')
@@ -89,6 +91,10 @@ def parse_args():
                  help='Clip gradients to max_grad_norm during training.')
   p.add_argument('--num_train_epochs', default=50, type=int,
                  help='Number of training epochs.')
+  p.add_argument('--patience', default=10, type=int,
+                 help='Number of epochs to wait before early stopping due to low dev accuracy.')
+  p.add_argument('--early_stopping_acc_threshold', default=1.0, type=float,
+                 help='Threshold for early stopping on dev set of main task. If 1.0, there is no early stopping.')
   p.add_argument('--print_trainable_variables', action='store_true',
                  default=False,
                  help='Diagnostic: print trainable variables')
@@ -210,12 +216,15 @@ def train_model(model,
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = train_batches[dataset_name]['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
   loss = model.get_multi_task_loss(train_batches,
@@ -294,6 +303,9 @@ def train_model(model,
     best_total_acc = float('-inf')
     best_total_acc_epoch = -1
 
+    main_task_dev_accuracy = []
+    stopping_criterion_reached = False
+    
     # Do training
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
@@ -357,10 +369,21 @@ def train_model(model,
 
       valid_loss_summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
       valid_file_writer.add_summary(valid_loss_summary, global_step=step)
-      main_task_acc = model_info[args.datasets[0]]['valid_metrics']['Acc']
-      valid_main_task_accuracy_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
+      main_task_accuracy = model_info[args.datasets[0]]['valid_metrics']['Acc']
+      valid_main_task_accuracy_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-acc", simple_value=main_task_accuracy)])
       valid_file_writer.add_summary(valid_main_task_accuracy_summary, global_step=step)
 
+      if (main_task_accuracy >= args.early_stopping_acc_threshold) and (len(main_task_dev_accuracy) >= args.patience) and (main_task_accuracy < main_task_dev_accuracy[-args.patience]):
+        print("Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(epoch, args.patience, args.early_stopping_acc_threshold))
+        stopping_criterion_reached = True
+
+      main_task_dev_accuracy.append(main_task_accuracy)
+
+      if args.reporting_metric != "Acc":
+        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
+        valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
+        valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
+        
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
@@ -408,6 +431,11 @@ def train_model(model,
       with open(args.log_file, 'a') as f:
         f.write(str_ + '\n')
 
+      if stopping_criterion_reached:
+        saver.save(sess.raw_session(),
+                   os.path.join(args.checkpoint_dir, 'early-stopping', 'model'))
+        break
+
     print(best_eval_performance)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
@@ -442,15 +470,22 @@ def test_model(model, dataset_info, args):
   """
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
+  print("testing model")
   fill_eval_loss_op(args, model, dataset_info, model_info)
+  print("filled eval loss op")
   fill_pred_op_info(dataset_info, model, args, model_info)
+  print("filled pred op")
   fill_topic_op(args, model_info)
-
+  print("filled topic op")
+  
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
   model_names = args.datasets
   if len(args.datasets) > 1:
     model_names.append('MULT')
+
+  if os.path.exists(os.path.join(args.checkpoint_dir, 'early-stopping', 'model')):
+    model_names.append('early-stopping')
 
   saver = tf.train.Saver()
 
@@ -460,6 +495,10 @@ def test_model(model, dataset_info, args):
     with tf.Session() as sess:
       if model_name == 'MULT':
         checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT',
+                                       'model')
+      elif model_name == 'early-stopping':
+        checkpoint_path = os.path.join(args.checkpoint_dir,
+                                       'early-stopping',
                                        'model')
       else:
         checkpoint_path = model_info[model_name]['checkpoint_path']
@@ -861,7 +900,7 @@ def main():
     training_files = [dataset_info[dataset_name]['train_path'] for
                       dataset_name
                       in dataset_info]
-    max_N_train = max(
+    min_N_train = min(
       [get_num_records(tf_rec_file) for tf_rec_file in training_files])
 
     # Seed TensorFlow RNG
@@ -879,8 +918,8 @@ def main():
         print(tvar)
 
     # Steps per epoch.
-    # One epoch: all datasets have been seen completely at least once
-    steps_per_epoch = int(max_N_train / args.batch_size)
+    # One epoch: smallest dataset has been seen once
+    steps_per_epoch = int(min_N_train / args.batch_size)
 
     # Create model(s):
     # NOTE: models must support the following functions:
@@ -1084,12 +1123,15 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
       batch = model_info[dataset_name]['pred_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
@@ -1130,12 +1172,15 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
       batch = model_info[dataset_name]['test_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
@@ -1159,6 +1204,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 
 
 def fill_topic_op(args, model_info):
+
   if args.experiment_name == "RUDER_NAACL_18":
     for dataset_name in model_info:
       if args.mode == 'train':
