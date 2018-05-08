@@ -48,7 +48,9 @@ def ruder_tokenizer(xs, pattern="([\s'\-\.\,\!])", preserve_case=False):
   if preserve_case:
     pass
   else:
-    tok = list(map(str.lower, tok))
+    # THE COMMENTED OUT LINE BELOW IS NOT PYTHON 2 COMPATIBLE
+    # tok = list(map(str.lower, tok))
+    tok = [x.lower() for x in tok]
   return tok
 
 

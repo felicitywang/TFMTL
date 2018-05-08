@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 from functools import reduce
 from tqdm import tqdm
@@ -18,7 +19,8 @@ DEFAULT_EMAIL = ''
 DEFAULT_EMAIL_PREFS = 'n'
 
 '''
-        venv: command to activate (anaconda) virtual environment
+        cpu_venv: command to activate (anaconda/venv) virtual environment for CPU
+        gpu_venv: command to activate (anaconda/venv) virtual environment for GPU
         root: root directory of code
         module: module to be executed from root by 'python -m'
         jobs_dir: where to store .sh files and qsub output
@@ -26,6 +28,7 @@ DEFAULT_EMAIL_PREFS = 'n'
         email: address to send email (optional)
         email_prefs: preferences for email notifications (optional)
         username: grid username for qstat
+        gpu: flag to use GPU
         total_slots: total number of slots to dedicate to experiments
                      (must not exceed your quota)
         slots_per_job: number of slots to dedicate to each experiment instance
@@ -38,7 +41,9 @@ DEFAULT_EMAIL_PREFS = 'n'
 class MetaConfig(object):
     def __init__(self, config):
         try:
-            self.venv = config.pop('venv')
+            self.cpu_venv = config.pop('cpu_venv')
+            self.gpu_venv = config.pop('gpu_venv')
+            self.gpu = config.pop('gpu', 0)
             self.root = config.pop('root')
             self.module = config.pop('module')
             self.jobs_dir = config.pop('jobs_dir')
@@ -144,8 +149,15 @@ def write_exp_bash_script(temp_script_filename, meta_config, exp_params_comb):
     exp_flags = flags_from_params(exp_params_comb)
     os.makedirs(os.path.dirname(temp_script_filename), exist_ok=True)
     with open(temp_script_filename, 'w') as f:
-        f.write('{}\n'.format(meta_config.venv))
+        if meta_config.gpu > 0:
+            # Loads the necessary environment variables from .bashrc
+            f.write('source /home/sebner/.bashrc\n')
+            f.write('{}\n'.format(meta_config.gpu_venv))
+        else:
+            f.write('{}\n'.format(meta_config.cpu_venv))
         f.write('cd {}\n'.format(meta_config.root))
+        if meta_config.gpu > 0:
+          f.write("CUDA_VISIBLE_DEVICES=`free-gpu` ")
         f.write('python -m {} {}'.format(meta_config.module, exp_flags))
 
 
@@ -181,10 +193,22 @@ def create_qsub_params(meta_config):
     qsub_params = {
         'o': meta_config.jobs_dir,
         'e': meta_config.jobs_dir,
-        'pe smp': meta_config.slots_per_job,
         'l': 'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
                                                     meta_config.mem_ram)
       }
+
+    if meta_config.slots_per_job > 1:
+        qsub_params['pe smp'] = meta_config.slots_per_job
+
+    if meta_config.gpu > 0:
+        # NOTE hostnames b11-18 have the tesla K80's; could allow others
+        #   c* has GTX 1080's
+        # See: http://wiki.clsp.jhu.edu/view/GPUs_on_the_grid
+        # qsub_params['l'] += ',gpu=1,hostname=b1[123456789]*'
+        qsub_params['l'] += ',gpu=1,hostname=b1[12345678]*|c*'
+        # qsub_params['l'] += ',gpu=1,hostname=c*'
+        # qsub_params['l'] += ',gpu=1'
+        qsub_params['q'] = "g.q,all.q"
 
     if meta_config.email != DEFAULT_EMAIL:
         qsub_params['M'] = meta_config.email
@@ -485,6 +509,9 @@ def run_all_experiments(meta_config, exp_config, encoder_config, debug=False):
 
         if success:
             jobs_run += 1
+            if meta_config.gpu > 0:
+                # avoid gpu race conditions
+                time.sleep(10)
 
         if jobs_run >= jobs_to_run:
             break
@@ -501,12 +528,16 @@ def main():
     config_file = sys.argv[1]
     config = None
     with open(config_file) as f:
-        config = json.loads(' '.join(f.readlines()))
+        # allow for '//' comments
+        lines = [line for line in f if not line.lstrip().startswith('//')]
+        config = json.loads(' '.join(lines))
 
     encoder_config_file = sys.argv[2]
     encoder_config = None
     with open(encoder_config_file) as f:
-      encoder_config = json.loads(' '.join(f.readlines()))
+        # allow for '//' comments
+        lines = [line for line in f if not line.lstrip().startswith('//')]
+        encoder_config = json.loads(' '.join(lines))
 
     debug = False
 

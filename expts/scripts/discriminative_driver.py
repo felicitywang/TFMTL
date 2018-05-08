@@ -205,7 +205,23 @@ def train_model(model,
 
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
-  loss = model.get_multi_task_loss(train_batches, is_training=True)
+  additional_extractor_kwargs = dict()
+  for dataset_name in model_info:
+    additional_extractor_kwargs[dataset_name] = dict()
+    with open(args.encoder_config_file, 'r') as f:
+      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+    if extract_fn == "serial_lbirnn":
+      if args.experiment_name == "RUDER_NAACL_18":
+        # use last token of last sequence as feature representation
+        indices = train_batches[dataset_name]['seq2_length']  # TODO(seth): un-hard code this
+        ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        additional_extractor_kwargs[dataset_name]['indices'] = indices
+    else:
+      pass
+  loss = model.get_multi_task_loss(train_batches,
+                                   is_training=True,
+                                   additional_extractor_kwargs=additional_extractor_kwargs)
 
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
@@ -437,7 +453,7 @@ def test_model(model, dataset_info, args):
   """
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
-  # fill_eval_loss_op(???)
+  fill_eval_loss_op(args, model, dataset_info, model_info)
   fill_pred_op_info(dataset_info, model, args, model_info)
   fill_topic_op(args, model_info)
 
@@ -468,11 +484,16 @@ def test_model(model, dataset_info, args):
         _eval_labels = model_info[dataset_name]['test_batch'][
           args.label_key]
         _eval_iter = model_info[dataset_name]['test_iter']
-        _metrics = compute_held_out_performance(sess, _pred_op,
+        _metrics = compute_held_out_performance(sess,
+                                                _pred_op,
                                                 _eval_labels,
                                                 _eval_iter,
+                                                metrics=dataset_info[dataset_name]['metrics'],
+                                                labels=dataset_info[dataset_name]['labels'],
                                                 args=args,
-                                                get_topic_op=_get_topic_op)
+                                                get_topic_op=_get_topic_op,
+                                                topic_path=dataset_info[dataset_name]['topic_path'],
+                                                eval_loss_op=model_info[dataset_name]['test_loss_op'])
         model_info[dataset_name]['test_metrics'] = _metrics
 
         _num_eval_total = model_info[dataset_name]['test_metrics'][
@@ -574,9 +595,15 @@ def get_topic(batch):
   return batch['index']
 
 
-def compute_held_out_performance(session, pred_op, eval_label,
-                                 eval_iterator, metrics, labels,
-                                 args, get_topic_op, topic_path,
+def compute_held_out_performance(session,
+                                 pred_op,
+                                 eval_label,
+                                 eval_iterator,
+                                 metrics,
+                                 labels,
+                                 args,
+                                 get_topic_op,
+                                 topic_path,
                                  eval_loss_op):
   # pred_op: predicted labels
   # eval_label: gold labels
@@ -1061,35 +1088,92 @@ def fill_info_dicts(dataset_info, args):
 
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
+
+  # TODO(seth): refactor populating `additional_extractor_kwargs` into a function?
+  additional_extractor_kwargs = dict()
+  for dataset_name in model_info:
+    additional_extractor_kwargs[dataset_name] = dict()
+    with open(args.encoder_config_file, 'r') as f:
+      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+    if args.mode == 'train':
+      batch = model_info[dataset_name]['valid_batch']
+    elif args.mode == 'test':
+      batch = model_info[dataset_name]['test_batch']
+    elif args.mode == 'predict':
+      batch = model_info[dataset_name]['pred_batch']
+
+    if extract_fn == "serial_lbirnn":
+      if args.experiment_name == "RUDER_NAACL_18":
+        # use last token of last sequence as feature representation
+        indices = batch['seq2_length']  # TODO(seth): un-hard code this
+        ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        additional_extractor_kwargs[dataset_name]['indices'] = indices
+    else:
+      pass
+
   for dataset_name in model_info:
     if args.mode == 'train':
       _valid_pred_op = model.get_predictions(
-        model_info[dataset_name]['valid_batch'], dataset_name,
-        dataset_info[dataset_name]['dataset_name'])
+        model_info[dataset_name]['valid_batch'],
+        dataset_name,
+        dataset_info[dataset_name]['dataset_name'],
+        additional_extractor_kwargs=additional_extractor_kwargs)
       model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
     elif args.mode == 'test':
       _test_pred_op = model.get_predictions(
-        model_info[dataset_name]['test_batch'], dataset_name,
-        dataset_info[dataset_name]['dataset_name'])
+        model_info[dataset_name]['test_batch'],
+        dataset_name,
+        dataset_info[dataset_name]['dataset_name'],
+        additional_extractor_kwargs=additional_extractor_kwargs)
       model_info[dataset_name]['test_pred_op'] = _test_pred_op
     elif args.mode == 'predict':
       _pred_pred_op = model.get_predictions(
-        model_info[dataset_name]['pred_batch'], dataset_name,
-        dataset_info[dataset_name]['dataset_name'])
+        model_info[dataset_name]['pred_batch'],
+        dataset_name,
+        dataset_info[dataset_name]['dataset_name'],
+        additional_extractor_kwargs=additional_extractor_kwargs)
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
 
 
 def fill_eval_loss_op(args, model, dataset_info, model_info):
+
+  additional_extractor_kwargs = dict()
+  for dataset_name in model_info:
+    additional_extractor_kwargs[dataset_name] = dict()
+    with open(args.encoder_config_file, 'r') as f:
+      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+    if args.mode == 'train':
+      batch = model_info[dataset_name]['valid_batch']
+    elif args.mode == 'test':
+      batch = model_info[dataset_name]['test_batch']
+
+    if extract_fn == "serial_lbirnn":
+      if args.experiment_name == "RUDER_NAACL_18":
+        # use last token of last sequence as feature representation
+        indices = batch['seq2_length']  # TODO(seth): un-hard code this
+        ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
+        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        additional_extractor_kwargs[dataset_name]['indices'] = indices
+    else:
+      pass
+
   for dataset_name in model_info:
     if args.mode == 'train':
       _valid_loss_op = model.get_loss(
-        model_info[dataset_name]['valid_batch'], dataset_name,
-        dataset_info[dataset_name]['dataset_name'], is_training=False)
+        model_info[dataset_name]['valid_batch'],
+        dataset_name,
+        dataset_info[dataset_name]['dataset_name'],
+        additional_extractor_kwargs=additional_extractor_kwargs,
+        is_training=False)
       model_info[dataset_name]['valid_loss_op'] = _valid_loss_op
     elif args.mode == 'test':
       _test_loss_op = model.get_loss(
-        model_info[dataset_name]['test_batch'], dataset_name,
-        dataset_info[dataset_name]['dataset_name'], is_training=False)
+        model_info[dataset_name]['test_batch'],
+        dataset_name,
+        dataset_info[dataset_name]['dataset_name'],
+        additional_extractor_kwargs=additional_extractor_kwargs,
+        is_training=False)
       model_info[dataset_name]['test_loss_op'] = _test_loss_op
 
 

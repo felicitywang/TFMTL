@@ -22,9 +22,8 @@ import sys
 from mtl.util.dataset import Dataset
 from mtl.util.util import make_dir
 
-with open('args_' + sys.argv[1] + '.json', 'rt') as file:
-  args_single = json.load(file)
-  file.close()
+with open('args_' + sys.argv[1] + '.json', 'rt') as f:
+  args_single = json.load(f)
 
 json_dir = "data/json/" + sys.argv[1]
 
