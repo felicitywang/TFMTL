@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.extractors.lbirnn import serial_lbirnn
+from mtl.extractors.lbirnn import serial_lbirnn, serial_lbirnn_stock
 
 
 class SerialLBiRNNTests(tf.test.TestCase):
@@ -33,28 +33,33 @@ class SerialLBiRNNTests(tf.test.TestCase):
       i2 = tf.constant([[7, 8], [9, 10]], dtype=tf.float32)
       i2 = tf.reshape(i2, [2, 2, 1])
       l2 = tf.constant([2, 2])
-      i3 = tf.constant([[100], [101]], dtype=tf.float32)
-      i3 = tf.reshape(i3, [2, 1, 1])
-      l3 = tf.constant([1, 1])
+      #i3 = tf.constant([[100], [101]], dtype=tf.float32)
+      #i3 = tf.reshape(i3, [2, 1, 1])
+      #l3 = tf.constant([1, 1])
 
-      inputs = [i1, i2, i3]
-      lengths = [l1, l2, l3]
+      inputs = [i1, i2]
+      lengths = [l1, l2]
+      #inputs = [i1, i2, i3]
+      #lengths = [l1, l2, l3]
 
       indices = None
       # indices = tf.constant([0,0])
 
-      num_layers = 2
-      # num_layers = 1
+      # num_layers = 2
+      num_layers = 1
 
-      cell_type = tf.contrib.rnn.GRUCell
+      # cell_type = tf.contrib.rnn.GRUCell
       # cell_type = tf.contrib.rnn.BasicLSTMCell
+      cell_type = tf.contrib.rnn.LSTMCell
 
-      cell_size = 32
+      cell_size = 64
       initial_state_fwd = None
       initial_state_bwd = None
-      outputs = serial_lbirnn(inputs,
+      is_training = True
+      outputs = serial_lbirnn_stock(inputs,
                               lengths,
-                              indices,
+                              is_training,
+                              # indices,
                               num_layers,
                               cell_type,
                               cell_size,
@@ -80,6 +85,7 @@ class SerialLBiRNNTests(tf.test.TestCase):
       for var in trainable_variables:
         print(var)
 
+      print('Outputs...')
       print(outputs_)
       print(outputs_.shape)
 

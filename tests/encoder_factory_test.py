@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from mtl.util.encoder_factory import build_encoders
 
-serial_lbirnn = False
+serial_lbirnn = True
 
 
 class EncoderTests(tf.test.TestCase):
@@ -54,12 +54,20 @@ of tied/untied embedders and extractors are correct."""
 
         inputs = [inputs1, inputs2]
         lengths = [lengths1, lengths2]
+
         output_SSTb = encoders['SSTb'](inputs=inputs,
                                        lengths=lengths,
-                                       indices=indices)
+                                       is_training=True)
         output_LMRD = encoders['LMRD'](inputs=inputs,
                                        lengths=lengths,
-                                       indices=indices)
+                                       is_training=True)
+
+        #output_SSTb = encoders['SSTb'](inputs=inputs,
+        #                               lengths=lengths,
+        #                               indices=indices)
+        #output_LMRD = encoders['LMRD'](inputs=inputs,
+        #                               lengths=lengths,
+        #                               indices=indices)
 
         all_variables = tf.global_variables()
         trainable_variables = tf.trainable_variables()
@@ -97,8 +105,8 @@ of tied/untied embedders and extractors are correct."""
         k = dict()
 
         # COMMENT THESE LINES OUT IF NOT USING L-BIRNN EXTRACTOR
-        indices1 = tf.constant([1, 1, 2, 0], dtype=tf.int64)
-        k = {'indices': indices1}
+        # indices1 = tf.constant([1, 1, 2, 0], dtype=tf.int64)
+        # k = {'indices': indices1}
         #
 
         output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
