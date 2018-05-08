@@ -151,8 +151,18 @@ def conv_block_internal(conv_fn,
   else:
     use_normalizer_fn = False
 
+  batch_size = tf.shape(inputs)[0]
+  batch_len = tf.shape(inputs)[1]
+
   if global_conditioning is None:
-    global_conditioning = tf.constant(0.0)
+    global_conditioning = tf.zeros([batch_size, batch_len])
+
+  h = global_conditioning
+  final_dim = tf.shape(h)[-1]
+  h = tf.expand_dims(h, axis=1)
+  h = tf.expand_dims(h, axis=2)
+  h = tf.tile(h, [1, batch_len, 1, 1])
+  h = tf.reshape(h, (batch_size, batch_len, 1, final_dim))
 
   with tf.variable_scope(name, "conv_block", [inputs]):
     cur, counter = inputs, -1
@@ -164,7 +174,7 @@ def conv_block_internal(conv_fn,
         cur *= mask
       if separabilities:
         cur = conv_fn(
-            cur + global_conditioning,
+            cur + h,
             filters,
             kernel_size,
             dilation_rate=dilation_rate,
@@ -174,7 +184,7 @@ def conv_block_internal(conv_fn,
             **kwargs)
       else:
         cur = conv_fn(
-            cur + global_conditioning,
+            cur + h,
             filters,
             kernel_size,
             dilation_rate=dilation_rate,

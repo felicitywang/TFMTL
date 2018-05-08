@@ -71,7 +71,7 @@ def input_fn(file_name,
              num_epochs=None,
              shuffle=True,
              one_shot=True,
-             static_max_length=None,
+             static_max_length=MAX_DOC_LEN,
              num_threads=1,
              shuffle_buffer_size=10000,
              batch_size=64):
@@ -81,7 +81,8 @@ def input_fn(file_name,
   ds = Pipeline(file_name, FEATURES, batch_size=batch_size,
                 num_threads=num_threads, shuffle=shuffle,
                 num_epochs=num_epochs, one_shot=one_shot,
-                shuffle_buffer_size=shuffle_buffer_size)
+                shuffle_buffer_size=shuffle_buffer_size,
+                static_max_length=static_max_length)
 
   if one_shot:
     return ds.batch
@@ -98,27 +99,34 @@ def model_fn(mode, batch, hp):
     raise ValueError("unrecognized mode: %s" % (mode))
 
   regularizer = None
-  if embed_l2_scale > 0.0:
-    regularizer = tf.contrib.layers.l2_regularizer(embed_l2_scale)
+  if hp.embed_l2_scale > 0.0:
+    regularizer = tf.contrib.layers.l2_regularizer(hp.embed_l2_scale)
   initializer = tf.truncated_normal_initializer(mean=0.0,
-                                                stddev=initializer_stddev)
+                                                stddev=hp.embed_init_stddev)
   with tf.variable_scope("input_embedding", reuse=tf.AUTO_REUSE):
     embed_matrix = tf.get_variable("embed_matrix", [VOCAB_SIZE, hp.embed_dim],
                                    regularizer=regularizer,
                                    initializer=initializer)
 
   def embedder(x):
-    x = tf.nn.embedding_lookup(embed_matrix, x)
+    return tf.nn.embedding_lookup(embed_matrix, x)
 
   code = encode(batch[TOKENS_FIELD],
                 batch[LEN_FIELD],
                 mode == TRAIN,
+                embed_fn=embedder,
                 encoder=hp.encoder,
+                hparams=hp.encoder_hparams)
 
+  if mode == TRAIN and hp.code_keep_prob < 1.0:
+    code = tf.nn.dropout(code, hp.code_keep_prob)
 
-  # TODO
-  #classification_error =
-
+  logits = tf.layers.dense(code, NUM_LABELS, use_bias=True, activation=None)
+  classification_error = tf.nn.sparse_softmax_cross_entropy_with_logits(
+    labels = batch[LABEL_FIELD],
+    logits = logits
+  )
+  classification_error = tf.reduce_mean(classification_error)
   avg_reconstruction_error = decode(batch[TOKENS_FIELD],
                                     batch[LEN_FIELD],
                                     VOCAB_SIZE,
@@ -126,15 +134,16 @@ def model_fn(mode, batch, hp):
                                     embed_fn=embedder,
                                     decoder=hp.decoder,
                                     hparams=hp.decoder_hparams,
-                                    average_across_timesteps=True,
+                                    average_across_timesteps=True,  # !!!
                                     average_across_batch=False,
                                     global_conditioning=code)
-
-  loss = tf.reduce_sum(losses, axis=1)
+  avg_reconstruction_error = tf.reduce_mean(avg_reconstruction_error)
+  loss = classification_error + hp.beta * avg_reconstruction_error
   global_step_tensor = tf.train.get_or_create_global_step()
   if mode == TRAIN:
     tvars = tf.trainable_variables()
-    loss = tf.reduce_mean(loss)
+    tf.summary.scalar('classification_error', classification_error)
+    tf.summary.scalar('avg_reconstruction_error', avg_reconstruction_error)
     tf.summary.scalar('loss', loss)
     reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     if len(reg_losses) > 0:
@@ -148,6 +157,6 @@ def model_fn(mode, batch, hp):
 
   if mode == EVAL:
     return {
-      'loss': tf.reduce_sum(loss),
-      'length': tf.reduce_sum(batch[LEN_FIELD])
+      'y_hat': tf.argmax(tf.nn.softmax(logits), axis=-1),
+      'y': batch[LABEL_FIELD],
     }

@@ -14,7 +14,7 @@ SAVE_SECS=60
 EXPT=expts
 DATA=data/tf/single/SSTb/min_1_max_-1
 
-echo "Hyper-parameters: $HPS"
+echo "Hyper-parameters: $1"
 TIME=`date +%Y-%m-%d_%H-%M-%S`
 
 if [ ! -d "$EXPT" ]; then
@@ -27,7 +27,7 @@ python task.py \
        --train-file $DATA/train.tf \
        --eval-file $DATA/valid.tf \
        --save-secs $SAVE_SECS \
-       --hparams "$HPS"  # &> $EXPT/$TIME/log.txt
+       --hparams "$1"  # &> $EXPT/$TIME/log.txt
 
 
 # eos

@@ -22,7 +22,7 @@ from six.moves import xrange
 import numpy as np
 import tensorflow as tf
 from mtl.layers.rnn import stacked_rnn_cell
-import mtl.util.registry
+import mtl.util.registry as registry
 
 
 @registry.register_hparams
@@ -33,6 +33,18 @@ def simple_birnn_default():
     depth=1,
     combine='concat',
     keep_prob=1.0
+  )
+  return hp
+
+
+@registry.register_hparams
+def simple_birnn_regularized():
+  hp = tf.contrib.training.HParams(
+    cell='lstm',
+    size=256,
+    depth=1,
+    combine='concat',
+    keep_prob=0.75
   )
   return hp
 

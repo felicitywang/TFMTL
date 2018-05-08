@@ -72,7 +72,7 @@ def rnn(x, is_training, global_conditioning=None,
   batch_len = tf.shape(x)[1]
 
   if global_conditioning is not None:
-    tf.logging.info("Adding global conditioning")
+    tf.logging.info("[RNNDecoder] Adding global conditioning")
     h = global_conditioning
     h = tf.expand_dims(h, axis=1)
     h = tf.tile(h, [1, batch_len, 1])
@@ -85,5 +85,4 @@ def rnn(x, is_training, global_conditioning=None,
                                  time_major=False)
 
 
-  print(outputs)
   return outputs

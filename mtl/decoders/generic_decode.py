@@ -61,14 +61,24 @@ def decode(targets, lengths, vocab_size, is_training,
   if 'rnn' in decoder:
     x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
                    global_conditioning=global_conditioning)
-    logits = tf.layers.dense(x, vocab_size, use_bias=False)
   else:
+    print('pre-expand', x)
     x = tf.expand_dims(x, axis=2)
+    print('post-expand', x)
     x = decoder_fn(x, is_training, hp=registry.hparams(hparams),
                    global_conditioning=global_conditioning)
-    k = (1, 1)
-    x = conv_wn(x, vocab_size, k, padding='LEFT')
-    logits = tf.squeeze(x, axis=2)
+    print('post-decode', x)
+    x = tf.squeeze(x, axis=2)
+    print('post-squeeze', x)
+#    k = (1, 1)
+#    with tf.variable_scope("output_projection"):
+#      x = conv_wn(x, vocab_size, k, padding='LEFT')
+#    logits = tf.squeeze(x, axis=2)
+
+  with tf.variable_scope("output_projection"):
+    logits = tf.layers.dense(x, vocab_size, use_bias=False)
+
+  assert len(logits.get_shape().as_list()) == 3
 
   # Mask for variable length targets
   batch_size = tf.shape(targets)[0]

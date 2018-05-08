@@ -71,7 +71,7 @@ class Pipeline(object):
       index += 1
     self._result = result
 
-  def pad(t):
+  def pad(self, t):
     s = tf.shape(t)
     paddings = [[0, 0], [0, self._static_max_length-s[1]]]
     x = tf.pad(t, paddings, 'CONSTANT', constant_values=0)
@@ -87,7 +87,7 @@ class Pipeline(object):
       if isinstance(val, sparse_tensor_lib.SparseTensor):
         dense_tensor = tf.sparse_tensor_to_dense(val)
         if self._static_max_length is not None:
-          self.pad(dense_tensor)
+          dense_tensor = self.pad(dense_tensor)
         result.append(dense_tensor)
       else:
         result.append(val)

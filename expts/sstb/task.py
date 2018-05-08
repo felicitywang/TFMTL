@@ -60,8 +60,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
     self._graph = graph
 
     # Fetches to evaluate
-    self._loss_op = fetches['loss']
-    self._len_op = fetches['length']
+    self._y_op = fetches['y']
+    self._y_hat_op = fetches['y_hat']
 
     # With the graph object as default graph
     # See https://www.tensorflow.org/api_docs/python/tf/Graph#as_default
@@ -129,16 +129,20 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
       # Retrieve global step
       train_step = session.run(self._gs)
-      total_loss = 0.0
 
       # Run the evaluation
       tf.logging.info('Starting evaluation for step: %d', train_step)
       ts = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
       eval_step = 0
+      ys = []
+      yhats = []
       while True:
         try:
-          loss_v, len_v = session.run([self._loss_op, self._len_op])
-          total_loss += loss_v / len_v
+          y, y_hat = session.run([self._y_op,
+                                  self._y_hat_op])
+          ys += y.tolist()
+          yhats += y_hat.tolist()
+
           if eval_step % 100 == 0:
             tf.logging.info("On evaluation step: %d", eval_step)
           eval_step += 1
@@ -150,16 +154,16 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
       # Number of evaluation steps
       tf.logging.info("Completed %d evaluation steps.", eval_step)
-
-      total_loss = total_loss / eval_step
-      summary = tf.Summary(value=[tf.Summary.Value(tag="eval_loss",
-                                                   simple_value=total_loss)])
+      assert len(ys) == len(yhats)
+      ncorrect = len([True for x, y in zip(ys, yhats) if x == y])
+      acc = float(ncorrect) / float(len(ys))
+      summary = tf.Summary(value=[tf.Summary.Value(tag="accuracy",
+                                                   simple_value=acc)])
       self._file_writer.add_summary(summary, global_step=train_step)
       self._file_writer.flush()
 
       # Log results
-      tf.logging.info("[%s] Loss: %f Perplexity: %d", ts, total_loss,
-                      np.exp(total_loss))
+      tf.logging.info("[train_step=%s] Accuracy: %.2f" % (train_step, acc))
 
 
 def run(target,
@@ -226,7 +230,7 @@ def run(target,
       # Features and label tensors as read using filename queue
       tf.logging.info("%d train epochs" % (hp.num_epochs))
       batch = model.input_fn(train_file,
-                             num_epochs=hp.num_epochs, shuffle=False,
+                             num_epochs=hp.num_epochs, shuffle=True,
                              batch_size=hp.train_batch_size)
 
       # Returns the training graph and global step tensor
@@ -377,18 +381,24 @@ if __name__ == "__main__":
 
   # Default hyper-parameters
   hp = tf.contrib.training.HParams(
-    num_epochs = 50,
+    num_epochs = 100,
     learning_rate = 0.0001,
     max_grad_norm = 0,
     train_batch_size = 64,
     eval_batch_size = 256,
     keep_prob = 1.0,
     optimizer = 'adafactor',
-    embed_dim = 512,
-    decoder = 'rnn',
-    decoder_hparams = 'rnn_default'
-    #decoder = 'resnet',
-    #decoder_hparams = 'resnet_large'
+    embed_dim = 256,
+    encoder = 'simple_birnn',
+    encoder_hparams = 'simple_birnn_regularized',
+    #decoder = 'rnn',
+    #decoder_hparams = 'rnn_default',
+    decoder = 'resnet',
+    decoder_hparams = 'resnet_single_layer',
+    beta = 0.5,
+    embed_l2_scale = 0.01,
+    embed_init_stddev = 0.001,
+    code_keep_prob = 0.75
   )
 
   # Update from command-line arguments; comma-separated list of

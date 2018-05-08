@@ -38,6 +38,19 @@ def resnet_default():
 
 
 @registry.register_hparams
+def resnet_single_layer():
+  hps = tf.contrib.training.HParams(
+    kernel_height = 3,
+    kernel_width = 1,
+    num_hidden_layer = 3,
+    num_conv_group = 1,
+    nonlinearity = 'relu',
+    keep_prob = 0.75
+  )
+  return hps
+
+
+@registry.register_hparams
 def resnet_large():
   hps = tf.contrib.training.HParams(
     kernel_height = 3,
@@ -78,11 +91,13 @@ def resnet(x, is_training, global_conditioning=None,
 
   if global_conditioning is not None:
     with tf.variable_scope("global_cond_proj"):
-      h = tf.layers.dense(global_conditioning, hidden_dim, use_bias=False)
+      h = tf.layers.dense(global_conditioning, hidden_dim, use_bias=True)
   else:
     h = None
 
   with tf.variable_scope(name):
+    assert hp.kernel_height is not None
+    assert hp.kernel_width is not None
     k = (hp.kernel_height, hp.kernel_width)
     dilations_and_kernels = [((2**i, 1), k)
                              for i in xrange(hp.num_hidden_layer)]
@@ -101,4 +116,6 @@ def resnet(x, is_training, global_conditioning=None,
           else:
             y = tf.nn.dropout(y, hp.keep_prob)
         x += y
+
+    assert x.get_shape().as_list()[2] == 1
     return x

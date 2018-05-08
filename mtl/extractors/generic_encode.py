@@ -23,10 +23,13 @@ import mtl.util.registry as registry
 
 
 
-def encode(inputs, lengths, is_training, encoder='simple_birnn',
-           hparams='simple_birnn_default', embed_fn=None,
-           embed_dim=None, embed_l2_scale=0.0,
-           initializer_stddev=0.001, add_timing=False)
+def encode(inputs, lengths, is_training,
+           encoder='simple_birnn',
+           hparams='simple_birnn_default',
+           embed_fn=None,
+           embed_dim=None,
+           embed_l2_scale=0.0,
+           initializer_stddev=0.001):
 
   # Project integer inputs to vectors via an embedding
   if embed_fn is None:
@@ -46,8 +49,11 @@ def encode(inputs, lengths, is_training, encoder='simple_birnn',
 
   # Encode inputs, collapsing over axis=1
   encoder_fn = registry.encoder(encoder)
-  encoder_hp = registry.hparams(hparams)
-  code = encoder_fn(x, lengths, hp = encoder_hp, is_training=is_training)
+  hp = registry.hparams(hparams)
+  code = encoder_fn(x,
+                    lengths,
+                    hp=hp(),
+                    is_training=is_training)
 
   assert len(code.get_shape().as_list()) == 2
   return code
