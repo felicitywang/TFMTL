@@ -16,7 +16,7 @@ This dataset is a sub-set of the SemEval 2016 Task 6. It's used by arXiv:1802.09
 
 **Basic Unit**: sentence
 
-**Split**: train/dev/test = 3209 : 984 : 707
+**Split**: train : dev : test = 3209 : 984 : 707
 
 **bibtex**
 ```
