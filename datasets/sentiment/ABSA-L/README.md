@@ -1,4 +1,4 @@
-**ABSA-L -- Aspect-based Sentiment Analysis - Laptops*
+**ABSA-L -- Aspect-based Sentiment Analysis - Laptops**
 
 **Summary**
 

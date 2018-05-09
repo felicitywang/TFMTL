@@ -1,4 +1,4 @@
-**ABSA-R -- Aspect-based Sentiment Analysis - Restaurants*
+**ABSA-R -- Aspect-based Sentiment Analysis - Restaurants**
 
 **Summary**
 
