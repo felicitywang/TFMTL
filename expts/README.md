@@ -107,6 +107,13 @@ See `../../requirement.txt`
     - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, and `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`)
 - test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
 
+### 6. Init with the model
+
+- use the saved model trained with dataset A to initialize the model for dataset B
+- Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
+- For examples see `expts/init_test/`
+
+
 ## Arguments to generate TFRecord files
 
 - should be modified before generating the TFRecord files
