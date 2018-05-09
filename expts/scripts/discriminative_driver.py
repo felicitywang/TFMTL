@@ -307,6 +307,7 @@ def train_model(model,
 
     main_task_dev_accuracy = []
     stopping_criterion_reached = False
+    early_stopping_dev_results = ""
     
     # Do training
     with open(args.log_file, 'a') as f:
@@ -436,6 +437,10 @@ def train_model(model,
       if stopping_criterion_reached:
         saver.save(sess.raw_session(),
                    os.path.join(args.checkpoint_dir, 'early-stopping', 'model'))
+        early_stopping_dev_results = str_
+        #with open(args.log_file, 'a') as f:
+        #  f.write('\nSTOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
+        #  f.write(str_ + '\n')
         break
 
     print(best_eval_performance)
@@ -461,6 +466,9 @@ def train_model(model,
 
       f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
                                                                best_total_acc_epoch))
+      if stopping_criterion_reached:
+        f.write('STOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
+        f.write(early_stopping_dev_results + '\n\n')
 
     train_file_writer.close()
     valid_file_writer.close()
@@ -486,7 +494,7 @@ def test_model(model, dataset_info, args):
   if len(args.datasets) > 1:
     model_names.append('MULT')
 
-  if os.path.exists(os.path.join(args.checkpoint_dir, 'early-stopping', 'model')):
+  if os.path.exists(os.path.join(args.checkpoint_dir, 'early-stopping')):
     model_names.append('early-stopping')
 
   saver = tf.train.Saver()
