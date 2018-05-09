@@ -5,7 +5,7 @@
 Aspect-based sentiment analysis is the task of identifying whether an aspect, i.e. a particular property of an item is associated with a positive, negative, or neutral sentiment.
 
 
-This dataset is a sub-set of the SemEval 2016 Task 5 Subtask 1 Slot 3 with the laptops domains. The two text fields `seq1` and `seq2` are the aspects and the tweet. The label is the sentiment. It's used in arXiv:1802.09913.
+This dataset is a sub-set of the SemEval 2016 Task 5 Subtask 1 Slot 3 with the laptops domains. The two text fields `seq1` and `seq2` are the aspects and the review. The label is the sentiment. It's used in arXiv:1802.09913.
 
 **Examples**
 
