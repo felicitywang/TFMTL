@@ -358,7 +358,6 @@ def serial_lbirnn_stock(inputs,
   with tf.variable_scope("stock-lbirnn-seq1") as varscope1:
     _, seq1_states = _lbirnn_stock(inputs[0],
                                    lengths[0],
-                                   #is_training,
                                    is_training=is_training,
                                    num_layers=num_layers,
                                    cell_type=cell_type,
@@ -371,7 +370,6 @@ def serial_lbirnn_stock(inputs,
     varscope1.reuse_variables()
     outputs, states = _lbirnn_stock(inputs[1],
                                     lengths[1],
-                                    #is_training,
                                     is_training=is_training,
                                     num_layers=num_layers,
                                     cell_type=cell_type,
@@ -393,7 +391,7 @@ def serial_lbirnn_stock(inputs,
 def RUDER_NAACL18_HPARAMS():
   hp = tf.contrib.training.HParams(
     cell_type='lstm',
-    cell_size=256,
+    cell_size=100,
     num_layers=1,
     keep_prob=0.5
   )
@@ -422,12 +420,12 @@ def ruder_encoder(inputs, lengths, is_training, hp=None):
   
   keep_prob = hp.keep_prob if is_training else 1.0
 
-  code = serial_lbirnn(inputs,
-                       lengths,
-                       is_training=is_training,
-                       num_layers=hp.num_layers,
-                       cell_type=cell_type,
-                       cell_size=hp.cell_size)
+  code = serial_lbirnn_stock(inputs,
+                             lengths,
+                             is_training=is_training,
+                             num_layers=hp.num_layers,
+                             cell_type=cell_type,
+                             cell_size=hp.cell_size)
 
   assert len(code.get_shape().as_list()) == 2
   return code

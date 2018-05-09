@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.extractors.lbirnn import serial_lbirnn
+from mtl.extractors.lbirnn import serial_lbirnn, serial_lbirnn_stock
 
 
 class SerialLBiRNNTests(tf.test.TestCase):
@@ -56,10 +56,10 @@ class SerialLBiRNNTests(tf.test.TestCase):
       initial_state_fwd = None
       initial_state_bwd = None
       is_training = True
-      outputs = serial_lbirnn(inputs,
+      outputs = serial_lbirnn_stock(inputs,
                               lengths,
                               is_training,
-                              indices,
+                              # indices,
                               num_layers,
                               cell_type,
                               cell_size,
