@@ -50,7 +50,7 @@ def parse_args():
   p.add_argument('--model', type=str,
                  help='Which model to use [mlvae|mult]')
 
-  p.add_argument('--mode', choices=['train', 'test', 'predict'],
+  p.add_argument('--mode', choices=['train', 'test', 'predict', 'init'],
                  required=True,
                  help='Whether to train, test or predict. \n'
                       'train: train on train data and evaluate on valid data '
@@ -58,7 +58,8 @@ def parse_args():
                       'test: restore the saved model and evaluate on held-out '
                       'test data. \n'
                       'predict: restore the saved model and predict the '
-                      'labels of the given text file')
+                      'labels of the given text file. \n'
+                      'init: restore the saved model and continue training.')
   p.add_argument('--experiment_name', default='', type=str,
                  help='Name of experiment.')
   p.add_argument('--tuning_metric', default='Acc', type=str,
@@ -198,7 +199,7 @@ def train_model(model,
   Evaluate on valid data after each epoch;
   Save the model the performs the best on the validation epoch.
   """
-  if args.mode != 'train':
+  if args.mode not in ['train', 'init']:
     raise ValueError("train_model() called when in %s mode" % (args.mode))
 
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
@@ -211,12 +212,18 @@ def train_model(model,
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
-        indices = train_batches[dataset_name]['seq2_length']  # TODO(seth): un-hard code this
+        indices = train_batches[dataset_name][
+          'seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
   loss = model.get_multi_task_loss(train_batches,
@@ -277,7 +284,13 @@ def train_model(model,
                                          config=config) as sess:
     # Initialize model parameters
 
-    sess.run(init_ops)
+    if args.mode == 'train':
+      sess.run(init_ops)
+    else:
+      assert len(args.datasets) == 1
+      checkpoint_path = model_info[args.datasets[0]]['checkpoint_path']
+      print(checkpoint_path)
+      saver.restore(sess, checkpoint_path)
 
     train_file_writer = tf.summary.FileWriter(
       os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
@@ -488,12 +501,20 @@ def test_model(model, dataset_info, args):
                                                 _pred_op,
                                                 _eval_labels,
                                                 _eval_iter,
-                                                metrics=dataset_info[dataset_name]['metrics'],
-                                                labels=dataset_info[dataset_name]['labels'],
+                                                metrics=
+                                                dataset_info[dataset_name][
+                                                  'metrics'],
+                                                labels=
+                                                dataset_info[dataset_name][
+                                                  'labels'],
                                                 args=args,
                                                 get_topic_op=_get_topic_op,
-                                                topic_path=dataset_info[dataset_name]['topic_path'],
-                                                eval_loss_op=model_info[dataset_name]['test_loss_op'])
+                                                topic_path=
+                                                dataset_info[dataset_name][
+                                                  'topic_path'],
+                                                eval_loss_op=
+                                                model_info[dataset_name][
+                                                  'test_loss_op'])
         model_info[dataset_name]['test_metrics'] = _metrics
 
         _num_eval_total = model_info[dataset_name]['test_metrics'][
@@ -781,7 +802,7 @@ def main():
     _dataset_train_path = os.path.join(_dir, "train.tf")
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
 
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       _dataset_valid_path = os.path.join(_dir, "valid.tf")
       dataset_info[dataset_name]['valid_path'] = _dataset_valid_path
     elif args.mode == 'test':
@@ -824,7 +845,7 @@ def main():
           raise ValueError("Input key %s not supported!" % (args.input_key))
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
-  if args.mode in ['train', 'test']:
+  if args.mode in ['train', 'test', 'init']:
     FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   # FEATURES = {
@@ -855,7 +876,7 @@ def main():
                                is_training=True)
       dataset_info[dataset_name]['train_dataset'] = ds
 
-      if args.mode == 'train':
+      if args.mode in ['train', 'init']:
         # Validation dataset
         _valid_path = dataset_info[dataset_name]['valid_path']
         ds = build_input_dataset(_valid_path, FEATURES,
@@ -925,7 +946,7 @@ def main():
                    args=args)
 
       # Do training
-      if args.mode == 'train':
+      if args.mode in ['train', 'init']:
         train_model(model,
                     dataset_info,
                     steps_per_epoch,
@@ -1015,7 +1036,7 @@ def fill_info_dicts(dataset_info, args):
   #  e.g., data iterators, batches, prediction operations
 
   # use validation data for evaluation anyway
-  if args.mode == 'train':
+  if args.mode in ['train', 'init']:
     logging.info("Using validation data for evaluation.")
   elif args.mode == 'test':
     logging.info("Using test data for final evaluation.")
@@ -1033,7 +1054,7 @@ def fill_info_dicts(dataset_info, args):
   # Data iterators, etc.
   for dataset_name in dataset_info:
 
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       # Training data, iterator, and batch
       _train_dataset = dataset_info[dataset_name]['train_dataset']
       _train_iter = _train_dataset.iterator
@@ -1078,7 +1099,7 @@ def fill_info_dicts(dataset_info, args):
     return _feature_dict
 
   # Create feature_dicts for each dataset
-  if args.mode == 'train':
+  if args.mode in ['train', 'init']:
     for dataset_name in model_info:
       model_info[dataset_name]['feature_dict'] = _create_feature_dict(
         dataset_name, dataset_info, model_info)
@@ -1088,14 +1109,13 @@ def fill_info_dicts(dataset_info, args):
 
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
-
   # TODO(seth): refactor populating `additional_extractor_kwargs` into a function?
   additional_extractor_kwargs = dict()
   for dataset_name in model_info:
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
@@ -1103,17 +1123,22 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
       batch = model_info[dataset_name]['pred_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
   for dataset_name in model_info:
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       _valid_pred_op = model.get_predictions(
         model_info[dataset_name]['valid_batch'],
         dataset_name,
@@ -1137,29 +1162,33 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
 
 
 def fill_eval_loss_op(args, model, dataset_info, model_info):
-
   additional_extractor_kwargs = dict()
   for dataset_name in model_info:
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
 
     if extract_fn == "serial_lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         indices = tf.subtract(indices, ones)  # last token is at pos. length-1
         additional_extractor_kwargs[dataset_name]['indices'] = indices
+    elif extract_fn == "lbirnn":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "serial_lbirnn_stock":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
     else:
       pass
 
   for dataset_name in model_info:
-    if args.mode == 'train':
+    if args.mode in ['train', 'init']:
       _valid_loss_op = model.get_loss(
         model_info[dataset_name]['valid_batch'],
         dataset_name,
@@ -1180,7 +1209,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 def fill_topic_op(args, model_info):
   if args.experiment_name == "RUDER_NAACL_18":
     for dataset_name in model_info:
-      if args.mode == 'train':
+      if args.mode in ['train', 'init']:
         _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
         model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
       elif args.mode == 'test':

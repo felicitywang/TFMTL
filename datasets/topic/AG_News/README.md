@@ -40,3 +40,7 @@ The AG's news topic classification dataset is constructed by Xiang Zhang (xiang.
 ```
 
 [**Webpage**](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
+
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)

@@ -42,4 +42,6 @@ The Sogou news topic classification dataset is constructed by manually labeling 
 
 [**Webpage**](http://www.sogou.com/labs/dl/ca.html)
 
-[**Webpage**](http://www.sogou.com/labs/dl/cs.html)
+[**Webpage**](http://xzh.me/)
+
+[**Download link**](http://goo.gl/JyCnZq)
