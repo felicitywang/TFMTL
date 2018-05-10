@@ -92,11 +92,17 @@ class Mult(object):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      assert batch_source == dataset_name
+
     for dataset, dataset_path in zip(self._hps.datasets,
                                      self._hps.dataset_paths):
       if dataset == batch_source:
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
+          if self._hps.experiment_name == "RUDER_NAACL_18":
+            print("text_field_names={}".format(text_field_names))
+            assert text_field_names == ['seq1', 'seq2']
 
     x = list()
     input_lengths = list()
@@ -136,18 +142,24 @@ class Mult(object):
   def get_loss(self,
                batch,
                batch_source,  # which dataset the batch is from
-               dataset_name,
+               dataset_name,  # we predict labels w.r.t. this dataset
                additional_extractor_kwargs=dict(),
                features=None,
                is_training=True):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      assert batch_source == dataset_name
+
     for dataset, dataset_path in zip(self._hps.datasets,
                                      self._hps.dataset_paths):
       if dataset == batch_source:
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
+          if self._hps.experiment_name == "RUDER_NAACL_18":
+            print("text_field_names={}".format(text_field_names))
+            assert text_field_names == ['seq1', 'seq2']
 
     x = list()
     input_lengths = list()
