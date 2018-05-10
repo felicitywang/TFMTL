@@ -50,6 +50,9 @@ TRAIN_RATIO = 0.8  # train out of all
 VALID_RATIO = 0.1  # valid out of all / valid out of train
 RANDOM_SEED = 42
 
+BOS = 'BOS'
+EOS = 'EOS'
+
 
 class Dataset:
   def __init__(self,
@@ -192,13 +195,13 @@ Args:
       num_examples += 1
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
-        text = self._tokenizer(text) + ['EOS']
-        assert len(text) >= 2, text
+        text = [BOS] + self._tokenizer(text) + [EOS]
+        assert len(text) >= 3, text  # text has at least one non-special token
         if len(text) < min_seq_len:
           min_seq_len = len(text)
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
-        # length of cleaned text (including EOS)
+        # length of cleaned text (including BOS and EOS)
         self._sequence_lengths[text_field_name].append(len(text))
 
     print('Minimum sequence length: %d' % min_seq_len)
@@ -525,7 +528,7 @@ Args:
               value=[self._sequence_lengths[text_field_name][index]]))
 
           types, counts = get_types_and_counts(
-            self._sequences[text_field_name][index])  # including EOS
+            self._sequences[text_field_name][index])  # including BOS and EOS
           assert len(types) == len(counts)
           assert len(types) > 0
           for t in types:
@@ -854,20 +857,20 @@ def get_types_and_counts(token_list):
   return counts.keys(), counts.values()
 
 
-def tokenizer(iterator):
-  """Tokenizer generator.
-
-  Tokenize each string with nltk's tweet_tokenizer, and add an 'EOS' at
-  the end.
-
-  Args:
-    iterator: Input iterator with strings.
-
-  Yields:
-    array of tokens per each value in the input.
-  """
-  for value in iterator:
-    yield value
+# def tokenizer(iterator):
+#   """Tokenizer generator.
+#
+#   Tokenize each string with nltk's tweet_tokenizer, and add an 'EOS' at
+#   the end.
+#
+#   Args:
+#     iterator: Input iterator with strings.
+#
+#   Yields:
+#     array of tokens per each value in the input.
+#   """
+#   for value in iterator:
+#     yield value
 
 
 def main():
