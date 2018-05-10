@@ -790,7 +790,11 @@ def main():
   #  for dataset, metric in zip(args.datasets, args.metrics):
   #    metrics[dataset] = metric
   for dataset in args.datasets:
-    metrics[dataset] = ['Acc', 'MAE_Macro', 'F1_Macro', 'Recall_Macro']
+    metrics[dataset] = ['Acc',
+                        'MAE_Macro',
+                        'F1_Macro',
+                        'F1_PosNeg_Macro',
+                        'Recall_Macro']
   
   # Read data
   dataset_info = dict()
