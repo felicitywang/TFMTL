@@ -116,3 +116,5 @@ vocab_test/
 best_model/
 
 label*.json
+
+pretrained_word_embeddings/

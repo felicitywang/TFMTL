@@ -77,8 +77,6 @@ def create_encoders(embedders, extractors, fully_shared, args):
 
 
 def build_encoders(args):
-  encoders = dict()
-
   # Read in architectures from config file
   with open(args.encoder_config_file, 'r') as f:
     architectures = json.load(f)
@@ -111,6 +109,8 @@ def build_encoders(args):
   tie_embedders = architectures[arch]['embedders_tied']
   tie_extractors = architectures[arch]['extractors_tied']
   fully_shared = tie_embedders and tie_extractors
+
+  # build word embedding lookup Variable if to load pre-trained word embeddings
 
   embedders = create_embedders(embed_fns,
                                tie_embedders,

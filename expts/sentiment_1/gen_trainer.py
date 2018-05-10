@@ -31,8 +31,8 @@ import tensorflow as tf
 
 from decoder_factory import build_decoders
 
-from mtl.io import get_num_records
-from mtl.io import get_empirical_label_prior
+from mtl.tf_io import get_num_records
+from mtl.tf_io import get_empirical_label_prior
 from mtl.hparams import update_hparams_from_args
 from mtl.util.pipeline import Pipeline
 
