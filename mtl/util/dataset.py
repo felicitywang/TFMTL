@@ -25,9 +25,9 @@ import gzip
 import itertools
 import json
 import operator
-import sys
 import os
 import re
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -48,26 +48,9 @@ logging = tf.logging
 
 FLAGS = flags.FLAGS
 
-TRAIN_RATIO = 0.8  # train out of all
-VALID_RATIO = 0.1  # valid out of all / valid out of train
-RANDOM_SEED = 42
-
-LINEBREAKS = ['<br /><br />', '\n']
-
-vocab_names = [
-  'vocab_freq.json',
-  'vocab_v2i.json',
-  'glove.6B.50d.txt',
-  'glove.6B.100d.txt',
-  'glove.6B.200d.txt',
-  'glove.6B.300d.txt',
-  'glove.42B.300d.txt',
-  'glove.840B.300d.txt',
-  'glove.twitter.27B.25d.txt',
-  'glove.twitter.27B.50d.txt',
-  'glove.twitter.27B.100d.txt',
-  'glove.twitter.27B.200d.txt'
-]
+from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
+from mtl.util.constants import OLD_LINEBREAKS, LINEBREAK, EOS, BOS, OOV
+from mtl.util.constants import VOCAB_NAMES
 
 
 class Dataset:
@@ -175,7 +158,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
@@ -238,14 +221,16 @@ Args:
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
 
+        text = text.strip()  # remove leading and trailing whitespaces
+
         # remove urls
         text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
         # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
 
-        for LINEBREAK in LINEBREAKS:
-          text = text.replace(LINEBREAK, ' LINEBREAK ')
+        for old_linebreak in OLD_LINEBREAKS:
+          text = text.replace(old_linebreak, LINEBREAK)
 
-        text = self._tokenizer(text) + ['<EOS>']
+        text = [BOS] + self._tokenizer(text) + [EOS]
 
         assert len(text) >= 1, text
         if len(text) < min_seq_len:
@@ -320,7 +305,7 @@ Args:
     else:
       print("Public vocabulary given. Use that to build vocabulary "
             "processor.")
-      assert vocab_name in vocab_names
+      assert vocab_name in VOCAB_NAMES
       self._vocab_dir = vocab_dir
       self._tfrecord_dir = tfrecord_dir  # used to save the combined
       # vocabulary when loading pretrained word embeddings
@@ -511,7 +496,7 @@ Args:
                      mode='r', encoding='utf-8') as file:
       self._vocab_freq_dict = json.load(file)
 
-    categorical_vocab = CategoricalVocabulary()
+    categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
     for word in self._vocab_freq_dict:
       categorical_vocab.add(word, count=self._vocab_freq_dict[word])
     categorical_vocab.trim(min_frequency=self._min_frequency,
@@ -556,7 +541,7 @@ Args:
                        mode='r', encoding='utf-8') as file:
         self._vocab_freq_dict = json.load(file)
 
-      categorical_vocab = CategoricalVocabulary()
+      categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
       for word in self._vocab_freq_dict:
         categorical_vocab.add(word, count=self._vocab_freq_dict[word])
       categorical_vocab.trim(min_frequency=self._min_frequency,
@@ -648,7 +633,8 @@ Args:
             file.write(str(random_size))
 
       # build vocabulary processor using the loaded mapping
-      categorical_vocab = CategoricalVocabulary(mapping=self._vocab_v2i_dict)
+      categorical_vocab = CategoricalVocabulary(
+        unknown_token=OOV, mapping=self._vocab_v2i_dict)
       vocab_processor = VocabularyProcessor(
         vocabulary=categorical_vocab,
         max_document_length=self._max_document_length,
@@ -1099,7 +1085,12 @@ def merge_pretrain_write_tfrecord(json_dirs,
       max_document_lengths.append(max_document_length)
   if padding:
     max_document_length = max(max_document_lengths)
-  specials = ['<UNK>', '<EOS>', 'LINEBREAK']
+
+  specials = [OOV, BOS, EOS]  # make sure OOV is indexed 0
+  if LINEBREAK in train_vocab_set:
+    specials += [LINEBREAK]  # linebreaks may not appear in some sentence-level
+    #  dataset
+
   train_vocab_set.difference_update(set(specials))
   train_vocab_list = specials + list(train_vocab_set)
 
