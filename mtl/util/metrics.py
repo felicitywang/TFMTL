@@ -23,13 +23,14 @@ accurate_number:  number of correctly predicted labels
 f1_macro:         macro-averaged(unweighted mean) F1 score
 mae_macro:        macro-averaged(unweighted mean) mean absolute error
 recall_macro:     macro-averaged(unweighted mean) recall score
+precision_macro:  macro-averaged(unweighted mean) precision score
 
 More details see sklearn documentation
 http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 """
 
-import sklearn.metrics
 import numpy as np
+import sklearn.metrics
 
 
 def accuracy_score(y_trues, y_preds, labels, topics):
@@ -183,12 +184,30 @@ def recall_macro(y_trues, y_preds, labels, topics):
   return sum(recalls.values()) / len(recalls.values())
 
 
+def precision_macro(y_trues, y_preds, labels, topics):
+  """
+  macro-averaged (unweighted mean) precision score of all classes
+
+  :param y_trues: list of ground truth labels
+  :param y_preds: list of predicted labels
+  :param labels: labels for each class in a list, must specify
+  :return: float
+  """
+  assert labels is not None
+  return sklearn.metrics.f1_score(y_true=y_trues,
+                                  y_pred=y_preds,
+                                  labels=labels,
+                                  average='macro'
+                                  )
+
+
 def metric2func(metric_name):
   METRIC2FUNC = {
     'Acc': accuracy_score,
     'MAE_Macro': mae_macro,
     'F1_Macro': f1_macro,
-    'Recall_Macro': recall_macro
+    'Recall_Macro': recall_macro,
+    'Precision_Macro': precision_macro
   }
 
   if metric_name in METRIC2FUNC:

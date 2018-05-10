@@ -170,7 +170,8 @@ def parse_args():
                       'Acc: accuracy score;\n'
                       'MAE_Macro: macro-averaged mean absolute error;\n'
                       'F1_Macro:  macro-averaged F1 score;\n'
-                      'Recall_Macro: macro-averaged recall score.')
+                      'Recall_Macro: macro-averaged recall score;\n'
+                      'Precision_Macro: macro-averaged precision score.')
 
   return p.parse_args()
 
@@ -775,7 +776,11 @@ def main():
   #  for dataset, metric in zip(args.datasets, args.metrics):
   #    metrics[dataset] = metric
   for dataset in args.datasets:
-    metrics[dataset] = ['Acc', 'MAE_Macro', 'F1_Macro', 'Recall_Macro']
+    metrics[dataset] = ['Acc',
+                        'MAE_Macro',
+                        'F1_Macro',
+                        'Recall_Macro',
+                        'Precision_Macro']
 
   # Read data
   dataset_info = dict()
