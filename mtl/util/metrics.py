@@ -67,7 +67,7 @@ def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
   assert labels is not None
   f1_scores = sklearn.metrics.f1_score(y_true=y_trues,
                                        y_pred=y_preds,
-                                       labels=labels,
+                                       # labels=labels,
                                        average=None
                                        )
   # Assumes that POS and NEG-like labels are in positions 0 and 1
@@ -188,6 +188,7 @@ def metric2func(metric_name):
     'Acc': accuracy_score,
     'MAE_Macro': mae_macro,
     'F1_Macro': f1_macro,
+    'F1_PosNeg_Macro': f1_pos_neg_macro,
     'Recall_Macro': recall_macro
   }
 
