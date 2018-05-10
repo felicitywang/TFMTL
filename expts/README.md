@@ -109,6 +109,13 @@ See `../../requirement.txt`
 - test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
 - similar to the predict mode, when testing some extra dataset other than the datasets used to train the model(e.g. testing `TGts` with the model trained with `SWts` and `LMRD`), the `--datasets DATASET` argument refers to which part of the trained model to use; the real data are passed with `--dataset_paths`(e.g. in this example, the arguments should be `--dataset SWts --dataset_paths path_to_TGts_data`, meaning you're using the SWts' part of the model to evaluate TGts' test data)
 
+### 6. Init with the model
+
+- use the saved model trained with dataset A to initialize the model for dataset B
+- Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
+- For examples see `expts/init_test/`
+
+
 ## Arguments to generate TFRecord files
 
 - should be modified before generating the TFRecord files

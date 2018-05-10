@@ -246,7 +246,7 @@ def build_mlps(hps, is_shared):
                                   hidden_dims=hps.shared_hidden_dims,
                                   num_layers=hps.shared_mlp_layers,
                                   # TODO from args
-                                  activation=tf.nn.relu,
+                                  activation=tf.tanh,
                                   input_keep_prob=hps.input_keep_prob,
                                   # TODO ?
                                   batch_normalization=False,
@@ -266,7 +266,7 @@ def build_mlps(hps, is_shared):
         hidden_dims=hps.private_hidden_dims,
         num_layers=hps.private_mlp_layers,
         # TODO from args
-        activation=tf.nn.relu,
+        activation=tf.tanh,
         # TODO args.dropout_rate to keep_prob
         input_keep_prob=1,
         # TODO ?

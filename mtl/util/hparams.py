@@ -62,7 +62,8 @@ def str2func(s):
   from mtl.extractors.cnn import conv_and_pool
   from mtl.extractors.rnn import rnn_and_pool
   from mtl.extractors.lbirnn import (lbirnn,
-                                     serial_lbirnn)
+                                     serial_lbirnn,
+                                     serial_lbirnn_stock)
   from mtl.extractors.no_op import no_op_encoding
 
   from mtl.util.reducers import (reduce_avg_over_time,
@@ -81,6 +82,7 @@ def str2func(s):
     "rnn_and_pool": rnn_and_pool,
     "lbirnn": lbirnn,
     "serial_lbirnn": serial_lbirnn,
+    "serial_lbirnn_stock": serial_lbirnn_stock,
     "no_op_encoding": no_op_encoding,
 
     "reduce_min_over_time": reduce_min_over_time,
