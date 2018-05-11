@@ -37,6 +37,16 @@ for argv in datasets[:-1]:
   tfrecord_dir += argv + "_"
 tfrecord_dir += datasets[-1] + '/'
 
+preproc = True
+if 'preproc' in args_merged:
+  preproc = args_merged['preproc']
+
+vocab_all = False
+if 'vocab_all' in args_merged:
+  vocab_all = args_merged['vocab_all']
+
+
+
 if 'pretrained_file' not in args_merged or not args_merged['pretrained_file']:
   tfrecord_dir = os.path.join(tfrecord_dir,
                               "min_" + str(args_merged['min_frequency']) + \
@@ -61,7 +71,9 @@ if 'pretrained_file' not in args_merged or not args_merged['pretrained_file']:
                             subsample_ratio=args_merged['subsample_ratio'],
                             padding=args_merged['padding'],
                             write_bow=args_merged['write_bow'],
-                            write_tfidf=args_merged['write_tfidf'])
+                            write_tfidf=args_merged['write_tfidf'],
+                            preproc=preproc,
+                    vocab_all=vocab_all)
 else:
   vocab_path = args_merged['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
@@ -101,4 +113,6 @@ else:
                                 write_bow=args_merged['write_bow'],
                                 write_tfidf=args_merged['write_tfidf'],
                                 tokenizer_=args_merged['tokenizer'],
-                                expand_vocab=expand_vocab)
+                                expand_vocab=expand_vocab,
+                                preproc=preproc,
+                    vocab_all=vocab_all)

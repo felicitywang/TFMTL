@@ -48,9 +48,15 @@ args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
               os.path.isdir(os.path.join(vocab_dir, folder))]
 if len(args_paths) == 0:
   args_paths = [os.path.join(vocab_dir, 'args.json')]
-max_document_lengths = [
-  json.load(open(args_path, 'r'))['max_document_length']
-  for args_path in args_paths]
+
+max_document_lengths = []
+for args_path in args_paths:
+  max_document_length = json.load(open(args_path, 'r'))['max_document_length']
+  if max_document_length == 'Infinity':
+    max_document_length = float('inf')
+  max_document_lengths.append(max_document_length)
+
+# TODO preproc not handled
 
 dataset = Dataset(json_dir=None,
                   tfrecord_dir=tfrecord_dir,
@@ -68,7 +74,8 @@ dataset = Dataset(json_dir=None,
                   generate_tf_record=True,
                   predict_mode=True,
                   predict_json_path=predict_json_path,
-                  predict_tf_path=predict_tf_path)
+                  predict_tf_path=predict_tf_path
+                  )
 
 # with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
 #   f.write(str(dataset.vocab_size))

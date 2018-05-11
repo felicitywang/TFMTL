@@ -34,6 +34,8 @@ tfrecord_dir = sys.argv[2]
 vocab_dir = sys.argv[3]
 args_test_path = sys.argv[4]
 
+# TODO preproc not handled
+
 # compute max document length
 # max document length should be the max(max_document_lengths) for each
 # dataset used to generate the vocabulary, their max_document_length happens

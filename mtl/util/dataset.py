@@ -79,7 +79,9 @@ class Dataset:
                predict_json_path='predict.json.gz',
                predict_tf_path='predict.tf',
                tokenizer_="tweet_tokenizer",
-               expand_vocab=False
+               expand_vocab=False,
+               preproc=True,
+               vocab_all=False
                ):
     """
 Args:
@@ -127,9 +129,15 @@ Args:
     predict_tf_path: File path of the TFRecord file of the text to predict
     expand_vocab: whether to expand the training vocab with pre-trained
     word embeddings' vocab
+    preproc: whether to remove urls, trailing/leading whitespaces and
+    replace linebreaks
+    vocab_all: whether to use all three splits when buildilng vocabulary
     """
 
-    if max_vocab_size == -1:
+    self._preproc = preproc
+    self._vocab_all = vocab_all
+
+    if max_vocab_size == -1 or max_vocab_size is None:
       self._max_vocab_size = float('inf')
     else:
       self._max_vocab_size = max_vocab_size
@@ -157,7 +165,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
@@ -220,14 +228,19 @@ Args:
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
 
-        text = text.strip()  # remove leading and trailing whitespaces
+        if self._preproc:
 
-        # remove urls
-        text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
-        # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
+          # remove leading and trailing whitespaces(to get rid of redundant
+          # linebreaks)
+          text = text.strip()
 
-        for old_linebreak in OLD_LINEBREAKS:
-          text = text.replace(old_linebreak, LINEBREAK)
+          # remove urls
+          text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
+          # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
+
+          # replace line breaks
+          for old_linebreak in OLD_LINEBREAKS:
+            text = text.replace(old_linebreak, LINEBREAK)
 
         text = [BOS] + self._tokenizer(text) + [EOS]
 
@@ -386,7 +399,8 @@ Args:
         'unlabeled_path': os.path.abspath(
           self._unlabeled_path
         ) if self._unlabeled_path is not None else None,
-        'labels': list(self._label_set)
+        'labels': list(self._label_set),
+        'preproc': self._preproc
       }
       print('Arguments for the dataset:')
       for k, v in self._args.items():
@@ -412,6 +426,14 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
 
@@ -474,6 +496,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
     self._categorical_vocab = vocab_processor.vocabulary_
@@ -522,6 +551,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
 
@@ -903,7 +939,9 @@ def merge_dict_write_tfrecord(json_dirs,
                               subsample_ratio=1,
                               padding=False,
                               write_bow=False,
-                              write_tfidf=False):
+                              write_tfidf=False,
+                              preproc=True,
+                              vocab_all=False):
   """Merge all the dictionaries for each dataset and write TFRecord files
 
   1. generate word frequency dictionary for each dataset
@@ -936,7 +974,9 @@ def merge_dict_write_tfrecord(json_dirs,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
-                      generate_tf_record=False)
+                      generate_tf_record=False,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     # max_document_lengths.append(dataset.max_document_length)
   # if max_document_length == -1:
   #   max_document_length = max(max_document_lengths)
@@ -965,13 +1005,15 @@ def merge_dict_write_tfrecord(json_dirs,
                     max_document_length=-1,
                     min_frequency=min_frequency,
                     max_frequency=max_frequency,
-                    max_vocab_size=max_vocab_size
+                    max_vocab_size=max_vocab_size,
                     # train_ratio=train_ratio,
                     # valid_ratio=valid_ratio,
                     # subsample_ratio=subsample_ratio,
                     # padding=padding,
                     # write_bow=write_bow,
-                    # write_tfidf=write_tfidf
+                    # write_tfidf=write_tfidf,
+                    preproc=preproc,
+                    vocab_all=vocab_all
                     )
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:
@@ -1011,7 +1053,9 @@ def merge_dict_write_tfrecord(json_dirs,
                       padding=padding,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
-                      tokenizer_=tokenizer_
+                      tokenizer_=tokenizer_,
+                      preproc=preproc,
+                      vocab_all=vocab_all
                       )
     args_dicts.append(dataset.args)
 
@@ -1036,7 +1080,9 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   padding=False,
                                   write_bow=False,
                                   write_tfidf=False,
-                                  expand_vocab=False):
+                                  expand_vocab=False,
+                                  preproc=True,
+                                  vocab_all=True):
   """Use the dictionary of the pre-trained word embedding, combine the words
 
   from the training data of all the datasets if necessary
@@ -1078,7 +1124,9 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
-                      generate_tf_record=False)
+                      generate_tf_record=False,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     train_vocab_set = train_vocab_set.union(set(dataset.mapping))
     if padding:
       max_document_lengths.append(max_document_length)
@@ -1153,8 +1201,9 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       padding=padding,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
-                      tokenizer_=tokenizer_
-                      )
+                      tokenizer_=tokenizer_,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     args_dicts.append(dataset.args)
 
   return args_dicts
