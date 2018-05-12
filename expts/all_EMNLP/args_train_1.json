@@ -1,7 +1,7 @@
 {
     "max_document_length": -1,
     "max_vocab_size": -1,
-    "min_frequency": 0,
+    "min_frequency": 1,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
@@ -17,5 +17,5 @@
     "write_tfidf": false,
     "tokenizer": "ruder_tokenizer",
     "preproc": false,
-    "vocab_all": true
+    "vocab_all": false
 }

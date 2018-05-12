@@ -23,9 +23,13 @@ from mtl.util.dataset import merge_dict_write_tfrecord, \
   merge_pretrain_write_tfrecord
 from mtl.util.util import make_dir
 
-# TODO separate args file for each dataset?
+if sys.argv[-1].endswith('.json'):
+  args_name = sys.argv[-1]
+  sys.argv = sys.argv[:-1]
+else:
+  args_name = 'args_merged.json'
 
-with open('args_merged.json', 'rt') as file:
+with open(args_name, 'rt') as file:
   args_merged = json.load(file)
 
 json_dirs = [os.path.join('data/json/', argv) for argv in sys.argv[1:]]
@@ -44,8 +48,6 @@ if 'preproc' in args_merged:
 vocab_all = False
 if 'vocab_all' in args_merged:
   vocab_all = args_merged['vocab_all']
-
-
 
 if 'pretrained_file' not in args_merged or not args_merged['pretrained_file']:
   tfrecord_dir = os.path.join(tfrecord_dir,
@@ -73,7 +75,7 @@ if 'pretrained_file' not in args_merged or not args_merged['pretrained_file']:
                             write_bow=args_merged['write_bow'],
                             write_tfidf=args_merged['write_tfidf'],
                             preproc=preproc,
-                    vocab_all=vocab_all)
+                            vocab_all=vocab_all)
 else:
   vocab_path = args_merged['pretrained_file']
   vocab_dir = os.path.dirname(vocab_path)
@@ -115,4 +117,4 @@ else:
                                 tokenizer_=args_merged['tokenizer'],
                                 expand_vocab=expand_vocab,
                                 preproc=preproc,
-                    vocab_all=vocab_all)
+                                vocab_all=vocab_all)
