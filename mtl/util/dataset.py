@@ -400,7 +400,7 @@ Args:
         ) if self._unlabeled_path is not None else None,
         'labels': list(self._label_set),
         'preproc': self._preproc,
-        'vocab_all':self._vocab_all
+        'vocab_all': self._vocab_all
       }
       print('Arguments for the dataset:')
       for k, v in self._args.items():

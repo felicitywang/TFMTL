@@ -30,7 +30,6 @@ import sys
 from expts.scripts import write_tfrecords_merged
 from expts.scripts import write_tfrecords_single
 
-# TODO tfrecord files with pre-trained word embedding folder name
 
 # all the tasks in the NACCL paper(first author not Ruder, but to keep consitent with ruder_tokenizer and the experiment name RUDER_NACCL_18)
 # RUDER_TASKS = ['Topic2', 'Topic5', 'Target',
