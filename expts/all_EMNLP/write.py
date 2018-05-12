@@ -30,13 +30,9 @@ import sys
 from expts.scripts import write_tfrecords_merged
 from expts.scripts import write_tfrecords_single
 
-
 # all the tasks in the NACCL paper(first author not Ruder, but to keep consitent with ruder_tokenizer and the experiment name RUDER_NACCL_18)
-# RUDER_TASKS = ['Topic2', 'Topic5', 'Target',
-#                'Stance', 'ABSA-L', 'ABSA-R', 'FNC-1', 'MultiNLI']
-
-
-RUDER_TASKS = ['Topic2', 'Topic5']
+RUDER_TASKS = ['Topic2', 'Topic5', 'Target',
+               'Stance', 'ABSA-L', 'ABSA-R', 'FNC-1', 'MultiNLI']
 
 # NAACL paper table 4
 RUDER_AUX_TASK_DICT = {
