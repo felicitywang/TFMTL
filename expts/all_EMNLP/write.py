@@ -19,6 +19,9 @@
 
 run: python write.py TARGET
 where TARGET is either ALL or one of the Ruder tasks
+TFRecord files would be saved in
+data/tf/TARGET-st/{all_0, train_1}/TARGET/
+data/tf/TARGET-mt/{all_0, train_1}/DATASET/, DATASET in [TARGET, AUXs]
 """
 import os
 import shutil
@@ -27,9 +30,14 @@ import sys
 from expts.scripts import write_tfrecords_merged
 from expts.scripts import write_tfrecords_single
 
+# TODO tfrecord files with pre-trained word embedding folder name
+
 # all the tasks in the NACCL paper(first author not Ruder, but to keep consitent with ruder_tokenizer and the experiment name RUDER_NACCL_18)
-RUDER_TASKS = ['Topic2', 'Topic5', 'Target',
-               'Stance', 'ABSA-L', 'ABSA-R', 'FNC-1', 'MultiNLI']
+# RUDER_TASKS = ['Topic2', 'Topic5', 'Target',
+#                'Stance', 'ABSA-L', 'ABSA-R', 'FNC-1', 'MultiNLI']
+
+
+RUDER_TASKS = ['Topic2', 'Topic5']
 
 # NAACL paper table 4
 RUDER_AUX_TASK_DICT = {
@@ -48,7 +56,11 @@ RUDER_AUX_TASK_DICT = {
 
 ARGS_FILES = {
   'args_all_0.json': 'all_0/',  # all splits, min_freq = 0
-  'args_train_1.json': 'train_1/'  # train split, min_freq = 1
+  'args_train_1.json': 'train_1/',  # train split, min_freq = 1
+  # 'args_all_0_glove_init.json': 'all_0_glove_init',
+  # 'args_train_1_glove_init.json': 'train_1_glove_init',
+  # 'args_all_0_glove_expand.json': 'all_0_glove_expand',
+  # 'args_train_1_glove_expand.json': 'train_1_glove_expand',
 }
 
 if __name__ == '__main__':
@@ -58,32 +70,32 @@ if __name__ == '__main__':
     'ALL'] + RUDER_TASKS, 'Target dataset %s not supported in this ' \
                           'experiment!' % target_task
 
-  # single dataset
-  # print('Writing TFRecord files for the single task %s with train split '
-  #       'and min_freq = 1...' % target_task)
+  if target_task != 'ALL':
 
-  for args_file in ARGS_FILES:
-    folder_st_old = write_tfrecords_single.main(['', target_task, args_file])
-    folder_st = os.path.join('data/tf/', target_task + '-st', ARGS_FILES[
-      args_file])
-    # print('old:', folder_st_old)
-    # print('new:', folder_st)
-    shutil.move(folder_st_old, folder_st)
+    # single dataset
+    for args_file in ARGS_FILES:
+      folder_st_old = write_tfrecords_single.main(['', target_task, args_file])
+      folder_st = os.path.join('data/tf/', target_task + '-st', ARGS_FILES[
+        args_file], target_task)
+      # print('old:', folder_st_old)
+      # print('new:', folder_st)
+      shutil.move(folder_st_old, folder_st)
+      shutil.rmtree('data/tf/single/')
 
-  # multiple datasets
-  if target_task == 'ALL':
-    datasets = RUDER_TASKS
+    # multiple datasets
+    for args_file in ARGS_FILES:
+      folder_mt_old = write_tfrecords_merged.main(
+        ['', target_task] + RUDER_AUX_TASK_DICT[target_task] + [args_file])
+      folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
+        args_file])
+      shutil.move(folder_mt_old, folder_mt)
+      shutil.rmtree('data/tf/merged')
+
   else:
-    datasets = [target_task] + RUDER_AUX_TASK_DICT[target_task]
-
-  for args_file in ARGS_FILES:
-    folder_mt_old = write_tfrecords_merged.main(
-      [''] + datasets + [args_file])
-    folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
-      args_file])
-    # print('old:', folder_mt_old)
-    # print('new:', folder_mt)
-    shutil.move(folder_mt_old, folder_mt)
-
-  shutil.rmtree('data/tf/single/')
-  shutil.rmtree('data/tf/merged')
+    for args_file in ARGS_FILES:
+      folder_mt_old = write_tfrecords_merged.main(
+        [''] + RUDER_TASKS + [args_file])
+      folder_mt = os.path.join('data/tf/', 'ALL-mt', ARGS_FILES[
+        args_file])
+      shutil.move(folder_mt_old, folder_mt)
+      shutil.rmtree('data/tf/merged')

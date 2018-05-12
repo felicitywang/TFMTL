@@ -34,14 +34,13 @@ def main(argv):
   with open(args_name, 'rt') as file:
     args_merged = json.load(file)
 
-  json_dirs = [os.path.join('data/json/', argv) for argv in argv[1:]]
-  print(json_dirs)
-
   tfrecord_dir = "data/tf/merged/"
   datasets = sorted(argv[1:])
-  for argv in datasets[:-1]:
-    tfrecord_dir += argv + "_"
+  for dataset in datasets[:-1]:
+    tfrecord_dir += dataset + "_"
   tfrecord_dir += datasets[-1] + '/'
+
+  json_dirs = [os.path.join('data/json/', dataset) for dataset in datasets]
 
   preproc = True
   if 'preproc' in args_merged:
@@ -57,7 +56,10 @@ def main(argv):
                                 "min_" + str(args_merged['min_frequency']) + \
                                 "_max_" + str(args_merged['max_frequency']) + \
                                 "_vocab_" + str(args_merged['max_vocab_size']))
-    tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in argv[1:]]
+    tfrecord_dirs = [os.path.join(tfrecord_dir, dataset) for dataset in
+                     datasets]
+    assert [os.path.basename(tf_dir) for tf_dir in tfrecord_dirs] == [
+      os.path.basename(json_dir) for json_dir in json_dirs]
     for i in tfrecord_dirs:
       make_dir(i)
     merge_dict_write_tfrecord(json_dirs=json_dirs,
@@ -93,9 +95,12 @@ def main(argv):
     else:
       tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
         '.txt')] + '_init')
-    tfrecord_dirs = [os.path.join(tfrecord_dir, argv) for argv in argv[1:]]
+    tfrecord_dirs = [os.path.join(tfrecord_dir, dataset) for dataset in
+                     datasets]
     for i in tfrecord_dirs:
       make_dir(i)
+    assert [os.path.basename(tf_dir) for tf_dir in tfrecord_dirs] == [
+      os.path.basename(json_dir) for json_dir in json_dirs]
 
     merge_pretrain_write_tfrecord(json_dirs=json_dirs,
                                   tfrecord_dirs=tfrecord_dirs,
