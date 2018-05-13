@@ -7,7 +7,7 @@
             "embed_kwargs": {
                 "embed_dim": 100
             },
-            "extract_fn": "serial_lbirnn",
+            "extract_fn": "serial_lbirnn_stock",
             "extract_kwargs": {
                 "num_layers": 1,
                 "cell_type": "tf.contrib.rnn.LSTMCell",

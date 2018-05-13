@@ -25,9 +25,9 @@ import gzip
 import itertools
 import json
 import operator
-import sys
 import os
 import re
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +36,9 @@ from six.moves import xrange
 from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
+from mtl.util.constants import OLD_LINEBREAKS, LINEBREAK, EOS, BOS, OOV
+from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
+from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer)
@@ -47,27 +50,6 @@ flags = tf.flags
 logging = tf.logging
 
 FLAGS = flags.FLAGS
-
-TRAIN_RATIO = 0.8  # train out of all
-VALID_RATIO = 0.1  # valid out of all / valid out of train
-RANDOM_SEED = 42
-
-LINEBREAKS = ['<br /><br />', '\n']
-
-vocab_names = [
-  'vocab_freq.json',
-  'vocab_v2i.json',
-  'glove.6B.50d.txt',
-  'glove.6B.100d.txt',
-  'glove.6B.200d.txt',
-  'glove.6B.300d.txt',
-  'glove.42B.300d.txt',
-  'glove.840B.300d.txt',
-  'glove.twitter.27B.25d.txt',
-  'glove.twitter.27B.50d.txt',
-  'glove.twitter.27B.100d.txt',
-  'glove.twitter.27B.200d.txt'
-]
 
 
 class Dataset:
@@ -97,7 +79,9 @@ class Dataset:
                predict_json_path='predict.json.gz',
                predict_tf_path='predict.tf',
                tokenizer_="tweet_tokenizer",
-               expand_vocab=False
+               expand_vocab=False,
+               preproc=True,
+               vocab_all=False
                ):
     """
 Args:
@@ -145,9 +129,15 @@ Args:
     predict_tf_path: File path of the TFRecord file of the text to predict
     expand_vocab: whether to expand the training vocab with pre-trained
     word embeddings' vocab
+    preproc: whether to remove urls, trailing/leading whitespaces and
+    replace linebreaks
+    vocab_all: whether to use all three splits when buildilng vocabulary
     """
 
-    if max_vocab_size == -1:
+    self._preproc = preproc
+    self._vocab_all = vocab_all
+
+    if max_vocab_size == -1 or max_vocab_size is None:
       self._max_vocab_size = float('inf')
     else:
       self._max_vocab_size = max_vocab_size
@@ -238,14 +228,20 @@ Args:
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
 
-        # remove urls
-        text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
-        # text = re.sub(r'https?:.*[\r\n]*', 'http', text, flags=re.MULTILINE)
+        if self._preproc:
 
-        for LINEBREAK in LINEBREAKS:
-          text = text.replace(LINEBREAK, ' LINEBREAK ')
+          # remove leading and trailing whitespaces(to get rid of redundant
+          # linebreaks)
+          text = text.strip()
 
-        text = self._tokenizer(text) + ['<EOS>']
+          # remove urls
+          text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
+
+          # replace line breaks
+          for old_linebreak in OLD_LINEBREAKS:
+            text = text.replace(old_linebreak, LINEBREAK)
+
+        text = [BOS] + self._tokenizer(text) + [EOS]
 
         assert len(text) >= 1, text
         if len(text) < min_seq_len:
@@ -320,7 +316,7 @@ Args:
     else:
       print("Public vocabulary given. Use that to build vocabulary "
             "processor.")
-      assert vocab_name in vocab_names
+      assert vocab_name in VOCAB_NAMES
       self._vocab_dir = vocab_dir
       self._tfrecord_dir = tfrecord_dir  # used to save the combined
       # vocabulary when loading pretrained word embeddings
@@ -402,7 +398,9 @@ Args:
         'unlabeled_path': os.path.abspath(
           self._unlabeled_path
         ) if self._unlabeled_path is not None else None,
-        'labels': list(self._label_set)
+        'labels': list(self._label_set),
+        'preproc': self._preproc,
+        'vocab_all': self._vocab_all
       }
       print('Arguments for the dataset:')
       for k, v in self._args.items():
@@ -428,6 +426,14 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
 
@@ -490,6 +496,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
     self._categorical_vocab = vocab_processor.vocabulary_
@@ -511,7 +524,7 @@ Args:
                      mode='r', encoding='utf-8') as file:
       self._vocab_freq_dict = json.load(file)
 
-    categorical_vocab = CategoricalVocabulary()
+    categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
     for word in self._vocab_freq_dict:
       categorical_vocab.add(word, count=self._vocab_freq_dict[word])
     categorical_vocab.trim(min_frequency=self._min_frequency,
@@ -538,6 +551,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
+    if self._vocab_all:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._text_field_names
+                        for i in self._test_index]
 
     vocab_processor.fit(training_docs)
 
@@ -556,7 +576,7 @@ Args:
                        mode='r', encoding='utf-8') as file:
         self._vocab_freq_dict = json.load(file)
 
-      categorical_vocab = CategoricalVocabulary()
+      categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
       for word in self._vocab_freq_dict:
         categorical_vocab.add(word, count=self._vocab_freq_dict[word])
       categorical_vocab.trim(min_frequency=self._min_frequency,
@@ -648,7 +668,8 @@ Args:
             file.write(str(random_size))
 
       # build vocabulary processor using the loaded mapping
-      categorical_vocab = CategoricalVocabulary(mapping=self._vocab_v2i_dict)
+      categorical_vocab = CategoricalVocabulary(
+        unknown_token=OOV, mapping=self._vocab_v2i_dict)
       vocab_processor = VocabularyProcessor(
         vocabulary=categorical_vocab,
         max_document_length=self._max_document_length,
@@ -918,7 +939,9 @@ def merge_dict_write_tfrecord(json_dirs,
                               subsample_ratio=1,
                               padding=False,
                               write_bow=False,
-                              write_tfidf=False):
+                              write_tfidf=False,
+                              preproc=True,
+                              vocab_all=False):
   """Merge all the dictionaries for each dataset and write TFRecord files
 
   1. generate word frequency dictionary for each dataset
@@ -942,16 +965,18 @@ def merge_dict_write_tfrecord(json_dirs,
   for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
     dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
                       vocab_dir=merged_dir,
-                      max_document_length=-1,
-                      max_vocab_size=-1,
-                      min_frequency=0,
-                      max_frequency=-1,
+                      max_document_length=max_document_length,
+                      max_vocab_size=max_vocab_size,
+                      min_frequency=min_frequency,
+                      max_frequency=-max_frequency,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
-                      generate_tf_record=False)
+                      generate_tf_record=False,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     # max_document_lengths.append(dataset.max_document_length)
   # if max_document_length == -1:
   #   max_document_length = max(max_document_lengths)
@@ -976,17 +1001,18 @@ def merge_dict_write_tfrecord(json_dirs,
                     vocab_given=True,
                     vocab_name='vocab_freq.json',
                     generate_tf_record=False,
-                    # max_document_length=max_document_length,
-                    max_document_length=-1,
+                    max_document_length=max_document_length,
                     min_frequency=min_frequency,
                     max_frequency=max_frequency,
-                    max_vocab_size=max_vocab_size
+                    max_vocab_size=max_vocab_size,
                     # train_ratio=train_ratio,
                     # valid_ratio=valid_ratio,
                     # subsample_ratio=subsample_ratio,
                     # padding=padding,
                     # write_bow=write_bow,
-                    # write_tfidf=write_tfidf
+                    # write_tfidf=write_tfidf,
+                    preproc=preproc,
+                    vocab_all=vocab_all
                     )
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:
@@ -1017,16 +1043,18 @@ def merge_dict_write_tfrecord(json_dirs,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
                       max_document_length=max_document_length,
-                      # max_vocab_size=max_vocab_size,
-                      # min_frequency=min_frequency,
-                      # max_frequency=max_frequency,
+                      max_vocab_size=max_vocab_size,
+                      min_frequency=min_frequency,
+                      max_frequency=max_frequency,
                       train_ratio=train_ratio,
                       valid_ratio=valid_ratio,
                       subsample_ratio=subsample_ratio,
                       padding=padding,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
-                      tokenizer_=tokenizer_
+                      tokenizer_=tokenizer_,
+                      preproc=preproc,
+                      vocab_all=vocab_all
                       )
     args_dicts.append(dataset.args)
 
@@ -1051,7 +1079,9 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   padding=False,
                                   write_bow=False,
                                   write_tfidf=False,
-                                  expand_vocab=False):
+                                  expand_vocab=False,
+                                  preproc=True,
+                                  vocab_all=True):
   """Use the dictionary of the pre-trained word embedding, combine the words
 
   from the training data of all the datasets if necessary
@@ -1084,7 +1114,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
     dataset = Dataset(json_dir,
                       tfrecord_dir=tfrecord_dir,
                       vocab_dir=merged_dir,
-                      max_document_length=-1,
+                      max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
                       min_frequency=min_frequency,
                       max_frequency=max_frequency,
@@ -1093,13 +1123,20 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
-                      generate_tf_record=False)
+                      generate_tf_record=False,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     train_vocab_set = train_vocab_set.union(set(dataset.mapping))
     if padding:
       max_document_lengths.append(max_document_length)
   if padding:
     max_document_length = max(max_document_lengths)
-  specials = ['<UNK>', '<EOS>', 'LINEBREAK']
+
+  specials = [OOV, BOS, EOS]  # make sure OOV is indexed 0
+  if LINEBREAK in train_vocab_set:
+    specials += [LINEBREAK]  # linebreaks may not appear in some sentence-level
+    #  dataset
+
   train_vocab_set.difference_update(set(specials))
   train_vocab_list = specials + list(train_vocab_set)
 
@@ -1154,17 +1191,18 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
                       max_document_length=max_document_length,
-                      # max_vocab_size=max_vocab_size,
-                      # min_frequency=min_frequency,
-                      # max_frequency=max_frequency,
+                      max_vocab_size=max_vocab_size,
+                      min_frequency=min_frequency,
+                      max_frequency=max_frequency,
                       train_ratio=train_ratio,
                       valid_ratio=valid_ratio,
                       subsample_ratio=subsample_ratio,
                       padding=padding,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
-                      tokenizer_=tokenizer_
-                      )
+                      tokenizer_=tokenizer_,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
     args_dicts.append(dataset.args)
 
   return args_dicts

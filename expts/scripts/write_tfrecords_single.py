@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ============================================================================
+# =============================================================================
 
 """Write TFRecord Files for the single dataset.
 
@@ -27,19 +27,30 @@ import sys
 
 from mtl.util.dataset import Dataset
 
-if len(sys.argv) == 2:
-    args_name = 'args_' + sys.argv[1] + '.json'
-else:
-    args_name = sys.argv[2]
 
-with open(args_name, 'rt') as file:
+def main(argv):
+  if len(argv) == 2:
+    args_name = 'args_' + argv[1] + '.json'
+  else:
+    args_name = argv[2]
+
+  with open(args_name, 'rt') as file:
     args_single = json.load(file)
 
-json_dir = "data/json/" + sys.argv[1]
+  json_dir = "data/json/" + argv[1]
 
-tfrecord_dir = os.path.join("data/tf/single/", sys.argv[1])
+  tfrecord_dir = os.path.join("data/tf/single/", argv[1])
 
-if 'pretrained_file' not in args_single or not args_single['pretrained_file']:
+  preproc = True
+  if 'preproc' in args_single:
+    preproc = args_single['preproc']
+
+  vocab_all = False
+  if 'vocab_all' in args_single:
+    vocab_all = args_single['vocab_all']
+
+  if 'pretrained_file' not in args_single or not args_single[
+    'pretrained_file']:
     tfrecord_dir = os.path.join(tfrecord_dir,
                                 "min_" + str(args_single['min_frequency']) +
                                 "_max_" + str(args_single['max_frequency']) +
@@ -62,22 +73,24 @@ if 'pretrained_file' not in args_single or not args_single['pretrained_file']:
                       tokenizer_=args_single['tokenizer'],
                       generate_basic_vocab=False,
                       vocab_given=False,
-                      generate_tf_record=True)
-else:
+                      generate_tf_record=True,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
+  else:
     vocab_path = args_single['pretrained_file']
     vocab_dir = os.path.dirname(vocab_path)
     vocab_name = os.path.basename(vocab_path)
 
     expand_vocab = False
     if 'expand_vocab' in args_single:
-        expand_vocab = args_single['expand_vocab']
+      expand_vocab = args_single['expand_vocab']
 
     if expand_vocab:
-        tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-            '.txt')] + '_expand')
+      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+        '.txt')] + '_expand')
     else:
-        tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-            '.txt')] + '_init')
+      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
+        '.txt')] + '_init')
 
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
@@ -99,7 +112,14 @@ else:
                       tokenizer_=args_single['tokenizer'],
                       generate_basic_vocab=False,
                       generate_tf_record=True,
-                      expand_vocab=expand_vocab)
+                      expand_vocab=expand_vocab,
+                      preproc=preproc,
+                      vocab_all=vocab_all)
 
-with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
+  with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
     f.write(str(dataset.vocab_size))
+
+  return tfrecord_dir
+
+if __name__ == '__main__':
+  main(sys.argv)
