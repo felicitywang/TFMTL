@@ -47,6 +47,7 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
         activation=tf.nn.selu, input_keep_prob=1.0,
         batch_normalization=False, layer_normalization=True,
         output_keep_prob=1.0):
+  print("MLP layer: is_training={}".format(is_training))
   if num_layers < 1:
     return x
   if activation == tf.nn.selu:
@@ -54,7 +55,7 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
   else:
     dropout = tf.nn.dropout
 
-  if input_keep_prob < 1.0:
+  if is_training and (input_keep_prob < 1.0):
     x = dropout(x, input_keep_prob, name='input_dropout')
 
   assert not (batch_normalization and layer_normalization)
@@ -77,7 +78,7 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
         x = tf.contrib.layers.layer_norm(x)
       x = activation(x)
 
-  if output_keep_prob < 1.0:
+  if is_training and (output_keep_prob < 1.0):
     x = dropout(x, output_keep_prob, name='output_dropout')
 
   return x

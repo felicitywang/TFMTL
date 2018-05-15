@@ -367,7 +367,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
-
+    training_docs.extend([self._sequences[text_field_name][i]
+     for text_field_name in self._text_field_names
+     for i in self._valid_index])
+    training_docs.extend([self._sequences[text_field_name][i]
+     for text_field_name in self._text_field_names
+     for i in self._test_index])
+    
     vocab_processor.fit(training_docs)
 
     if self._padding:
@@ -432,7 +438,13 @@ Args:
     training_docs = [self._sequences[text_field_name][i]
                      for text_field_name in self._text_field_names
                      for i in self._train_index]
-
+    training_docs.extend([self._sequences[text_field_name][i]
+     for text_field_name in self._text_field_names
+     for i in self._valid_index])
+    training_docs.extend([self._sequences[text_field_name][i]
+     for text_field_name in self._text_field_names
+     for i in self._test_index])
+    
     vocab_processor.fit(training_docs)
 
     vocab_freq_dict = vocab_processor.vocabulary_.freq
@@ -857,20 +869,20 @@ def get_types_and_counts(token_list):
   return counts.keys(), counts.values()
 
 
-# def tokenizer(iterator):
-#   """Tokenizer generator.
-#
-#   Tokenize each string with nltk's tweet_tokenizer, and add an 'EOS' at
-#   the end.
-#
-#   Args:
-#     iterator: Input iterator with strings.
-#
-#   Yields:
-#     array of tokens per each value in the input.
-#   """
-#   for value in iterator:
-#     yield value
+def tokenizer(iterator):
+  """Tokenizer generator.
+
+  Tokenize each string with nltk's tweet_tokenizer, and add an 'EOS' at
+  the end.
+
+  Args:
+    iterator: Input iterator with strings.
+
+  Yields:
+    array of tokens per each value in the input.
+  """
+  for value in iterator:
+    yield value
 
 
 def main():

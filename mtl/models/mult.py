@@ -64,10 +64,11 @@ class Mult(object):
 
     self._encoders = build_encoders(args)
 
-    self._mlps_shared = build_mlps(hps, is_shared=True)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      self._mlps_shared = build_mlps(hps, is_shared=True)
     self._mlps_private = build_mlps(hps, is_shared=False)
 
-    self._logits = build_logits(class_sizes)
+    self._logits = build_logits(class_sizes, self._hps.experiment_name)
 
   # Encoding (feature extraction)
   def encode(self,
@@ -101,7 +102,7 @@ class Mult(object):
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
           if self._hps.experiment_name == "RUDER_NAACL_18":
-            print("text_field_names={}".format(text_field_names))
+            # print("text_field_names={}".format(text_field_names))
             assert text_field_names == ['seq1', 'seq2']
 
     x = list()
@@ -129,7 +130,8 @@ class Mult(object):
                     lengths=input_lengths,
                     additional_extractor_kwargs=additional_extractor_kwargs)
 
-    x = self._mlps_shared[dataset_name](x, is_training=False)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      x = self._mlps_shared[dataset_name](x, is_training=False)
     x = self._mlps_private[dataset_name](x, is_training=False)
 
     x = self._logits[dataset_name](x)
@@ -158,7 +160,7 @@ class Mult(object):
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
           if self._hps.experiment_name == "RUDER_NAACL_18":
-            print("text_field_names={}".format(text_field_names))
+            # print("text_field_names={}".format(text_field_names))
             assert text_field_names == ['seq1', 'seq2']
 
     x = list()
@@ -192,16 +194,19 @@ class Mult(object):
     else:
       x = features
 
-    x = self._mlps_shared[dataset_name](x, is_training=is_training)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      x = self._mlps_shared[dataset_name](x, is_training=is_training)
     x = self._mlps_private[dataset_name](x, is_training=is_training)
 
     x = self._logits[dataset_name](x)
 
     # loss
-    ce = tf.reduce_mean(
-      tf.nn.sparse_softmax_cross_entropy_with_logits(
-        logits=x, labels=tf.cast(labels, dtype=tf.int32)))
-
+    #ce = tf.reduce_mean(
+    #  tf.nn.sparse_softmax_cross_entropy_with_logits(
+    #    logits=x, labels=tf.cast(labels, dtype=tf.int32)))
+    ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=x,
+                                                        labels=tf.cast(labels, dtype=tf.int32))
+    
     loss = tf.reduce_mean(ce)  # average loss per training example
 
     return loss
@@ -242,7 +247,8 @@ class Mult(object):
 
     total_loss += l2_weight_penalty
 
-    return total_loss
+    # return total_loss
+    return losses
 
   @property
   def encoders(self):
@@ -262,7 +268,8 @@ def build_mlps(hps, is_shared):
                                   num_layers=hps.shared_mlp_layers,
                                   # TODO from args
                                   activation=tf.tanh,
-                                  input_keep_prob=hps.input_keep_prob,
+                                  # input_keep_prob=hps.input_keep_prob,
+                                  input_keep_prob=1,
                                   # TODO ?
                                   batch_normalization=False,
                                   # TODO ?
@@ -288,19 +295,25 @@ def build_mlps(hps, is_shared):
         batch_normalization=False,
         # TODO ?
         layer_normalization=False,
-        output_keep_prob=hps.output_keep_prob,
+        # output_keep_prob=hps.output_keep_prob,
+        output_keep_prob=1,
       )
 
   return mlps
 
 
-def build_logits(class_sizes):
+def build_logits(class_sizes,
+                 experiment_name):
+  if experiment_name == "RUDER_NAACL_18":
+    activation = tf.tanh
+  else:
+    activation = None
   logits = dict()
   for k, v in class_sizes.items():
     logits[k] = tf.make_template('logit_{}'.format(k),
                                  dense_layer,
                                  name='logits',
                                  output_size=v,
-                                 activation=None
+                                 activation=activation
                                  )
   return logits

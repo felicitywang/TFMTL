@@ -17,13 +17,13 @@
     // mem_ram in GB
 
     // GPU
-    "gpu": 1,
-    "total_slots": 5,
-    "slots_per_job": 1,
+    //"gpu": 1,
+    //"total_slots": 5,
+    //"slots_per_job": 1,
 
     // CPU
-    //"total_slots": 100,
-    //"slots_per_job": 2,
+    "total_slots": 100,
+    "slots_per_job": 2,
 
     "mem_ram": 3,
 
@@ -33,11 +33,11 @@
     // experimental hyperparameters
     "expt_setup": [{"expt_setup_name": "MultiNLI_mult",
                     "datasets": "MultiNLI Topic5",
-                    "dataset_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI /export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5",
+                    "dataset_paths": "/export/a11/sebner/tfmtl_data/MultiNLI_ruder_vocab/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/MultiNLI /export/a11/sebner/tfmtl_data/MultiNLI_ruder_vocab/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/Topic5",
                     "class_sizes": "3 5",
-                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/MultiNLI/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt",
+                    "vocab_size_file": "/export/a11/sebner/tfmtl_data/MultiNLI_ruder_vocab/data/tf/merged/MultiNLI_Topic5/min_0_max_-1/vocab_size.txt",
                     "alphas": "0.5 0.5",
-                    "topics_paths": "/export/a11/sebner/tfmtl_data/MultiNLI/data/json/MultiNLI/data.json.gz /export/a11/sebner/tfmtl_data/MultiNLI/data/json/Topic5/data.json.gz",
+                    "topics_paths": "/export/a11/sebner/tfmtl_data/MultiNLI_ruder_vocab/data/json/MultiNLI/data.json.gz /export/a11/sebner/tfmtl_data/MultiNLI_ruder_vocab/data/json/Topic5/data.json.gz",
                     "embedders_tied": [true],
                     "extractors_tied": [true]
                    }],
@@ -46,6 +46,8 @@
     "model": "mult",
     "mode": "train",
     "num_train_epochs": 30,
+    "patience": 3,
+    "early_stopping_acc_threshold": 0.0,
     "checkpoint_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/ckpt",
     "summaries_dir": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/summ",
     "log_file": "/home/sebner/tfmtl/results/<expt_setup_name>/<name>/<mode>_results.log",
@@ -55,21 +57,18 @@
     
     "shared_mlp": [{"shared_mlp_layers": 0, "shared_hidden_dims": 0}],
 
-    "private_mlp": [{"private_mlp_layers": 0, "private_hidden_dims": 0},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 32},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 64},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 128},
-                    {"private_mlp_layers": 1, "private_hidden_dims": 256}
+    "private_mlp": [
+                    {"private_mlp_layers": 1, "private_hidden_dims": 100}
                    ],
     "input_keep_prob": [1.0],
     "output_keep_prob": [1.0],
-    "l2_weight": [0, 0.001],
+    "l2_weight": [0],
     "optimizer": [{"optimizer": "rmsprop",
                    "lr0": [0.001]}
                  ],
 
     "tuning_metric": "Acc",
     "reporting_metric": "Acc",
-    "seed": [42]
+    "seed": [42, 11, 21]
 
 }

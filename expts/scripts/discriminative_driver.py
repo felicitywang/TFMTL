@@ -86,7 +86,7 @@ def parse_args():
                  help='Whether decoders are shared across datasets')
   p.add_argument('--optimizer', default='adam', type=str,
                  help='Name of optimization algorithm to use')
-  p.add_argument('--lr0', default=0.0001, type=float,
+  p.add_argument('--lr0', default=0.001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
@@ -231,9 +231,16 @@ def train_model(model,
       additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
-  loss = model.get_multi_task_loss(train_batches,
-                                   is_training=True,
-                                   additional_extractor_kwargs=additional_extractor_kwargs)
+  #losses = model.get_multi_task_loss(train_batches,
+  #                                   is_training=True,
+  #                                   additional_extractor_kwargs=additional_extractor_kwargs)
+  losses = dict()
+  for dataset in model_info:
+    losses[dataset] = model.get_loss(train_batches[dataset],
+                                     dataset,
+                                     dataset,
+                                     additional_extractor_kwargs=additional_extractor_kwargs,
+                                     is_training=True)
 
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
@@ -246,9 +253,20 @@ def train_model(model,
   global_step_tensor = tf.train.get_or_create_global_step()
   zero_global_step_op = global_step_tensor.assign(0)
   lr = get_learning_rate(args.lr0)
-  tvars, grads = get_var_grads(loss)
-  train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
-                          global_step_tensor, args.optimizer, name='train_op')
+
+  train_ops = dict()
+  optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
+  for dataset_name in model_info:
+    #tvars, grads = get_var_grads(losses[dataset_name])
+    #train_ops[dataset_name] = get_train_op(tvars, grads, lr, args.max_grad_norm,
+    #                               global_step_tensor, args.optimizer, name='train_op_{}'.format(dataset_name))
+    train_ops[dataset_name] = optim.minimize(losses[dataset_name], global_step=global_step_tensor)
+
+
+    
+  #tvars, grads = get_var_grads(loss)
+  #train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
+  #                        global_step_tensor, args.optimizer, name='train_op')
   init_ops = [tf.global_variables_initializer(),
               tf.local_variables_initializer()]
   config = get_proto_config(args)
@@ -330,19 +348,29 @@ def train_model(model,
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      for _ in tqdm(xrange(steps_per_epoch)):
-        step, loss_v, _ = sess.run(
-          [global_step_tensor, loss, train_op])
-        num_iter += 1
-        total_loss += loss_v
+      #for _ in tqdm(xrange(steps_per_epoch)):
+      #  step, loss_v, _ = sess.run(
+      #    [global_step_tensor, loss, train_op])
+      #  num_iter += 1
+      #  total_loss += loss_v
+      #
+      #  # loss_v is sum over a batch from each dataset of the average loss *per
+      #  #  training example*
+      #assert num_iter > 0
+      #
+      ## average loss per batch (which is in turn averaged across examples)
+      #train_loss = float(total_loss) / float(num_iter)
 
-        # loss_v is sum over a batch from each dataset of the average loss *per
-        #  training example*
+      for _ in tqdm(xrange(steps_per_epoch)):
+        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):          
+          loss_v, _ = sess.run([losses[dataset_name], train_ops[dataset_name]])
+          total_loss += alpha * loss_v
+        step = sess.run(global_step_tensor)
+        num_iter += 1
       assert num_iter > 0
 
-      # average loss per batch (which is in turn averaged across examples)
       train_loss = float(total_loss) / float(num_iter)
-
+          
       train_loss_summary = tf.Summary(
         value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
       train_file_writer.add_summary(train_loss_summary, global_step=step)
