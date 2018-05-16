@@ -176,7 +176,8 @@ def parse_args():
                       'Acc: accuracy score;\n'
                       'MAE_Macro: macro-averaged mean absolute error;\n'
                       'F1_Macro:  macro-averaged F1 score;\n'
-                      'Recall_Macro: macro-averaged recall score.')
+                      'Recall_Macro: macro-averaged recall score;\n'
+                      'Precision_Macro: macro-averaged precision score.')
 
   return p.parse_args()
 
@@ -281,9 +282,13 @@ def train_model(model,
 
   print("All the variables after defining valid/test accuracy:")
   all_variables = tf.global_variables()
+  trainable_variables = tf.trainable_variables()
   print(type(all_variables))
   for _ in all_variables:
-    print(_)
+    if _ in trainable_variables:
+      print('(t) {}'.format(_))
+    else:
+      print('( ) {}'.format(_))
 
   print("\n\n\n")
 
@@ -851,8 +856,9 @@ def main():
                         'MAE_Macro',
                         'F1_Macro',
                         'F1_PosNeg_Macro',
-                        'Recall_Macro']
-  
+                        'Recall_Macro',
+                        'Precision_Macro']
+
   # Read data
   dataset_info = dict()
   for dataset_name in args.datasets:

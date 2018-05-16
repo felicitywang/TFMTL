@@ -17,9 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-import os
 import json
+import os
+
+import tensorflow as tf
 
 from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
@@ -108,13 +109,13 @@ class Mult(object):
     x = list()
     input_lengths = list()
     for text_field_name in text_field_names:
-      input_lengths.append(batch[text_field_name+'_length'])
+      input_lengths.append(batch[text_field_name + '_length'])
       if self._hps.input_key == 'tokens':
         x.append(batch[text_field_name])
       elif self._hps.input_key == 'bow':
-        x.append(batch[text_field_name+'_bow'])
+        x.append(batch[text_field_name + '_bow'])
       elif self._hps.input_key == 'tfidf':
-        x.append(batch[text_field_name+'_tfidf'])
+        x.append(batch[text_field_name + '_tfidf'])
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 
@@ -166,13 +167,13 @@ class Mult(object):
     x = list()
     input_lengths = list()
     for text_field_name in text_field_names:
-      input_lengths.append(batch[text_field_name+'_length'])
+      input_lengths.append(batch[text_field_name + '_length'])
       if self._hps.input_key == 'tokens':
         x.append(batch[text_field_name])
       elif self._hps.input_key == 'bow':
-        x.append(batch[text_field_name+'_bow'])
+        x.append(batch[text_field_name + '_bow'])
       elif self._hps.input_key == 'tfidf':
-        x.append(batch[text_field_name+'_tfidf'])
+        x.append(batch[text_field_name + '_tfidf'])
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 

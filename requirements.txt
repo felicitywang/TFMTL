@@ -11,3 +11,4 @@ pytest
 pytest-runner
 sklearn
 scipy
+glove_python

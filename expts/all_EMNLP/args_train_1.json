@@ -1,11 +1,12 @@
 {
     "max_document_length": -1,
-    "max_vocab_size": 10000,
-    "min_frequency": 0,
+    "max_vocab_size": -1,
+    "min_frequency": 1,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
-        "text"
+        "seq1",
+        "seq2"
     ],
     "train_ratio": 0.8,
     "valid_ratio": 0.1,
@@ -14,5 +15,7 @@
     "padding": false,
     "write_bow": false,
     "write_tfidf": false,
-    "tokenizer": "tweet_tokenizer"
+    "tokenizer": "ruder_tokenizer",
+    "preproc": false,
+    "vocab_all": false
 }
