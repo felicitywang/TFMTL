@@ -7,9 +7,10 @@
                                             "cell_size": [100],
                                             "initial_state_fwd": null,
                                             "initial_state_bwd": null,
-                                            "output_keep_prob": [0.5, 1.0]
+                                            "output_keep_prob": [1.0],
+                                            "skip_connections": [true]
                                            }],
                         "embed_kwargs_names": "embed_dim",
-                        "extract_kwargs_names": "num_layers cell_type cell_size initial_state_fwd initial_state_bwd output_keep_prob"
+                        "extract_kwargs_names": "num_layers cell_type cell_size initial_state_fwd initial_state_bwd output_keep_prob skip_connections"
                        }]
 }

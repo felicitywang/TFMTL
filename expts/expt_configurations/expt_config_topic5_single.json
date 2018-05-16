@@ -57,7 +57,8 @@
 
     "shared_mlp": [{"shared_mlp_layers": 0, "shared_hidden_dims": 0}],
 
-    "private_mlp": [{"private_mlp_layers": 0, "private_hidden_dims": 0},
+    "private_mlp": [
+                    {"private_mlp_layers": 0, "private_hidden_dims": 0},
                     {"private_mlp_layers": 1, "private_hidden_dims": 32},                    
                     {"private_mlp_layers": 1, "private_hidden_dims": 64},
                     {"private_mlp_layers": 1, "private_hidden_dims": 128},
