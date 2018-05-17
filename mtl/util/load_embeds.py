@@ -70,7 +70,7 @@ def reorder_vocab(glove_path, training_vocab_list):
   :param train_vocab_list: list, all the word types in the training data
   :return: reordered vocab
   """
-  print('Loading embeddings from {}...\n'.format(glove_path), end='')
+  print('Loading embeddings from {}...\n'.format(glove_path))
   glove_vocab_set = set(glove.Glove.load_stanford(glove_path).dictionary)
 
   not_in_glove = []
