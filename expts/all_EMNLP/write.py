@@ -56,10 +56,10 @@ RUDER_AUX_TASK_DICT = {
 ARGS_FILES = {
     'args_all_0.json': 'all_0/',  # all splits, min_freq = 0
     'args_train_1.json': 'train_1/',  # train split, min_freq = 1
-    'args_all_0_glove_init.json': 'all_0_glove_init/',
-    'args_train_1_glove_init.json': 'train_1_glove_init/',
-    'args_all_0_glove_expand.json': 'all_0_glove_expand/',
-    'args_train_1_glove_expand.json': 'train_1_glove_expand/',
+    # 'args_all_0_glove_init.json': 'all_0_glove_init/',
+    # 'args_train_1_glove_init.json': 'train_1_glove_init/',
+    # 'args_all_0_glove_expand.json': 'all_0_glove_expand/',
+    # 'args_train_1_glove_expand.json': 'train_1_glove_expand/',
 }
 
 if __name__ == '__main__':
