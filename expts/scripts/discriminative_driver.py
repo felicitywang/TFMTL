@@ -283,12 +283,20 @@ def train_model(model,
   print("All the variables after defining valid/test accuracy:")
   all_variables = tf.global_variables()
   trainable_variables = tf.trainable_variables()
+  total_trainable_parameters = 0
   print(type(all_variables))
-  for _ in all_variables:
-    if _ in trainable_variables:
-      print('(t) {}'.format(_))
+  for var in all_variables:
+    if var in trainable_variables:
+      print('(t) {}'.format(var))
+      shape = var.get_shape()
+      var_params = 1
+      for dim in shape:
+        var_params *= dim.value
+      total_trainable_parameters += var_params
     else:
-      print('( ) {}'.format(_))
+      print('( ) {}'.format(var))
+
+  print("Total trainable parameters in this model={}".format(total_trainable_parameters))
 
   print("\n\n\n")
 
@@ -450,7 +458,9 @@ def train_model(model,
 
         str_ += '\n(%s) ' % (dataset_name)
         for m, s in model_info[dataset_name]['valid_metrics'].items():
-          if m == args.tuning_metric:
+          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+            str_ += '**%s=%f** ' % (m, s)
+          elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
@@ -606,7 +616,9 @@ def test_model(model, dataset_info, args):
           str_ += '( )'
         str_ += '(%s)' % (dataset_name)
         for m, s in model_info[dataset_name]['test_metrics'].items():
-          if m == args.tuning_metric:
+          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+            str_ += '**%s=%f** ' % (m, s)
+          elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
@@ -733,7 +745,11 @@ def compute_held_out_performance(session,
 
   if topic_path != '' and topic_path is not None:
     with gzip.open(topic_path, mode='rt') as f:
-      d = json.load(f, encoding='utf-8')
+      try:
+        d = json.load(f, encoding='utf-8')
+      except UnicodeDecodeError:
+        print("Failed to read topic_path={}".format(topic_path))
+        raise
   index2topic = dict()
   for item in d:
     index2topic[item['index']] = item['seq1']
@@ -757,6 +773,10 @@ def compute_held_out_performance(session,
                    y_index]  # topic for each example so we can macro-average across topics
         y_indexes += y_index
         y_topics += y_topic
+        if "FNC-1" in topic_path:
+          zip_ = zip(*[y_index, y_topic, y_pred, y_true])
+          for i, top, p, tr in zip_:
+            print("({}: {}) pred={}, true={}".format(i, top, p, tr))
       else:
         y_true, y_pred, eval_loss_v = session.run(
           [eval_label, pred_op, eval_loss_op])
@@ -791,7 +811,7 @@ def compute_held_out_performance(session,
   res['ncorrect'] = ncorrect
   for score in scores:
     res[score] = scores[score]
-  res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
+  # res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
 
   res['eval_loss'] = evaluation_loss
   return res

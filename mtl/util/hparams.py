@@ -58,13 +58,15 @@ def str2func(s):
   from mtl.embedders.pretrained import (init_glove,
                                         expand_glove)
 
-  from mtl.extractors.paragram import paragram_phrase
+  from mtl.extractors.paragram import (paragram_phrase,
+                                       serial_paragram)
   from mtl.extractors.cnn import conv_and_pool
   from mtl.extractors.rnn import rnn_and_pool
   from mtl.extractors.lbirnn import (lbirnn,
                                      serial_lbirnn,
                                      serial_lbirnn_stock)
-  from mtl.extractors.no_op import no_op_encoding
+  from mtl.extractors.no_op import (no_op_encoding,
+                                    concat_extractor)
 
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
@@ -78,12 +80,14 @@ def str2func(s):
     "init_glove": init_glove,
     "expand_glove": expand_glove,
     "paragram": paragram_phrase,
+    "serial_paragram": serial_paragram,
     "conv_and_pool": conv_and_pool,
     "rnn_and_pool": rnn_and_pool,
     "lbirnn": lbirnn,
     "serial_lbirnn": serial_lbirnn,
     "serial_lbirnn_stock": serial_lbirnn_stock,
     "no_op_encoding": no_op_encoding,
+    "concat_extractor": concat_extractor,
 
     "reduce_min_over_time": reduce_min_over_time,
     "reduce_max_over_time": reduce_max_over_time,
@@ -93,6 +97,7 @@ def str2func(s):
 
     "tf.nn.relu": tf.nn.relu,
     "tf.nn.elu": tf.nn.elu,
+    "tf.nn.tanh": tf.nn.tanh,
 
     "tf.contrib.rnn.BasicLSTMCell": tf.contrib.rnn.BasicLSTMCell,
     "tf.contrib.rnn.LSTMCell": tf.contrib.rnn.LSTMCell,

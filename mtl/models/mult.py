@@ -26,6 +26,7 @@ from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
 
 logging = tf.logging
+eps = 1e-5
 
 
 def validate_labels(feature_dict, class_sizes):
@@ -202,12 +203,12 @@ class Mult(object):
     x = self._logits[dataset_name](x)
 
     # loss
-    #ce = tf.reduce_mean(
+    # ce = tf.reduce_mean(
     #  tf.nn.sparse_softmax_cross_entropy_with_logits(
     #    logits=x, labels=tf.cast(labels, dtype=tf.int32)))
-    ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=x,
-                                                        labels=tf.cast(labels, dtype=tf.int32))
-    
+    softmax_xent = tf.nn.sparse_softmax_cross_entropy_with_logits
+    ce = softmax_xent(logits=x, labels=tf.cast(labels, dtype=tf.int32))
+
     loss = tf.reduce_mean(ce)  # average loss per training example
 
     return loss
@@ -223,7 +224,7 @@ class Mult(object):
     losses = dict()
     total_loss = 0.0
     assert len(dataset_batches) == len(self._hps.alphas)
-    assert sum(self._hps.alphas) == 1.0
+    assert abs(sum(self._hps.alphas) - 1.0) < eps
     for dataset_batch, alpha in zip(dataset_batches.items(),
                                     self._hps.alphas):
       # We assume that the encoders and decoders always use the

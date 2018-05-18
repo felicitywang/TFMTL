@@ -66,3 +66,42 @@ def paragram_phrase(inputs,
                               activation=activation_fn)
 
   return s_embedding
+
+
+def serial_paragram(inputs,
+                    lengths,
+                    reducer,
+                    apply_activation,
+                    activation_fn):
+  lists = [inputs, lengths]
+  it = iter(lists)
+  num_stages = len(next(it))
+  if not all(len(l) == num_stages for l in it):
+    raise ValueError("all list arguments must have the same length")
+
+  assert num_stages > 0, "must specify arguments for " \
+                         "at least one stage of serial paragram"
+
+  with tf.variable_scope("paragram-seq1") as varscope1:
+    p_seq1 = paragram_phrase(inputs[0],
+                             lengths[0],
+                             reducer=reducer,
+                             apply_activation=apply_activation,
+                             activation_fn=activation_fn)
+
+  with tf.variable_scope("paragram-seq2") as varscope2:
+    varscope1.reuse_variables()
+    p_seq2 = paragram_phrase(inputs[1],
+                             lengths[1],
+                             reducer=reducer,
+                             apply_activation=apply_activation,
+                             activation_fn=activation_fn)
+
+  features = tf.concat([p_seq1, p_seq2], axis=-1)
+
+  outputs = dense_layer(features,
+                        features.get_shape().as_list()[-1],  # keep same dimensionality
+                        name="serial-paragram-output",
+                        activation=tf.nn.tanh)
+
+  return outputs

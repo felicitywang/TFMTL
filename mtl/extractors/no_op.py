@@ -13,8 +13,10 @@
 # limitations under the License.
 # ============================================================================
 
+import tensorflow as tf
 
-def no_op_encoding(inputs):
+
+def no_op_encoding(inputs, lengths):
   """A no-op encoder, e.g., for use with bag-of-words features
   that have already been encoded.
 
@@ -28,3 +30,9 @@ def no_op_encoding(inputs):
   """
 
   return inputs
+
+
+def concat_extractor(inputs, lengths):
+  if not isinstance(inputs, list):
+    inputs = [inputs]
+  return tf.concat(inputs, axis=1)  # concat along time axis
