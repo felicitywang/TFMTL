@@ -109,6 +109,10 @@ of tied/untied embedders and extractors are correct."""
         # k = {'indices': indices1}
         #
 
+        # COMMENT THESE LINES OUT IF NOT USING L-BIRNN or SERIAL L-BIRNN EXTRACTOR
+        k['is_training'] = False
+        #
+
         output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
         output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1, **k)
 

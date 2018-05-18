@@ -64,6 +64,8 @@ def parse_args():
                  help='Name of experiment.')
   p.add_argument('--tuning_metric', default='Acc', type=str,
                  help='Metric used to tune hyper-parameters')
+  p.add_argument('--reporting_metric', default='Acc', type=str,
+                 help='Metric to report')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
                       'predict. Used in predict mode.')
@@ -84,12 +86,16 @@ def parse_args():
                  help='Whether decoders are shared across datasets')
   p.add_argument('--optimizer', default='adam', type=str,
                  help='Name of optimization algorithm to use')
-  p.add_argument('--lr0', default=0.0001, type=float,
+  p.add_argument('--lr0', default=0.001, type=float,
                  help='Initial learning rate')
   p.add_argument('--max_grad_norm', default=5.0, type=float,
                  help='Clip gradients to max_grad_norm during training.')
   p.add_argument('--num_train_epochs', default=50, type=int,
                  help='Number of training epochs.')
+  p.add_argument('--patience', default=10, type=int,
+                 help='Number of epochs to wait before early stopping due to low dev accuracy.')
+  p.add_argument('--early_stopping_acc_threshold', default=1.0, type=float,
+                 help='Threshold for early stopping on dev set of main task. If 1.0, there is no early stopping.')
   p.add_argument('--print_trainable_variables', action='store_true',
                  default=False,
                  help='Diagnostic: print trainable variables')
@@ -226,9 +232,16 @@ def train_model(model,
       additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
-  loss = model.get_multi_task_loss(train_batches,
-                                   is_training=True,
-                                   additional_extractor_kwargs=additional_extractor_kwargs)
+  #losses = model.get_multi_task_loss(train_batches,
+  #                                   is_training=True,
+  #                                   additional_extractor_kwargs=additional_extractor_kwargs)
+  losses = dict()
+  for dataset in model_info:
+    losses[dataset] = model.get_loss(train_batches[dataset],
+                                     dataset,
+                                     dataset,
+                                     additional_extractor_kwargs=additional_extractor_kwargs,
+                                     is_training=True)
 
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
@@ -241,9 +254,20 @@ def train_model(model,
   global_step_tensor = tf.train.get_or_create_global_step()
   zero_global_step_op = global_step_tensor.assign(0)
   lr = get_learning_rate(args.lr0)
-  tvars, grads = get_var_grads(loss)
-  train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
-                          global_step_tensor, args.optimizer, name='train_op')
+
+  train_ops = dict()
+  optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
+  for dataset_name in model_info:
+    #tvars, grads = get_var_grads(losses[dataset_name])
+    #train_ops[dataset_name] = get_train_op(tvars, grads, lr, args.max_grad_norm,
+    #                               global_step_tensor, args.optimizer, name='train_op_{}'.format(dataset_name))
+    train_ops[dataset_name] = optim.minimize(losses[dataset_name], global_step=global_step_tensor)
+
+
+    
+  #tvars, grads = get_var_grads(loss)
+  #train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
+  #                        global_step_tensor, args.optimizer, name='train_op')
   init_ops = [tf.global_variables_initializer(),
               tf.local_variables_initializer()]
   config = get_proto_config(args)
@@ -258,9 +282,21 @@ def train_model(model,
 
   print("All the variables after defining valid/test accuracy:")
   all_variables = tf.global_variables()
+  trainable_variables = tf.trainable_variables()
+  total_trainable_parameters = 0
   print(type(all_variables))
-  for _ in all_variables:
-    print(_)
+  for var in all_variables:
+    if var in trainable_variables:
+      print('(t) {}'.format(var))
+      shape = var.get_shape()
+      var_params = 1
+      for dim in shape:
+        var_params *= dim.value
+      total_trainable_parameters += var_params
+    else:
+      print('( ) {}'.format(var))
+
+  print("Total trainable parameters in this model={}".format(total_trainable_parameters))
 
   print("\n\n\n")
 
@@ -310,6 +346,10 @@ def train_model(model,
     best_total_acc = float('-inf')
     best_total_acc_epoch = -1
 
+    main_task_dev_accuracy = []
+    stopping_criterion_reached = False
+    early_stopping_dev_results = ""
+    
     # Do training
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
@@ -321,19 +361,29 @@ def train_model(model,
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      for _ in tqdm(xrange(steps_per_epoch)):
-        step, loss_v, _ = sess.run(
-          [global_step_tensor, loss, train_op])
-        num_iter += 1
-        total_loss += loss_v
+      #for _ in tqdm(xrange(steps_per_epoch)):
+      #  step, loss_v, _ = sess.run(
+      #    [global_step_tensor, loss, train_op])
+      #  num_iter += 1
+      #  total_loss += loss_v
+      #
+      #  # loss_v is sum over a batch from each dataset of the average loss *per
+      #  #  training example*
+      #assert num_iter > 0
+      #
+      ## average loss per batch (which is in turn averaged across examples)
+      #train_loss = float(total_loss) / float(num_iter)
 
-        # loss_v is sum over a batch from each dataset of the average loss *per
-        #  training example*
+      for _ in tqdm(xrange(steps_per_epoch)):
+        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):          
+          loss_v, _ = sess.run([losses[dataset_name], train_ops[dataset_name]])
+          total_loss += alpha * loss_v
+        step = sess.run(global_step_tensor)
+        num_iter += 1
       assert num_iter > 0
 
-      # average loss per batch (which is in turn averaged across examples)
       train_loss = float(total_loss) / float(num_iter)
-
+          
       train_loss_summary = tf.Summary(
         value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
       train_file_writer.add_summary(train_loss_summary, global_step=step)
@@ -382,6 +432,17 @@ def train_model(model,
       valid_file_writer.add_summary(valid_main_task_accuracy_summary,
                                     global_step=step)
 
+      if (main_task_acc >= args.early_stopping_acc_threshold) and (len(main_task_dev_accuracy) >= args.patience) and (main_task_acc < main_task_dev_accuracy[-args.patience]):
+        print("Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(epoch, args.patience, args.early_stopping_acc_threshold))
+        stopping_criterion_reached = True
+
+      main_task_dev_accuracy.append(main_task_acc)
+
+      if args.reporting_metric != "Acc":
+        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
+        valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
+        valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
+        
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
@@ -397,7 +458,9 @@ def train_model(model,
 
         str_ += '\n(%s) ' % (dataset_name)
         for m, s in model_info[dataset_name]['valid_metrics'].items():
-          if m == args.tuning_metric:
+          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+            str_ += '**%s=%f** ' % (m, s)
+          elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
@@ -430,6 +493,15 @@ def train_model(model,
       with open(args.log_file, 'a') as f:
         f.write(str_ + '\n')
 
+      if stopping_criterion_reached:
+        saver.save(sess.raw_session(),
+                   os.path.join(args.checkpoint_dir, 'early-stopping', 'model'))
+        early_stopping_dev_results = str_
+        #with open(args.log_file, 'a') as f:
+        #  f.write('\nSTOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
+        #  f.write(str_ + '\n')
+        break
+
     print(best_eval_performance)
     print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
                                                        best_total_acc_epoch))
@@ -455,6 +527,9 @@ def train_model(model,
 
       f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
                                                                best_total_acc_epoch))
+      if stopping_criterion_reached:
+        f.write('STOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
+        f.write(early_stopping_dev_results + '\n\n')
 
     train_file_writer.close()
     valid_file_writer.close()
@@ -466,15 +541,22 @@ def test_model(model, dataset_info, args):
   """
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
+  print("testing model")
   fill_eval_loss_op(args, model, dataset_info, model_info)
+  print("filled eval loss op")
   fill_pred_op_info(dataset_info, model, args, model_info)
+  print("filled pred op")
   fill_topic_op(args, model_info)
-
+  print("filled topic op")
+  
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
   model_names = args.datasets
   if len(args.datasets) > 1:
     model_names.append('MULT')
+
+  if os.path.exists(os.path.join(args.checkpoint_dir, 'early-stopping')):
+    model_names.append('early-stopping')
 
   saver = tf.train.Saver()
 
@@ -484,6 +566,10 @@ def test_model(model, dataset_info, args):
     with tf.Session() as sess:
       if model_name == 'MULT':
         checkpoint_path = os.path.join(args.checkpoint_dir, 'MULT',
+                                       'model')
+      elif model_name == 'early-stopping':
+        checkpoint_path = os.path.join(args.checkpoint_dir,
+                                       'early-stopping',
                                        'model')
       else:
         checkpoint_path = model_info[model_name]['checkpoint_path']
@@ -530,7 +616,9 @@ def test_model(model, dataset_info, args):
           str_ += '( )'
         str_ += '(%s)' % (dataset_name)
         for m, s in model_info[dataset_name]['test_metrics'].items():
-          if m == args.tuning_metric:
+          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+            str_ += '**%s=%f** ' % (m, s)
+          elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
           else:
             str_ += '%s=%f ' % (m, s)
@@ -657,7 +745,11 @@ def compute_held_out_performance(session,
 
   if topic_path != '' and topic_path is not None:
     with gzip.open(topic_path, mode='rt') as f:
-      d = json.load(f, encoding='utf-8')
+      try:
+        d = json.load(f, encoding='utf-8')
+      except UnicodeDecodeError:
+        print("Failed to read topic_path={}".format(topic_path))
+        raise
   index2topic = dict()
   for item in d:
     index2topic[item['index']] = item['seq1']
@@ -681,6 +773,10 @@ def compute_held_out_performance(session,
                    y_index]  # topic for each example so we can macro-average across topics
         y_indexes += y_index
         y_topics += y_topic
+        if "FNC-1" in topic_path:
+          zip_ = zip(*[y_index, y_topic, y_pred, y_true])
+          for i, top, p, tr in zip_:
+            print("({}: {}) pred={}, true={}".format(i, top, p, tr))
       else:
         y_true, y_pred, eval_loss_v = session.run(
           [eval_label, pred_op, eval_loss_op])
@@ -715,7 +811,7 @@ def compute_held_out_performance(session,
   res['ncorrect'] = ncorrect
   for score in scores:
     res[score] = scores[score]
-  res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
+  # res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
 
   res['eval_loss'] = evaluation_loss
   return res
@@ -779,6 +875,7 @@ def main():
     metrics[dataset] = ['Acc',
                         'MAE_Macro',
                         'F1_Macro',
+                        'F1_PosNeg_Macro',
                         'Recall_Macro',
                         'Precision_Macro']
 
@@ -901,7 +998,7 @@ def main():
     training_files = [dataset_info[dataset_name]['train_path'] for
                       dataset_name
                       in dataset_info]
-    max_N_train = max(
+    min_N_train = min(
       [get_num_records(tf_rec_file) for tf_rec_file in training_files])
 
     # Seed TensorFlow RNG
@@ -919,8 +1016,8 @@ def main():
         print(tvar)
 
     # Steps per epoch.
-    # One epoch: all datasets have been seen completely at least once
-    steps_per_epoch = int(max_N_train / args.batch_size)
+    # One epoch: smallest dataset has been seen once
+    steps_per_epoch = int(min_N_train / args.batch_size)
 
     # Create model(s):
     # NOTE: models must support the following functions:
@@ -1207,6 +1304,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 
 
 def fill_topic_op(args, model_info):
+
   if args.experiment_name == "RUDER_NAACL_18":
     for dataset_name in model_info:
       if args.mode in ['train', 'init']:

@@ -308,14 +308,17 @@ def _lbirnn_stock(inputs,
     cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
     cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
 
+    if "skip_connections" in kwargs and kwargs["skip_connections"]:
+      cells_fwd = tf.contrib.rnn.ResidualWrapper(cells_fwd)
+      cells_bwd = tf.contrib.rnn.ResidualWrapper(cells_bwd)
+
     if is_training and ("output_keep_prob" in kwargs) and (kwargs["output_keep_prob"] < 1.0):
-      print("is_training={} --> using dropout in stock lbirnn (scope={})".format(is_training, scope_name))
       cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
                                                 output_keep_prob=kwargs["output_keep_prob"])
       cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
                                                 output_keep_prob=kwargs["output_keep_prob"])
     else:
-      print("not using dropout in stock lbirnn (is_training={}, scope={})".format(is_training, scope_name))
+      pass
 
     if "attention" in kwargs and kwargs["attention"] == True:
       if "attn_length" in kwargs:
@@ -364,7 +367,8 @@ def serial_lbirnn_stock(inputs,
                                    cell_size=cell_size,
                                    initial_state_fwd=initial_state_fwd,
                                    initial_state_bwd=initial_state_bwd,
-                                   scope=varscope1)
+                                   scope=varscope1,
+                                   **kwargs)
 
   with tf.variable_scope("stock-lbirnn-seq2") as varscope2:
     varscope1.reuse_variables()
@@ -376,9 +380,11 @@ def serial_lbirnn_stock(inputs,
                                     cell_size=cell_size,
                                     initial_state_fwd=seq1_states[0],
                                     initial_state_bwd=seq1_states[1],
-                                    scope=varscope2)
+                                    scope=varscope2,
+                                    **kwargs)
 
   # concatenate hx_fwd and hx_bwd of top layer
+  # `states` = ((cx_fwd, hx_fwd), (cx_bwd, hx_bwd))
   if num_layers > 1:
     output = tf.concat([states[0][-1][1], states[1][-1][1]], 1)
   else:

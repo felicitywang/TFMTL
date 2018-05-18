@@ -26,6 +26,7 @@ from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
 
 logging = tf.logging
+eps = 1e-5
 
 
 def validate_labels(feature_dict, class_sizes):
@@ -65,21 +66,24 @@ class Mult(object):
 
     self._encoders = build_encoders(args)
 
-    self._mlps_shared = build_mlps(hps, is_shared=True)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      self._mlps_shared = build_mlps(hps, is_shared=True)
     self._mlps_private = build_mlps(hps, is_shared=False)
 
-    self._logits = build_logits(class_sizes)
+    self._logits = build_logits(class_sizes, self._hps.experiment_name)
 
   # Encoding (feature extraction)
   def encode(self,
              inputs,
              dataset_name,
+             # is_training,
              lengths=None,
              additional_extractor_kwargs=dict()):
     # Also apply arguments that aren't `inputs` or `lengths`
     # (such as `indices` for the serial bi-RNN extractor)
     return self._encoders[dataset_name](inputs,
                                         lengths,
+                                        # is_training,
                                         **additional_extractor_kwargs[
                                           dataset_name])
 
@@ -91,11 +95,17 @@ class Mult(object):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      assert batch_source == dataset_name
+
     for dataset, dataset_path in zip(self._hps.datasets,
                                      self._hps.dataset_paths):
       if dataset == batch_source:
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
+          if self._hps.experiment_name == "RUDER_NAACL_18":
+            # print("text_field_names={}".format(text_field_names))
+            assert text_field_names == ['seq1', 'seq2']
 
     x = list()
     input_lengths = list()
@@ -118,10 +128,12 @@ class Mult(object):
 
     x = self.encode(x,
                     dataset_name,
+                    # is_training=False,
                     lengths=input_lengths,
                     additional_extractor_kwargs=additional_extractor_kwargs)
 
-    x = self._mlps_shared[dataset_name](x, is_training=False)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      x = self._mlps_shared[dataset_name](x, is_training=False)
     x = self._mlps_private[dataset_name](x, is_training=False)
 
     x = self._logits[dataset_name](x)
@@ -134,18 +146,24 @@ class Mult(object):
   def get_loss(self,
                batch,
                batch_source,  # which dataset the batch is from
-               dataset_name,
+               dataset_name,  # we predict labels w.r.t. this dataset
                additional_extractor_kwargs=dict(),
                features=None,
                is_training=True):
     # Returns most likely label given conditioning variables (only
     # run this on eval data)
 
+    if self._hps.experiment_name == "RUDER_NAACL_18":
+      assert batch_source == dataset_name
+
     for dataset, dataset_path in zip(self._hps.datasets,
                                      self._hps.dataset_paths):
       if dataset == batch_source:
         with open(os.path.join(dataset_path, 'args.json')) as f:
           text_field_names = json.load(f)['text_field_names']
+          if self._hps.experiment_name == "RUDER_NAACL_18":
+            # print("text_field_names={}".format(text_field_names))
+            assert text_field_names == ['seq1', 'seq2']
 
     x = list()
     input_lengths = list()
@@ -172,20 +190,24 @@ class Mult(object):
     if features is None:
       x = self.encode(x,
                       dataset_name,
+                      # is_training=is_training,
                       lengths=input_lengths,
                       additional_extractor_kwargs=additional_extractor_kwargs)
     else:
       x = features
 
-    x = self._mlps_shared[dataset_name](x, is_training=is_training)
+    if self._hps.experiment_name != "RUDER_NAACL_18":
+      x = self._mlps_shared[dataset_name](x, is_training=is_training)
     x = self._mlps_private[dataset_name](x, is_training=is_training)
 
     x = self._logits[dataset_name](x)
 
     # loss
-    ce = tf.reduce_mean(
-      tf.nn.sparse_softmax_cross_entropy_with_logits(
-        logits=x, labels=tf.cast(labels, dtype=tf.int32)))
+    # ce = tf.reduce_mean(
+    #  tf.nn.sparse_softmax_cross_entropy_with_logits(
+    #    logits=x, labels=tf.cast(labels, dtype=tf.int32)))
+    softmax_xent = tf.nn.sparse_softmax_cross_entropy_with_logits
+    ce = softmax_xent(logits=x, labels=tf.cast(labels, dtype=tf.int32))
 
     loss = tf.reduce_mean(ce)  # average loss per training example
 
@@ -202,7 +224,7 @@ class Mult(object):
     losses = dict()
     total_loss = 0.0
     assert len(dataset_batches) == len(self._hps.alphas)
-    assert sum(self._hps.alphas) == 1.0
+    assert abs(sum(self._hps.alphas) - 1.0) < eps
     for dataset_batch, alpha in zip(dataset_batches.items(),
                                     self._hps.alphas):
       # We assume that the encoders and decoders always use the
@@ -227,7 +249,8 @@ class Mult(object):
 
     total_loss += l2_weight_penalty
 
-    return total_loss
+    # return total_loss
+    return losses
 
   @property
   def encoders(self):
@@ -247,7 +270,8 @@ def build_mlps(hps, is_shared):
                                   num_layers=hps.shared_mlp_layers,
                                   # TODO from args
                                   activation=tf.tanh,
-                                  input_keep_prob=hps.input_keep_prob,
+                                  # input_keep_prob=hps.input_keep_prob,
+                                  input_keep_prob=1,
                                   # TODO ?
                                   batch_normalization=False,
                                   # TODO ?
@@ -273,19 +297,25 @@ def build_mlps(hps, is_shared):
         batch_normalization=False,
         # TODO ?
         layer_normalization=False,
-        output_keep_prob=hps.output_keep_prob,
+        # output_keep_prob=hps.output_keep_prob,
+        output_keep_prob=1,
       )
 
   return mlps
 
 
-def build_logits(class_sizes):
+def build_logits(class_sizes,
+                 experiment_name):
+  if experiment_name == "RUDER_NAACL_18":
+    activation = tf.tanh
+  else:
+    activation = None
   logits = dict()
   for k, v in class_sizes.items():
     logits[k] = tf.make_template('logit_{}'.format(k),
                                  dense_layer,
                                  name='logits',
                                  output_size=v,
-                                 activation=None
+                                 activation=activation
                                  )
   return logits

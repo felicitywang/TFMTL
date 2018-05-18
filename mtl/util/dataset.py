@@ -51,6 +51,13 @@ logging = tf.logging
 
 FLAGS = flags.FLAGS
 
+# TRAIN_RATIO = 0.8  # train out of all
+# VALID_RATIO = 0.1  # valid out of all / valid out of train
+# RANDOM_SEED = 42
+
+# BOS = 'BOS'
+# EOS = 'EOS'
+
 
 class Dataset:
 
@@ -243,13 +250,14 @@ Args:
 
         text = [BOS] + self._tokenizer(text) + [EOS]
 
-        assert len(text) >= 1, text
+        assert len(text) >= 3, text
+
         if len(text) < min_seq_len:
           min_seq_len = len(text)
 
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
-        # length of cleaned text (including EOS)
+        # length of cleaned text (including BOS and EOS)
         self._sequence_lengths[text_field_name].append(len(text))
 
     print('Minimum sequence length: %d' % min_seq_len)
@@ -720,7 +728,7 @@ Args:
               value=[self._sequence_lengths[text_field_name][index]]))
 
           types, counts = get_types_and_counts(
-            self._sequences[text_field_name][index])  # including EOS
+            self._sequences[text_field_name][index])  # including BOS and EOS
           assert len(types) == len(counts)
           assert len(types) > 0
           for t in types:
