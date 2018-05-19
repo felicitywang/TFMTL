@@ -77,7 +77,7 @@ if __name__ == '__main__':
         args_file], target_task)
       if Path(folder_st).exists():
         print("File %s already exists! Skipping..." % folder_st)
-        break
+        continue
       print("File %s doesn't exist. Creating..." % folder_st)
       folder_st_old = write_tfrecords_single.main(
         ['', target_task, args_file])
@@ -89,9 +89,9 @@ if __name__ == '__main__':
     for args_file in ARGS_FILES:
       folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
         args_file])
-      if Path(folder_mt).exists():
+      if Path(os.path.join(folder_mt, )).exists():
         print("File %s already exists! Skipping..." % folder_mt)
-        break
+        continue
       print("File %s doesn't exist. Creating..." % folder_mt)
       folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
         args_file])
