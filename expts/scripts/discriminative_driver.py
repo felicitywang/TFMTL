@@ -592,7 +592,6 @@ def predict(model, dataset_info, args):
                 'w') as file:
         for i in _predictions:
           file.write(str(i) + '\n')
-        file.close
 
   logging.info(str_)
 
@@ -764,7 +763,6 @@ def main():
   for dataset, dataset_path in zip(args.datasets, args.dataset_paths):
     with open(os.path.join(dataset_path, 'args.json')) as file:
       labels[dataset] = json.load(file)['labels']
-      file.close()
 
   # evaluation metrics for each dataset
   metrics = dict()

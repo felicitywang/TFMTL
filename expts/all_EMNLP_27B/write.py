@@ -28,6 +28,8 @@ import shutil
 import sys
 from pathlib import Path
 
+from mtl.util.util import make_dir
+
 sys.path.append('../../')
 sys.path.append('../')
 
@@ -54,12 +56,12 @@ RUDER_AUX_TASK_DICT = {
 
 
 ARGS_FILES = {
-  'args_all_0.json': 'all_0/',  # all splits, min_freq = 0
-  'args_train_1.json': 'train_1/',  # train split, min_freq = 1
-  # 'args_all_0_glove_init.json': 'all_0_glove_init/',
-  # 'args_train_1_glove_init.json': 'train_1_glove_init/',
-  # 'args_all_0_glove_expand.json': 'all_0_glove_expand/',
-  # 'args_train_1_glove_expand.json': 'train_1_glove_expand/',
+  # 'args_all_0.json': 'all_0/',  # all splits, min_freq = 0
+  # 'args_train_1.json': 'train_1/',  # train split, min_freq = 1
+  'args_all_0_glove_init.json': 'all_0_glove_init/',
+  'args_train_1_glove_init.json': 'train_1_glove_init/',
+  'args_all_0_glove_expand.json': 'all_0_glove_expand/',
+  'args_train_1_glove_expand.json': 'train_1_glove_expand/',
 }
 
 if __name__ == '__main__':
@@ -93,8 +95,7 @@ if __name__ == '__main__':
         print("File %s already exists! Skipping..." % folder_mt)
         break
       print("File %s doesn't exist. Creating..." % folder_mt)
-      folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
-        args_file])
+      # make_dir(os.path.dirname(folder_mt))
       folder_mt_old = write_tfrecords_merged.main(
         ['', target_task] + RUDER_AUX_TASK_DICT[target_task] + [args_file])
       shutil.move(folder_mt_old, folder_mt)
@@ -109,6 +110,7 @@ if __name__ == '__main__':
         print("File %s already exists! Skipping..." % folder_mt)
         break
       print("File %s doesn't exist. Creating..." % folder_mt)
+      # make_dir(os.path.dirname(folder_mt))
       folder_mt_old = write_tfrecords_merged.main(
         [''] + RUDER_TASKS + [args_file])
       shutil.move(folder_mt_old, folder_mt)

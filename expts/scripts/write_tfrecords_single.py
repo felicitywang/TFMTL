@@ -49,12 +49,14 @@ def main(argv):
   if 'vocab_all' in args_single:
     vocab_all = args_single['vocab_all']
 
+  tfrecord_dir_name = "min_" + str(
+    args_single['min_frequency']) + "_max_" + str(
+    args_single['max_frequency']) + "_vocab_" + str(
+    args_single['max_vocab_size'])
+
   if 'pretrained_file' not in args_single or not args_single[
     'pretrained_file']:
-    tfrecord_dir = os.path.join(tfrecord_dir,
-                                "min_" + str(args_single['min_frequency']) +
-                                "_max_" + str(args_single['max_frequency']) +
-                                "_vocab_" + str(args_single['max_vocab_size']))
+    tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
                       vocab_dir=tfrecord_dir,
@@ -86,11 +88,15 @@ def main(argv):
       expand_vocab = args_single['expand_vocab']
 
     if expand_vocab:
-      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-        '.txt')] + '_expand')
+      tfrecord_dir = os.path.join(
+        tfrecord_dir,
+        tfrecord_dir_name + '_' +
+        vocab_name[:vocab_name.find('.txt')] + '_expand')
     else:
-      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-        '.txt')] + '_init')
+      tfrecord_dir = os.path.join(
+        tfrecord_dir,
+        tfrecord_dir_name + '_' +
+        vocab_name[:vocab_name.find('.txt')] + '_init')
 
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
@@ -120,6 +126,7 @@ def main(argv):
     f.write(str(dataset.vocab_size))
 
   return tfrecord_dir
+
 
 if __name__ == '__main__':
   main(sys.argv)

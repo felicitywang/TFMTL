@@ -50,12 +50,14 @@ def main(argv):
   if 'vocab_all' in args_merged:
     vocab_all = args_merged['vocab_all']
 
+  tfrecord_dir_name = "min_" + str(
+    args_merged['min_frequency']) + "_max_" + str(
+    args_merged['max_frequency']) + "_vocab_" + str(
+    args_merged['max_vocab_size'])
+
   if 'pretrained_file' not in args_merged or not args_merged[
     'pretrained_file']:
-    tfrecord_dir = os.path.join(tfrecord_dir,
-                                "min_" + str(args_merged['min_frequency']) + \
-                                "_max_" + str(args_merged['max_frequency']) + \
-                                "_vocab_" + str(args_merged['max_vocab_size']))
+    tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
     tfrecord_dirs = [os.path.join(tfrecord_dir, dataset) for dataset in
                      datasets]
     assert [os.path.basename(tf_dir) for tf_dir in tfrecord_dirs] == [
@@ -90,11 +92,16 @@ def main(argv):
       expand_vocab = args_merged['expand_vocab']
 
     if expand_vocab:
-      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-        '.txt')] + '_expand')
+      tfrecord_dir = os.path.join(
+        tfrecord_dir,
+        tfrecord_dir_name + '_' +
+        vocab_name[:vocab_name.find('.txt')] + '_expand')
     else:
-      tfrecord_dir = os.path.join(tfrecord_dir, vocab_name[:vocab_name.find(
-        '.txt')] + '_init')
+      tfrecord_dir = os.path.join(
+        tfrecord_dir,
+        tfrecord_dir_name + '_' +
+        vocab_name[:vocab_name.find('.txt')] + '_init')
+
     tfrecord_dirs = [os.path.join(tfrecord_dir, dataset) for dataset in
                      datasets]
     for i in tfrecord_dirs:
