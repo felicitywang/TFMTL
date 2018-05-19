@@ -21,6 +21,7 @@ import functools
 import gzip
 import json
 import shutil
+import sys
 from pathlib import Path
 
 from tqdm import tqdm
@@ -30,8 +31,12 @@ from mtl.util.data_prep import ruder_tokenizer
 
 def main():
   tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
-  dataset = 'FNC-1'
-  max_len = 100
+  # dataset = 'FNC-1'
+  # max_len = 100
+
+  dataset = sys.argv[1]
+  max_len = int(sys.argv[2])
+
   truncated_num_seq1 = 0
   truncated_num_seq2 = 0
 
