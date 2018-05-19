@@ -59,6 +59,14 @@ FLAGS = flags.FLAGS
 # EOS = 'EOS'
 
 
+# TRAIN_RATIO = 0.8  # train out of all
+# VALID_RATIO = 0.1  # valid out of all / valid out of train
+# RANDOM_SEED = 42
+
+# BOS = 'BOS'
+# EOS = 'EOS'
+
+
 class Dataset:
 
   def __init__(self,
@@ -324,7 +332,7 @@ Args:
     else:
       print("Public vocabulary given. Use that to build vocabulary "
             "processor.")
-      assert vocab_name in VOCAB_NAMES
+      assert vocab_name in VOCAB_NAMES, vocab_name
       self._vocab_dir = vocab_dir
       self._tfrecord_dir = tfrecord_dir  # used to save the combined
       # vocabulary when loading pretrained word embeddings

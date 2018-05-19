@@ -84,6 +84,8 @@ mv -f fakenewschallenge/ data/raw/FNC-1/
 
 cp ../../datasets/sentiment/FNC-1/label.json ./label_FNC-1.json -f
 
+echo "Backing up FNC-1 data..."
+cp data/json/FNC-1/ -fr data/json/FNC-1.bak
 
 # Target-based sentiment
 mkdir -p data/raw/Target

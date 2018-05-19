@@ -17,7 +17,6 @@
 
 from __future__ import unicode_literals
 
-import glove
 from tqdm import tqdm
 
 
@@ -30,6 +29,7 @@ def combine_vocab(glove_path, train_vocab_list):
   :param train_vocab_list: list, all the word types in the training data
   :return: glove vocab + training vocab
   """
+  import glove
   print('Loading embeddings from {}...\n'.format(glove_path), end='')
   glove_vocab_dict = glove.Glove.load_stanford(glove_path).dictionary  # used
   #  to create the final vocab and keep order
@@ -70,6 +70,7 @@ def reorder_vocab(glove_path, training_vocab_list):
   :param train_vocab_list: list, all the word types in the training data
   :return: reordered vocab
   """
+  import glove
   print('Loading embeddings from {}...\n'.format(glove_path))
   glove_vocab_set = set(glove.Glove.load_stanford(glove_path).dictionary)
 

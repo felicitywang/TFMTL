@@ -20,7 +20,6 @@ from __future__ import print_function
 import codecs
 import json
 
-import glove
 import numpy as np
 import tensorflow as tf
 # TODO other word embeddings
@@ -37,6 +36,7 @@ def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
   :param trainable: whether to train the pred-trained word embeddings
   :return: embed lookup layer
   """
+  import glove
   tf.logging.info('Loading glove embeddings from %s' % glove_path)
   pretrained_matrix = glove.Glove.load_stanford(
     glove_path).word_vectors
@@ -104,7 +104,7 @@ def init_glove(x, vocab_size, embed_dim, glove_path, reverse_vocab_path,
   randomly initialized(those not in Glove)
   :return: embed lookup layer
   """
-
+  import glove
   with codecs.open(random_size_path) as file:
     random_size = int(file.readline().split()[0])
 
