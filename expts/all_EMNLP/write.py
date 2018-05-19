@@ -107,7 +107,7 @@ if __name__ == '__main__':
         args_file])
       if Path(folder_mt).exists():
         print("File %s already exists! Skipping..." % folder_mt)
-        break
+        continue
       print("File %s doesn't exist. Creating..." % folder_mt)
       folder_mt_old = write_tfrecords_merged.main(
         [''] + RUDER_TASKS + [args_file])
