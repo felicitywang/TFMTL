@@ -60,11 +60,11 @@ def main():
   with gzip.open('data/json/' + dataset + '/data.json.gz', mode='wt') as file:
     json.dump(data_list, file, ensure_ascii=False)
 
-  with gzip.open('data/json/' + dataset + '/data.json.gz', mode='rt') as file:
-    data_list = json.load(file, encoding='utf-8')
-  for data in tqdm(data_list):
-    assert len(data['seq1'].split()) <= max_len
-    assert len(data['seq2'].split()) <= max_len
+  # with gzip.open('data/json/' + dataset + '/data.json.gz', mode='rt') as file:
+  #   data_list = json.load(file, encoding='utf-8')
+  # for data in tqdm(data_list):
+  #   assert len(data['seq1'].split()) <= max_len
+  #   assert len(data['seq2'].split()) <= max_len
 
 
 if __name__ == '__main__':
