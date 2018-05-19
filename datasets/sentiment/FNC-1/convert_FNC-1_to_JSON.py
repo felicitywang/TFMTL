@@ -8,6 +8,10 @@ import json
 import os
 import sys
 
+import math
+from collections import Counter
+from random import shuffle
+
 from tqdm import tqdm
 
 FNC_LABELS = ['agree', 'disagree', 'discuss', 'unrelated']
@@ -287,6 +291,20 @@ def save_csv(data_split, filepath):
 if __name__ == '__main__':
   datafolder = sys.argv[1]
 
+  try:
+    stratify = True if (sys.argv[2].lower() == 'true') else False
+    examples_per_class = int(sys.argv[3])
+    create_new_dev = True if (sys.argv[4].lower() == 'true') else False
+  except:
+    stratify = False
+    examples_per_class = -1
+    create_new_dev = False
+
+  if stratify:
+    print("Stratify={}, {} examples per class, creating new dev set={}".format(stratify, examples_per_class, create_new_dev))
+  else:
+    print("Not stratifying the data")
+
   # split train to train + dev
   data = FNCData(os.path.join(datafolder,
                               "fakenewschallenge/train_stances.csv"),
@@ -301,6 +319,108 @@ if __name__ == '__main__':
     datafolder=datafolder,
     debug=False,
     num_instances=20)
+
+
+  # get a stratified sample based on the training data: ensure 25% occurrence of each label
+
+  def stratify_split(data_train, data_dev, create_new_dev, examples_per_class):
+    if create_new_dev:
+      data_dev = None
+
+    num_train_examples = len(data_train["stance"])
+
+    assert num_train_examples == len(data_train["seq1"])
+    assert num_train_examples == len(data_train["seq2"])
+
+    train_label_counts = Counter(data_train["stance"])
+    min_label_count = min(train_label_counts.values())
+    print("Min label count={}".format(min_label_count))
+    print("Label counts={}".format(train_label_counts))
+
+    # separate training data by label
+    data_train_zip = list(zip(*[data_train['seq1'],
+                                data_train['seq2'],
+                                data_train['stance']]))
+
+    data_train_by_label = dict()
+    data_train_by_label["agree"] = list()
+    data_train_by_label["disagree"] = list()
+    data_train_by_label["discuss"] = list()
+    data_train_by_label["unrelated"] = list()
+
+    for ex in data_train_zip:
+      label = ex[2]
+      data_train_by_label[label].append(ex)
+
+
+    # Split training data into 90/10 train/dev by splitting each class
+    if create_new_dev:
+      data_dev_by_label = dict()
+      data_dev_by_label["agree"] = list()
+      data_dev_by_label["disagree"] = list()
+      data_dev_by_label["discuss"] = list()
+      data_dev_by_label["unrelated"] = list()
+    for label in data_train_by_label.keys():
+      exs = data_train_by_label[label]
+      if create_new_dev:
+        train_size = int(0.9 * len(exs))
+      else:
+        train_size = len(exs)
+
+      data_train_by_label[label] = exs[:train_size]
+      if create_new_dev:
+        data_dev_by_label[label] = exs[train_size:]
+
+
+    # get even distribution of labels
+    for label in data_train_by_label.keys():
+      if len(data_train_by_label[label]) >= examples_per_class:
+        # remove examples in over-represented classes
+        data_train_by_label[label] = data_train_by_label[label][:examples_per_class]
+      else:
+        # make m copies of examples with this label
+        m = int(math.ceil(examples_per_class / len(data_train_by_label[label])))
+        data_train_by_label[label] = (data_train_by_label[label] * m)[:examples_per_class]
+
+      if create_new_dev:
+        if len(data_dev_by_label[label]) >= examples_per_class:
+          # remove examples in over-represented classes
+          data_dev_by_label[label] = data_dev_by_label[label][:examples_per_class]
+        else:
+          pass  # do not up-sample dev examples
+
+
+    # shuffle examples to shuffle order of labels
+    data_train_tmp = list()
+    if create_new_dev:
+      data_dev_tmp = list()
+    for label in data_train_by_label.keys():
+      data_train_tmp.extend(data_train_by_label[label])
+      if create_new_dev:
+        data_dev_tmp.extend(data_dev_by_label[label])
+
+    shuffle(data_train_tmp)
+    if create_new_dev:
+      shuffle(data_dev_tmp)
+
+
+    # put data back into expected dict format
+    data_train = dict()
+    data_train["seq1"] = [ex[0] for ex in data_train_tmp]
+    data_train["seq2"] = [ex[1] for ex in data_train_tmp]
+    data_train["stance"] = [ex[2] for ex in data_train_tmp]
+
+    if create_new_dev:
+      data_dev = dict()
+      data_dev["seq1"] = [ex[0] for ex in data_dev_tmp]
+      data_dev["seq2"] = [ex[1] for ex in data_dev_tmp]
+      data_dev["stance"] = [ex[2] for ex in data_dev_tmp]
+
+    return data_train, data_dev
+
+
+  if stratify:
+    data_train, data_dev = stratify_split(data_train, data_dev, create_new_dev, examples_per_class)
 
   index = 0
   train_list, index, train_index = make_example_list(data_train, index)
