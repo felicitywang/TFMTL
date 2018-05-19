@@ -30,7 +30,7 @@ from mtl.util.data_prep import ruder_tokenizer
 
 def main():
   tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
-  dataset = 'MultiNLI'
+  dataset = 'FNC-1'
   max_len = 100
   truncated_num_seq1 = 0
   truncated_num_seq2 = 0
