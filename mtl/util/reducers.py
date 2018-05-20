@@ -35,6 +35,13 @@ def reduce_avg_over_time(x, lengths=None, time_axis=1):
   if lengths is None:
     return tf.reduce_mean(x, keep_dims=False, axis=time_axis)
   s = tf.reduce_sum(x, axis=time_axis)
+
+  rank_s = len(s.get_shape().as_list())
+  rank_l = len(lengths.get_shape().as_list())
+
+  if rank_l == rank_s - 1:
+    lengths = tf.expand_dims(lengths, 1)
+
   return tf.divide(s, tf.to_float(lengths))
 
 
@@ -54,15 +61,23 @@ def reduce_var_over_time(x, lengths=None, avg=None, time_axis=1):
                                 time_axis=time_axis)
 
 
-def reduce_over_time(x, lengths=None, max=True, min=False, avg=False,
+def reduce_over_time(x, lengths=None, max=True, min=False, avg=True,
                      var=False, time_axis=1):
   summaries = []
   if min:
-    summaries += [reduce_min_over_time(lengths=lengths, time_axis=time_axis)]
+    summaries += [reduce_min_over_time(x,
+                                       lengths=lengths,
+                                       time_axis=time_axis)]
   if max:
-    summaries += [reduce_max_over_time(lengths=lengths, time_axis=time_axis)]
+    summaries += [reduce_max_over_time(x,
+                                       lengths=lengths,
+                                       time_axis=time_axis)]
   if avg:
-    summaries += [reduce_avg_over_time(lengths=lengths, time_axis=time_axis)]
+    summaries += [reduce_avg_over_time(x,
+                                       lengths=lengths,
+                                       time_axis=time_axis)]
   if var:
-    summaries += [reduce_var_over_time(lengths=lengths, time_axis=time_axis)]
+    summaries += [reduce_var_over_time(x,
+                                       lengths=lengths,
+                                       time_axis=time_axis)]
   return tf.concat(summaries, axis=1)

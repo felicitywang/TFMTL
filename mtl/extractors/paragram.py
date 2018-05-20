@@ -19,7 +19,8 @@ from mtl.layers import dense_layer
 from mtl.util.reducers import (reduce_avg_over_time,
                                reduce_var_over_time,
                                reduce_max_over_time,
-                               reduce_min_over_time)
+                               reduce_min_over_time,
+                               reduce_over_time)
 
 
 def paragram_phrase(inputs,
@@ -50,7 +51,8 @@ def paragram_phrase(inputs,
   reducers = [reduce_avg_over_time,
               reduce_var_over_time,
               reduce_max_over_time,
-              reduce_min_over_time]
+              reduce_min_over_time,
+              reduce_over_time]
   assert reducer in reducers, "unrecognized paragram reducer: %s" % reducer
 
   if len(lengths.get_shape()) == 1:

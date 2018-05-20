@@ -60,7 +60,8 @@ def str2func(s):
 
   from mtl.extractors.paragram import (paragram_phrase,
                                        serial_paragram)
-  from mtl.extractors.cnn import conv_and_pool
+  from mtl.extractors.cnn import (conv_and_pool,
+                                  serial_cnn)
   from mtl.extractors.rnn import rnn_and_pool
   from mtl.extractors.lbirnn import (lbirnn,
                                      serial_lbirnn,
@@ -82,6 +83,7 @@ def str2func(s):
     "paragram": paragram_phrase,
     "serial_paragram": serial_paragram,
     "conv_and_pool": conv_and_pool,
+    "serial_cnn": serial_cnn,
     "rnn_and_pool": rnn_and_pool,
     "lbirnn": lbirnn,
     "serial_lbirnn": serial_lbirnn,
