@@ -88,22 +88,25 @@ def serial_paragram(inputs,
     p_seq1 = paragram_phrase(inputs[0],
                              lengths[0],
                              reducer=reducer,
-                             apply_activation=apply_activation,
-                             activation_fn=activation_fn)
+                             apply_activation=False,
+                             activation_fn=None)
 
   with tf.variable_scope("paragram-seq2") as varscope2:
     varscope1.reuse_variables()
     p_seq2 = paragram_phrase(inputs[1],
                              lengths[1],
                              reducer=reducer,
-                             apply_activation=apply_activation,
-                             activation_fn=activation_fn)
+                             apply_activation=False,
+                             activation_fn=None)
 
   features = tf.concat([p_seq1, p_seq2], axis=-1)
 
-  outputs = dense_layer(features,
-                        features.get_shape().as_list()[-1],  # keep same dimensionality
-                        name="serial-paragram-output",
-                        activation=tf.nn.tanh)
+  if apply_activation:
+    outputs = dense_layer(features,
+                          features.get_shape().as_list()[-1],  # keep same dimensionality
+                          name="serial-paragram-output",
+                          activation=activation_fn)
+  else:
+    outputs = features
 
   return outputs
