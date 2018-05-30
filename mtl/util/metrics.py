@@ -194,11 +194,10 @@ def precision_macro(y_trues, y_preds, labels, topics):
   :return: float
   """
   assert labels is not None
-  return sklearn.metrics.f1_score(y_true=y_trues,
-                                  y_pred=y_preds,
-                                  labels=labels,
-                                  average='macro'
-                                  )
+  return sklearn.metrics.precision_score(y_true=y_trues,
+                                         y_pred=y_preds,
+                                         labels=labels,
+                                         average='macro')
 
 
 def metric2func(metric_name):
