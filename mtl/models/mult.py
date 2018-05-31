@@ -70,6 +70,42 @@ class Mult(object):
                                         **additional_extractor_kwargs[
                                           dataset_name])
 
+  def get_text_field_names(self,
+                           batch_source):
+    # assumes same ordering of datasets in hps.datasets and hps.dataset_paths
+    batch_source_idx = self._hps.datasets.index(batch_source)
+    batch_source_dataset_path = self._hps.dataset_paths[batch_source_idx]
+    with open(os.path.join(batch_source_dataset_path, 'args.json')) as f:
+      text_field_names = json.load(f)['text_field_names']
+      if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
+        if text_field_names != ['seq1', 'seq2']:
+          raise ValueError("Text field names must be [seq1, seq2] (exp=%s)"
+                           % (self._hps.experiment_name))
+      else:
+        # Requirements/constraints on text_field_names (for other exps) go here
+        pass
+
+    return text_field_names
+
+  def get_inputs_and_lengths(self,
+                             batch,
+                             text_field_names):
+    x = list()
+    input_lengths = list()
+    for text_field_name in text_field_names:
+      # TODO: un-hard-code this
+      input_lengths.append(batch[text_field_name + '_length'])
+      if self._hps.input_key == 'tokens':
+        x.append(batch[text_field_name])
+      elif self._hps.input_key == 'bow':
+        x.append(batch[text_field_name + '_bow'])
+      elif self._hps.input_key == 'tfidf':
+        x.append(batch[text_field_name + '_tfidf'])
+      else:
+        raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+
+    return x, input_lengths
+
   def get_logits(self,
                  batch,
                  batch_source,  # name of dataset that batch is from
@@ -84,32 +120,9 @@ class Mult(object):
     if batch_source not in self._hps.datasets:
       raise ValueError("Unrecognized batch source=%s" % (batch_source))
 
-    # assumes same ordering of datasets in hps.datasets and hps.dataset_paths
-    batch_source_idx = self._hps.datasets.index(batch_source)
-    batch_source_dataset_path = self._hps.dataset_paths[batch_source_idx]
-    with open(os.path.join(batch_source_dataset_path, 'args.json')) as f:
-      text_field_names = json.load(f)['text_field_names']
-      if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
-        if text_field_names != ['seq1', 'seq2']:
-          raise ValueError("Text field names must be [seq1, seq2] (exp=%s)"
-                           % (self._hps.experiment_name))
-      else:
-        # Requirements/constraints on text_field_names (for other exps) go here
-        pass
+    text_field_names = self.get_text_field_names(batch_source)
 
-    x = list()
-    input_lengths = list()
-    for text_field_name in text_field_names:
-      # TODO: un-hard-code this
-      input_lengths.append(batch[text_field_name + '_length'])
-      if self._hps.input_key == 'tokens':
-        x.append(batch[text_field_name])
-      elif self._hps.input_key == 'bow':
-        x.append(batch[text_field_name + '_bow'])
-      elif self._hps.input_key == 'tfidf':
-        x.append(batch[text_field_name + '_tfidf'])
-      else:
-        raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+    x, input_lengths = self.get_inputs_and_lengths(batch, text_field_names)
 
     x = self.encode(x,
                     dataset_name,
