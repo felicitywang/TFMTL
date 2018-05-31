@@ -24,7 +24,7 @@ import tensorflow as tf
 
 from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
-from mtl.util.constants import EXP_NAMES
+from mtl.util.constants import EXP_NAMES as EXP
 
 logging = tf.logging
 eps = 1e-5
@@ -76,7 +76,7 @@ class Mult(object):
                  dataset_name,  # name of dataset whose labels we are encoding/decoding/predicting wrt
                  is_training,
                  additional_extractor_kwargs=dict()):
-    if self._hps.experiment_name in [EMNLP_18]:
+    if self._hps.experiment_name in [EXP.EMNLP_18]:
       if batch_source != dataset_name:
         raise ValueError("The batch and label set must come from the same dataset (exp=%s)" % (self._hps.experiment_name))
 
@@ -87,7 +87,7 @@ class Mult(object):
     batch_source_dataset_path = self._hps.dataset_paths[batch_source_idx]  # assumes same ordering of datasets in hps.datasets and hps.dataset_paths
     with open(os.path.join(batch_source_dataset_path, 'args.json')) as f:
       text_field_names = json.load(f)['text_field_names']
-      if self._hps.experiment_name in [RUDER_NAACL_18, EMNLP_18]:
+      if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
         if text_field_names != ['seq1', 'seq2']:
           raise ValueError("Text field names must be [seq1, seq2] (exp=%s)" % (self._hps.experiment_name))
       else:
@@ -200,7 +200,7 @@ class Mult(object):
       # same fields/features (given by the keys in the batch
       # accesses below)
       batch_source, batch = dataset_batch
-      if self._hps.experiment_name in [EMNLP_18]:
+      if self._hps.experiment_name in [EXP.EMNLP_18]:
         # encode/decode wrt same dataset that batch came from        
         dataset_name = batch_source
         additional_extractor_kwargs = additional_extractor_kwargs
@@ -220,7 +220,7 @@ class Mult(object):
 
     total_loss += l2_weight_penalty
 
-    if self._hps.experiment_name in [RUDER_NAACL_18, EMNLP_18]:
+    if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
       return losses
     else:
       return total_loss
@@ -261,7 +261,7 @@ def build_mlps(hps, is_shared):
 
 def build_logit_layers(class_sizes,
                        experiment_name):
-  if experiment_name in [RUDER_NAACL_18, EMNLP_18]:
+  if experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
     activation = tf.tanh
   else:
     activation = None

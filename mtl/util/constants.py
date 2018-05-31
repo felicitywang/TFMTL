@@ -52,7 +52,5 @@ VOCAB_NAMES = [
 ]
 
 """Experiment names"""
-RUDER_NAACL_18 = EMNLP_18 = "RUDER_NAACL_18"
-
-EXP_NAMES = [RUDER_NAACL_18,
-             EMNLP_18]
+class EXP_NAMES():
+  RUDER_NAACL_18 = EMNLP_18 = "RUDER_NAACL_18"
