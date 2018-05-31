@@ -53,7 +53,8 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
         output_keep_prob=1.0):
 
   if batch_normalization and layer_normalization:
-    raise ValueError("batch normalization and layer normalization cannot both be on")
+    raise ValueError("batch normalization and layer normalization \
+                      cannot both be on")
   if num_layers is None:
     raise ValueError("Must specify number of MLP layers")
   if hidden_dims is None:
@@ -61,15 +62,16 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
 
   if type(hidden_dims) is list:
     if len(hidden_dims) != num_layers:
-      raise ValueError("Number of hidden dimensions supplied must match number of MLP layers")
+      raise ValueError("Number of hidden dimensions supplied \
+                        must match number of MLP layers")
   elif type(hidden_dims) is int:
     hidden_dims = [hidden_dims] * num_layers
   else:
     raise TypeError("hidden_dims must be list or int")
-  
+
   if num_layers < 1:
     return x
-  
+
   if activation == tf.nn.selu:
     dropout = tf.contrib.nn.alpha_dropout
   else:

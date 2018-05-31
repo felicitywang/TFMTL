@@ -36,23 +36,24 @@ class Mult(object):
                dataset_order,
                hps):
 
-    # class_sizes: map from feature names/dataset names to cardinality of label sets
+    # class_sizes: map from feature names/dataset names to
+    #   cardinality of label sets
     # dataset_order: list of features/datasets in some fixed order
     #   (concatenated order could matter for decoding)
 
     # all feature names are present and consistent across data structures
     if set(class_sizes.keys()) != set(dataset_order):
       raise ValueError("class_sizes must have same elements as dataset_order")
-    
-    self._class_sizes   = class_sizes
+
+    self._class_sizes = class_sizes
     self._dataset_order = dataset_order
-    self._hps           = hps
+    self._hps = hps
 
-    self._encoders     = build_encoders(self._hps)  # encoders: one per dataset
-    self._mlps_shared  = build_mlps(hps, is_shared=True)
+    self._encoders = build_encoders(self._hps)  # encoders: one per dataset
+    self._mlps_shared = build_mlps(hps, is_shared=True)
     self._mlps_private = build_mlps(hps, is_shared=False)
-    self._logit_layers = build_logit_layers(class_sizes, self._hps.experiment_name)
-
+    self._logit_layers = build_logit_layers(class_sizes,
+                                            self._hps.experiment_name)
 
   # Encoding (feature extraction)
   def encode(self,
@@ -69,35 +70,38 @@ class Mult(object):
                                         **additional_extractor_kwargs[
                                           dataset_name])
 
-
   def get_logits(self,
                  batch,
                  batch_source,  # name of dataset that batch is from
-                 dataset_name,  # name of dataset whose labels we are encoding/decoding/predicting wrt
+                 dataset_name,  # name of dataset whose labels we predict wrt
                  is_training,
                  additional_extractor_kwargs=dict()):
     if self._hps.experiment_name in [EXP.EMNLP_18]:
       if batch_source != dataset_name:
-        raise ValueError("The batch and label set must come from the same dataset (exp=%s)" % (self._hps.experiment_name))
+        raise ValueError("Batch and labels must come from same dataset: exp=%s"
+                         % (self._hps.experiment_name))
 
     if batch_source not in self._hps.datasets:
       raise ValueError("Unrecognized batch source=%s" % (batch_source))
 
+    # assumes same ordering of datasets in hps.datasets and hps.dataset_paths
     batch_source_idx = self._hps.datasets.index(batch_source)
-    batch_source_dataset_path = self._hps.dataset_paths[batch_source_idx]  # assumes same ordering of datasets in hps.datasets and hps.dataset_paths
+    batch_source_dataset_path = self._hps.dataset_paths[batch_source_idx]
     with open(os.path.join(batch_source_dataset_path, 'args.json')) as f:
       text_field_names = json.load(f)['text_field_names']
       if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
         if text_field_names != ['seq1', 'seq2']:
-          raise ValueError("Text field names must be [seq1, seq2] (exp=%s)" % (self._hps.experiment_name))
+          raise ValueError("Text field names must be [seq1, seq2] (exp=%s)"
+                           % (self._hps.experiment_name))
       else:
-        # Requirements/constraints on text_field_names (for other experiments) go here
+        # Requirements/constraints on text_field_names (for other exps) go here
         pass
 
     x = list()
     input_lengths = list()
     for text_field_name in text_field_names:
-      input_lengths.append(batch[text_field_name + '_length'])  # TODO: un-hard-code this
+      # TODO: un-hard-code this
+      input_lengths.append(batch[text_field_name + '_length'])
       if self._hps.input_key == 'tokens':
         x.append(batch[text_field_name])
       elif self._hps.input_key == 'bow':
@@ -117,7 +121,6 @@ class Mult(object):
 
     return x
 
-
   def get_predictions(self,
                       batch,
                       batch_source,
@@ -130,12 +133,12 @@ class Mult(object):
                         batch_source,
                         dataset_name,
                         is_training=False,
-                        additional_extractor_kwargs=additional_extractor_kwargs)
+                        additional_extractor_kwargs=
+                        additional_extractor_kwargs)
     res = tf.argmax(x, axis=1)
     # res = tf.expand_dims(res, axis=1)
 
     return res
-
 
   def get_loss(self,
                batch,
@@ -145,14 +148,15 @@ class Mult(object):
                is_training=True):
 
     # returns a scalar loss for each batch
-    
+
     x = self.get_logits(batch,
                         batch_source,
                         dataset_name,
                         is_training=is_training,
-                        additional_extractor_kwargs=additional_extractor_kwargs)
+                        additional_extractor_kwargs=
+                        additional_extractor_kwargs)
     labels = batch[self._hps.label_key]
-    
+
     # loss
     softmax_xent = tf.nn.sparse_softmax_cross_entropy_with_logits
     ce = softmax_xent(logits=x, labels=tf.cast(labels, dtype=tf.int32))
@@ -160,7 +164,6 @@ class Mult(object):
     loss = tf.reduce_mean(ce)  # average loss per training example
 
     return loss
-
 
   def get_l2_penalty(self):
     if self._hps.l2_weight < 0.0:
@@ -176,7 +179,6 @@ class Mult(object):
 
     return l2_weight_penalty
 
-  
   def get_multi_task_loss(self,
                           dataset_batches,
                           is_training,
@@ -188,7 +190,8 @@ class Mult(object):
     #   are observed at a time; the rest are unobserved
 
     if len(dataset_batches) != len(self._hps.alphas):
-      raise ValueError("The calculation of multi-task loss requires the same number of batches as alpha values")
+      raise ValueError("The calculation of multi-task loss requires \
+                        the same number of batches as alpha values")
     if abs(sum(self._hps.alphas) - 1.0) > eps:
       raise ValueError("The alpha values must sum to 1")
 
@@ -201,7 +204,7 @@ class Mult(object):
       # accesses below)
       batch_source, batch = dataset_batch
       if self._hps.experiment_name in [EXP.EMNLP_18]:
-        # encode/decode wrt same dataset that batch came from        
+        # encode/decode wrt same dataset that batch came from
         dataset_name = batch_source
         additional_extractor_kwargs = additional_extractor_kwargs
       else:
