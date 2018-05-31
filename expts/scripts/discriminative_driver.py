@@ -170,6 +170,10 @@ def parse_args():
                  help='Key of the tokens lengths.')
   p.add_argument('--l2_weight', type=float, default=0.0,
                  help='Weight of the l2 regularization.')
+  p.add_argument('--batch_normalization', type=bool, default=False,
+                 help='Whether to use batch normalization in MLP layers')
+  p.add_argument('--layer_normalization', type=bool, default=False,
+                 help='Whether to use layer normalization in MLP layers')  
   p.add_argument('--metrics', nargs='+', type=str, default=None,
                  help='Evaluation metrics for each dataset to use. '
                       'Supported metrics include:\n'
@@ -1037,8 +1041,7 @@ def main():
 
       model = Mult(class_sizes=class_sizes,
                    dataset_order=dataset_order,
-                   hps=hps,
-                   args=args)
+                   hps=hps)
 
       # Do training
       if args.mode in ['train', 'init']:

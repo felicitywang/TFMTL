@@ -26,8 +26,10 @@ from mtl.util.hparams import get_activation_fn
 
 
 def dense_layer(x, output_size, name, activation=tf.nn.selu):
-  assert type(output_size) is int
-  assert type(name) is str
+  if type(output_size) is not int:
+    raise TypeError("output size of dense layer must be an int")
+  if type(name) is not str:
+    raise TypeError("name of dense layer must be a string")
 
   if type(activation) == str:
     activation = get_activation_fn(activation)
@@ -37,7 +39,9 @@ def dense_layer(x, output_size, name, activation=tf.nn.selu):
   else:
     init = glorot_uniform_initializer()
 
-  return tf.layers.dense(x, output_size, name=name,
+  return tf.layers.dense(x,
+                         output_size,
+                         name=name,
                          kernel_initializer=init,
                          bias_initializer=zeros_initializer(),
                          activation=activation)
@@ -47,9 +51,25 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
         activation=tf.nn.selu, input_keep_prob=1.0,
         batch_normalization=False, layer_normalization=True,
         output_keep_prob=1.0):
-  print("MLP layer: is_training={}".format(is_training))
+
+  if batch_normalization and layer_normalization:
+    raise ValueError("batch normalization and layer normalization cannot both be on")
+  if num_layers is None:
+    raise ValueError("Must specify number of MLP layers")
+  if hidden_dims is None:
+    raise ValueError("Must specify hidden dimensions of MLP layers")
+
+  if type(hidden_dims) is list:
+    if len(hidden_dims) != num_layers:
+      raise ValueError("Number of hidden dimensions supplied must match number of MLP layers")
+  elif type(hidden_dims) is int:
+    hidden_dims = [hidden_dims] * num_layers
+  else:
+    raise TypeError("hidden_dims must be list or int")
+  
   if num_layers < 1:
     return x
+  
   if activation == tf.nn.selu:
     dropout = tf.contrib.nn.alpha_dropout
   else:
@@ -57,17 +77,6 @@ def mlp(x, is_training, hidden_dims=[256, 256], num_layers=2,
 
   if is_training and (input_keep_prob < 1.0):
     x = dropout(x, input_keep_prob, name='input_dropout')
-
-  assert not (batch_normalization and layer_normalization)
-  assert not (num_layers is None)
-  assert not (hidden_dims is None)
-
-  if type(hidden_dims) is list:
-    assert len(hidden_dims) == num_layers
-  elif type(hidden_dims) is int:
-    hidden_dims = [hidden_dims] * num_layers
-  else:
-    raise ValueError("hidden_dims must be list or int")
 
   for i in xrange(num_layers):
     with tf.variable_scope("layer_%d" % i):
