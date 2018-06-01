@@ -14,6 +14,7 @@
 # ============================================================================
 
 import tensorflow as tf
+from six.moves import xrange
 
 from mtl.layers import dense_layer
 from mtl.util.reducers import (reduce_avg_over_time,
