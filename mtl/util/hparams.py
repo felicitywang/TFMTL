@@ -59,8 +59,7 @@ def str2func(s):
                                         expand_glove)
 
   from mtl.extractors.paragram import paragram_phrase
-  from mtl.extractors.cnn import (conv_and_pool,
-                                  serial_cnn)
+  from mtl.extractors.cnn import cnn_extractor
   from mtl.extractors.rnn import rnn_and_pool
   from mtl.extractors.lbirnn import (lbirnn,
                                      serial_lbirnn,
@@ -81,8 +80,9 @@ def str2func(s):
     "expand_glove": expand_glove,
     "paragram": paragram_phrase,
     "serial_paragram": paragram_phrase,  # deprecated key
-    "conv_and_pool": conv_and_pool,
-    "serial_cnn": serial_cnn,
+    "cnn_extractor": cnn_extractor,
+    "conv_and_pool": cnn_extractor,  # deprecated key
+    "serial_cnn": cnn_extractor,  # deprecated key
     "rnn_and_pool": rnn_and_pool,
     "lbirnn": lbirnn,
     "serial_lbirnn": serial_lbirnn,
