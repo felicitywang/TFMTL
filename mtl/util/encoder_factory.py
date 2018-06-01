@@ -26,19 +26,25 @@ import tensorflow as tf
 from mtl.util.embedder_factory import create_embedders
 from mtl.util.extractor_factory import create_extractors
 from mtl.util.hparams import dict2func
+from mtl.util.common import listify
 
 
 def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
-  if isinstance(inputs, (list, tuple)):
-    extr = list()
-    for i in inputs:
-      emb = embed_fn(i)
-      extr += [emb]
-  else:
-    extr = embed_fn(inputs)
+  if type(inputs) != type(lengths):
+    raise TypeError("inputs and lengths must be both Tensors or \
+                     both lists of Tensors")
+
+  # Cast inputs and lengths to lists
+  inputs = listify(inputs)
+  lengths = listify(lengths)
+
+  embs = list()
+  for i in inputs:
+    emb = embed_fn(i)
+    embs.append(emb)
 
   # All extra arguments (kwargs) get passed into the extractor function
-  enc = extract_fn(extr, lengths, **kwargs)
+  enc = extract_fn(embs, lengths, **kwargs)
   return enc
 
 

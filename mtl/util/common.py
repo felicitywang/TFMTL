@@ -24,7 +24,7 @@ from mtl.layers import dense_layer
 
 
 def listify(x):
-    if type(x) is not list:
+    if not isinstance(x, (list, tuple)):
         return [x]
     else:
         return x
@@ -61,3 +61,15 @@ def MLP_unnormalized_log_categorical(inputs, output_size, **kwargs):
 def MLP_ordinal(inputs, **kwargs):
     return dense_layer(preoutput_MLP(inputs, **kwargs), 1, 'output',
                        activation=None)
+
+
+def validate_extractor_inputs(inputs, lengths):
+  lists = [inputs, lengths]
+  it = iter(lists)
+  num_stages = len(next(it))
+  if not all(len(l) == num_stages for l in it):
+    raise ValueError("all list arguments must have the same length")
+
+  if num_stages <= 0:
+    raise ValueError("must specify arguments for at least \
+                      one stage of extractor")
