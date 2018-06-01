@@ -64,8 +64,7 @@ def str2func(s):
   from mtl.extractors.lbirnn import (lbirnn,
                                      serial_lbirnn,
                                      serial_lbirnn_stock)
-  from mtl.extractors.no_op import (no_op_encoding,
-                                    concat_extractor)
+  from mtl.extractors.no_op import concat_extractor
 
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
@@ -87,7 +86,7 @@ def str2func(s):
     "lbirnn": lbirnn,
     "serial_lbirnn": serial_lbirnn,
     "serial_lbirnn_stock": serial_lbirnn_stock,
-    "no_op_encoding": no_op_encoding,
+    "no_op_encoding": concat_extractor,  # deprecated key
     "concat_extractor": concat_extractor,
 
     "reduce_min_over_time": reduce_min_over_time,
