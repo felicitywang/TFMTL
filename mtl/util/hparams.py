@@ -58,8 +58,7 @@ def str2func(s):
   from mtl.embedders.pretrained import (init_glove,
                                         expand_glove)
 
-  from mtl.extractors.paragram import (paragram_phrase,
-                                       serial_paragram)
+  from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import (conv_and_pool,
                                   serial_cnn)
   from mtl.extractors.rnn import rnn_and_pool
@@ -81,7 +80,7 @@ def str2func(s):
     "init_glove": init_glove,
     "expand_glove": expand_glove,
     "paragram": paragram_phrase,
-    "serial_paragram": serial_paragram,
+    "serial_paragram": paragram_phrase,  # deprecated key
     "conv_and_pool": conv_and_pool,
     "serial_cnn": serial_cnn,
     "rnn_and_pool": rnn_and_pool,
