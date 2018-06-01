@@ -16,7 +16,7 @@
 # -*- coding: utf-8 -*-
 
 
-"""Constants used for dataset preprocessing"""
+"""Constants used in TFMTL"""
 
 """Splits"""
 TRAIN_RATIO = 0.8  # train out of all
@@ -50,3 +50,9 @@ VOCAB_NAMES = [
   'glove.twitter.27B.100d.txt',
   'glove.twitter.27B.200d.txt'
 ]
+
+"""Experiment names"""
+
+
+class EXP_NAMES():
+  RUDER_NAACL_18 = EMNLP_18 = "RUDER_NAACL_18"
