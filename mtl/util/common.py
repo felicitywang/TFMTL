@@ -63,9 +63,8 @@ def MLP_ordinal(inputs, **kwargs):
                        activation=None)
 
 
-def validate_extractor_inputs(inputs, lengths):
-  lists = [inputs, lengths]
-  it = iter(lists)
+def validate_extractor_inputs(*inputs):
+  it = iter(inputs)
   num_stages = len(next(it))
   if not all(len(l) == num_stages for l in it):
     raise ValueError("all list arguments must have the same length")
