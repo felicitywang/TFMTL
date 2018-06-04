@@ -752,10 +752,17 @@ def compute_held_out_performance(session,
         d = json.load(f, encoding='utf-8')
       except UnicodeDecodeError:
         print("Failed to read topic_path={}".format(topic_path))
-        raise
-  index2topic = dict()
-  for item in d:
-    index2topic[item['index']] = item['seq1']
+        d = None
+        names = ["topic2", "topic-2", "topic5", "topic-5"]
+        if any(name in topic_path.lower() for name in names):
+          raise
+
+  if d is not None:
+    index2topic = dict()
+    for item in d:
+      index2topic[item['index']] = item['seq1']
+  else:
+    index2topic = None
 
   # Accumulate predictions
   y_trues = []
@@ -772,8 +779,11 @@ def compute_held_out_performance(session,
         num_eval_iter += 1
         total_eval_loss += eval_loss_v
         y_index = y_index.tolist()  # index of example in data.json
-        y_topic = [index2topic[idx] for idx in
-                   y_index]  # topic for each example so we can macro-average across topics
+        if index2topic is not None:
+          y_topic = [index2topic[idx] for idx in
+                     y_index]  # topic for each example so we can macro-average across topics
+        else:
+          y_topic = []
         y_indexes += y_index
         y_topics += y_topic
         if "FNC-1" in topic_path:
