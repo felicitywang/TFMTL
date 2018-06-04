@@ -24,10 +24,22 @@ from mtl.layers import dense_layer
 
 
 def listify(x):
-    if not isinstance(x, (list, tuple)):
-        return [x]
-    else:
-        return x
+  """Convert one element into a list of that element. No-op on list inputs."""
+  if not isinstance(x, (list, tuple)):
+    return [x]
+  else:
+    return x
+
+
+def unlistify(x):
+  """Convert a list of one element into that element.
+     No-op on list of multiple elements."""
+  if not isinstance(x, (list, tuple)):
+    raise TypeError("unlistify expects a list or tuple")
+  if len(x) == 1:
+    return x[0]
+  else:
+    return x
 
 
 def maybe_concat(x):

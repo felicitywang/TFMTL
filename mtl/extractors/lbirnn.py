@@ -21,7 +21,9 @@ import tensorflow as tf
 from six.moves import xrange
 import mtl.util.registry as registry
 
-from mtl.util.common import validate_extractor_inputs
+from mtl.util.common import (validate_extractor_inputs,
+                             listify,
+                             unlistify)
 
 
 def get_multi_cell(cell_type, cell_size, num_layers):
@@ -142,17 +144,28 @@ def _lbirnn_helper(inputs,
 
 
     batch_size = tf.shape(inputs)[0]
-    if initial_state_fwd is None:
-      #initial_state_fwd = [None]
-      initial_state_fwd = fill_initial_state([None], cells_fwd, batch_size)#[0]
-    else:
-      initial_state_fwd = fill_initial_state(initial_state_fwd, cells_fwd, batch_size)
 
-    if initial_state_bwd is None:
-      #initial_state_bwd = [None]
-      initial_state_bwd = fill_initial_state([None], cells_bwd, batch_size)#[0]
-    else:
-      initial_state_bwd = fill_initial_state(initial_state_bwd, cells_bwd, batch_size)
+    initial_state_fwd = fill_initial_state(listify(initial_state_fwd),
+                                           cells_fwd,
+                                           batch_size)
+    initial_state_fwd = unlistify(initial_state_fwd)
+
+    initial_state_bwd = fill_initial_state(listify(initial_state_bwd),
+                                           cells_bwd,
+                                           batch_size)
+    initial_state_bwd = unlistify(initial_state_bwd)
+
+    # if initial_state_fwd is None:
+    #   #initial_state_fwd = [None]
+    #   initial_state_fwd = fill_initial_state([None], cells_fwd, batch_size)#[0]
+    # else:
+    #   initial_state_fwd = fill_initial_state(initial_state_fwd, cells_fwd, batch_size)
+    #
+    # if initial_state_bwd is None:
+    #   #initial_state_bwd = [None]
+    #   initial_state_bwd = fill_initial_state([None], cells_bwd, batch_size)#[0]
+    # else:
+    #   initial_state_bwd = fill_initial_state(initial_state_bwd, cells_bwd, batch_size)
 
     code_fwd, last_state_fwd = tf.nn.dynamic_rnn(cells_fwd,
                                                  inputs,
@@ -179,7 +192,7 @@ def _lbirnn_helper(inputs,
 
     return (code_fwd, code_bwd), (last_state_fwd, last_state_bwd)
 
-
+"""
 def lbirnn(inputs,
            lengths,
            is_training,
@@ -208,18 +221,18 @@ def lbirnn(inputs,
     outputs = code
 
     return outputs
+"""
 
-
-def serial_lbirnn(inputs,
-                  lengths,
-                  is_training,
-                  indices=None,
-                  num_layers=2,
-                  cell_type=tf.contrib.rnn.GRUCell,
-                  cell_size=64,
-                  initial_state_fwd=None,
-                  initial_state_bwd=None,
-                  **kwargs):
+def lbirnn(inputs,
+           lengths,
+           is_training,
+           indices=None,
+           num_layers=2,
+           cell_type=tf.contrib.rnn.GRUCell,
+           cell_size=64,
+           initial_state_fwd=None,
+           initial_state_bwd=None,
+           **kwargs):
   """Serial stacked linear chain bi-directional RNN
 
   If `indices` is specified for the last stage, the outputs of the tokens
@@ -294,16 +307,16 @@ def serial_lbirnn(inputs,
   return outputs
 
 
-def _lbirnn_stock(inputs,
-                  lengths,
-                  is_training,
-                  num_layers=2,
-                  cell_type=tf.contrib.rnn.GRUCell,
-                  cell_size=64,
-                  initial_state_fwd=None,
-                  initial_state_bwd=None,
-                  scope=None,
-                  **kwargs):
+def _lbirnn_stock_helper(inputs,
+                         lengths,
+                         is_training,
+                         num_layers=2,
+                         cell_type=tf.contrib.rnn.GRUCell,
+                         cell_size=64,
+                         initial_state_fwd=None,
+                         initial_state_bwd=None,
+                         scope=None,
+                         **kwargs):
 
   scope_name = scope if scope is not None else "stock-lbirnn"
   with tf.variable_scope(scope_name) as varscope:
@@ -341,15 +354,15 @@ def _lbirnn_stock(inputs,
     return outputs, last_states
 
   
-def serial_lbirnn_stock(inputs,
-                        lengths,
-                        is_training,
-                        num_layers=2,
-                        cell_type=tf.contrib.rnn.GRUCell,
-                        cell_size=64,
-                        initial_state_fwd=None,
-                        initial_state_bwd=None,
-                        **kwargs):
+def lbirnn_stock(inputs,
+                 lengths,
+                 is_training,
+                 num_layers=2,
+                 cell_type=tf.contrib.rnn.GRUCell,
+                 cell_size=64,
+                 initial_state_fwd=None,
+                 initial_state_bwd=None,
+                 **kwargs):
 
   validate_extractor_inputs(inputs, lengths)
 
@@ -363,16 +376,16 @@ def serial_lbirnn_stock(inputs,
     with tf.variable_scope("serial-lbirnn-stock-seq{}".format(n_stage)) as varscope:
       if prev_varscope is not None:
         prev_varscope.reuse_variables()
-      code, states = _lbirnn_stock(inputs[n_stage],
-                                   lengths[n_stage],
-                                   is_training=is_training,
-                                   num_layers=num_layers,
-                                   cell_type=cell_type,
-                                   cell_size=cell_size,
-                                   initial_state_fwd=fwd_,
-                                   initial_state_bwd=bwd_,
-                                   scope=varscope,
-                                   **kwargs)
+      code, states = _lbirnn_stock_helper(inputs[n_stage],
+                                          lengths[n_stage],
+                                          is_training=is_training,
+                                          num_layers=num_layers,
+                                          cell_type=cell_type,
+                                          cell_size=cell_size,
+                                          initial_state_fwd=fwd_,
+                                          initial_state_bwd=bwd_,
+                                          scope=varscope,
+                                          **kwargs)
       fwd_ = states[0]
       bwd_ = states[1]
       prev_varscope = varscope
@@ -380,10 +393,12 @@ def serial_lbirnn_stock(inputs,
   # concatenate hx_fwd and hx_bwd of top layer
   # `states` = ((cx_fwd, hx_fwd), (cx_bwd, hx_bwd))
   if num_layers > 1:
-    assert states.get_shape().as_list() == [2, num_layers, 2]
+    # shape states: [2, num_layers, 2]
+    # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L43)
     output = tf.concat([states[0][-1][1], states[1][-1][1]], 1)
   else:
-    assert states.get_shape().as_list() == [2, 2]
+    # shape states: [2, 2]
+    # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L40)
     output = tf.concat([states[0][1], states[1][1]], 1)
 
   return output
@@ -422,12 +437,12 @@ def ruder_encoder(inputs, lengths, is_training, hp=None):
   
   keep_prob = hp.keep_prob if is_training else 1.0
 
-  code = serial_lbirnn_stock(inputs,
-                             lengths,
-                             is_training=is_training,
-                             num_layers=hp.num_layers,
-                             cell_type=cell_type,
-                             cell_size=hp.cell_size)
+  code = lbirnn_stock(inputs,
+                      lengths,
+                      is_training=is_training,
+                      num_layers=hp.num_layers,
+                      cell_type=cell_type,
+                      cell_size=hp.cell_size)
 
   assert len(code.get_shape().as_list()) == 2
   return code
