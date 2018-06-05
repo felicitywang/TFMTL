@@ -24,10 +24,22 @@ from mtl.layers import dense_layer
 
 
 def listify(x):
-    if type(x) is not list:
-        return [x]
-    else:
-        return x
+  """Convert one element into a list of that element. No-op on list inputs."""
+  if not isinstance(x, (list, tuple)):
+    return [x]
+  else:
+    return x
+
+
+def unlistify(x):
+  """Convert a list of one element into that element.
+     No-op on list of multiple elements."""
+  if not isinstance(x, (list, tuple)):
+    raise TypeError("unlistify expects a list or tuple")
+  if len(x) == 1:
+    return x[0]
+  else:
+    return x
 
 
 def maybe_concat(x):
@@ -61,3 +73,14 @@ def MLP_unnormalized_log_categorical(inputs, output_size, **kwargs):
 def MLP_ordinal(inputs, **kwargs):
     return dense_layer(preoutput_MLP(inputs, **kwargs), 1, 'output',
                        activation=None)
+
+
+def validate_extractor_inputs(*inputs):
+  it = iter(inputs)
+  num_stages = len(next(it))
+  if not all(len(l) == num_stages for l in it):
+    raise ValueError("all list arguments must have the same length")
+
+  if num_stages <= 0:
+    raise ValueError("must specify arguments for at least \
+                      one stage of extractor")

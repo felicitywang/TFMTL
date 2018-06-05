@@ -10,7 +10,7 @@
             "embed_kwargs":
             {
             },
-            "extract_fn": "serial_lbirnn_stock",
+            "extract_fn": "lbirnn_stock",
             "extract_kwargs":
             {
                 "num_layers": 1,
@@ -27,7 +27,7 @@
             "embed_kwargs":
             {
             },
-            "extract_fn": "serial_lbirnn_stock",
+            "extract_fn": "lbirnn_stock",
             "extract_kwargs":
             {
                 "num_layers": 1,

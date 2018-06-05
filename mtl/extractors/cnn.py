@@ -17,14 +17,15 @@ import tensorflow as tf
 from six.moves import xrange
 
 from mtl.util.reducers import reduce_max_over_time
+from mtl.util.common import validate_extractor_inputs
 
 
-def conv_and_pool(inputs,
-                  lengths=None,
-                  num_filter=128,
-                  max_width=7,
-                  activation_fn=tf.nn.relu,
-                  reducer=reduce_max_over_time):
+def _conv_and_pool(inputs,
+                   lengths=None,
+                   num_filter=128,
+                   max_width=7,
+                   activation_fn=tf.nn.relu,
+                   reducer=reduce_max_over_time):
   """Processes inputs using 1D convolutions of size [2, max_width] on
   the input followed by temporal pooling.
 
@@ -67,60 +68,54 @@ def conv_and_pool(inputs,
 
   return tf.concat(filters, 1)
 
+def cnn_extractor(inputs,
+                  lengths,
+                  num_filter,
+                  max_width,
+                  activation_fn,
+                  reducer):
 
-def serial_cnn(inputs,
-               lengths,
-               num_filter,
-               max_width,
-               activation_fn,
-               reducer):
-  lists = [inputs, lengths]
-  it = iter(lists)
-  num_stages = len(next(it))
-  if not all(len(l) == num_stages for l in it):
-    raise ValueError("all list arguments must have the same length")
+  validate_extractor_inputs(inputs, lengths)
 
-  assert num_stages > 0, "must specify arguments for " \
-                         "at least one stage of serial CNN"
+  num_stages = len(inputs)
 
-  with tf.variable_scope("cnn-seq1") as varscope1:
-    f_seq1 = conv_and_pool(inputs[0],
-                           lengths=lengths[0],
-                           num_filter=num_filter,
-                           max_width=max_width,
-                           activation_fn=activation_fn,
-                           reducer=reducer)
+  code = []
+  prev_varscope = None
+  for n_stage in xrange(num_stages):
+    with tf.variable_scope("cnn-seq{}".format(n_stage)) as varscope:
+      if prev_varscope is not None:
+        prev_varscope.reuse_variables()
+      if n_stage == 0:
+        cond_inputs = inputs[0]
+      else:
+        # condition reading of seq_n on learned features of seq_n-1
+        p = tf.expand_dims(p, axis=1)
 
-  with tf.variable_scope("cnn-seq2") as varscope2:
-    varscope1.reuse_variables()
+        max_len = tf.reduce_max(lengths[n_stage], axis=0)  # get length of longest seq_n in batch)
+        max_len = tf.reshape(max_len, [1])
+        max_len = tf.cast(max_len, dtype=tf.int32)
+        max_len = tf.concat([tf.constant([1]), max_len, tf.constant([1])], axis=0)  # [1, max_len, 1]
 
-    # condition reading of seq2 on learned features of seq1
-    f_seq1 = tf.expand_dims(f_seq1, axis=1)
+        p = tf.tile(p, max_len)  # tile over time dimension
 
-    max_len = tf.reduce_max(lengths[1], axis=0)  # get length of longest seq2 in batch
-    max_len = tf.reshape(max_len, [1])
-    max_len = tf.cast(max_len, dtype=tf.int32)
-    max_len = tf.concat([tf.constant([1]), max_len, tf.constant([1])], axis=0)  # [1, max_len, 1]
+        cond_inputs = tf.concat([inputs[n_stage], p], axis=2)  # condition via concatenation
 
-    f_seq1 = tf.tile(f_seq1, max_len)  # tile over time dimension
+        # mask out p for padded tokens
+        mask = tf.sequence_mask(lengths[n_stage], dtype=tf.int32)
+        mask = tf.expand_dims(mask, axis=2)
+        mask = tf.cast(mask, dtype=tf.float32)
+        cond_inputs = tf.multiply(cond_inputs, mask)
 
-    cond_inputs = tf.concat([inputs[1], f_seq1], axis=2)  # condition via concatenation
+      p = _conv_and_pool(cond_inputs,
+                         lengths=lengths[n_stage],
+                         num_filter=num_filter,
+                         max_width=max_width,
+                         activation_fn=activation_fn,
+                         reducer=reducer)
 
-    # mask out f_seq1 for padded tokens
-    mask = tf.sequence_mask(lengths[1], dtype=tf.int32)
-    mask = tf.expand_dims(mask, axis=2)
-    mask = tf.cast(mask, dtype=tf.float32)
-    cond_inputs = tf.multiply(cond_inputs, mask)
+      prev_varscope = varscope
 
-    # print("cond_inputs shape={}".format(cond_inputs.get_shape().as_list()))
 
-    f_seq2 = conv_and_pool(cond_inputs,
-                           lengths=lengths[1],
-                           num_filter=num_filter,
-                           max_width=max_width,
-                           activation_fn=activation_fn,
-                           reducer=reducer)
-
-  outputs = f_seq2
+  outputs = p
 
   return outputs

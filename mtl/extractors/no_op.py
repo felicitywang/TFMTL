@@ -16,23 +16,17 @@
 import tensorflow as tf
 
 
-def no_op_encoding(inputs, lengths):
+def concat_extractor(inputs, lengths):
   """A no-op encoder, e.g., for use with bag-of-words features
   that have already been encoded.
 
   Inputs
   ------
-    inputs: batch of size [batch_size, D]
+    inputs: list of batches of size [batch_size, D]
 
   Outputs
   -------
-    outputs: a Tensor of size [batch_size, D].
+    outputs: a Tensor of size [batch_size, len(inputs)*D].
   """
 
-  return inputs
-
-
-def concat_extractor(inputs, lengths):
-  if not isinstance(inputs, list):
-    inputs = [inputs]
   return tf.concat(inputs, axis=1)  # concat along time axis
