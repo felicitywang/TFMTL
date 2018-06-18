@@ -250,7 +250,14 @@ Args:
           text = text.strip()
 
           # remove urls
-          text = re.sub(r'https?:.*[\r\n]*', ' ', text, flags=re.MULTILINE)
+          toks = []
+          for tok in text.split():
+            if re.match('https?:.*[\r\n]*', tok):
+              tok = tok.split('http')[0]
+              #keep everything before hand in cases where there is not space between previous token and url
+            if tok.strip():
+              toks.append(tok)
+          text = " ".join(toks)
 
           # replace line breaks
           for old_linebreak in OLD_LINEBREAKS:
