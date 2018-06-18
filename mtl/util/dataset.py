@@ -254,7 +254,8 @@ Args:
           for tok in text.split():
             if re.match('https?:.*[\r\n]*', tok):
               tok = tok.split('http')[0]
-              #keep everything before hand in cases where there is not space between previous token and url
+              #keep everything before hand in cases where there is not space
+              #between previous token and url
             if tok.strip():
               toks.append(tok)
           text = " ".join(toks)
