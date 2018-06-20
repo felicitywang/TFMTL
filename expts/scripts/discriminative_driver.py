@@ -121,6 +121,8 @@ def parse_args():
                  help='Key for label field in the batches')
   p.add_argument('--input_key', default="tokens", type=str,
                  help='Key for input field in the batches')
+  p.add_argument('--topic_field_name', default="seq1", type=str,
+                 help="Key for field representing examples' topics")
   p.add_argument('--datasets', nargs='+', type=str,
                  help='Key of the dataset(s) to train and evaluate on')
   p.add_argument('--dataset_paths', nargs='+', type=str,
@@ -720,31 +722,8 @@ def compute_held_out_performance(session,
   # pred_op: predicted labels
   # eval_label: gold labels
 
-  # Initializer eval iterator
+  # Initialize eval iterator
   session.run(eval_iterator.initializer)
-
-  # # Accumulate predictions
-  # ys = []
-  # y_hats = []
-  # while True:
-  #   try:
-  #     y, y_hat = session.run([eval_label, pred_op])
-  #     assert y.shape == y_hat.shape, print(y.shape, y_hat.shape)
-  #     y_list = y.tolist()
-  #     y_hat_list = y_hat.tolist()
-  #     ys += y_list
-  #     y_hats += y_hat_list
-  #   except tf.errors.OutOfRangeError:
-  #     break
-  #
-  # assert len(ys) == len(y_hats)
-  #
-  # ntotal = len(ys)
-  # ncorrect = 0
-  # for i in xrange(len(ys)):
-  #   if ys[i] == y_hats[i]:
-  #     ncorrect += 1
-  # acc = float(ncorrect) / float(ntotal)
 
   if topic_path != '' and topic_path is not None:
     with gzip.open(topic_path, mode='rt') as f:
@@ -755,12 +734,14 @@ def compute_held_out_performance(session,
         d = None
         names = ["topic2", "topic-2", "topic5", "topic-5"]
         if any(name in topic_path.lower() for name in names):
+          # Topic-2 and Topic-5 require examples' topics to compute metric,
+          # so we need to read their corresponding files
           raise
 
   if d is not None:
     index2topic = dict()
     for item in d:
-      index2topic[item['index']] = item['seq1']
+      index2topic[item['index']] = item[args.topic_field_name]
   else:
     index2topic = None
 
@@ -773,28 +754,19 @@ def compute_held_out_performance(session,
   num_eval_iter = 0
   while True:
     try:
-      if args.experiment_name == "RUDER_NAACL_18":
-        y_true, y_pred, y_index, eval_loss_v = session.run(
-          [eval_label, pred_op, get_topic_op, eval_loss_op])
-        num_eval_iter += 1
-        total_eval_loss += eval_loss_v
-        y_index = y_index.tolist()  # index of example in data.json
-        if index2topic is not None:
-          y_topic = [index2topic[idx] for idx in
-                     y_index]  # topic for each example so we can macro-average across topics
-        else:
-          y_topic = []
-        y_indexes += y_index
-        y_topics += y_topic
-        if "FNC-1" in topic_path:
-          zip_ = zip(*[y_index, y_topic, y_pred, y_true])
-          for i, top, p, tr in zip_:
-            print("({}: {}) pred={}, true={}".format(i, top, p, tr))
+      y_true, y_pred, y_index, eval_loss_v = session.run(
+        [eval_label, pred_op, get_topic_op, eval_loss_op])
+      num_eval_iter += 1
+      total_eval_loss += eval_loss_v
+      y_index = y_index.tolist()  # index of example in data.json
+      if index2topic is not None:
+        y_topic = [index2topic[idx] for idx in
+                   y_index]  # topic for each example so we can macro-average across topics
       else:
-        y_true, y_pred, eval_loss_v = session.run(
-          [eval_label, pred_op, eval_loss_op])
-        num_eval_iter += 1
-        total_eval_loss += eval_loss_v
+        y_topic = []
+      y_indexes += y_index
+      y_topics += y_topic
+
       assert y_true.shape == y_pred.shape
       y_trues += y_true.tolist()
       y_preds += y_pred.tolist()
@@ -803,10 +775,6 @@ def compute_held_out_performance(session,
 
   assert num_eval_iter > 0
   evaluation_loss = float(total_eval_loss) / float(num_eval_iter)
-
-  # if args.experiment_name == "RUDER_NAACL_18":
-  # for y_index, y_topic, y_t, y_p in zip(*[y_indexes, y_topics, y_trues, y_preds]):
-  #  print('{} ({}): TRUE: {}, PRED: {}'.format(y_index, y_topic, y_t, y_p))
 
   ntotal = len(y_trues)
   ncorrect = accurate_number(y_trues=y_trues,
@@ -824,16 +792,9 @@ def compute_held_out_performance(session,
   res['ncorrect'] = ncorrect
   for score in scores:
     res[score] = scores[score]
-  # res['aligned_accuracy'] = aligned_accuracy(y_trues, y_preds)
 
   res['eval_loss'] = evaluation_loss
   return res
-  # return {
-  #  'ntotal': ntotal,
-  #  'ncorrect': ncorrect,
-  #  'accuracy': score,  # TODO score name
-  #  'aligned_accuracy': aligned_accuracy(y_trues, y_preds),
-  # }
 
 
 def main():
