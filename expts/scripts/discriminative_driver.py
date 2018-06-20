@@ -1315,20 +1315,16 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 
 
 def fill_topic_op(args, model_info):
-
-  if args.experiment_name == "RUDER_NAACL_18":
-    for dataset_name in model_info:
-      if args.mode in ['train', 'init']:
-        _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
-        model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
-      elif args.mode == 'test':
-        _test_topic_op = get_topic(model_info[dataset_name]['test_batch'])
-        model_info[dataset_name]['test_topic_op'] = _test_topic_op
-      elif args.mode == 'predict':
-        _pred_topic_op = get_topic(model_info[dataset_name]['pred_batch'])
-        model_info[dataset_name]['pred_topic_op'] = _pred_topic_op
-  else:
-    pass
+  for dataset_name in model_info:
+    if args.mode in ['train', 'init']:
+      _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
+      model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
+    elif args.mode == 'test':
+      _test_topic_op = get_topic(model_info[dataset_name]['test_batch'])
+      model_info[dataset_name]['test_topic_op'] = _test_topic_op
+    elif args.mode == 'predict':
+      _pred_topic_op = get_topic(model_info[dataset_name]['pred_batch'])
+      model_info[dataset_name]['pred_topic_op'] = _pred_topic_op
 
 
 def build_input_dataset(tfrecord_path, batch_features, batch_size,
