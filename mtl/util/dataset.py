@@ -41,7 +41,8 @@ from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
 from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
-                                ruder_tokenizer)
+                                ruder_tokenizer,
+                                split_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -50,6 +51,7 @@ flags = tf.flags
 logging = tf.logging
 
 FLAGS = flags.FLAGS
+
 
 # TRAIN_RATIO = 0.8  # train out of all
 # VALID_RATIO = 0.1  # valid out of all / valid out of train
@@ -171,6 +173,8 @@ Args:
       self._tokenizer = tweet_tokenizer_keep_handles.tokenize
     elif tokenizer_ == "ruder_tokenizer":
       self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
+    elif tokenizer_ == "split_tokenizer":
+      self._tokenizer = functools.partial(split_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % tokenizer_)
 
@@ -180,7 +184,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
