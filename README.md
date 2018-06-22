@@ -47,6 +47,10 @@ pip install -r requirements.txt
 
 * Use `six` to maintain backwards compatibility with Python 2.7.
 
+## Running Models
+Instructions to train and test models are provided in this [README](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/blob/master/expts/README.md)
+
+
 ## Embedders, Extractors, and Encoders
 
 One focus of this repository is a collection of off-the-shelf functions
