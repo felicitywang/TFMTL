@@ -79,6 +79,11 @@ See `../../requirement.txt`
 - run `scripts/discriminative_driver.py` with `train` mode with different configurations, e.g., `sentiment_1/train_mult.py`, `sentiment_1/test_mult.py`; see the source file for further hyper-parameter / argument explanation
 - checkpoints will be saved to use in the `test` and `predict` mode
 
+#### List of required command line arguments when training a model
+
+###### Metadata
+	- `mode`: Either `train`, `test`, `predict`, or `init`
+
 ### 3. Test the model
 
 - use the trained model to evaluate on the test data
