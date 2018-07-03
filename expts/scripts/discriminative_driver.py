@@ -35,7 +35,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.models.mult import Mult
-from mtl.util.clustering import aligned_accuracy
+from mtl.util.constants import METRICS
 from mtl.util.metrics import accurate_number, metric2func
 from mtl.util.pipeline import Pipeline
 from mtl.util.util import make_dir
@@ -175,8 +175,8 @@ def parse_args():
   p.add_argument('--batch_normalization', type=bool, default=False,
                  help='Whether to use batch normalization in MLP layers')
   p.add_argument('--layer_normalization', type=bool, default=False,
-                 help='Whether to use layer normalization in MLP layers')  
-  p.add_argument('--metrics', nargs='+', type=str, default=None,
+                 help='Whether to use layer normalization in MLP layers')
+  p.add_argument('--metrics', nargs='+', type=str, default=METRICS,
                  help='Evaluation metrics for each dataset to use. '
                       'Supported metrics include:\n'
                       'Acc: accuracy score;\n'
@@ -238,7 +238,7 @@ def train_model(model,
       additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
-  #losses = model.get_multi_task_loss(train_batches,
+  # losses = model.get_multi_task_loss(train_batches,
   #                                   is_training=True,
   #                                   additional_extractor_kwargs=additional_extractor_kwargs)
   losses = dict()
@@ -264,15 +264,14 @@ def train_model(model,
   train_ops = dict()
   optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
   for dataset_name in model_info:
-    #tvars, grads = get_var_grads(losses[dataset_name])
-    #train_ops[dataset_name] = get_train_op(tvars, grads, lr, args.max_grad_norm,
+    # tvars, grads = get_var_grads(losses[dataset_name])
+    # train_ops[dataset_name] = get_train_op(tvars, grads, lr, args.max_grad_norm,
     #                               global_step_tensor, args.optimizer, name='train_op_{}'.format(dataset_name))
-    train_ops[dataset_name] = optim.minimize(losses[dataset_name], global_step=global_step_tensor)
+    train_ops[dataset_name] = optim.minimize(losses[dataset_name],
+                                             global_step=global_step_tensor)
 
-
-    
-  #tvars, grads = get_var_grads(loss)
-  #train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
+  # tvars, grads = get_var_grads(loss)
+  # train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
   #                        global_step_tensor, args.optimizer, name='train_op')
   init_ops = [tf.global_variables_initializer(),
               tf.local_variables_initializer()]
@@ -302,7 +301,8 @@ def train_model(model,
     else:
       print('( ) {}'.format(var))
 
-  print("Total trainable parameters in this model={}".format(total_trainable_parameters))
+  print("Total trainable parameters in this model={}".format(
+    total_trainable_parameters))
 
   print("\n\n\n")
 
@@ -355,7 +355,7 @@ def train_model(model,
     main_task_dev_accuracy = []
     stopping_criterion_reached = False
     early_stopping_dev_results = ""
-    
+
     # Do training
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
@@ -367,7 +367,7 @@ def train_model(model,
       # Take steps_per_epoch gradient steps
       total_loss = 0
       num_iter = 0
-      #for _ in tqdm(xrange(steps_per_epoch)):
+      # for _ in tqdm(xrange(steps_per_epoch)):
       #  step, loss_v, _ = sess.run(
       #    [global_step_tensor, loss, train_op])
       #  num_iter += 1
@@ -375,13 +375,13 @@ def train_model(model,
       #
       #  # loss_v is sum over a batch from each dataset of the average loss *per
       #  #  training example*
-      #assert num_iter > 0
+      # assert num_iter > 0
       #
       ## average loss per batch (which is in turn averaged across examples)
-      #train_loss = float(total_loss) / float(num_iter)
+      # train_loss = float(total_loss) / float(num_iter)
 
       for _ in tqdm(xrange(steps_per_epoch)):
-        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):          
+        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
           loss_v, _ = sess.run([losses[dataset_name], train_ops[dataset_name]])
           total_loss += alpha * loss_v
         step = sess.run(global_step_tensor)
@@ -389,7 +389,7 @@ def train_model(model,
       assert num_iter > 0
 
       train_loss = float(total_loss) / float(num_iter)
-          
+
       train_loss_summary = tf.Summary(
         value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
       train_file_writer.add_summary(train_loss_summary, global_step=step)
@@ -438,17 +438,25 @@ def train_model(model,
       valid_file_writer.add_summary(valid_main_task_accuracy_summary,
                                     global_step=step)
 
-      if (main_task_acc >= args.early_stopping_acc_threshold) and (len(main_task_dev_accuracy) >= args.patience) and (main_task_acc < main_task_dev_accuracy[-args.patience]):
-        print("Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(epoch, args.patience, args.early_stopping_acc_threshold))
+      if (main_task_acc >= args.early_stopping_acc_threshold) and (
+        len(main_task_dev_accuracy) >= args.patience) and (
+        main_task_acc < main_task_dev_accuracy[-args.patience]):
+        print(
+          "Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(
+            epoch, args.patience, args.early_stopping_acc_threshold))
         stopping_criterion_reached = True
 
       main_task_dev_accuracy.append(main_task_acc)
 
       if args.reporting_metric != "Acc":
-        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
-        valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
-        valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
-        
+        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][
+          args.reporting_metric]
+        valid_main_task_performance_summary = tf.Summary(value=[
+          tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric),
+                           simple_value=main_task_performance)])
+        valid_file_writer.add_summary(valid_main_task_performance_summary,
+                                      global_step=step)
+
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
@@ -464,7 +472,8 @@ def train_model(model,
 
         str_ += '\n(%s) ' % (dataset_name)
         for m, s in model_info[dataset_name]['valid_metrics'].items():
-          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+          if (dataset_name == args.datasets[0]) and (
+            m == args.reporting_metric):  # main task
             str_ += '**%s=%f** ' % (m, s)
           elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
@@ -501,9 +510,10 @@ def train_model(model,
 
       if stopping_criterion_reached:
         saver.save(sess.raw_session(),
-                   os.path.join(args.checkpoint_dir, 'early-stopping', 'model'))
+                   os.path.join(args.checkpoint_dir, 'early-stopping',
+                                'model'))
         early_stopping_dev_results = str_
-        #with open(args.log_file, 'a') as f:
+        # with open(args.log_file, 'a') as f:
         #  f.write('\nSTOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
         #  f.write(str_ + '\n')
         break
@@ -554,7 +564,7 @@ def test_model(model, dataset_info, args):
   print("filled pred op")
   fill_topic_op(args, model_info)
   print("filled topic op")
-  
+
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
   model_names = args.datasets
@@ -622,7 +632,8 @@ def test_model(model, dataset_info, args):
           str_ += '( )'
         str_ += '(%s)' % (dataset_name)
         for m, s in model_info[dataset_name]['test_metrics'].items():
-          if (dataset_name == args.datasets[0]) and (m == args.reporting_metric):  # main task
+          if (dataset_name == args.datasets[0]) and (
+            m == args.reporting_metric):  # main task
             str_ += '**%s=%f** ' % (m, s)
           elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
@@ -845,12 +856,7 @@ def main():
   #  for dataset, metric in zip(args.datasets, args.metrics):
   #    metrics[dataset] = metric
   for dataset in args.datasets:
-    metrics[dataset] = ['Acc',
-                        'MAE_Macro',
-                        'F1_Macro',
-                        'F1_PosNeg_Macro',
-                        'Recall_Macro',
-                        'Precision_Macro']
+    metrics[dataset] = args.metrics
 
   # Read data
   dataset_info = dict()

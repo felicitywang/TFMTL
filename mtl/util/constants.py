@@ -56,3 +56,14 @@ VOCAB_NAMES = [
 
 class EXP_NAMES():
   RUDER_NAACL_18 = EMNLP_18 = "RUDER_NAACL_18"
+
+
+"""Metrics"""
+METRICS = [
+  'Acc',
+  'MAE_Macro',
+  'F1_Macro',
+  'F1_PosNeg_Macro',
+  'Recall_Macro',
+  'Precision_Macro'
+]
