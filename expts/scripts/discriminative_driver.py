@@ -175,7 +175,7 @@ def parse_args():
   p.add_argument('--batch_normalization', type=bool, default=False,
                  help='Whether to use batch normalization in MLP layers')
   p.add_argument('--layer_normalization', type=bool, default=False,
-                 help='Whether to use layer normalization in MLP layers')  
+                 help='Whether to use layer normalization in MLP layers')
   p.add_argument('--metrics', nargs='+', type=str, default=None,
                  help='Evaluation metrics for each dataset to use. '
                       'Supported metrics include:\n'
@@ -270,7 +270,7 @@ def train_model(model,
     train_ops[dataset_name] = optim.minimize(losses[dataset_name], global_step=global_step_tensor)
 
 
-    
+
   #tvars, grads = get_var_grads(loss)
   #train_op = get_train_op(tvars, grads, lr, args.max_grad_norm,
   #                        global_step_tensor, args.optimizer, name='train_op')
@@ -355,7 +355,7 @@ def train_model(model,
     main_task_dev_accuracy = []
     stopping_criterion_reached = False
     early_stopping_dev_results = ""
-    
+
     # Do training
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
@@ -381,7 +381,7 @@ def train_model(model,
       #train_loss = float(total_loss) / float(num_iter)
 
       for _ in tqdm(xrange(steps_per_epoch)):
-        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):          
+        for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
           loss_v, _ = sess.run([losses[dataset_name], train_ops[dataset_name]])
           total_loss += alpha * loss_v
         step = sess.run(global_step_tensor)
@@ -389,7 +389,7 @@ def train_model(model,
       assert num_iter > 0
 
       train_loss = float(total_loss) / float(num_iter)
-          
+
       train_loss_summary = tf.Summary(
         value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
       train_file_writer.add_summary(train_loss_summary, global_step=step)
@@ -448,7 +448,7 @@ def train_model(model,
         main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
         valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
         valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
-        
+
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
@@ -554,7 +554,7 @@ def test_model(model, dataset_info, args):
   print("filled pred op")
   fill_topic_op(args, model_info)
   print("filled topic op")
-  
+
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
   model_names = args.datasets
@@ -1296,7 +1296,7 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size,
                   )
   else:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
-                  num_epochs=1)
+                  num_epochs=1, shuffle=False)
 
   # We return the class because we might need to access the
   # initializer op for TESTING, while training only requires the
