@@ -449,13 +449,9 @@ def train_model(model,
       main_task_dev_accuracy.append(main_task_acc)
 
       if args.reporting_metric != "Acc":
-        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][
-          args.reporting_metric]
-        valid_main_task_performance_summary = tf.Summary(value=[
-          tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric),
-                           simple_value=main_task_performance)])
-        valid_file_writer.add_summary(valid_main_task_performance_summary,
-                                      global_step=step)
+        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
+        valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
+        valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
 
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
@@ -1302,7 +1298,7 @@ def build_input_dataset(tfrecord_path, batch_features, batch_size,
                   )
   else:
     ds = Pipeline(tfrecord_path, batch_features, batch_size,
-                  num_epochs=1)
+                  num_epochs=1, shuffle=False)
 
   # We return the class because we might need to access the
   # initializer op for TESTING, while training only requires the

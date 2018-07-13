@@ -79,6 +79,7 @@ See `../../requirement.txt`
 - run `scripts/discriminative_driver.py` with `train` mode with different configurations, e.g., `sentiment_1/train_mult.py`, `sentiment_1/test_mult.py`; see the source file for further hyper-parameter / argument explanation
 - checkpoints will be saved to use in the `test` and `predict` mode
 
+
 ### 3. Test the model
 
 - use the trained model to evaluate on the test data
@@ -115,6 +116,36 @@ See `../../requirement.txt`
 - use the saved model trained with dataset A to initialize the model for dataset B
 - Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
 - For examples see `expts/init_test/`
+
+## Required arguments to run the discriminative version of TFMTL
+
+* **Metadata**
+    * `mode`: Either `train`, `test`, `predict`, or `init` 
+    * `experiment_name`: A string for the name of the experiment
+* **Training Details**
+    * `alphas`: A list of decimals that sums to approximately 1. Each index corresponds to a specific dataset
+    * `class_sizes`: A list of integers that represent how many classes are in each task
+* **Logging Details**
+    * `checkpoint_dir`: A path to save models during each checkpoint
+    * `log_file`: The file to store the log files
+* **Dataset Details**
+    * `topics_path`: List of paths to the data.json files. 1 path per dataset
+    * `topics_field_name`: (name of keys for topic/input) - it defaults to `seq1`
+    * `datasets`: List of names for each dataset
+    * `dataset_paths`: List of paths to the TF records. 1 path per dataset
+    * `vocab_size_file`: Path to the file that contains size of vocabulary, created when generating TFRecords.
+* **Encoder Details**
+    * `architecture`: The key for the json object in the corresponding encoder_config_file to use for encoders
+    * `encoder_config_file`: The json file that contains the configurations for the encoders
+* **Model_hyperparams**
+    * `shared_hidden_dims`: List of integers, or just 1 integer that is broadcast for each layer
+    * `private_hidden_dims`: List of integers, or just 1 integer that is broadcast for each layer
+    * `shared_mlp_layers`: List of integers, or just 1 integer that is broadcast for each layer
+    * `private_mlp_layers`: List of integers, or just 1 integer that is broadcast for each layer
+* **Prediction** - When predicting:
+    * `predict_tfrecord`: File path of the tf record file path of the text to predict
+    * `predict_dataset`: Path to data to predict/annotate
+    * `predict_output_folder`: Folder to save predictions
 
 
 ## Arguments to generate TFRecord files
