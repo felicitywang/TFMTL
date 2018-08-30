@@ -41,8 +41,7 @@ from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
 from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
-                                ruder_tokenizer,
-                                split_tokenizer)
+                                ruder_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -102,7 +101,6 @@ class Dataset:
                ):
     """
 Args:
-    data_type: whether the data is json data or TFRecords
     json_dir: where data.json.gz and index.json.gz are
         located, and vocabulary/TFRecords built from the single
         datasets are to be saved
@@ -167,14 +165,13 @@ Args:
     self._write_tfidf = write_tfidf
     self._load_vocab_name = vocab_name
 
+    self._tokenizer_name = tokenizer_
     if tokenizer_ == "tweet_tokenizer":
       self._tokenizer = tweet_tokenizer.tokenize
     elif tokenizer_ == "tweet_tokenizer_keep_handles":
       self._tokenizer = tweet_tokenizer_keep_handles.tokenize
     elif tokenizer_ == "ruder_tokenizer":
       self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
-    elif tokenizer_ == "split_tokenizer":
-      self._tokenizer = functools.partial(split_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % tokenizer_)
 
@@ -184,7 +181,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
@@ -213,6 +210,8 @@ Args:
     self._label_list = [int(item[label_field_name])
                         if label_field_name in item else None for
                         item in tqdm(data)]
+    # TODO: is it possible that the label list read doesn't cover all the
+    # labels?
     self._label_set = set(self._label_list)
     self._num_classes = len(set(self._label_list))
 
@@ -240,13 +239,23 @@ Args:
       self._sequences[text_field_name] = list()
       self._sequence_lengths[text_field_name] = list()
 
+    # TODO
+    # String ID(name) for predict mode
+    self._ids = []
+
     print("Generating text lists...")
     min_seq_len = sys.maxsize
-    for item in tqdm(data):
+    for index, item in tqdm(enumerate(data)):
       num_examples += 1
+
+      # TODO
+      # String ID(name) for predict mode
+      if predict_mode:
+        if 'id' in item:
+          self._ids.append(item['id'])
+
       for text_field_name in self._text_field_names:
         text = item[text_field_name]
-
         if self._preproc:
 
           # remove leading and trailing whitespaces(to get rid of redundant
@@ -270,7 +279,9 @@ Args:
 
         text = [BOS] + self._tokenizer(text) + [EOS]
 
-        assert len(text) >= 3, text
+        if len(text) < 3:
+          print("!!!!!", json_dir, index)
+        # assert len(text) >= 3, old_text
 
         if len(text) < min_seq_len:
           min_seq_len = len(text)
@@ -284,7 +295,8 @@ Args:
 
     for text_field_name in text_field_names:
       # Check that every example has every field
-      assert len(self._sequences[text_field_name]) == num_examples
+      assert len(self._sequences[text_field_name]) == num_examples, \
+        str(num_examples) + ' ' + str(len(self._sequences[text_field_name]))
       assert len(self._sequence_lengths[text_field_name]) == num_examples
 
     self._num_examples = num_examples
@@ -296,6 +308,7 @@ Args:
     if predict_mode:
       self._predict_index = np.asarray(range(num_examples))
     else:
+      assert self._ids == []
       print("Generating train/valid/test splits...")
       index_path = os.path.join(json_dir, "index.json.gz")
       (self._train_index, self._valid_index, self._test_index,
@@ -428,7 +441,11 @@ Args:
         ) if self._unlabeled_path is not None else None,
         'labels': list(self._label_set),
         'preproc': self._preproc,
-        'vocab_all': self._vocab_all
+        'vocab_all': self._vocab_all,
+        'tokenizer': self._tokenizer_name,
+        'padding': self._padding,
+        'write_bow': self._write_bow,
+        'write_tfidf': self._write_tfidf
       }
       print('Arguments for the dataset:')
       for k, v in self._args.items():
@@ -636,7 +653,7 @@ Args:
 
         if self._expand_vocab:
           print('Combine pre-trained word embeddings\' vocabulary mapping '
-                'with all the word types appering in the training data.')
+                'with all the word types appearing in the training data.')
           # TODO multiple training data for merged vocabulary
           # raise NotImplementedError('Combine pre-trained word embedding '
           #                           'and training data dictionary Not '
@@ -645,8 +662,9 @@ Args:
           # train_vocab_list = self.get_train_vocab_list()
 
           # TODO other pre-trained word embedding
-          glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
-          self._vocab_v2i_dict, vocab_extra = combine_vocab(glove_path,
+          pretrained_path = os.path.join(self._vocab_dir,
+                                         self._load_vocab_name)
+          self._vocab_v2i_dict, vocab_extra = combine_vocab(pretrained_path,
                                                             train_vocab_list)
 
           self._vocab_size = len(self._vocab_v2i_dict)
@@ -678,8 +696,9 @@ Args:
           print('Use training vocab only.')
 
           # TODO other pre-trained word embedding
-          glove_path = os.path.join(self._vocab_dir, self._load_vocab_name)
-          random_size, self._vocab_v2i_dict = reorder_vocab(glove_path,
+          pretrained_path = os.path.join(self._vocab_dir,
+                                         self._load_vocab_name)
+          random_size, self._vocab_v2i_dict = reorder_vocab(pretrained_path,
                                                             train_vocab_list)
 
           self._vocab_size = len(self._vocab_v2i_dict)
@@ -739,6 +758,12 @@ Args:
         feature['index'] = tf.train.Feature(
           int64_list=tf.train.Int64List(
             value=[index]))
+
+        if self._ids:
+          feature['id'] = tf.train.Feature(
+            bytes_list=tf.train.BytesList(
+              value=[self._ids[index].encode('utf-8')]))
+
         for text_field_name in self._text_field_names:
           feature[text_field_name] = tf.train.Feature(
             int64_list=tf.train.Int64List(
@@ -773,6 +798,7 @@ Args:
               float_list=tf.train.FloatList(value=bow))
 
         # Gather label
+
         if labeled:
           label = self._label_list[index]
           assert label is not None
@@ -780,8 +806,9 @@ Args:
             int64_list=tf.train.Int64List(
               value=[label]))
         else:
-          label = self._label_list[index]
-          assert label is None
+          # label = self._label_list[index]
+          # assert label is None
+          pass
 
         if self._write_tfidf:
           raise NotImplementedError("tfidf not supported")
@@ -1130,7 +1157,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
   # the generated vocab freq dicts shall be saved at
   # json_dir/vocab_freq_dict.json
 
-  glove_path = os.path.join(vocab_dir, vocab_name)
+  pretrained_path = os.path.join(vocab_dir, vocab_name)
 
   # get the vocab from the training data of each dataset
   # Assumes that all datasets have
@@ -1171,8 +1198,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
   if not expand_vocab:
     print('Use training vocab only.')
 
-    # TODO other pre-trained word embedding
-    random_size, vocab_v2i_all = reorder_vocab(glove_path,
+    random_size, vocab_v2i_all = reorder_vocab(pretrained_path,
                                                train_vocab_list)
 
     with open(os.path.join(merged_dir, "random_size.txt"),
@@ -1181,8 +1207,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
 
   else:
 
-    # TODO other word embeddings
-    vocab_v2i_all, vocab_extra = combine_vocab(glove_path, train_vocab_list)
+    vocab_v2i_all, vocab_extra = combine_vocab(pretrained_path,
+                                               train_vocab_list)
 
     with codecs.open(os.path.join(merged_dir,
                                   "vocab_extra_v2i.json"),

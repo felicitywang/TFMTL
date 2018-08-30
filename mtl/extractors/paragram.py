@@ -17,12 +17,12 @@ import tensorflow as tf
 from six.moves import xrange
 
 from mtl.layers import dense_layer
+from mtl.util.common import validate_extractor_inputs
 from mtl.util.reducers import (reduce_avg_over_time,
                                reduce_var_over_time,
                                reduce_max_over_time,
                                reduce_min_over_time,
                                reduce_over_time)
-from mtl.util.common import validate_extractor_inputs
 
 
 def _paragram_phrase_helper(inputs,
@@ -71,12 +71,12 @@ def _paragram_phrase_helper(inputs,
 
   return s_embedding
 
+
 def paragram_phrase(inputs,
                     lengths,
                     reducer,
                     apply_activation,
                     activation_fn):
-
   validate_extractor_inputs(inputs, lengths)
 
   num_stages = len(inputs)
@@ -101,7 +101,8 @@ def paragram_phrase(inputs,
 
   if apply_activation:
     outputs = dense_layer(code,
-                          code.get_shape().as_list()[1],  # keep same dimensionality
+                          code.get_shape().as_list()[1],
+                          # keep same dimensionality
                           name="paragram-output",
                           activation=activation_fn)
   else:

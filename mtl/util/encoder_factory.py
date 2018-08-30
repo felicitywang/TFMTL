@@ -20,13 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import json
+import os
 
 import tensorflow as tf
 
+from mtl.util.common import listify
 from mtl.util.embedder_factory import create_embedders
 from mtl.util.extractor_factory import create_extractors
 from mtl.util.hparams import dict2func
-from mtl.util.common import listify
 
 
 def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
@@ -99,9 +100,8 @@ def build_encoders(args):
                   for ds in architectures[arch]
                   if type(architectures[arch][ds]) is dict}
   # Put 'vocab_size' into embedder_kwargs for all datasets
-  with open(args.vocab_size_file, 'r') as f:
-    line = f.readline().strip()
-    vocab_size = int(line)
+  with open(os.path.join(args.dataset_paths[0], 'args.json')) as file:
+    vocab_size = int(json.load(file)['vocab_size'])
   for ds in embed_kwargs:
     embed_kwargs[ds]['vocab_size'] = vocab_size
 

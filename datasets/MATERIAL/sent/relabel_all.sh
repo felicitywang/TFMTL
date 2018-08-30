@@ -1,0 +1,7 @@
+python relabel_translation.py 1A_ANNOTATION_GOV-LIF 1A_TEXT_TRANSLATION 1A_DEST
+
+python relabel_translation.py 1A_ANNOTATION_GOV-LIF 1A_SPEECH_TRANSLATION 1A_DEST
+
+python relabel_translation.py 1B_ANNOTATION_GOV-LIF 1B_TEXT_TRANSLATION 1B_DEST
+
+python relabel_translation.py 1B_ANNOTATION_GOV-LIF 1B_SPEECH_TRANSLATION 1B_DEST

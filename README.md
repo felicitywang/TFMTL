@@ -17,12 +17,12 @@ may be appropriate:
   relying on large portions of code that you did not write yourself.
 
 Please refrain from sharing code in this repository beyond immediate
-collaborators, as parts of it may related to work that is still under
+collaborators, as parts of it may be related to work that is still under
 submission or will soon be submitted for publication.
 
 ## Requirements
 
-The requirements are listed in requirements.txt. To install, run:
+The requirements are listed in `requirements.txt`. To install, run:
 
 ```
 pip install -U pip
@@ -47,10 +47,28 @@ pip install -r requirements.txt
 
 * Use `six` to maintain backwards compatibility with Python 2.7.
 
-## Running Models
-Instructions to train and test models are provided in this [README](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/blob/master/expts/README.md)
+## File Structure
+
+- `datasets/`: collection of different datasets of text classification tasks with summaries, dataset statistics and bibtex info
+
+- `expts/`:
+  - `scripts/`: scripts to write TFRecord data and to run the model
+  - `experiment_name`: setup, configuration, running scripts, etc. for a particular experiment
+  - ...
+  <!-- - TODO example folders -->
+- `mtl/`: main codebase
+
+- `pretrained_word_embeddings/`: folder to save the pre-trained word embedding files
+
+- `tests/`: test files
 
 
+## Running Experiments
+
+See `expts/README.md` for a detailed experiment pipeline.
+
+
+<!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place? -->
 ## Embedders, Extractors, and Encoders
 
 One focus of this repository is a collection of off-the-shelf functions
@@ -64,8 +82,12 @@ An architecture is a specification of an encoder for each dataset in an experime
 Users specify encoder architectures in a JSON configuration file. An architecture
 is specified with a name (key) whose value is a dictionary with the following fields:
 
-* `embedders_tied`: `true` if all datasets should be embedded with the same function (i.e., shared parameters), `false` otherwise
-* `extractors_tied`: `true` if all datasets should have features extracted with the same function (i.e., shared parameters), `false` otherwise
+* `embedders_tied`:
+  * `true` if all datasets should be embedded with the same function (i.e., shared parameters),
+  * `false` otherwise
+* `extractors_tied`:
+  * `true` if all datasets should have features extracted with the same function (i.e., shared parameters),
+  * `false` otherwise
 * Name of dataset A
   * `embed_fn`: a string specifying an embedding function
   * `embed_kwargs`: a dictionary specifying `argument: value` pairs (arguments are strings) for the embedding function
@@ -79,7 +101,9 @@ for an architecture, then `embed_fn` and `embed_kwargs` must have identical valu
 all datasets specified in the given architecture (similarly if `extractors_tied` is `true`).
 
 `true` is the JSON equivalent of Python's `True` value.
+
 `false` is the JSON equivalent of Python's `False` value.
+
 `null` is the JSON equivalent of Python's `None` value.
 
 An example configuration file can be found at `tfmtl/tests/encoders.json`.
@@ -90,3 +114,4 @@ and `tfmtl/mtl/extractors`, respectively.
 The architecture to use in an experiment is given by the `--architecture` flag,
 and the file containing the architecture(s) is given by the `--encoder_config_file`
 flag. Multiple architectures can be placed in the same configuration file.
+

@@ -1,0 +1,96 @@
+
+TGt: 0.44
+TGt+(LMRD): 0.64(0.9024)
+
+TGs:
+Best total accuracy: 0.5625 at epoch 2
+
+TGts: 0.5121951219512195
+
+
+SWt
+Best accuaracy for dataset SWt: {'epoch': 1, 'acc': 0.6071428571428571}
+Best total accuracy: 0.6071428571428571 at epoch 1
+
+SWt
+Best accuaracy for dataset SWt: {'epoch': 1, 'acc': 0.6071428571428571}
+Best total accuracy: 0.6071428571428571 at epoch 1
+
+SWts
+Best accuaracy for dataset SWts: {'acc': 0.6190476190476191, 'epoch': 10}
+Best total accuracy: 0.6190476190476191 at epoch 10
+
+SWTGs
+Best accuaracy for dataset SWTGs: {'acc': 0.7419354838709677, 'epoch': 1}
+Best total accuracy: 0.7419354838709677 at epoch 1
+
+
+SWTGt
+Best accuaracy for dataset SWTGt: {'acc': 0.5769230769230769, 'epoch': 1}
+Best total accuracy: 0.5769230769230769 at epoch 1
+
+SWTGts
+Best accuaracy for dataset SWTGts: {'acc': 0.5783132530120482, 'epoch': 4}
+Best total accuracy: 0.5783132530120482 at epoch 4
+
+
+
+{'SWts': {'acc': 0.5952380952380952, 'epoch': 7}}
+Best total accuracy: 0.5952380952380952 at epoch 7
+
+{'SWt': {'acc': 0.6071428571428571, 'epoch': 2}}
+Best total accuracy: 0.6071428571428571 at epoch 2
+
+
+SWt
+Best accuaracy for dataset SWt: {'acc': 0.6071428571428571, 'epoch': 2}
+Best total accuracy: 0.6071428571428571 at epoch 2
+
+SWts
+Best accuaracy for dataset SWts: {'acc': 0.5952380952380952, 'epoch': 7}
+Best total accuracy: 0.5952380952380952 at epoch 7
+
+SWs LMRD
+Best accuaracy for dataset SWs: {'epoch': 1, 'acc': 0.5714285714285714}
+Best accuaracy for dataset LMRD: {'epoch': 19, 'acc': 0.8976}
+Best total accuracy: 1.4690285714285714 at epoch 19
+
+LMRD SWt
+Best accuaracy for dataset LMRD: {'epoch': 20, 'acc': 0.8972}
+Best accuaracy for dataset SWt: {'epoch': 4, 'acc': 0.75}
+Best total accuracy: 1.6472 at epoch 20
+
+
+
+LMRD SWts
+Best accuaracy for dataset LMRD: {'epoch': 10, 'acc': 0.874}
+Best accuaracy for dataset SWts: {'epoch': 8, 'acc': 0.7380952380952381}
+
+
+
+SWTGs
+Best accuaracy for dataset SWTGs: {'acc': 0.7419354838709677, 'epoch': 1}
+Best total accuracy: 0.7419354838709677 at epoch 1
+
+SWTGs + LMRD
+{'SWTGs': {'acc': 0.7096774193548387, 'epoch': 1}, 'LMRD': {'acc': 0.8776, 'epoch': 10}}
+Best total accuracy: 1.5550193548387097 at epoch 10
+
+SWTGt
+Best accuaracy for dataset SWTGt: {'epoch': 2, 'acc': 0.5769230769230769}
+Best total accuracy: 0.5769230769230769 at epoch 2
+
+SWTGt + LMRD
+{'LMRD': {'epoch': 10, 'acc': 0.8716}, 'SWTGt': {'epoch': 3, 'acc': 0.7307692307692307}}
+Best total accuracy: 1.6023692307692308 at epoch 10
+
+SWTGts
+Best accuaracy for dataset SWTGts: {'acc': 0.7108433734939759, 'epoch': 10}
+Best total accuracy: 0.7108433734939759 at epoch 10
+
+SWTGts + LMRD
+Best accuaracy for dataset LMRD: {'epoch': 10, 'acc': 0.8744}
+Best accuaracy for dataset SWTGts: {'epoch': 4, 'acc': 0.8192771084337349}
+Best total accuracy: 1.607677108433735 at epoch 4
+Best total accuracy: 1.6120952380952382 at epoch 10
+

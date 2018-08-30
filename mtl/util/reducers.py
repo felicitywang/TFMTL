@@ -22,18 +22,18 @@ import tensorflow as tf
 
 def reduce_min_over_time(x, lengths=None, time_axis=1):
   if lengths is None:
-    return tf.reduce_min(x, keep_dims=False, axis=time_axis)
+    return tf.reduce_min(x, keepdims=False, axis=time_axis)
   else:
     raise ValueError("not supported")
 
 
 def reduce_max_over_time(x, lengths=None, time_axis=1):
-  return tf.reduce_max(x, keep_dims=False, axis=time_axis)
+  return tf.reduce_max(x, keepdims=False, axis=time_axis)
 
 
 def reduce_avg_over_time(x, lengths=None, time_axis=1):
   if lengths is None:
-    return tf.reduce_mean(x, keep_dims=False, axis=time_axis)
+    return tf.reduce_mean(x, keepdims=False, axis=time_axis)
   s = tf.reduce_sum(x, axis=time_axis)
 
   rank_s = len(s.get_shape().as_list())

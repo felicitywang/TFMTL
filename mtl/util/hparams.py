@@ -55,7 +55,9 @@ def str2func(s):
   # for functions using, e.g., dense_layer()
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
-  from mtl.embedders.pretrained import (init_glove,
+  from mtl.embedders.pretrained import (init_pretrained,
+                                        expand_pretrained,
+                                        init_glove,
                                         expand_glove)
 
   from mtl.extractors.paragram import paragram_phrase
@@ -64,6 +66,7 @@ def str2func(s):
   from mtl.extractors.lbirnn import (lbirnn,
                                      lbirnn_stock)
   from mtl.extractors.no_op import concat_extractor
+  from mtl.extractors.dan import dan
 
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
@@ -76,6 +79,9 @@ def str2func(s):
     "no_op_embedding": no_op_embedding,
     "init_glove": init_glove,
     "expand_glove": expand_glove,
+    "init_pretrained": init_pretrained,
+    "expand_pretrained": expand_pretrained,
+
     "paragram": paragram_phrase,
     "serial_paragram": paragram_phrase,  # deprecated key
     "cnn_extractor": cnn_extractor,
@@ -88,14 +94,17 @@ def str2func(s):
     "serial_lbirnn_stock": lbirnn_stock,
     "no_op_encoding": concat_extractor,  # deprecated key
     "concat_extractor": concat_extractor,
+    "dan": dan,
 
     "reduce_min_over_time": reduce_min_over_time,
     "reduce_max_over_time": reduce_max_over_time,
     "reduce_avg_over_time": reduce_avg_over_time,
+    "reduce_mean_over_time": reduce_avg_over_time,
     "reduce_var_over_time": reduce_var_over_time,
     "reduce_over_time": reduce_over_time,
 
     "tf.nn.relu": tf.nn.relu,
+    "tf.nn.selu": tf.nn.selu,
     "tf.nn.elu": tf.nn.elu,
     "tf.nn.tanh": tf.nn.tanh,
 
@@ -104,7 +113,11 @@ def str2func(s):
     "tf.contrib.rnn.GRUCell": tf.contrib.rnn.GRUCell,
   }
 
-  res = functions[s] if s in functions else s
+  res = None
+  if isinstance(s, list):
+    res = [functions[ss] if ss in functions else ss for ss in s]
+  else:
+    res = functions[s] if s in functions else s
   return res
 
 

@@ -1,0 +1,23 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 30 \
+       --checkpoint_dir ./data/ckpt/LMRD_SSTb_nopretrain_meanmax_relu_0.1/ \
+       --datasets LMRD SSTb \
+       --class_sizes 2 5 \
+       --dataset_paths data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/LMRD/ data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/SSTb/ \
+       --topics_path data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/LMRD/data.json.gz data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/SSTb/data.json.gz \
+       --topic_field_name text \
+       --encoder_config_file encoders.json \
+       --architecture meanmax_relu_0.1_nopretrain \
+       --shared_mlp_layers 1 \
+       --shared_hidden_dims 100 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 100 \
+       --alphas 0.5 0.5 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --seed 42 \
+       --summaries_dir ./data/summ/LMRD_SSTb_nopretrain/ \
+       --log_file data/logs/LMRD_SSTb_nopretrain.log \
+       --tuning_metric Acc \

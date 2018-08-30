@@ -1,0 +1,42 @@
+{
+    "paragram": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "SSTb": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 256
+            },
+            "extract_fn": "paragram",
+            "extract_kwargs": {
+                "reducer": "reduce_max_over_time",
+                "apply_activation": true,
+                "activation_fn": null
+            }
+        },
+        "LMRD": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 256
+            },
+            "extract_fn": "paragram",
+            "extract_kwargs": {
+                "reducer": "reduce_max_over_time",
+                "apply_activation": true,
+                "activation_fn": null
+            }
+        },
+        "SWts": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 256
+            },
+            "extract_fn": "paragram",
+            "extract_kwargs": {
+                "reducer": "reduce_max_over_time",
+                "apply_activation": true,
+                "activation_fn": null
+            }
+        }
+    }
+}

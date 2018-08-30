@@ -19,8 +19,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 from six.moves import xrange
-import mtl.util.registry as registry
 
+import mtl.util.registry as registry
 from mtl.util.common import (validate_extractor_inputs,
                              listify,
                              unlistify)
@@ -119,18 +119,21 @@ def _lbirnn_helper(inputs,
   else:
     scope_name = "lbirnn"
   with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as varscope:
-    #print("_lbirnn_helper scope={}".format(varscope))
+    # print("_lbirnn_helper scope={}".format(varscope))
     # reverse each batch example up through its length, maintaining right-padding
     inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
 
     cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
     cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
 
-    if is_training and ("output_keep_prob" in kwargs) and (kwargs["output_keep_prob"] < 1.0):
+    if is_training and ("output_keep_prob" in kwargs) and (
+      kwargs["output_keep_prob"] < 1.0):
       cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
-                                                output_keep_prob=kwargs["output_keep_prob"])
+                                                output_keep_prob=kwargs[
+                                                  "output_keep_prob"])
       cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
-                                                output_keep_prob=kwargs["output_keep_prob"])
+                                                output_keep_prob=kwargs[
+                                                  "output_keep_prob"])
     else:
       pass
 
@@ -139,9 +142,10 @@ def _lbirnn_helper(inputs,
         attn_length = kwargs["attn_length"]
       else:
         attn_length = 10
-      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
-      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
-
+      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd,
+                                                      attn_length=attn_length)
+      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd,
+                                                      attn_length=attn_length)
 
     batch_size = tf.shape(inputs)[0]
 
@@ -192,6 +196,7 @@ def _lbirnn_helper(inputs,
 
     return (code_fwd, code_bwd), (last_state_fwd, last_state_bwd)
 
+
 """
 def lbirnn(inputs,
            lengths,
@@ -222,6 +227,7 @@ def lbirnn(inputs,
 
     return outputs
 """
+
 
 def lbirnn(inputs,
            lengths,
@@ -274,7 +280,7 @@ def lbirnn(inputs,
 
   prev_varscope = None
   for n_stage in xrange(num_stages):
-    #with tf.variable_scope("serial_lbirnn", reuse=tf.AUTO_REUSE) as varscope:
+    # with tf.variable_scope("serial_lbirnn", reuse=tf.AUTO_REUSE) as varscope:
     with tf.variable_scope("serial-lbirnn-seq{}".format(n_stage)) as varscope:
       if prev_varscope is not None:
         prev_varscope.reuse_variables()
@@ -317,7 +323,6 @@ def _lbirnn_stock_helper(inputs,
                          initial_state_bwd=None,
                          scope=None,
                          **kwargs):
-
   scope_name = scope if scope is not None else "stock-lbirnn"
   with tf.variable_scope(scope_name) as varscope:
     cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
@@ -327,11 +332,14 @@ def _lbirnn_stock_helper(inputs,
       cells_fwd = tf.contrib.rnn.ResidualWrapper(cells_fwd)
       cells_bwd = tf.contrib.rnn.ResidualWrapper(cells_bwd)
 
-    if is_training and ("output_keep_prob" in kwargs) and (kwargs["output_keep_prob"] < 1.0):
+    if is_training and ("output_keep_prob" in kwargs) and (
+      kwargs["output_keep_prob"] < 1.0):
       cells_fwd = tf.contrib.rnn.DropoutWrapper(cell=cells_fwd,
-                                                output_keep_prob=kwargs["output_keep_prob"])
+                                                output_keep_prob=kwargs[
+                                                  "output_keep_prob"])
       cells_bwd = tf.contrib.rnn.DropoutWrapper(cell=cells_bwd,
-                                                output_keep_prob=kwargs["output_keep_prob"])
+                                                output_keep_prob=kwargs[
+                                                  "output_keep_prob"])
     else:
       pass
 
@@ -340,8 +348,10 @@ def _lbirnn_stock_helper(inputs,
         attn_length = kwargs["attn_length"]
       else:
         attn_length = 10
-      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd, attn_length=attn_length)
-      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd, attn_length=attn_length)
+      cells_fwd = tf.contrib.rnn.AttentionCellWrapper(cells_fwd,
+                                                      attn_length=attn_length)
+      cells_bwd = tf.contrib.rnn.AttentionCellWrapper(cells_bwd,
+                                                      attn_length=attn_length)
 
     outputs, last_states = tf.nn.bidirectional_dynamic_rnn(cells_fwd,
                                                            cells_bwd,
@@ -353,7 +363,7 @@ def _lbirnn_stock_helper(inputs,
 
     return outputs, last_states
 
-  
+
 def lbirnn_stock(inputs,
                  lengths,
                  is_training,
@@ -363,7 +373,6 @@ def lbirnn_stock(inputs,
                  initial_state_fwd=None,
                  initial_state_bwd=None,
                  **kwargs):
-
   validate_extractor_inputs(inputs, lengths)
 
   num_stages = len(inputs)
@@ -373,7 +382,8 @@ def lbirnn_stock(inputs,
 
   prev_varscope = None
   for n_stage in xrange(num_stages):
-    with tf.variable_scope("serial-lbirnn-stock-seq{}".format(n_stage)) as varscope:
+    with tf.variable_scope(
+      "serial-lbirnn-stock-seq{}".format(n_stage)) as varscope:
       if prev_varscope is not None:
         prev_varscope.reuse_variables()
       code, states = _lbirnn_stock_helper(inputs[n_stage],
@@ -392,20 +402,30 @@ def lbirnn_stock(inputs,
 
   # concatenate hx_fwd and hx_bwd of top layer
   # `states` = ((cx_fwd, hx_fwd), (cx_bwd, hx_bwd))
+
+  # TODO for GRU
+
   if num_layers > 1:
     # shape states: [2, num_layers, 2]
     # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L43)
-    output = tf.concat([states[0][-1][1], states[1][-1][1]], 1)
+    if cell_type == tf.contrib.rnn.GRUCell:
+      # TODO
+      pass
+    elif cell_type == tf.contrib.rnn.LSTMCell:
+      output = tf.concat([states[0][-1][1], states[1][-1][1]], 1)
   else:
     # shape states: [2, 2]
     # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L40)
-    output = tf.concat([states[0][1], states[1][1]], 1)
+    if cell_type == tf.contrib.rnn.GRUCell:
+      output = tf.concat([states[0], states[1]], 1)
+    elif cell_type == tf.contrib.rnn.LSTMCell:
+      output = tf.concat([states[0][1], states[1][1]], 1)
 
   return output
 
 
 @registry.register_hparams
-def RUDER_NAACL18_HPARAMS():
+def sRUDER_NAACL18_HPARAMS():
   hp = tf.contrib.training.HParams(
     cell_type='lstm',
     cell_size=100,
@@ -427,14 +447,14 @@ def ruder_encoder(inputs, lengths, is_training, hp=None):
   assert num_input_dim == 3  # BATCH X TIME X EMBED
   num_length_dim = len(lengths[0].get_shape().as_list())
   assert num_length_dim == 1
-  
+
   if hp.cell_type == 'gru':
     cell_type = tf.contrib.rnn.GRUCell
   elif hp.cell_type == 'lstm':
     cell_type = tf.contrib.rnn.LSTMCell
   else:
     raise ValueError(hp.cell_type)
-  
+
   keep_prob = hp.keep_prob if is_training else 1.0
 
   code = lbirnn_stock(inputs,

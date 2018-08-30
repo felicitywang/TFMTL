@@ -2,12 +2,12 @@ python ../scripts/discriminative_driver.py \
        --model mult \
        --mode train \
        --num_train_epochs 5 \
-       --checkpoint_dir ./data/ckpt/Topic2/ \
+       --checkpoint_dir ./data/ckpt/Topic2_A/ \
        --experiment_name RUDER_NAACL_18 \
        --datasets Topic2 \
-       --dataset_paths data/tf/single/Topic2/min_0_max_-1 \
+       --dataset_paths data/tf/single/Topic2/min_0_max_-1_vocab_-1 \
        --class_sizes 2 \
-       --vocab_size_file data/tf/single/Topic2/min_0_max_-1/vocab_size.txt \
+       --vocab_size_file data/tf/single/Topic2/min_0_max_-1_vocab_-1/vocab_size.txt \
        --encoder_config_file encoders.json \
        --architecture serial-birnn \
        --shared_mlp_layers 0 \

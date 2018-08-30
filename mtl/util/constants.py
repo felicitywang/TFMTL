@@ -24,7 +24,8 @@ VALID_RATIO = 0.1  # valid out of all / valid out of train
 RANDOM_SEED = 42
 
 """Special Symbols"""
-OLD_LINEBREAKS = ['<br /><br />', '\n', '\r']  # all the line break marks
+OLD_LINEBREAKS = ['<br /><br />', '\n', '\r',
+                  '\\r', '\\n']  # all the line break marks
 # appearing in the unpreprocessed dataset
 
 LINEBREAK = ' brbrbr '  # linebreak mark used to replace all kinds of
@@ -40,6 +41,7 @@ VOCAB_NAMES = [
   'vocab_v2i.json',  # when directly loading word-id mapping
   'glove.6B.50d.txt',  # when using(init only / expand vocab) Glove's
   # pre-trained word embeddings
+  # Glove
   'glove.6B.100d.txt',
   'glove.6B.200d.txt',
   'glove.6B.300d.txt',
@@ -48,7 +50,14 @@ VOCAB_NAMES = [
   'glove.twitter.27B.25d.txt',
   'glove.twitter.27B.50d.txt',
   'glove.twitter.27B.100d.txt',
-  'glove.twitter.27B.200d.txt'
+  'glove.twitter.27B.200d.txt',
+  # word2vec
+  'GoogleNews-vectors-negative300.bin.gz',
+  'GoogleNews-vectors-negative300-SLIM.bin.gz',
+  # fasttext
+  'wiki-news-300d-1M.vec.zip',
+  'wiki-news-300d-1M-subword.vec.zip',
+  'crawl-300d-2M.vec.zip',
 ]
 
 """Experiment names"""
@@ -58,12 +67,27 @@ class EXP_NAMES():
   RUDER_NAACL_18 = EMNLP_18 = "RUDER_NAACL_18"
 
 
-"""Metrics"""
-METRICS = [
+"""Reducers"""
+from mtl.util.reducers import (reduce_avg_over_time,
+                               reduce_var_over_time,
+                               reduce_max_over_time,
+                               reduce_min_over_time,
+                               reduce_over_time)
+
+REDUCERS = [reduce_avg_over_time,
+            reduce_var_over_time,
+            reduce_max_over_time,
+            reduce_min_over_time,
+            reduce_over_time]
+
+"""All metrics"""
+
+ALL_METRICS = [
   'Acc',
   'MAE_Macro',
   'F1_Macro',
   'F1_PosNeg_Macro',
   'Recall_Macro',
-  'Precision_Macro'
+  'Precision_Macro',
+  'Confusion_Matrix'
 ]

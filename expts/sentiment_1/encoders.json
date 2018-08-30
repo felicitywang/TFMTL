@@ -1,29 +1,29 @@
 {
-    "paragram": {
+    "paragram_nopretrain": {
         "embedders_tied": true,
         "extractors_tied": true,
         "SSTb": {
             "embed_fn": "embed_sequence",
             "embed_kwargs": {
-                "embed_dim": 256
+                "embed_dim": 300
             },
             "extract_fn": "paragram",
             "extract_kwargs": {
                 "reducer": "reduce_max_over_time",
                 "apply_activation": true,
-                "activation_fn": null
+                "activation_fn": "tf.nn.relu"
             }
         },
         "LMRD": {
             "embed_fn": "embed_sequence",
             "embed_kwargs": {
-                "embed_dim": 256
+                "embed_dim": 300
             },
             "extract_fn": "paragram",
             "extract_kwargs": {
                 "reducer": "reduce_max_over_time",
                 "apply_activation": true,
-                "activation_fn": null
+                "activation_fn": "tf.nn.relu"
             }
         }
     }

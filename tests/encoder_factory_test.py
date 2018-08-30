@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+
 import tensorflow as tf
 
 from mtl.util.encoder_factory import build_encoders
@@ -35,7 +36,6 @@ of tied/untied embedders and extractors are correct."""
     parser.add_argument('--architecture', default='example')
     parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
     parser.add_argument('--encoder_config_file', default='tests/encoders.json')
-    parser.add_argument('--vocab_size_file', default='tests/.vocab_size.txt')
     args = parser.parse_args()
 
     with self.test_session() as sess:
@@ -62,10 +62,10 @@ of tied/untied embedders and extractors are correct."""
                                        lengths=lengths,
                                        is_training=True)
 
-        #output_SSTb = encoders['SSTb'](inputs=inputs,
+        # output_SSTb = encoders['SSTb'](inputs=inputs,
         #                               lengths=lengths,
         #                               indices=indices)
-        #output_LMRD = encoders['LMRD'](inputs=inputs,
+        # output_LMRD = encoders['LMRD'](inputs=inputs,
         #                               lengths=lengths,
         #                               indices=indices)
 

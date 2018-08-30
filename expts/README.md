@@ -1,34 +1,25 @@
-## Overview
+# Overview
 
-Information about the experiments.
+Detailed instructions on how to run an experiment.
 
-## Datasets
+# Requirements
 
-type|name|#items|#labels|unit|summary|split|unlabeled
----|---|---|---|---|---|---|---
-sentiment|SSTb|11,855|5|sentence|Rotten Tomatoes movie reviews|train:valid:test=8544:1101:2210|none
-sentiment|LMRD|50,000|2|document|IMDB movie reviews|train:test=25,000:25,000|50,000
-sentiment|IMDb|600,000|2|paragraph|IMDb movie reviews|train:test=300,000:300,000|none
-sentiment|RTU|739,903|2|paragraph|Rotten Tomatoes user movie reviews|train:test=737,903:2000|none
-sentiment|RTC|43,800|2|sentence|Rotten Tomatoes critic movie reviews|train:test=43,600,2000|none
-sentiment|SUBJ|10,000|2|sentence|Rotten Tomatoes and IMDB movie reviews|not given|none
-politics|FGPS|766|5|sentence|Political propositions|not given|142,654
-politics|POLT|318,761|2|paragraph|Political tweets|not given|none
+For Python package requirements and other general info see `../../requirement.txt`.
 
-## Requirements
-
-See `../../requirement.txt`
-
-## File structure
-- `task/`: different dataset combinations, e.g., `sentiment_1`, `politics_1`
+# File structure
+- `TASK/`: name of an experiment, e.g., `sentiment_1`, `all_EMNLP`, etc.
     - `setup.sh`: shell(bash) script to download original data files, convert them to json format, generate their shared vocabulary, and generate TFRecord files according to that vocabulary
-    - `args_merged`: arguments for the datasets that use the shared vocabulary
-    - `args_DATASET`: arguments for the single dataset, e.g. `args_SSTb.json`, `args_LMRD.json`, etc.
+    - `args_NAME.json`: arguments to write TFRecord data from json format, could be
+        - `args_merged.json`: default file used when processing different datasets together and write the TFRecord data with their shared vocabulary, `../scripts/write_tfrecords_merged.py` will look for this file in default if no other filenames specified
+        - `args_DATASET`: arguments for each dataset separately, e.g. `args_SSTb.json`, `args_LMRD.json`, etc., `../scripts/write_tfrecords_single.py` will look for this file in default if no other filenames specified
+        - `args_ANY-NAME-YOU-WANT.json`: need to specify the name
     - `data/`: data files used in the experiment
-        - `data/raw/`: downloaded/unzipped original data files
-        - `data/json/`: converted json data and basic vocabulary of the dataset
+        - `data/raw/`: downloaded/unzipped original data files, etc.
+        - `data/json/`: converted json data and basic vocabulary files of the dataset
+            - `data.json.gz`: json data that should include text field and label field(if labeled)
+            - `index.json.gz`(optional): train/dev/test splits
         - `data/tf/`: TFRecord files
-                - `data/tf/merged/DATASETXXX_DATASETYYY/min_(min_freq)_max_(max_freq)_vocab_(max_vocab_size)/`: generated data for the given min/max vocab frequency, e.g. `data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000/`
+                - `data/tf/merged/DATASETA_DATASETB_.../min_(min_freq)_max_(max_freq)_vocab_(max_vocab_size)_doc_(max_doc_len)/`: generated data using particular arguments, e.g. `data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000_doc_-1/`
                     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
                     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
                     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -36,7 +27,7 @@ See `../../requirement.txt`
                         - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                         - `unlabeled.tf`: unlabeled TFRecord file(if there is unlabeled data)
                         - `args.json`: arguments used to generate the TFRecord files
-                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)`: generated data for the given min/max vocab frequency and limited maximum vocabulary size for the single dataset, e.g., `data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
+                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)_doc_(max_doc_len)`: generated data for the given min/max vocab frequency and limited maximum vocabulary size for the single dataset, e.g., `data/tf/single/LMRD/min_0_max_-1_vocab_10000_doc_-1/`
                     - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                     - `unlabeled.tf`: unlabeled TFRecord files(if there is unlabeled data)
                     - `args.json`: arguments used to generate the TFRecord files
@@ -44,96 +35,83 @@ See `../../requirement.txt`
                     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
                     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
 - `scripts/`: scripts to run the experiments
-    - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files
-    - `write_tfrecord_single.py`: python script to generate the TFRecord files for the single dataset(without share vocabulary)
+    - `write_tfrecord_single.py`: python script to generate the TFRecord files for the single dataset(without shared vocabulary)
+    - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files for more than one datasets
     - `write_tfrecord_predict.py`: python script to generate the TFRecord file for the given json file of the unlabeled text to predict
     - `write_tfrecord_test.py`: python script to generate the TFRecord file for the given json file of the labeled text to test
-    - `convert_TEXT_to_JSON.py`: python script to convert to text to predict from plain text to gzipped json
-    - `discriminative_driver.py`: driver script to run the MULT model
+    - `write_tfrecord_init.py`: python script to generate the TFRecord file for the given json file of a dataset to fine-tune the model with based on the dataset the model was pre-trained on
+    - `convert_TEXT_to_JSON.py`: python script to convert to text to predict from plain text to json format
+    - `discriminative_driver.py`: driver script to run the MUTL model'
 
-- restore saved checkpoints and evaluate on test data(e.g., `sentiment_1/test_mult.sh`)
-- (restore saved checekpoints and predict given text)(e.g., `sentiment_1/predict_mult.sh`)
-
-
-## Steps
-
-### 1. Setup data
-
-1. download data
-2. convert original data files into gzipped json format
-3. write TFRecord files from the json file
-
-- for multiple datasets
-    1. modify arguments in `TASK/args_merged.json`(or add an argument config file of other names)
-    2. run `TASK/setup.sh` to generate TFRecord files with merged vocabulary
-    3. to manually write TFRecord files for dataset D1, D2, ..., Dn, run `python ../scripts/write_tfrecords_merged.py D1 D2 ... Dn`(which uses `args_merged.json`) or `python ../scripts/write_tfrecords_merged.py D1 D2 ... Dn args_xxx.json`(which uses the specified args file)
-- for single dataset
-    1. modify arguments in `TASK/args_DATASET.json`, e.g. `sentiment_1/args_SSTb.json`(or add an argument config file of other names)
-    2. use `scripts/write_tfrecords_single.py` to generate TFRecord files, e.g. in `sentiment_1/` run `python ../scripts/write_tfrecords_single.py SSTb` or `python ../scripts/write_tfrecords_single.py SSTb args_LMRD.json`, the latter will let you use particular args file, otherwise the program will find `args_SSTb.json` itself
-
-- if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
-
-### 2. Train the model
-
-- train the MULT model with single/multiple datasets with training data and validation data, save the checkpoints
-- run `scripts/discriminative_driver.py` with `train` mode with different configurations, e.g., `sentiment_1/train_mult.py`, `sentiment_1/test_mult.py`; see the source file for further hyper-parameter / argument explanation
-- checkpoints will be saved to use in the `test` and `predict` mode
+    <!-- TODO generative_driver.py ? -->
 
 
-### 3. Test the model
 
-- use the trained model to evaluate on the test data
-- run `scripts/discriminative_driver.py` with `test` mode, specifying path of the saved checkpoints, e.g., `sentiment_1/test_single.sh`, `sentiment_1/test_mult.sh`; see the source file for further hyper-parameter / argument explanation
+# Pipeline
 
-### 4. Predict with the model
+All the following commands suppose that you're in some experiment folder `expts/TASK/` and uses relative paths.
 
-<!-- TODO other features? -->
+All the example commands can be found in `expts/example/`. (Run `python get_encoders.py` to generate `encoders.json`.)
 
-- use the trained model to give predictions of the given text
-- input: plain text file, each line is a piece of data to predict
-- run `scripts/convert_TEXT_to_JSON.py`, convert plain text to json(gzip) file, e.g., in `sentiment_1/`, run `python ../scripts/convert_TEXT_to_JSON.py ../../tests/LMRD_neg.txt data/raw/LMRD_neg.json.gz`
-- run `scripts/write_tfrecords_predict.py`, write TFRecord file for the text to predict
+## 1. Setup data
 
-    - e.g., in each task, `python ../scripts/write_tfrecords_predict.py DATASET_NAME predict_json_path predict_tf_path tfrecord_dir`
-    - e.g., in `sentiment_1/`, run
+Run `./setup.sh` to setup the data.
 
-        - `python ../scripts/write_tfrecords_predict.py args_LMRD.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_single.tf data/tf/single/LMRD/min_0_max_-1_vocab_10000/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
-        - `python ../scripts/write_tfrecords_predict.py args_merged.json data/raw/LMRD_neg.json.gz data/raw/LMRD_neg_mult.tf data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000/LMRD/ data/tf/single/LMRD/min_0_max_-1_vocab_10000/`
-- run `scripts/discriminative_driver.py` with `predict` mode, specifying path of the saved checkpoints, e.g., `sentiment_1/predict_single.sh`, `sentiment_1/predict_mult.sh`; see the source file for further hyper-parameter / argument explanation
-- note that in the commands' arguments in the predict mode, `--datasets DATASET` means you're using the DATASET part of the trained model(private layers + output layer + the parameters that perform the best on the DATASET's valid data), thus the class sizes of the dataset to predict should be the same as DATASET, and the real TFRecord dataset name and data you predict using the saved model are passed in with `--predict_dataset` and `--predict_tfrecord_path`
+1. Download data file in its original format using some public link
+    - When writing your own `setup.sh`, remember to use some public links so that the experiment can be easily replicated
 
-### 5. Test with the model
+2. Convert original data files into gzipped json format
+    - For existing datasets in this repo, this step would be `python .../convert_DATASET_to_JSON.py`
 
-- use the trained model to test other test data(except for the original test data)
-- input: json file of test data with texts and labels
-- run `scripts/write_tfrecords_test.py` to write TFRecord file for the data to test
-    - e.g. `python ../scripts/write_tfrecords_test.py test_json_dir tfrecord_dir vocab_dir args_test_json_path` where `test_json_dir` is the directory with the test json.gz file, `tfrecord_dir` is the directory to put in the TFRecord file, `vocab_dir` is the directory of the vocabulary used in the model you're going to use(e.g. in `data/tf/merged/xxx/`), adn `args_test_json_path` is the path to the json config file for the extra test data
-- test the model following instructions in step 3, changing dataset path to the path where you write the extra test data
-- similar to the predict mode, when testing some extra dataset other than the datasets used to train the model(e.g. testing `TGts` with the model trained with `SWts` and `LMRD`), the `--datasets DATASET` argument refers to which part of the trained model to use; the real data are passed with `--dataset_paths`(e.g. in this example, the arguments should be `--dataset SWts --dataset_paths path_to_TGts_data`, meaning you're using the SWts' part of the model to evaluate TGts' test data)
+3. Write TFRecord files from the json file using different argument files (See `expts/example/setup.sh`.)
 
-### 6. Init with the model
+    - relevant source files:
+        - `mtl/util/dataset.py`
+        - `expts/scripts/write_tfrecords_single.py`
+        - `expts/scripts/write_tfrecords_merged.py`
+    - example files:
+        - `expts/example/setup.sh`
+    - for a single dataset:
+        - Modify default args file `args_DATASET.json`(e.g. `args_SSTb.json`) or use another name (e.g. `args_oneinput_nopretrain.json`)
+        - Write TFRecord data with `python ../scripts/write_tfrecords_single.py DATASET [args_....json]`, e.g. `python ../scripts/write_tfrecords_single.py SSTb` or `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_nopretrain.json`
+    - for multiple datasets
+        - Modify default args file `args_merged.json` or use another name (e.g. `args_oneinput_nopretrain.json`)
+        - Write TFRecord data with `python ../scripts/write_tfrecords_merged.py DATASET_1 DATASET_2 ... [args_....json]`, e.g. `python ../scripts/write_tfrecords_merged.py SSTb LMRD` or `python ../scripts/write_tfrecords_merged.py SSTb LMRD args_oneinput_nopretrain.json`
+    - if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
 
-- use the saved model trained with dataset A to initialize the model for dataset B
-- Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
-- For examples see `expts/init_test/`
 
-## Required arguments to run the discriminative version of TFMTL
+## 2. Run Discriminative MULT
+
+Run the MULT model with the discriminative driver scripts. Currently there're four modes:
+- train: train the model on training set(`train.tf`) and evaluate on dev set(`valid.tf`) for certain epochs, saving the latest/best model
+- test: test the trained model on test set(`test.tf`)
+- predict: use the trained model to predict some unlabeled data
+- finetune: finetune the pre-trained model on another dataset
+
+Relevant source files:
+
+- `mtl/models/mult.py`
+- `expts/scripts/discriminative_driver.py`
+
+### 2.0 Arguments
+
+#### Required Arguments
 
 * **Metadata**
-    * `mode`: Either `train`, `test`, `predict`, or `init` 
-    * `experiment_name`: A string for the name of the experiment
+    * `mode`: Either `train`, `test`, `predict`, or `finetune`
+    <!-- * `experiment_name`: A string for the name of the experiment -->
 * **Training Details**
     * `alphas`: A list of decimals that sums to approximately 1. Each index corresponds to a specific dataset
     * `class_sizes`: A list of integers that represent how many classes are in each task
 * **Logging Details**
-    * `checkpoint_dir`: A path to save models during each checkpoint
+    * `checkpoint_dir`: Folder to save trained models in `train` mode to or restore them from in `test`, `predict` and `finetune` modes
     * `log_file`: The file to store the log files
 * **Dataset Details**
     * `topics_path`: List of paths to the data.json files. 1 path per dataset
     * `topics_field_name`: (name of keys for topic/input) - it defaults to `seq1`
     * `datasets`: List of names for each dataset
     * `dataset_paths`: List of paths to the TF records. 1 path per dataset
-    * `vocab_size_file`: Path to the file that contains size of vocabulary, created when generating TFRecords.
+    <!-- * `vocab_size_file`: Path to the file that contains size of vocabulary, created when generating TFRecords. (moved to args.json)-->
 * **Encoder Details**
     * `architecture`: The key for the json object in the corresponding encoder_config_file to use for encoders
     * `encoder_config_file`: The json file that contains the configurations for the encoders
@@ -146,6 +124,68 @@ See `../../requirement.txt`
     * `predict_tfrecord`: File path of the tf record file path of the text to predict
     * `predict_dataset`: Path to data to predict/annotate
     * `predict_output_folder`: Folder to save predictions
+* **Finetune** - When fine-tuning:
+    * `checkpoint_dir_finetune`: Path to save new models in `finetune` mode.
+
+### Optional Arguments
+<!-- TODO -->
+
+
+
+
+### 2.1 Train the model
+
+
+Train the MULT model with single/multiple datasets with training data(`train.tf`) and validation data(`valid.tf`), save the checkpoints for the latest the best models. The models will be used in modes `test`,`predict` and `finetune`.
+
+- Run `scripts/discriminative_driver.py` with `train` mode with different configurations, e.g.,
+    - train single one-sequence-input dataset: `expts/example/train_SSTb_nopretrain.sh`
+    - train two one-sequence-input datasets together: `expts/example/train_LMRD_SSTb_nopretrain.sh`
+    - train single two-sequence-input dataset:
+    `expts/example/train_Topic2_nopretrain.sh`
+    - train two two-sequence-input datasets together:
+    `expts/example/train_Target_Topic2_nopretrain.sh`
+
+
+### 2.2. Test the model
+
+Use the trained model to evaluate on the test set.
+
+- Run `scripts/discriminative_driver.py` with `test` mode, specifying path of the saved checkpoints, e.g.,
+    - test single one-sequence-input dataset: `expts/example/test_SSTb_nopretest.sh`
+    - test two one-sequence-input datasets together: `expts/example/test_LMRD_SSTb_nopretest.sh`
+    - test single two-sequence-input dataset:
+    `expts/example/test_Topic2_nopretest.sh`
+    - test two two-sequence-input datasets together:
+    `expts/example/test_Target_Topic2_nopretest.sh`
+
+### 2.3. Predict with the model
+
+<!-- TODO other features? -->
+Use the trained model to predict unlabeled data. When writing TFRecord data for the unlabeled data to predict, remember to use the same vocabulary as the training data.
+
+- Make sure the data to predict is also in json format. Apart from the text field(s), every example should also have a field `id` to help you distinguish the predictions. An example script that does this is `expts/scripts/convert_TEXT_to_JSON.py`. Run `python convert_TEXT_to_JSON.py text_file_path json_file_path`. e.g., `python ../scripts/convert_TEXT_to_JSON.py data/pred/SSTb_neg.txt data/pred/SSTb_neg.json.gz`
+- Use `expts/scripts/write_tfrecords_predict.py` to write TFRecord data for it. Run `python write_tfrecords_predict.py dataset_args_path predict_json_path predict_tf_path vocab_dir`, e.g., `python ../scripts/write_tfrecords_predict.py args_SSTb.json data/pred/SSTb_neg.json.gz data/pred/SSTb_neg.tf data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+- Run the driver script in `predict` mode to use the trained classifier to give predictions, e.g. run `./predict_SSTb_nopretrain.sh`.
+- Note that in the commands' arguments in the predict mode, `--datasets DATASET` means you're using the DATASET part of the trained model(private layers + output layer + the parameters that perform the best on the DATASET's dev set), thus the class sizes of the dataset to predict should be the same as DATASET, and the real TFRecord dataset name and data you predict using the saved model are passed in with `--predict_dataset` and `--predict_tfrecord_path`
+- Outputs would be in both tsv and json formats and saved to `--predict_output_folder` as `PREDICT_DATASET.tsv` and `PREDICT_DATASET.json`. For each example, the output contains its id, predicted label and confidence scores between 0 and 1(softmax values of the output layer) for each label. If the task is binary classification, then there would only be confidence scores for the positive label(label "1"). e.g. Check the outputs `data/pred/SSTb_neg.pred/SSTb.json` and `data/pred/SSTb_neg.pred/SSTb.tsv`.
+
+### 2.4. Test with the model
+
+Apart from evaluating the classifier using the test set of the previous dataset, you can also write TFRecord files using its vocabulary for some other data you want to test the model with.
+
+- The input should always be in JSON format. The required fields are texts and labels.
+- To write the TFRecord files with the vocabulary of the training data the model has been trained with, run `python write_tfrecords_test.py args_test_json_path test_json_dir tfrecord_dir vocab_dir`, e.g., `python ../scripts/write_tfrecords_test.py args_SSTb.json data/test/SSTb_neg/json/ data/test/SSTb_neg/tf/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+- Run the discriminative driver script in `test` mode they way in 2.2, changing `--dataset_path` to the path the extra test data is saved into. e.g., run `test_SSTb_neg_nopretrain.sh`
+- Similar to the `predict` mode, when testing some extra dataset other than the datasets used to train the model(e.g. testing `SSTb_neg` with the model trained with `SSTb` and `LMRD`), the `--datasets DATASET` argument refers to which part of the trained model to use; the real data are passed with `--dataset_paths`(e.g. in this example, the arguments should be `--dataset SSTb --dataset_paths path_to_SSTb_neg_data`, meaning you're using the SSTb' part of the model to evaluate the new SSTb_neg test data)
+
+### 2.5. Finetune the model
+
+<!-- TODO -->
+
+<!-- - use the saved model trained with dataset A to initialize the model for dataset B
+- Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
+- For examples see `expts/init_test/` -->
 
 
 ## Arguments to generate TFRecord files
@@ -190,43 +230,9 @@ See `../../requirement.txt`
 - unlabeled_size: size of the unlabeled data
 
 
-## Baseline
 
-type|dataset|accuracy|min_freq|model
----|---|---|---|---
-sentiment|SSTb|40.7240%|1|CNN
-sentiment|LMRD|89.0160%|50|BoW MLP
-<!-- other datasets with more encoders -->
 
-<!-- ### hyperparameters:
-- learning rate: 0.0001
-- dropout rate:0.5
-- batch size: 32
-- seed: 42
-- max_num_epoch: 20(with early stopping)
-- layers: [100, 100]
-- encoding: bag of words
-- train:valid = 9:1 if no valid split given -->
 
-### State-of-the-art results for each dataset
+<!-- -# TODO pretrained word embeddings usage -->
 
-- SSTb:
-
-Tree-LSTM: 50.1%
-http://aihuang.org/static/papers/AAAI2018_ClassifyAndStructure.pdf
-
-original: 45.7%
-https://nlp.stanford.edu/sentiment/code.html
-
-others:
-https://github.com/magizbox/underthesea/wiki/DATA-SST
-
-- LMRD:
-
-NgramCNN: 91.2%
-http://porto.polito.it/2695485/1/ErionCanoIcgda2018_CR.pdf
-
-original: 88.89%
-http://ai.stanford.edu/~amaas/data/sentiment/
-
-<!-- other datasets -->
+<!-- TODO pretrained  -->

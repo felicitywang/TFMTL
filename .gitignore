@@ -112,9 +112,18 @@ report/
 # data files
 data/
 log/
+logs/
 vocab_test/
 best_model/
+jobs/
+summ/
+ckpt/
+predictions/
+submissions/
+results/
 
 label*.json
 
+
 pretrained_word_embeddings/
+

@@ -1,0 +1,23 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 30 \
+       --checkpoint_dir ./data/ckpt/HOS/ \
+       --datasets HOS \
+       --dataset_paths data/tf/single/HOS/min_1_max_-1_vocab_-1 \
+       --class_sizes 2 \
+       --vocab_size_file data/tf/single/HOS/min_1_max_-1_vocab_-1/vocab_size.txt \
+       --encoder_config_file encoders.json \
+       --architecture serial-birnn \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 64 \
+       --alphas 1 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --tuning_metric Acc \
+       --topics_path data/json/HOS/data.json.gz \
+       --seed 42 \
+       --log_file HOS.log \
+       --topic_field_name text

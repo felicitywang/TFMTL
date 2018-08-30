@@ -1,0 +1,1 @@
+python driver.py --datasets SWTGs --dataset_paths ./data/tf/single/SWTGs/min_1_max_-1/ --model_dirs ./data/tf/single/SWTGs/min_1_max_-1/ --vocab_path ./data/tf/single/SWTGs/min_1_max_-1/vocab_size.txt --model mult --encoder_architecture cnn_LARGE_tied_word_embeddings --alphas 1

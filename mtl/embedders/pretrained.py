@@ -25,21 +25,22 @@ import tensorflow as tf
 # TODO other word embeddings
 from tqdm import tqdm
 
+from mtl.util.load_embeds import (load_pretrained_matrix,
+                                  load_pretrianed_vocab_dict)
 
-def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
-  """Expand training vocab with Glove
+
+def expand_pretrained(x, vocab_size, embed_dim, pretrained_path, trainable):
+  """Expand training vocab with pretrained
 
   :param x: list of word ids
   :param vocab_size: size of the vocabulary given in the config file
   :param embed_dim: dimension of the embeddings given in the config file
-  :param glove_path: path to the pre-trained word embedding file
+  :param pretrained_path: path to the pre-trained word embedding file
   :param trainable: whether to train the pred-trained word embeddings
   :return: embed lookup layer
   """
-  import glove
-  tf.logging.info('Loading glove embeddings from %s' % glove_path)
-  pretrained_matrix = glove.Glove.load_stanford(
-    glove_path).word_vectors
+  tf.logging.info('Loading pretrained embeddings from %s' % pretrained_path)
+  pretrained_matrix = load_pretrained_matrix(pretrained_path)
   assert pretrained_matrix.shape[
            0] <= vocab_size, "Given vocab size (%d) is less than that of " \
                              "the " \
@@ -49,11 +50,11 @@ def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
            1] == embed_dim, "Given embed dim (%d) and that of the " \
                             "pre-trained embedding (%d) don't match!" % (
                               embed_dim, pretrained_matrix.shape[1])
-  # glove file name - .txt
-  # word_embedding_name = os.path.basename(glove_path)[:-4]
+  # pretrained file name - .txt
+  # word_embedding_name = os.path.basename(pretrained_path)[:-4]
   tf.logging.info('Generating embedding lookup layer from %s and the words '
                   'from the training set' %
-                  glove_path)
+                  pretrained_path)
 
   loaded_embedding = tf.get_variable(
     name='embedding_pretrained',
@@ -87,29 +88,29 @@ def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
                                 x)
 
 
-def init_glove(x, vocab_size, embed_dim, glove_path, reverse_vocab_path,
-               random_size_path, trainable):
-  """Initialize training vocab with Glove's pre-trained word embeddings,
+def init_pretrained(x, vocab_size, embed_dim, pretrained_path,
+                    reverse_vocab_path,
+                    random_size_path, trainable):
+  """Initialize training vocab with pretrained's pre-trained word embeddings,
   always trainable
 
   :param x: list of word ids
   :param vocab_size: size of the vocabulary given in the config file
   :param embed_dim: dimension of the embeddings given in the config file
-  :param glove_path: path to the pre-trained word embedding file
+  :param pretrained_path: path to the pre-trained word embedding file
   :param reverse_vocab_path: path to the vocab file(id to word mapping of
-  all the dictionary(extra train + Glove))
+  all the dictionary(extra train + pretrained))
   :param trainable: whether to fine-tune the part of word embeddings
-  initialized from Glove
-  :param: random_size_path: path to the size of word embeddings to be
-  randomly initialized(those not in Glove)
+  initialized from pretrained
+  :param random_size_path: path to the size of word embeddings to be
+  randomly initialized(those not in pretrained)
   :return: embed lookup layer
   """
-  import glove
   with codecs.open(random_size_path) as file:
     random_size = int(file.readline().split()[0])
 
   tf.logging.info('Randomly initializing word embeddings for %s words not '
-                  'in Glove...' % random_size)
+                  'in pretrained...' % random_size)
 
   random_embedding = tf.get_variable(
     name='embedding_training',
@@ -123,18 +124,17 @@ def init_glove(x, vocab_size, embed_dim, glove_path, reverse_vocab_path,
   with codecs.open(reverse_vocab_path) as file:
     reverse_vocab = json.load(file)
 
-  tf.logging.info('Loading glove embeddings from %s' % glove_path)
-  pretrained_embedding = glove.Glove.load_stanford(glove_path)
-  pretrained_vocab = pretrained_embedding.dictionary
-  pretrained_matrix = pretrained_embedding.word_vectors
+  tf.logging.info('Loading pretrained embeddings from %s' % pretrained_path)
+  pretrained_vocab = load_pretrianed_vocab_dict(pretrained_path)
+  pretrained_matrix = load_pretrained_matrix(pretrained_path)
 
   assert pretrained_matrix.shape[
            1] == embed_dim, "Given embed dim (%d) and that of the " \
                             "pre-trained embedding (%d) don't match!" % (
                               embed_dim, pretrained_matrix.shape[1])
 
-  # glove file name - .txt
-  # word_embedding_name = os.path.basename(glove_path)[:-4]
+  # pretrained file name - .txt
+  # word_embedding_name = os.path.basename(pretrained_path)[:-4]
   loaded_matrix = np.zeros([vocab_size - random_size, embed_dim])
 
   for i in tqdm(range(random_size, len(reverse_vocab))):
@@ -151,7 +151,7 @@ def init_glove(x, vocab_size, embed_dim, glove_path, reverse_vocab_path,
 
   tf.logging.info('Generating embedding lookup layer from %s and the words '
                   'from the training set' %
-                  glove_path)
+                  pretrained_path)
   word_embedding = tf.concat([random_embedding, loaded_embedding],
                              axis=0,
                              name='embedding_combined')
@@ -160,3 +160,16 @@ def init_glove(x, vocab_size, embed_dim, glove_path, reverse_vocab_path,
 
   return tf.nn.embedding_lookup(word_embedding,
                                 x)
+
+
+def init_glove(x, vocab_size, embed_dim, glove_path,
+               reverse_vocab_path,
+               random_size_path, trainable):
+  return init_pretrained(x, vocab_size, embed_dim, glove_path,
+                         reverse_vocab_path,
+                         random_size_path, trainable)
+
+
+def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
+  return expand_pretrained(x, vocab_size, embed_dim, glove_path,
+                           trainable)

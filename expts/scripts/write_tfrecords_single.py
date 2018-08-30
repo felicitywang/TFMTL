@@ -35,87 +35,94 @@ def main(argv):
     args_name = argv[2]
 
   with open(args_name, 'rt') as file:
-    args_single = json.load(file)
+    args = json.load(file)
 
   json_dir = "data/json/" + argv[1]
 
   tfrecord_dir = os.path.join("data/tf/single/", argv[1])
 
   preproc = True
-  if 'preproc' in args_single:
-    preproc = args_single['preproc']
+  if 'preproc' in args:
+    preproc = args['preproc']
 
   vocab_all = False
-  if 'vocab_all' in args_single:
-    vocab_all = args_single['vocab_all']
+  if 'vocab_all' in args:
+    vocab_all = args['vocab_all']
 
-  tfrecord_dir_name = "min_" + str(
-    args_single['min_frequency']) + "_max_" + str(
-    args_single['max_frequency']) + "_vocab_" + str(
-    args_single['max_vocab_size'])
+  tfrecord_dir_name = \
+    "min_" + str(args['min_frequency']) + \
+    "_max_" + str(args['max_frequency']) + \
+    "_vocab_" + str(args['max_vocab_size']) + \
+    "_doc_" + str(args['max_document_length'])
 
-  if 'pretrained_file' not in args_single or not args_single[
+  if 'pretrained_file' not in args or not args[
     'pretrained_file']:
     tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
                       vocab_dir=tfrecord_dir,
-                      text_field_names=args_single['text_field_names'],
-                      label_field_name=args_single['label_field_name'],
-                      max_document_length=args_single['max_document_length'],
-                      max_vocab_size=args_single['max_vocab_size'],
-                      min_frequency=args_single['min_frequency'],
-                      max_frequency=args_single['max_frequency'],
-                      train_ratio=args_single['train_ratio'],
-                      valid_ratio=args_single['valid_ratio'],
-                      subsample_ratio=args_single['subsample_ratio'],
-                      padding=args_single['padding'],
-                      write_bow=args_single['write_bow'],
-                      write_tfidf=args_single['write_tfidf'],
-                      tokenizer_=args_single['tokenizer'],
+                      text_field_names=args['text_field_names'],
+                      label_field_name=args['label_field_name'],
+                      max_document_length=args['max_document_length'],
+                      max_vocab_size=args['max_vocab_size'],
+                      min_frequency=args['min_frequency'],
+                      max_frequency=args['max_frequency'],
+                      train_ratio=args['train_ratio'],
+                      valid_ratio=args['valid_ratio'],
+                      subsample_ratio=args['subsample_ratio'],
+                      padding=args['padding'],
+                      write_bow=args['write_bow'],
+                      write_tfidf=args['write_tfidf'],
+                      tokenizer_=args['tokenizer'],
                       generate_basic_vocab=False,
                       vocab_given=False,
                       generate_tf_record=True,
                       preproc=preproc,
                       vocab_all=vocab_all)
   else:
-    vocab_path = args_single['pretrained_file']
+    vocab_path = args['pretrained_file']
     vocab_dir = os.path.dirname(vocab_path)
     vocab_name = os.path.basename(vocab_path)
 
     expand_vocab = False
-    if 'expand_vocab' in args_single:
-      expand_vocab = args_single['expand_vocab']
+    if 'expand_vocab' in args:
+      expand_vocab = args['expand_vocab']
 
     if expand_vocab:
       tfrecord_dir = os.path.join(
         tfrecord_dir,
         tfrecord_dir_name + '_' +
-        vocab_name[:vocab_name.find('.txt')] + '_expand')
+        vocab_name[:max(vocab_name.find('.txt'),
+                        vocab_name.find('.bin.gz'),
+                        vocab_name.find('.vec.zip'))] +
+        '_expand')
     else:
       tfrecord_dir = os.path.join(
         tfrecord_dir,
         tfrecord_dir_name + '_' +
-        vocab_name[:vocab_name.find('.txt')] + '_init')
+        vocab_name[:max(vocab_name.find('.txt'),
+                        vocab_name.find('.bin.gz'),
+                        vocab_name.find('.vec.zip'))] +
+        '_init')
 
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
                       vocab_given=True,
                       vocab_dir=vocab_dir,
                       vocab_name=vocab_name,
-                      text_field_names=args_single['text_field_names'],
-                      label_field_name=args_single['label_field_name'],
-                      max_document_length=args_single['max_document_length'],
-                      max_vocab_size=args_single['max_vocab_size'],
-                      min_frequency=args_single['min_frequency'],
-                      max_frequency=args_single['max_frequency'],
-                      train_ratio=args_single['train_ratio'],
-                      valid_ratio=args_single['valid_ratio'],
-                      subsample_ratio=args_single['subsample_ratio'],
-                      padding=args_single['padding'],
-                      write_bow=args_single['write_bow'],
-                      write_tfidf=args_single['write_tfidf'],
-                      tokenizer_=args_single['tokenizer'],
+                      text_field_names=args['text_field_names'],
+                      label_field_name=args['label_field_name'],
+                      max_document_length=args['max_document_length'],
+                      max_vocab_size=args['max_vocab_size'],
+                      min_frequency=args['min_frequency'],
+                      max_frequency=args['max_frequency'],
+                      train_ratio=args['train_ratio'],
+                      valid_ratio=args['valid_ratio'],
+                      subsample_ratio=args['subsample_ratio'],
+                      padding=args['padding'],
+                      write_bow=args['write_bow'],
+                      write_tfidf=args['write_tfidf'],
+                      tokenizer_=args['tokenizer'],
                       generate_basic_vocab=False,
                       generate_tf_record=True,
                       expand_vocab=expand_vocab,

@@ -42,8 +42,8 @@ def create_embedders(embed_fns,
 
     # Arguments for embedder function should be
     # the same if the embedder is tied
-    assert all([embedder_kwargs[a] == embedder_kwargs[b]
-                for a in args.datasets for b in args.datasets])
+    # assert all([embedder_kwargs[a] == embedder_kwargs[b]
+    #             for a in args.datasets for b in args.datasets])
     embedder_kwargs = embedder_kwargs[args.datasets[0]]
 
     embedder = tf.make_template('embedder_shared',

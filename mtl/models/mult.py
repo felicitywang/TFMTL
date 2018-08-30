@@ -23,8 +23,8 @@ import os
 import tensorflow as tf
 
 from mtl.layers.mlp import dense_layer, mlp
-from mtl.util.encoder_factory import build_encoders
 from mtl.util.constants import EXP_NAMES as EXP
+from mtl.util.encoder_factory import build_encoders
 
 logging = tf.logging
 eps = 1e-5
@@ -118,7 +118,7 @@ class Mult(object):
                          % (self._hps.experiment_name))
 
     if batch_source not in self._hps.datasets:
-      raise ValueError("Unrecognized batch source=%s" % (batch_source))
+      raise ValueError("Unrecognized batch source=%s" % batch_source)
 
     text_field_names = self.get_text_field_names(batch_source)
 
@@ -133,6 +133,28 @@ class Mult(object):
     x = self._logit_layers[dataset_name](x)
 
     return x
+
+  def get_pred_res(self,
+                   batch,
+                   batch_source,
+                   dataset_name,
+                   additional_extractor_kwargs=dict()):
+    # Return id, predicted label and confidence scores for each class,
+    # used in predict mode
+
+    x = self.get_logits(batch,
+                        batch_source,
+                        dataset_name,
+                        is_training=False,
+                        additional_extractor_kwargs=
+                        additional_extractor_kwargs)
+    res = tf.argmax(x, axis=1)
+
+    x = tf.nn.softmax(x)
+
+    id = batch['id']
+
+    return id, res, x
 
   def get_predictions(self,
                       batch,

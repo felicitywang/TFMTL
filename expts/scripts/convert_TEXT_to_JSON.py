@@ -22,16 +22,31 @@ import json
 # path that saves
 import sys
 
+from tqdm import tqdm
+
+
+"""Converts to data to predict in plain text format to JSON format
+
+Usage: python convert_TEXT_to_JSON.py text_file_path json_file_path
+"""
+
 text_file_path = sys.argv[1]
 json_file_path = sys.argv[2]
 
-text_list = []
+data = []
 
 with open(text_file_path, 'r') as file:
-  for line in file.readlines():
-    text_list.append({'text': line.strip()})
-  file.close()
+  for index, line in tqdm(enumerate(file.readlines())):
+    data.append({
+      'text': line.strip(),
+      'id': str(index)
+    })
 
 with gzip.open(json_file_path, mode='wt') as file:
-  json.dump(text_list, file, ensure_ascii=False)
+  json.dump(data, file, ensure_ascii=False)
   file.close()
+
+# open test
+with gzip.open(json_file_path, mode='rt') as file:
+  data = json.load(file, encoding='utf-8')
+  print(len(data))

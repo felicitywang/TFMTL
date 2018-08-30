@@ -143,6 +143,47 @@ def neg_mae_macro(y_trues, y_preds, labels, topics):
   return -mae_macro(y_trues, y_preds, labels, topics)
 
 
+# def recall_macro(y_trues, y_preds, labels, topics):
+#   """
+#   macro-averaged (unweighted mean) over topics of recall score of all classes
+#
+#   :param y_trues: list of ground truth labels
+#   :param y_preds: list of predicted labels
+#   :param labels: labels for each class in a list, must specify
+#   :return: float
+#   """
+#   if len(topics) == 0:
+#     return float('-inf')
+#
+#   topics_set = set(topics)
+#   # print('{} topics'.format(len(topics_set)))
+#
+#   preds = list(zip(*[y_trues, y_preds, topics]))
+#   preds_by_topic = dict()
+#   for topic in topics_set:
+#     preds_by_topic[topic] = []
+#
+#   # group predictions by topic
+#   for pred in preds:
+#     preds_by_topic[pred[2]].append(pred)
+#
+#   recalls = dict()
+#   for topic, preds in preds_by_topic.items():
+#     y_true = [p[0] for p in preds]
+#     y_pred = [p[1] for p in preds]
+#
+#     r = sklearn.metrics.recall_score(y_true=y_true,
+#                                      y_pred=y_pred,
+#                                      average='macro')
+#     recalls[topic] = r
+#
+#   # for topic, recall in recalls.items():
+#   #   print('{}: recall={}'.format(topic, recall))
+#
+#   # simple mean of recalls over topics
+#   return sum(recalls.values()) / len(recalls.values())
+#
+
 def recall_macro(y_trues, y_preds, labels, topics):
   """
   macro-averaged (unweighted mean) over topics of recall score of all classes
@@ -152,36 +193,11 @@ def recall_macro(y_trues, y_preds, labels, topics):
   :param labels: labels for each class in a list, must specify
   :return: float
   """
-  if len(topics) == 0:
-    return float('-inf')
-
-  topics_set = set(topics)
-  # print('{} topics'.format(len(topics_set)))
-
-  preds = list(zip(*[y_trues, y_preds, topics]))
-  preds_by_topic = dict()
-  for topic in topics_set:
-    preds_by_topic[topic] = []
-
-  # group predictions by topic
-  for pred in preds:
-    preds_by_topic[pred[2]].append(pred)
-
-  recalls = dict()
-  for topic, preds in preds_by_topic.items():
-    y_true = [p[0] for p in preds]
-    y_pred = [p[1] for p in preds]
-
-    r = sklearn.metrics.recall_score(y_true=y_true,
-                                     y_pred=y_pred,
-                                     average='macro')
-    recalls[topic] = r
-
-  # for topic, recall in recalls.items():
-  #   print('{}: recall={}'.format(topic, recall))
-
-  # simple mean of recalls over topics
-  return sum(recalls.values()) / len(recalls.values())
+  assert labels is not None
+  return sklearn.metrics.recall_score(y_true=y_trues,
+                                      y_pred=y_preds,
+                                      labels=labels,
+                                      average='macro')
 
 
 def precision_macro(y_trues, y_preds, labels, topics):
@@ -200,6 +216,24 @@ def precision_macro(y_trues, y_preds, labels, topics):
                                          average='macro')
 
 
+def confusion_matrix(y_trues, y_preds, labels, topics):
+  """
+  confusion matrix C, C[i, j] is the number of observations known to be in
+  group i but predicted to be in group j
+
+  :param y_trues: list of ground truth labels
+  :param y_preds: list of predicted labels
+  :param labels: labels for each class in a list, must specify
+  :return: array, shape = [n_classes, n_classes]
+  """
+
+  assert labels is not None
+
+  return sklearn.metrics.confusion_matrix(y_trues,
+                                          y_preds,
+                                          labels=labels)
+
+
 def metric2func(metric_name):
   METRIC2FUNC = {
     'Acc': accuracy_score,
@@ -207,7 +241,8 @@ def metric2func(metric_name):
     'F1_Macro': f1_macro,
     'F1_PosNeg_Macro': f1_pos_neg_macro,
     'Recall_Macro': recall_macro,
-    'Precision_Macro': precision_macro
+    'Precision_Macro': precision_macro,
+    'Confusion_Matrix': confusion_matrix
   }
 
   if metric_name in METRIC2FUNC:

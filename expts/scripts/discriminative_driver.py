@@ -26,6 +26,7 @@ import argparse as ap
 import gzip
 import json
 import os
+from math import ceil
 from time import time
 
 import numpy as np
@@ -35,7 +36,7 @@ from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 from mtl.models.mult import Mult
-from mtl.util.constants import METRICS
+from mtl.util.constants import ALL_METRICS
 from mtl.util.metrics import accurate_number, metric2func
 from mtl.util.pipeline import Pipeline
 from mtl.util.util import make_dir
@@ -50,16 +51,16 @@ def parse_args():
   p.add_argument('--model', type=str,
                  help='Which model to use [mlvae|mult]')
 
-  p.add_argument('--mode', choices=['train', 'test', 'predict', 'init'],
+  p.add_argument('--mode', choices=['train', 'test', 'predict', 'finetune'],
                  required=True,
-                 help='Whether to train, test or predict. \n'
+                 help='Whether to train, test, predict or finetune. \n'
                       'train: train on train data and evaluate on valid data '
                       'for certain epochs, saving the best models\n'
                       'test: restore the saved model and evaluate on held-out '
                       'test data. \n'
                       'predict: restore the saved model and predict the '
                       'labels of the given text file. \n'
-                      'init: restore the saved model and continue training.')
+                      'finetune: restore the saved model and continue training.')
   p.add_argument('--experiment_name', default='', type=str,
                  help='Name of experiment.')
   p.add_argument('--tuning_metric', default='Acc', type=str,
@@ -157,8 +158,12 @@ def parse_args():
   p.add_argument('--class_sizes', nargs='+', type=int,
                  help='Number of classes for each dataset.')
   p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
-                 help='Directory to save the checkpoints.')
-  p.add_argument('--summaries_dir', type=str, default='./data/summ/',
+                 help='Directory to save the checkpoints into.')
+  p.add_argument('--checkpoint_dir_finetune', type=str,
+                 default='./data/ckpt_finetune/',
+                 help='Directory to load the checkpoints from in the finetune '
+                      'mode.')
+  p.add_argument('--summaries_dir', type=str, default=None,
                  help='Directory to save the Tensorboard summaries.')
   p.add_argument('--log_file', type=str,
                  help='File where results are stored.')
@@ -176,7 +181,7 @@ def parse_args():
                  help='Whether to use batch normalization in MLP layers')
   p.add_argument('--layer_normalization', type=bool, default=False,
                  help='Whether to use layer normalization in MLP layers')
-  p.add_argument('--metrics', nargs='+', type=str, default=METRICS,
+  p.add_argument('--metrics', nargs='+', type=str, default=ALL_METRICS,
                  help='Evaluation metrics for each dataset to use. '
                       'Supported metrics include:\n'
                       'Acc: accuracy score;\n'
@@ -195,11 +200,19 @@ def get_num_records(tf_record_filename):
   return c
 
 
-def get_vocab_size(vocab_file_path):
-  with open(vocab_file_path, "r") as f:
-    line = f.readline().strip()
-    vocab_size = int(line)
-  return vocab_size
+def get_vocab_size(dataset_paths):
+  """Read the vocab_size in args.json in the TFRecord paths
+
+  :param dataset_paths: list, paths to the datasets' TFRecord files
+  :return: int, size of the vocabulary
+  """
+  vocab_sizes = []
+  for dataset_path in dataset_paths:
+    with open(os.path.join(dataset_path, 'args.json')) as file:
+      vocab_sizes.append(json.load(file)['vocab_size'])
+  assert len(set(vocab_sizes)) == 1, 'Vocabulary sizes are not the ' \
+                                     'same: ' + ' '.join(vocab_sizes)
+  return int(vocab_sizes[0])
 
 
 def train_model(model,
@@ -209,10 +222,10 @@ def train_model(model,
   """
   Train the model for certain epochs;
   Evaluate on valid data after each epoch;
-  Save the model the performs the best on the validation epoch.
+  Save the model that performs the best on the validation epoch.
   """
-  if args.mode not in ['train', 'init']:
-    raise ValueError("train_model() called when in %s mode" % (args.mode))
+  if args.mode not in ['train', 'finetune']:
+    raise ValueError("train_model() called when in %s mode" % args.mode)
 
   dataset_info, model_info = fill_info_dicts(dataset_info, args)
 
@@ -242,7 +255,7 @@ def train_model(model,
   #                                   is_training=True,
   #                                   additional_extractor_kwargs=additional_extractor_kwargs)
   losses = dict()
-  for dataset in model_info:
+  for dataset in args.datasets:
     losses[dataset] = model.get_loss(train_batches[dataset],
                                      dataset,
                                      dataset,
@@ -258,8 +271,7 @@ def train_model(model,
 
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
-  zero_global_step_op = global_step_tensor.assign(0)
-  lr = get_learning_rate(args.lr0)
+  zero_global_step_op = global_step_tensor.assign(0)  # TODO this is never used
 
   train_ops = dict()
   optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
@@ -301,10 +313,8 @@ def train_model(model,
     else:
       print('( ) {}'.format(var))
 
-  print("Total trainable parameters in this model={}".format(
+  print("Total trainable parameters in this model={}\n\n\n".format(
     total_trainable_parameters))
-
-  print("\n\n\n")
 
   # # Add ops to save and restore all the variables.
 
@@ -312,6 +322,7 @@ def train_model(model,
   # saves every several steps
   # automatically done by tf.train.SingularMonitorSession with
   # tf.train.CheckpoinSaverHook
+
   # TODO load from some checkpoint dif at the beginning(?)
   saver_hook = tf.train.CheckpointSaverHook(
     checkpoint_dir=os.path.join(args.checkpoint_dir, 'latest'),
@@ -320,24 +331,27 @@ def train_model(model,
   # saved model builders for each model
   # builders = init_builders(args, model_info)
 
-  saver = tf.train.Saver()
+  saver = tf.train.Saver(max_to_keep=100)
 
   with tf.train.SingularMonitoredSession(hooks=[saver_hook],
                                          config=config) as sess:
+
     # Initialize model parameters
 
     if args.mode == 'train':
       sess.run(init_ops)
     else:
+      # finetune TODO
       assert len(args.datasets) == 1
-      checkpoint_path = model_info[args.datasets[0]]['checkpoint_path']
-      print(checkpoint_path)
-      saver.restore(sess, checkpoint_path)
+      checkpoint_path_load = model_info[args.datasets[0]][
+        'checkpoint_path_load']
+      saver.restore(sess, checkpoint_path_load)
 
-    train_file_writer = tf.summary.FileWriter(
-      os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
-    valid_file_writer = tf.summary.FileWriter(
-      os.path.join(args.summaries_dir, 'valid'), graph=sess.graph)
+    if args.summaries_dir:
+      train_file_writer = tf.summary.FileWriter(
+        os.path.join(args.summaries_dir, 'train'), graph=sess.graph)
+      valid_file_writer = tf.summary.FileWriter(
+        os.path.join(args.summaries_dir, 'valid'), graph=sess.graph)
 
     best_eval_performance = dict()
     for dataset_name in model_info:
@@ -360,6 +374,7 @@ def train_model(model,
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
     for epoch in xrange(1, args.num_train_epochs + 1):
+
       start_time = time()
 
       total_acc = 0.0
@@ -390,14 +405,15 @@ def train_model(model,
 
       train_loss = float(total_loss) / float(num_iter)
 
-      train_loss_summary = tf.Summary(
-        value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
-      train_file_writer.add_summary(train_loss_summary, global_step=step)
+      if args.summaries_dir:
+        train_loss_summary = tf.Summary(
+          value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
+        train_file_writer.add_summary(train_loss_summary, global_step=step)
 
       # Evaluate held-out accuracy
       # if not args.test:  # Validation mode
       # Get performance metrics on each dataset
-      for dataset_name in model_info:
+      for dataset_name in args.datasets:
         _pred_op = model_info[dataset_name]['valid_pred_op']
         _eval_labels = model_info[dataset_name]['valid_batch'][
           args.label_key]
@@ -429,14 +445,16 @@ def train_model(model,
         valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics'][
           'eval_loss']
 
-      valid_loss_summary = tf.Summary(
-        value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
-      valid_file_writer.add_summary(valid_loss_summary, global_step=step)
       main_task_acc = model_info[args.datasets[0]]['valid_metrics']['Acc']
-      valid_main_task_accuracy_summary = tf.Summary(value=[
-        tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
-      valid_file_writer.add_summary(valid_main_task_accuracy_summary,
-                                    global_step=step)
+
+      if args.summaries_dir:
+        valid_loss_summary = tf.Summary(
+          value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
+        valid_file_writer.add_summary(valid_loss_summary, global_step=step)
+        valid_main_task_accuracy_summary = tf.Summary(value=[
+          tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
+        valid_file_writer.add_summary(valid_main_task_accuracy_summary,
+                                      global_step=step)
 
       if (main_task_acc >= args.early_stopping_acc_threshold) and (
         len(main_task_dev_accuracy) >= args.patience) and (
@@ -449,16 +467,21 @@ def train_model(model,
       main_task_dev_accuracy.append(main_task_acc)
 
       if args.reporting_metric != "Acc":
-        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][args.reporting_metric]
-        valid_main_task_performance_summary = tf.Summary(value=[tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric), simple_value=main_task_performance)])
-        valid_file_writer.add_summary(valid_main_task_performance_summary, global_step=step)
+        main_task_performance = model_info[args.datasets[0]]['valid_metrics'][
+          args.reporting_metric]
+        if args.summaries_dir:
+          valid_main_task_performance_summary = tf.Summary(value=[
+            tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric),
+                             simple_value=main_task_performance)])
+          valid_file_writer.add_summary(valid_main_task_performance_summary,
+                                        global_step=step)
 
       # Log performance(s)
       str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
         epoch, args.num_train_epochs, np.asscalar(step), elapsed,
         train_loss, valid_loss)
 
-      for dataset_name in model_info:
+      for dataset_name in args.datasets:
         _num_eval_total = model_info[dataset_name]['valid_metrics'][
           'ntotal']
         # TODO use other metric here for tuning
@@ -466,18 +489,25 @@ def train_model(model,
         # _eval_align_acc = model_info[dataset_name]['valid_metrics'][
         #  'aligned_accuracy']
 
-        str_ += '\n(%s) ' % (dataset_name)
+        str_ += '\n(%s) ' % dataset_name
         for m, s in model_info[dataset_name]['valid_metrics'].items():
           if (dataset_name == args.datasets[0]) and (
             m == args.reporting_metric):  # main task
             str_ += '**%s=%f** ' % (m, s)
           elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
+          elif m == 'Confusion_Matrix':
+            pass
           else:
             str_ += '%s=%f ' % (m, s)
+        if 'Confusion_Matrix' in model_info[dataset_name]['valid_metrics']:
+          str_ += 'Confusion_Matrix:\n'
+          str_ += '\n'.join('  '.join('%4d' % x for x in y) for y in
+                            model_info[dataset_name]['valid_metrics'][
+                              'Confusion_Matrix'])
 
         # Track best-performing epoch for each dataset
-        if _eval_acc > best_eval_performance[dataset_name]["acc"]:
+        if _eval_acc >= best_eval_performance[dataset_name]["acc"]:
           best_eval_performance[dataset_name]["acc"] = _eval_acc
           best_eval_performance[dataset_name]["performance"] = \
             model_info[dataset_name]['valid_metrics'].copy()
@@ -486,10 +516,14 @@ def train_model(model,
           saver.save(sess.raw_session(),
                      model_info[dataset_name]['checkpoint_path'])
 
+        # # test
+        # saver.save(sess.raw_session(), checkpoint_path)
+
         total_acc += _eval_acc
 
       # Track best-performing epoch for collection of datasets
-      if total_acc > best_total_acc:
+
+      if total_acc >= best_total_acc:
         best_total_acc = total_acc
         best_total_acc_epoch = epoch
         best_epoch_results = str_
@@ -508,6 +542,7 @@ def train_model(model,
         saver.save(sess.raw_session(),
                    os.path.join(args.checkpoint_dir, 'early-stopping',
                                 'model'))
+
         early_stopping_dev_results = str_
         # with open(args.log_file, 'a') as f:
         #  f.write('\nSTOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
@@ -543,8 +578,9 @@ def train_model(model,
         f.write('STOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
         f.write(early_stopping_dev_results + '\n\n')
 
-    train_file_writer.close()
-    valid_file_writer.close()
+    if args.summaries_dir:
+      train_file_writer.close()
+      valid_file_writer.close()
 
 
 def test_model(model, dataset_info, args):
@@ -563,14 +599,14 @@ def test_model(model, dataset_info, args):
 
   str_ = '\nAccuracy on the held-out test data using different saved models:'
 
-  model_names = args.datasets
+  model_names = args.datasets.copy()
   if len(args.datasets) > 1:
     model_names.append('MULT')
 
   if os.path.exists(os.path.join(args.checkpoint_dir, 'early-stopping')):
     model_names.append('early-stopping')
 
-  saver = tf.train.Saver()
+  saver = tf.train.Saver(max_to_keep=100)
 
   for model_name in model_names:
     # load the saved best model
@@ -589,7 +625,7 @@ def test_model(model, dataset_info, args):
 
       saver.restore(sess, checkpoint_path)
 
-      for dataset_name in model_info:
+      for dataset_name in args.datasets:
         _pred_op = model_info[dataset_name]['test_pred_op']
         _get_topic_op = model_info[dataset_name]['test_topic_op']
         _eval_labels = model_info[dataset_name]['test_batch'][
@@ -626,15 +662,23 @@ def test_model(model, dataset_info, args):
           str_ += '(*)'
         else:
           str_ += '( )'
-        str_ += '(%s)' % (dataset_name)
+        str_ += '(%s)' % dataset_name
         for m, s in model_info[dataset_name]['test_metrics'].items():
           if (dataset_name == args.datasets[0]) and (
             m == args.reporting_metric):  # main task
             str_ += '**%s=%f** ' % (m, s)
           elif m == args.tuning_metric:
             str_ += '*%s=%f* ' % (m, s)
+          elif m == 'Confusion_Matrix':
+            pass
           else:
             str_ += '%s=%f ' % (m, s)
+        if 'Confusion_Matrix' in model_info[dataset_name]['test_metrics']:
+          str_ += 'Confusion_Matrix:\n'
+          str_ += '\n'.join('  '.join('%4d' % x for x in y) for y in
+                            model_info[dataset_name]['test_metrics'][
+                              'Confusion_Matrix'])
+
         # str_ += '(%s) num_eval_total=%d eval_acc=%f eval_align_acc=%f' % (
         #  dataset_name,
         #  _num_eval_total,
@@ -660,8 +704,12 @@ def predict(model, dataset_info, args):
 
   str_ = 'Predictions of the given text data of dataset %s using different ' \
          'saved models:' % args.predict_dataset
-
-  saver = tf.train.Saver()
+  labels = [str(i) for i in dataset_info[args.predict_dataset]['labels']]
+  if len(labels) == 2:
+    header = 'id\tlabel\t' + labels[1] + '\n'
+  else:
+    header = 'id\tlabel\t' + '\t'.join(labels) + '\n'
+  saver = tf.train.Saver(max_to_keep=100)
 
   model_names = args.datasets
   if len(args.datasets) > 1:
@@ -670,6 +718,11 @@ def predict(model, dataset_info, args):
   for model_name in model_names:
     # load the saved best model
     str_ += '\nUsing the model that performs the best on (%s)\n' % model_name
+
+    output = header
+    str_ += header
+
+    data = []
 
     with tf.Session() as sess:
       if model_name == 'MULT':
@@ -683,16 +736,37 @@ def predict(model, dataset_info, args):
       dataset_name = args.predict_dataset
       _pred_op = model_info[dataset_name]['pred_pred_op']
       _pred_iter = model_info[dataset_name]['pred_iter']
-      _predictions = get_all_predictions(sess, _pred_op, _pred_iter)
+      _ids, _predictions, _scores = get_all_pred_res(sess, _pred_op,
+                                                     _pred_iter)
 
-      str_ += str(_predictions)
+      for id, pred, score in zip(_ids, _predictions, _scores):
+        record = {
+          'id': id,
+          'label': pred
+        }
+        for l, s in zip(labels, score):
+          record[l] = s
+        data.append(record)
 
-      # TODO write to output file
+        # output positive score for binary classification
+        if len(score) == 2:
+          score = str(score[1])
+        else:
+          score = '\t'.join([str(i) for i in score])
+        str_ += id + '\t' + str(pred) + '\t' + score + '\n'
+        output += id + '\t' + str(pred) + '\t' + score + '\n'
+
       make_dir(args.predict_output_folder)
-      with open(os.path.join(args.predict_output_folder, model_name) + '.pred',
+
+      with open(os.path.join(args.predict_output_folder, model_name) + '.tsv',
                 'w') as file:
-        for i in _predictions:
-          file.write(str(i) + '\n')
+        # for i in _predictions:
+        #   file.write(str(i))
+        file.write(output)
+
+      with open(os.path.join(args.predict_output_folder, model_name) + '.json',
+                'wt') as file:
+        json.dump(data, file, ensure_ascii=False)
 
   logging.info(str_)
 
@@ -710,6 +784,32 @@ def get_all_predictions(session, pred_op, pred_iterator):
       break
 
   return predictions
+
+
+def get_all_pred_res(session, pred_op, pred_iterator):
+  """Get all the predict results for a predict batch
+
+  (id, predicted label and softmax values for each class)
+  used for predict mode only
+  """
+  session.run(pred_iterator.initializer)
+
+  ids = []
+  predictions = []
+  scores = []
+  while True:
+    try:
+      id, pred_class, score = session.run(pred_op)
+      id_list = [i.decode('utf-8') for i in id.tolist()]
+      pred_class_list = pred_class.tolist()
+      score_list = score.tolist()
+      ids += id_list  # TODO bytes to string
+      predictions += pred_class_list
+      scores += score_list
+    except tf.errors.OutOfRangeError:
+      break
+
+  return ids, predictions, scores
 
 
 def get_topic(batch):
@@ -732,18 +832,21 @@ def compute_held_out_performance(session,
   # Initialize eval iterator
   session.run(eval_iterator.initializer)
 
-  if topic_path != '' and topic_path is not None:
-    with gzip.open(topic_path, mode='rt') as f:
-      try:
-        d = json.load(f, encoding='utf-8')
-      except UnicodeDecodeError:
-        print("Failed to read topic_path={}".format(topic_path))
-        d = None
-        names = ["topic2", "topic-2", "topic5", "topic-5"]
-        if any(name in topic_path.lower() for name in names):
-          # Topic-2 and Topic-5 require examples' topics to compute metric,
-          # so we need to read their corresponding files
-          raise
+  if args.experiment_name == 'RUDER_NAACL_18':
+    if topic_path != '' and topic_path is not None:
+      with gzip.open(topic_path, mode='rt') as f:
+        try:
+          d = json.load(f, encoding='utf-8')
+        except UnicodeDecodeError:
+          print("Failed to read topic_path={}".format(topic_path))
+          d = None
+          names = ["topic2", "topic-2", "topic5", "topic-5"]
+          if any(name in topic_path.lower() for name in names):
+            # Topic-2 and Topic-5 require examples' topics to compute metric,
+            # so we need to read their corresponding files
+            raise
+
+  d = None
 
   if d is not None:
     index2topic = dict()
@@ -801,6 +904,7 @@ def compute_held_out_performance(session,
     res[score] = scores[score]
 
   res['eval_loss'] = evaluation_loss
+
   return res
 
 
@@ -840,7 +944,8 @@ def main():
   # if args.metrics in ['F1_Macro', 'Recall_Macro']:
   for dataset, dataset_path in zip(args.datasets, args.dataset_paths):
     with open(os.path.join(dataset_path, 'args.json')) as file:
-      labels[dataset] = json.load(file)['labels']
+      labels[dataset] = [label for label in json.load(file)['labels'] if
+                         label is not None]  # exclude None
 
   # evaluation metrics for each dataset
   metrics = dict()
@@ -874,7 +979,7 @@ def main():
     _dataset_train_path = os.path.join(_dir, "train.tf")
     dataset_info[dataset_name]['train_path'] = _dataset_train_path
 
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       _dataset_valid_path = os.path.join(_dir, "valid.tf")
       dataset_info[dataset_name]['valid_path'] = _dataset_valid_path
     elif args.mode == 'test':
@@ -886,7 +991,8 @@ def main():
     else:
       raise ValueError('No such mode!')
 
-  vocab_size = get_vocab_size(args.vocab_size_file)
+  # vocab_size = get_vocab_size(args.vocab_size_file)
+  vocab_size = get_vocab_size(args.dataset_paths)
 
   class_sizes = {dataset_name: dataset_info[dataset_name]['class_size'] for
                  dataset_name in dataset_info}
@@ -902,6 +1008,7 @@ def main():
     with open(os.path.join(dataset_path, 'args.json')) as f:
       json_config = json.load(f)
       text_field_names = json_config['text_field_names']
+
       for text_field_name in text_field_names:
         FEATURES[text_field_name + '_length'] = tf.FixedLenFeature([],
                                                                    dtype=tf.int64)
@@ -917,8 +1024,12 @@ def main():
           raise ValueError("Input key %s not supported!" % (args.input_key))
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
-  if args.mode in ['train', 'test', 'init']:
+  if args.mode in ['train', 'test', 'finetune']:
     FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
+
+  # String ID(name) for predict mode
+  if args.mode == 'predict':
+    FEATURES['id'] = tf.FixedLenFeature([], dtype=tf.string)
 
   # FEATURES = {
   #  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
@@ -948,7 +1059,7 @@ def main():
                                is_training=True)
       dataset_info[dataset_name]['train_dataset'] = ds
 
-      if args.mode in ['train', 'init']:
+      if args.mode in ['train', 'finetune']:
         # Validation dataset
         _valid_path = dataset_info[dataset_name]['valid_path']
         ds = build_input_dataset(_valid_path, FEATURES,
@@ -992,7 +1103,7 @@ def main():
 
     # Steps per epoch.
     # One epoch: smallest dataset has been seen once
-    steps_per_epoch = int(min_N_train / args.batch_size)
+    steps_per_epoch = ceil(min_N_train / args.batch_size)
 
     # Create model(s):
     # NOTE: models must support the following functions:
@@ -1017,7 +1128,7 @@ def main():
                    hps=hps)
 
       # Do training
-      if args.mode in ['train', 'init']:
+      if args.mode in ['train', 'finetune']:
         train_model(model,
                     dataset_info,
                     steps_per_epoch,
@@ -1025,7 +1136,6 @@ def main():
       elif args.mode == 'test':
         test_model(model, dataset_info, args)
       elif args.mode == 'predict':
-        # TODO text data to predict.tf
         predict(model, dataset_info, args)
       else:
         raise NotImplementedError(
@@ -1035,7 +1145,6 @@ def main():
       raise ValueError("unrecognized model: %s" % args.model)
 
 
-# TODO: use this directly:
 # https://www.tensorflow.org/api_docs/python/tf/contrib/training/HParams
 #   # If the hyperparameters are in json format use parse_json:
 #   hparams.parse_json('{"learning_rate": 0.3, "activations": "relu"}')
@@ -1046,19 +1155,6 @@ def set_hps(args):
     hParams.add_hparam(k, v)
 
   return hParams
-  #
-  #
-  # return HParams(hidden_dim=args.hidden_dim,
-  #                num_filter=args.num_filter,
-  #                max_width=args.max_width,
-  #                word_embed_dim=args.word_embed_dim,
-  #                alphas=args.alphas,
-  #                label_key=args.label_key,
-  #                input_key=args.input_key,
-  #                dropout_rate=0.5,
-  #                num_layers=args.num_layers,
-  #                share_mlp=args.share_mlp
-  #                )
 
 
 def get_learning_rate(learning_rate):
@@ -1107,7 +1203,7 @@ def fill_info_dicts(dataset_info, args):
   #  e.g., data iterators, batches, prediction operations
 
   # use validation data for evaluation anyway
-  if args.mode in ['train', 'init']:
+  if args.mode in ['train', 'finetune']:
     logging.info("Using validation data for evaluation.")
   elif args.mode == 'test':
     logging.info("Using test data for final evaluation.")
@@ -1118,14 +1214,23 @@ def fill_info_dicts(dataset_info, args):
   model_info = dict()
 
   # paths to save/restore the checkpoints of the best model for each dataset
-  for dataset_name in dataset_info:
-    model_info[dataset_name] = dict()
-    model_info[dataset_name]['checkpoint_path'] = os.path.join(
-      args.checkpoint_dir, dataset_name, 'model')
+  if args.mode == 'finetune':
+    assert args.checkpoint_dir_finetune is not None, 'checkpoint_dir_finetune is None!'
+    for dataset_name in dataset_info:
+      model_info[dataset_name] = dict()
+      model_info[dataset_name]['checkpoint_path_load'] = os.path.join(
+        args.checkpoint_dir_finetune, dataset_name, 'model')
+      model_info[dataset_name]['checkpoint_path'] = os.path.join(
+        args.checkpoint_dir, dataset_name, 'model')
+  else:
+    for dataset_name in dataset_info:
+      model_info[dataset_name] = dict()
+      model_info[dataset_name]['checkpoint_path'] = os.path.join(
+        args.checkpoint_dir, dataset_name, 'model')
   # Data iterators, etc.
   for dataset_name in dataset_info:
 
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       # Training data, iterator, and batch
       _train_dataset = dataset_info[dataset_name]['train_dataset']
       _train_iter = _train_dataset.iterator
@@ -1170,7 +1275,7 @@ def fill_info_dicts(dataset_info, args):
     return _feature_dict
 
   # Create feature_dicts for each dataset
-  if args.mode in ['train', 'init']:
+  if args.mode in ['train', 'finetune']:
     for dataset_name in model_info:
       model_info[dataset_name]['feature_dict'] = _create_feature_dict(
         dataset_name, dataset_info, model_info)
@@ -1186,7 +1291,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
@@ -1209,7 +1314,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
       pass
 
   for dataset_name in model_info:
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       _valid_pred_op = model.get_predictions(
         model_info[dataset_name]['valid_batch'],
         dataset_name,
@@ -1224,7 +1329,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         additional_extractor_kwargs=additional_extractor_kwargs)
       model_info[dataset_name]['test_pred_op'] = _test_pred_op
     elif args.mode == 'predict':
-      _pred_pred_op = model.get_predictions(
+      _pred_pred_op = model.get_pred_res(
         model_info[dataset_name]['pred_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
@@ -1238,7 +1343,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
       extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
@@ -1259,7 +1364,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
       pass
 
   for dataset_name in model_info:
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       _valid_loss_op = model.get_loss(
         model_info[dataset_name]['valid_batch'],
         dataset_name,
@@ -1279,7 +1384,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 
 def fill_topic_op(args, model_info):
   for dataset_name in model_info:
-    if args.mode in ['train', 'init']:
+    if args.mode in ['train', 'finetune']:
       _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
       model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
     elif args.mode == 'test':
@@ -1310,6 +1415,14 @@ def get_var_grads(loss):
   tvars = tf.trainable_variables()
   grads = tf.gradients(loss, tvars)
   return tvars, grads
+
+
+def model_exists(checkpoint_path):
+  model_index_path = os.path.join(os.path.dirname(checkpoint_path),
+                                  'model.index')
+  # print('Checking path ', model_index_path)
+  # print(os.listdir(os.path.dirname(checkpoint_path)))
+  return os.path.exists(model_index_path)
 
 
 if __name__ == "__main__":

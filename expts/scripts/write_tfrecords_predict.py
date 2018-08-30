@@ -19,63 +19,71 @@ import json
 import os
 import sys
 
-from mtl.util.dataset import Dataset
+from docutils.io import InputError
 
-if len(sys.argv) != 6:
-  print("Usage: python write_tfrecords_predict.py DATASET_NAME "
-        "predict_json_path predict_tf_path tfrecord_dir vocab_dir")
+from mtl.util.dataset import Dataset
+from mtl.util.util import make_dir
+
+# TODO two-sequence input?
+
+if len(sys.argv) != 5:
+  raise InputError(
+    "Usage: python write_tfrecords_predict.py dataset_args_path "
+    "predict_json_path predict_tf_path vocab_dir")
 
 dataset_args_path = sys.argv[1]
 predict_json_path = sys.argv[2]
 predict_tf_path = sys.argv[3]
-tfrecord_dir = sys.argv[4]
-vocab_dir = sys.argv[5]
+vocab_dir = sys.argv[4]
+
+# find the used arguments
+if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
+  args_path = os.path.join(os.path.abspath(vocab_dir), 'args.json')
+else:
+  args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0], 'args.json')
+
+with open(args_path) as file:
+  args_used = json.load(file)
+
+if not os.path.exists(os.path.dirname(predict_tf_path)):
+  make_dir(os.path.dirname(predict_tf_path))
 
 # args_DATASET.json or args_merged.json which has min_freq, max_freq,
 # max_document_length etc. information, which are used to further build
 # vocabulary
 with open(dataset_args_path, 'rt') as file:
-  args_predict = json.load(file)
+  args = json.load(file)
 
-# compute max document length
-# max document length should be the max(max_document_lengths) for each
-# dataset used to generate the vocabulary, their max_document_length happens
-#  to be in vocab_dir/DATASET/args.json
-# otherwise, vocabulary comes from a single dataset, whose args.jon lies in
-# vocab_dir
-args_paths = [os.path.join(vocab_dir, folder, 'args.json') for folder in
-              os.listdir(vocab_dir) if
-              os.path.isdir(os.path.join(vocab_dir, folder))]
-if len(args_paths) == 0:
-  args_paths = [os.path.join(vocab_dir, 'args.json')]
+dataset = Dataset(
 
-max_document_lengths = []
-for args_path in args_paths:
-  max_document_length = json.load(open(args_path, 'r'))['max_document_length']
-  if max_document_length == 'Infinity':
-    max_document_length = float('inf')
-  max_document_lengths.append(max_document_length)
+  # keep consistent with the training datasets
+  max_document_length=args_used['max_document_length'],
+  max_vocab_size=args_used['max_vocab_size_allowed'],
+  min_frequency=args_used['min_frequency'],
+  max_frequency=args_used['max_frequency'],
+  padding=args_used.get('padding', args['padding']),
+  write_bow=args_used.get('write_bow', args['write_bow']),
+  write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
+  tokenizer_=args_used.get('tokenizer', args['tokenizer']),
+  preproc=args_used.get('preproc', args.get('preproc', True)),
+  vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
 
-# TODO preproc not handled
+  # may be different
+  text_field_names=args['text_field_names'],
+  label_field_name=args['label_field_name'],
 
-dataset = Dataset(json_dir=None,
-                  tfrecord_dir=tfrecord_dir,
-                  vocab_dir=vocab_dir,
-                  max_document_length=max(max_document_lengths),
-                  text_field_names=args_predict['text_field_names'],
-                  label_field_name=args_predict['label_field_name'],
-                  padding=args_predict['padding'],
-                  write_bow=args_predict['write_bow'],
-                  write_tfidf=args_predict['write_tfidf'],
-                  tokenizer_=args_predict['tokenizer'],
-                  generate_basic_vocab=False,
-                  vocab_given=True,
-                  vocab_name='vocab_v2i.json',
-                  generate_tf_record=True,
-                  predict_mode=True,
-                  predict_json_path=predict_json_path,
-                  predict_tf_path=predict_tf_path
-                  )
+  # default in predict mode
+  json_dir=None,
+  tfrecord_dir=None,
+  vocab_dir=vocab_dir,
+  generate_basic_vocab=False,
+  vocab_given=True,
+  vocab_name='vocab_v2i.json',
+  generate_tf_record=True,
+  predict_mode=True,
+  predict_json_path=predict_json_path,
+  predict_tf_path=predict_tf_path
+)
 
 # with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
 #   f.write(str(dataset.vocab_size))

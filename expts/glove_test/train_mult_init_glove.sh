@@ -1,13 +1,13 @@
 python ../scripts/discriminative_driver.py \
        --model mult \
        --mode train \
-       --num_train_epochs 50 \
-       --checkpoint_dir ./data/ckpt/Topic2_glove_mult_init/ \
+       --num_train_epochs 30 \
+       --checkpoint_dir ./data/ckpt/Target_Topic2_glove_mult_init/ \
        --experiment_name RUDER_NAACL_18 \
        --datasets Target Topic2 \
-       --dataset_paths data/tf/merged/Target_Topic2/glove.6B.100d_init/Target/ data/tf/merged/Target_Topic2/glove.6B.100d_init/Topic2/ \
+       --dataset_paths data/tf/merged/Target_Topic2/min_0_max_-1_vocab_None_glove.6B.100d_init/Target/ data/tf/merged/Target_Topic2/min_0_max_-1_vocab_None_glove.6B.100d_init/Topic2/ \
        --class_sizes 3 2 \
-       --vocab_size_file data/tf/single/Topic2/glove.6B.100d_expand/vocab_size.txt \
+       --vocab_size_file data/tf/merged/Target_Topic2/min_0_max_-1_vocab_None_glove.6B.100d_init/vocab_size.txt \
        --encoder_config_file encoders.json \
        --architecture serial-birnn-init-glove-mult \
        --shared_mlp_layers 0 \
