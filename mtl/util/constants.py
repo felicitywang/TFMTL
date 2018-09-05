@@ -14,7 +14,11 @@
 # =============================================================================
 
 # -*- coding: utf-8 -*-
-
+from mtl.util.reducers import (reduce_avg_over_time,
+                               reduce_var_over_time,
+                               reduce_max_over_time,
+                               reduce_min_over_time,
+                               reduce_over_time)
 
 """Constants used in TFMTL"""
 
@@ -68,11 +72,6 @@ class EXP_NAMES():
 
 
 """Reducers"""
-from mtl.util.reducers import (reduce_avg_over_time,
-                               reduce_var_over_time,
-                               reduce_max_over_time,
-                               reduce_min_over_time,
-                               reduce_over_time)
 
 REDUCERS = [reduce_avg_over_time,
             reduce_var_over_time,

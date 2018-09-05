@@ -56,9 +56,7 @@ def str2func(s):
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
   from mtl.embedders.pretrained import (init_pretrained,
-                                        expand_pretrained,
-                                        init_glove,
-                                        expand_glove)
+                                        expand_pretrained)
 
   from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import cnn_extractor
@@ -77,8 +75,6 @@ def str2func(s):
   functions = {
     "embed_sequence": embed_sequence,
     "no_op_embedding": no_op_embedding,
-    "init_glove": init_glove,
-    "expand_glove": expand_glove,
     "init_pretrained": init_pretrained,
     "expand_pretrained": expand_pretrained,
 
