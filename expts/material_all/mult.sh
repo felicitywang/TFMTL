@@ -1,1 +1,0 @@
-python driver.py --datasets LMRD TGt --dataset_paths ./data/tf/merged/TGt_LMRD/min_50_max_-1/LMRD/ ./data/tf/merged/TGt_LMRD/min_50_max_-1/TGt/ --vocab_path ./data/tf/merged/TGt_LMRD/min_50_max_-1/vocab_size.txt --model mult --encoder_architecture paragram_phrase_tied_word_embeddings

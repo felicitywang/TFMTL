@@ -159,10 +159,10 @@ def parse_args():
                  help='Number of classes for each dataset.')
   p.add_argument('--checkpoint_dir', type=str, default='./data/ckpt/',
                  help='Directory to save the checkpoints into.')
-  p.add_argument('--checkpoint_dir_finetune', type=str,
-                 default='./data/ckpt_finetune/',
-                 help='Directory to load the checkpoints from in the finetune '
-                      'mode.')
+  p.add_argument('--checkpoint_dir_init', type=str,
+                 default='./data/ckpt_init/',
+                 help='Directory to load the checkpoints of the '
+                      'pre-trained model from in the finetune mode.')
   p.add_argument('--summaries_dir', type=str, default=None,
                  help='Directory to save the Tensorboard summaries.')
   p.add_argument('--log_file', type=str,
@@ -371,6 +371,7 @@ def train_model(model,
     early_stopping_dev_results = ""
 
     # Do training
+    make_dir(os.path.dirname(args.log_file))
     with open(args.log_file, 'a') as f:
       f.write('VALIDATION RESULTS\n')
     for epoch in xrange(1, args.num_train_epochs + 1):
@@ -883,7 +884,7 @@ def compute_held_out_performance(session,
     except tf.errors.OutOfRangeError:
       break
 
-  assert num_eval_iter > 0
+  assert num_eval_iter > 0, num_eval_iter
   evaluation_loss = float(total_eval_loss) / float(num_eval_iter)
 
   ntotal = len(y_trues)
@@ -1215,11 +1216,11 @@ def fill_info_dicts(dataset_info, args):
 
   # paths to save/restore the checkpoints of the best model for each dataset
   if args.mode == 'finetune':
-    assert args.checkpoint_dir_finetune is not None, 'checkpoint_dir_finetune is None!'
+    assert args.checkpoint_dir_init is not None, 'checkpoint_dir_finetune is None!'
     for dataset_name in dataset_info:
       model_info[dataset_name] = dict()
       model_info[dataset_name]['checkpoint_path_load'] = os.path.join(
-        args.checkpoint_dir_finetune, dataset_name, 'model')
+        args.checkpoint_dir_init, dataset_name, 'model')
       model_info[dataset_name]['checkpoint_path'] = os.path.join(
         args.checkpoint_dir, dataset_name, 'model')
   else:

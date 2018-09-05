@@ -1,1 +1,0 @@
-python driver.py --datasets SWs --dataset_paths ./data/tf/single/SWs/min_1_max_-1/ --vocab_path ./data/tf/single/SWs/min_1_max_-1/vocab_size.txt --model mult --encoder_architecture paragram_phrase_tied_word_embeddings --alphas 1

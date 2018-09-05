@@ -1,0 +1,758 @@
+{
+    "serial_birnn_stock_glove_init_finetune": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/Topic2-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Topic2-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Topic5": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/Topic5-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Topic5-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/Target-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Target-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Stance": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/Stance-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Stance-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-L": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/ABSA-L-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/ABSA-L-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-R": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/ABSA-R-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/ABSA-R-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "FNC-1": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/FNC-1-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/FNC-1-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "MultiNLI": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/MultiNLI-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/MultiNLI-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    },
+    "serial_birnn_stock_glove_init_freeze": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/Topic2-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Topic2-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Topic5": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/Topic5-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Topic5-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/Target-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Target-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Stance": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/Stance-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/Stance-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-L": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/ABSA-L-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/ABSA-L-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-R": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/ABSA-R-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/ABSA-R-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "FNC-1": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/FNC-1-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/FNC-1-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "MultiNLI": {
+            "embed_fn": "init_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false,
+                "reverse_vocab_path": "data/tf/MultiNLI-mt/train_1_glove_init/vocab_i2v.json",
+                "random_size_path": "data/tf/MultiNLI-mt/train_1_glove_init/random_size.txt"
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    },
+    "serial_birnn_stock_glove_expand_finetune": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Topic5": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Stance": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-L": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-R": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "FNC-1": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "MultiNLI": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": true
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    },
+    "serial_birnn_stock_glove_expand_freeze": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Topic5": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Stance": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-L": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-R": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "FNC-1": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "MultiNLI": {
+            "embed_fn": "expand_glove",
+            "embed_kwargs": {
+                "embed_dim": 100,
+                "glove_path": "../../pretrained_word_embeddings/glove/glove.6B.100d.txt",
+                "trainable": false
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    },
+    "serial_birnn_stock": {
+        "embedders_tied": true,
+        "extractors_tied": true,
+        "Topic2": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Topic5": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Target": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "Stance": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-L": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "ABSA-R": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "FNC-1": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        },
+        "MultiNLI": {
+            "embed_fn": "embed_sequence",
+            "embed_kwargs": {
+                "embed_dim": 100
+            },
+            "extract_fn": "serial_lbirnn_stock",
+            "extract_kwargs": {
+                "num_layers": 1,
+                "cell_type": "tf.contrib.rnn.LSTMCell",
+                "cell_size": 100,
+                "output_keep_prob": 1.0,
+                "skip_connections": true,
+                "initial_state_fwd": null,
+                "initial_state_bwd": null
+            }
+        }
+    }
+}

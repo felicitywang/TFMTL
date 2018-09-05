@@ -136,4 +136,18 @@ python ../scripts/write_tfrecords_merged.py SSTb LMRD
 python ../scripts/write_tfrecords_merged.py Topic2 Target args_twoinputs_nopretrain.json
 
 
+### write finetune data, use SSTb_neg
+mkdir -p data/finetune/SSTb_neg/json
+cp -f data/test/SSTb_neg/json/data.json.gz data/finetune/SSTb_neg/json
+
+python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/
+
+
+### Glove usage
+
+# python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_init.json
+
+# python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_expand.json
+
 unset LC_ALL
+

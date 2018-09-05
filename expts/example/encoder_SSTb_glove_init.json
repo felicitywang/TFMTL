@@ -1,0 +1,26 @@
+{
+    "meanmax_relu_0.1_glove_init": {
+        "embedders_tied": false,
+        "extractors_tied": true,
+        "SSTb": {
+            "embed_fn": "init_pretrained",
+            "embed_kwargs": {
+                "embed_dim": 300,
+                "pretrained_path": "../../pretrained_word_embeddings/glove/glove.6B.300d.txt",
+                "trainable": true,
+                "reverse_vocab_path": "data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_glove.6B.100d_init/vocab_i2v.json",
+                "random_size_path": "data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_glove.6B.100d_init/random_size.txt"
+            },
+            "extract_fn": "dan",
+            "extract_kwargs": {
+                "word_dropout_rate": 0.1,
+                "reducer": "reduce_over_time",
+                "apply_activation": true,
+                "activation_fns": [
+                    "tf.nn.relu"
+                ],
+                "num_layers": 1
+            }
+        }
+    }
+}

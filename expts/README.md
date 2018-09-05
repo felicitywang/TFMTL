@@ -39,7 +39,7 @@ For Python package requirements and other general info see `../../requirement.tx
     - `write_tfrecord_merged.py`: python script to generate merged vocabulary and write TFRecord data files for more than one datasets
     - `write_tfrecord_predict.py`: python script to generate the TFRecord file for the given json file of the unlabeled text to predict
     - `write_tfrecord_test.py`: python script to generate the TFRecord file for the given json file of the labeled text to test
-    - `write_tfrecord_init.py`: python script to generate the TFRecord file for the given json file of a dataset to fine-tune the model with based on the dataset the model was pre-trained on
+    - `write_tfrecord_finetune.py`: python script to generate the TFRecord file for the given json file of a dataset to fine-tune the model with based on the dataset the model was pre-trained on
     - `convert_TEXT_to_JSON.py`: python script to convert to text to predict from plain text to json format
     - `discriminative_driver.py`: driver script to run the MUTL model'
 
@@ -99,7 +99,6 @@ Relevant source files:
 
 * **Metadata**
     * `mode`: Either `train`, `test`, `predict`, or `finetune`
-    <!-- * `experiment_name`: A string for the name of the experiment -->
 * **Training Details**
     * `alphas`: A list of decimals that sums to approximately 1. Each index corresponds to a specific dataset
     * `class_sizes`: A list of integers that represent how many classes are in each task
@@ -125,10 +124,12 @@ Relevant source files:
     * `predict_dataset`: Path to data to predict/annotate
     * `predict_output_folder`: Folder to save predictions
 * **Finetune** - When fine-tuning:
-    * `checkpoint_dir_finetune`: Path to save new models in `finetune` mode.
+    * `checkpoint_dir_init`: Path to load the pre-trained model from.
 
 ### Optional Arguments
-<!-- TODO -->
+
+<!-- TODO categories -->
+* `experiment_name`: A string for the name of the experiment.
 
 
 
@@ -164,6 +165,9 @@ Use the trained model to evaluate on the test set.
 <!-- TODO other features? -->
 Use the trained model to predict unlabeled data. When writing TFRecord data for the unlabeled data to predict, remember to use the same vocabulary as the training data.
 
+- Relevant source code
+    - `expts/scripts/write_tfrecords_predict.py`
+
 - Make sure the data to predict is also in json format. Apart from the text field(s), every example should also have a field `id` to help you distinguish the predictions. An example script that does this is `expts/scripts/convert_TEXT_to_JSON.py`. Run `python convert_TEXT_to_JSON.py text_file_path json_file_path`. e.g., `python ../scripts/convert_TEXT_to_JSON.py data/pred/SSTb_neg.txt data/pred/SSTb_neg.json.gz`
 - Use `expts/scripts/write_tfrecords_predict.py` to write TFRecord data for it. Run `python write_tfrecords_predict.py dataset_args_path predict_json_path predict_tf_path vocab_dir`, e.g., `python ../scripts/write_tfrecords_predict.py args_SSTb.json data/pred/SSTb_neg.json.gz data/pred/SSTb_neg.tf data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
 - Run the driver script in `predict` mode to use the trained classifier to give predictions, e.g. run `./predict_SSTb_nopretrain.sh`.
@@ -174,6 +178,9 @@ Use the trained model to predict unlabeled data. When writing TFRecord data for 
 
 Apart from evaluating the classifier using the test set of the previous dataset, you can also write TFRecord files using its vocabulary for some other data you want to test the model with.
 
+- Relevant source code:
+    - `expts/scripts/write_tfrecords_test.py`
+
 - The input should always be in JSON format. The required fields are texts and labels.
 - To write the TFRecord files with the vocabulary of the training data the model has been trained with, run `python write_tfrecords_test.py args_test_json_path test_json_dir tfrecord_dir vocab_dir`, e.g., `python ../scripts/write_tfrecords_test.py args_SSTb.json data/test/SSTb_neg/json/ data/test/SSTb_neg/tf/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
 - Run the discriminative driver script in `test` mode they way in 2.2, changing `--dataset_path` to the path the extra test data is saved into. e.g., run `test_SSTb_neg_nopretrain.sh`
@@ -181,12 +188,52 @@ Apart from evaluating the classifier using the test set of the previous dataset,
 
 ### 2.5. Finetune the model
 
-<!-- TODO -->
+The `finetune` mode lets you use initialize with a trained model and fine-tune it with another dataset. Currently only supports the STL with all the parameters shared(embedding layer, extracting layer, MLPs, output layer, etc.). Thus the two datasets should have the same number of classes.
 
-<!-- - use the saved model trained with dataset A to initialize the model for dataset B
-- Note that currently this is limited to single dataset and all parameters; and as dataset A B use the same model, their class sizes, vocabulary and use the same dataset name(`args.dataset`)
-- For examples see `expts/init_test/` -->
+- Relevant ource code
+    - `expts/scripts/write_tfrecords_finetune.py`
+- Write TFRecord for the new dataset, using the same vocabulary of the previous one. `expts/scripts/write_tfrecord_finetune.py` does this. Usage: `python write_tfrecord_finetune.py dataset_name args_finetune_json_path finetune_json_dir vocab_dir`, e.g.
+    - `python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+    - This command would write TFRecord data for `SSTb_neg` using the vocabulary used to write TFRecord data for `SSTb`, and save the TFRecord data in `data/tf/SSTb_finetune`
+- Fine-tune the model with the new data with the `finetune` mode. You need to specify `checkpoint_dir_init`, which is the path where the pre-trained model is saved; and `checkpiont_dir`, which is the path whrer the fine-tuned model would be saved. e.g.,
+    - `finetune_SSTb_neg_init_SSTb.sh` shows how to use the model pre-trained with SSTb and fine-tune it with the SSTb_neg data;
+    - `test_finetune_SSTb_neg_init_SSTb.sh` shows how to use the fine-tuned model to test SSTb data
 
+
+
+## Using pre-trained word embeddings
+
+Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popular pre-trained word embeddings are supported in this library. Other formats of pre-trained word embeddings can also be easily used. To use a pre-trained word embedding file, one needs to first merge its vocabulary with the vocabulary generated solely from the training set of the dataset; then specify corresponding embedder and file paths in the encoder configuration file.
+
+- Relevant source code
+    - `pretrained_word_embeddings/*`
+    - `mtl/embedders/pretrained.py`
+
+### Steps
+<!--  TODO elmo -->
+0. Currently the supported pre-trained word embeddings are Glove, fasttext, word2vec, word2vec slim. See `pretrained_word_embeddings/README.md` for more information.
+1. Download pre-trained word embedding files using `pretrained_word_embeddings/download...`
+2. Write TFRecord data: specify `pretrained_file` and `expand_vocab` in the args file. e.g. See `args_oneinput_glove_expand.json`, `args_oneinput_glove_init.json`
+3. Write encoder configuration file:
+    - for `embed_fn`, use either `expand_pretrained` or `init_pretrained`
+        - `expand_pretrained`: expand training vocab with pre-trained file's vocabulary, new embeddings can be either trainable or not
+        - `init_pretrained`: initialize training vocab with pre-trained word embeddings, new embeddings always trainable
+    - for `embed_kwargs`:
+        - make sure `embed_dim` matches the dimension of the pre-trained embeddings' dimension
+        - specify `pretrained_path`, the path where the pre-trained word embedding file is saved
+        - `trainable`: whether to fine-tune the part of word embeddings loaded from the pre-trained file(for words that aren't in the pre-trained file's vocabulary, their embeddings would be randomly initialized and always fine-tuned)
+        - for `expand_pretrained`, no other argument is needed:
+        - for `init_pretrained`, further specify:
+            - `reverse_vocab_path`: file path of the vocabulary used, automatically written when writing TFRecord data; vocabulary would be reordered, spliting those from the training vocab and those from the pre-trained file
+            - `random_size_path`: file path of the number of words to be randomly initialized, automatically written when writing TFRecord data
+
+    - e.g.
+        - `expand_pretiraned
+            - Write TFRecord data with `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_expand.json`
+            - Train with `train_SSTb_glove_expand.py`
+        - `init_pretiraned
+            - Write TFRecord data with `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_init.json`
+            - Train with `train_SSTb_glove_init.py`
 
 ## Arguments to generate TFRecord files
 
