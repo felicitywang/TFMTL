@@ -228,10 +228,10 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
             - `random_size_path`: file path of the number of words to be randomly initialized, automatically written when writing TFRecord data
 
     - e.g.
-        - `expand_pretiraned
+        - `expand_pretiraned`
             - Write TFRecord data with `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_expand.json`
             - Train with `train_SSTb_glove_expand.py`
-        - `init_pretiraned
+        - `init_pretiraned`
             - Write TFRecord data with `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_init.json`
             - Train with `train_SSTb_glove_init.py`
 
