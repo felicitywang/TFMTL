@@ -41,7 +41,8 @@ from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
 from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
-                                ruder_tokenizer)
+                                ruder_tokenizer,
+                                split_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -172,6 +173,8 @@ Args:
       self._tokenizer = tweet_tokenizer_keep_handles.tokenize
     elif tokenizer_ == "ruder_tokenizer":
       self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
+    elif tokenizer_ == "split_tokenizer":
+      self._tokenizer = functools.partial(split_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % tokenizer_)
 
