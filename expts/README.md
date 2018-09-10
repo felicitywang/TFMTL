@@ -65,19 +65,19 @@ Run `./setup.sh` to setup the data.
 
 3. Write TFRecord files from the json file using different argument files (See `expts/example/setup.sh`.)
 
-    - relevant source files:
-        - `mtl/util/dataset.py`
-        - `expts/scripts/write_tfrecords_single.py`
-        - `expts/scripts/write_tfrecords_merged.py`
-    - example files:
-        - `expts/example/setup.sh`
-    - for a single dataset:
-        - Modify default args file `args_DATASET.json`(e.g. `args_SSTb.json`) or use another name (e.g. `args_oneinput_nopretrain.json`)
-        - Write TFRecord data with `python ../scripts/write_tfrecords_single.py DATASET [args_....json]`, e.g. `python ../scripts/write_tfrecords_single.py SSTb` or `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_nopretrain.json`
-    - for multiple datasets
-        - Modify default args file `args_merged.json` or use another name (e.g. `args_oneinput_nopretrain.json`)
-        - Write TFRecord data with `python ../scripts/write_tfrecords_merged.py DATASET_1 DATASET_2 ... [args_....json]`, e.g. `python ../scripts/write_tfrecords_merged.py SSTb LMRD` or `python ../scripts/write_tfrecords_merged.py SSTb LMRD args_oneinput_nopretrain.json`
-    - if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
+- relevant source files:
+    - `mtl/util/dataset.py`
+    - `expts/scripts/write_tfrecords_single.py`
+    - `expts/scripts/write_tfrecords_merged.py`
+- example files:
+    - `expts/example/setup.sh`
+- for a single dataset:
+    - Modify default args file `args_DATASET.json`(e.g. `args_SSTb.json`) or use another name (e.g. `args_oneinput_nopretrain.json`)
+    - Write TFRecord data with `python ../scripts/write_tfrecords_single.py DATASET [args_....json]`, e.g. `python ../scripts/write_tfrecords_single.py SSTb` or `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_nopretrain.json`
+- for multiple datasets
+    - Modify default args file `args_merged.json` or use another name (e.g. `args_oneinput_nopretrain.json`)
+    - Write TFRecord data with `python ../scripts/write_tfrecords_merged.py DATASET_1 DATASET_2 ... [args_....json]`, e.g. `python ../scripts/write_tfrecords_merged.py SSTb LMRD` or `python ../scripts/write_tfrecords_merged.py SSTb LMRD args_oneinput_nopretrain.json`
+- if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
 
 
 ## 2. Run Discriminative MULT
@@ -279,6 +279,5 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
 
 
 
-<!-- -# TODO pretrained word embeddings usage -->
 
-<!-- TODO pretrained  -->
+

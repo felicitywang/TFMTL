@@ -85,5 +85,3 @@ dataset = Dataset(
   predict_tf_path=predict_tf_path
 )
 
-# with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-#   f.write(str(dataset.vocab_size))
