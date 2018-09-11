@@ -15,13 +15,12 @@
 # limitations under the License.
 # =============================================================================
 
-import json
 import os
 import sys
 
 from mtl.util.dataset import merge_dict_write_tfrecord, \
   merge_pretrain_write_tfrecord
-from mtl.util.util import make_dir
+from mtl.util.util import make_dir, load_json
 
 
 def main(argv):
@@ -30,9 +29,7 @@ def main(argv):
     argv = argv[:-1]
   else:
     args_name = 'args_merged.json'
-
-  with open(args_name, 'rt') as file:
-    args = json.load(file)
+  args = load_json(args_name)
 
   tfrecord_dir = "data/tf/merged/"
   datasets = sorted(argv[1:])
@@ -54,7 +51,8 @@ def main(argv):
     "min_" + str(args['min_frequency']) + \
     "_max_" + str(args['max_frequency']) + \
     "_vocab_" + str(args['max_vocab_size']) + \
-    "_doc_" + str(args['max_document_length'])
+    "_doc_" + str(args['max_document_length']) + \
+    "_tok_" + args['tokenizer'].replace('_tokenizer', '')
 
   if 'pretrained_file' not in args or not args[
     'pretrained_file']:

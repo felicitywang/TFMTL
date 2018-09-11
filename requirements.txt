@@ -12,3 +12,4 @@ pytest-runner
 sklearn
 scipy
 gensim
+json_minify

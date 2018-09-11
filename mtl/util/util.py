@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 import os
 import threading
 from datetime import datetime
@@ -24,6 +25,7 @@ from datetime import timedelta
 
 import numpy as np
 import tensorflow as tf
+from json_minify import json_minify
 from tqdm import tqdm
 
 
@@ -194,6 +196,14 @@ def make_dir(dir):
     os.makedirs(dir)
 
 
+def load_json(json_file_name):
+  """Load json file with C-style comments"""
+  with open(json_file_name) as file:
+    json_with_comments = file.read()
+    json_minified = json_minify(json_with_comments)
+    return json.loads(json_minified)
+
+
 if __name__ == "__main__":
   """Test bag of words"""
   # words = [1, 2, 3, 4, 4, 5]
@@ -206,8 +216,10 @@ if __name__ == "__main__":
   """Test Tf-idf"""
   all_documents = ['a b b c c c EOS', 'd e f g EOS', 'a b c d e f g h EOS']
 
+
   def tokenize(doc):
     return doc.lower().split(" ")
+
 
   # in Scikit-Learn
   from sklearn.feature_extraction.text import TfidfVectorizer

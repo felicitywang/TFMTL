@@ -23,63 +23,65 @@ import sys
 from docutils.io import InputError
 
 from mtl.util.dataset import Dataset
-
-if len(sys.argv) != 5:
-  raise InputError(
-    "Usage: python write_tfrecords_test.py args_test_json_path "
-    "test_json_dir tfrecord_dir vocab_dir")
-
-# TODO REFACTOR!!!
+from mtl.util.util import load_json
 
 
-args_test_path = sys.argv[1]
-json_dir = sys.argv[2]
-tfrecord_dir = sys.argv[3]
-vocab_dir = sys.argv[4]
+def main():
+  if len(sys.argv) != 5:
+    raise InputError(
+      "Usage: python write_tfrecords_test.py args_test_json_path "
+      "test_json_dir tfrecord_dir vocab_dir")
 
-# find the used arguments
-if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
-  args_path = os.path.join(os.path.abspath(vocab_dir), 'args.json')
-else:
-  args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0], 'args.json')
+  # TODO REFACTOR!!!
 
-with open(args_path) as file:
-  args_used = json.load(file)
+  args_test_path = sys.argv[1]
+  json_dir = sys.argv[2]
+  tfrecord_dir = sys.argv[3]
+  vocab_dir = sys.argv[4]
 
-with open(args_test_path)as file:
-  args = json.load(file)
+  # find the used arguments
+  if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
+    args_path = os.path.join(os.path.abspath(vocab_dir), 'args.json')
+  else:
+    args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0], 'args.json')
 
-dataset = Dataset(
+  with open(args_path) as file:
+    args_used = json.load(file)
 
-  # keep consistent with the training datasets
-  max_document_length=args_used['max_document_length'],
-  max_vocab_size=args_used['max_vocab_size_allowed'],
-  min_frequency=args_used['min_frequency'],
-  max_frequency=args_used['max_frequency'],
-  padding=args_used.get('padding', args['padding']),
-  write_bow=args_used.get('write_bow', args['write_bow']),
-  write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
-  tokenizer_=args_used.get('tokenizer', args['tokenizer']),
-  preproc=args_used.get('preproc', args.get('preproc', True)),
-  vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
+  args = load_json(args_path)
 
-  # may be different
-  text_field_names=args['text_field_names'],
-  label_field_name=args['label_field_name'],
+  dataset = Dataset(
 
-  # test split only
-  train_ratio=0.0,
-  valid_ratio=0.0,
+    # keep consistent with the training datasets
+    max_document_length=args_used['max_document_length'],
+    max_vocab_size=args_used['max_vocab_size_allowed'],
+    min_frequency=args_used['min_frequency'],
+    max_frequency=args_used['max_frequency'],
+    padding=args_used.get('padding', args['padding']),
+    write_bow=args_used.get('write_bow', args['write_bow']),
+    write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
+    tokenizer_=args_used.get('tokenizer', args['tokenizer']),
+    preproc=args_used.get('preproc', args.get('preproc', True)),
+    vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
 
-  # default in test mode
-  json_dir=json_dir,
-  tfrecord_dir=tfrecord_dir,
-  vocab_dir=vocab_dir,
-  generate_basic_vocab=False,
-  vocab_given=True,
-  vocab_name='vocab_v2i.json',
-  generate_tf_record=True
-)
+    # may be different
+    text_field_names=args['text_field_names'],
+    label_field_name=args['label_field_name'],
 
-# with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-#   f.write(str(dataset.vocab_size))
+    # test split only
+    train_ratio=0.0,
+    valid_ratio=0.0,
+
+    # default in test mode
+    json_dir=json_dir,
+    tfrecord_dir=tfrecord_dir,
+    vocab_dir=vocab_dir,
+    generate_basic_vocab=False,
+    vocab_given=True,
+    vocab_name='vocab_v2i.json',
+    generate_tf_record=True
+  )
+
+
+if __name__ == '__main__':
+  main(sys.argv)

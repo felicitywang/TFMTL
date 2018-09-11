@@ -65,8 +65,8 @@ tfrecord_dir_name = \
   "min_" + str(args['min_frequency']) + \
   "_max_" + str(args['max_frequency']) + \
   "_vocab_" + str(args['max_vocab_size']) + \
-  "_doc_" + str(args['max_document_length'])
-tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
+  "_doc_" + str(args['max_document_length']) + \
+  "_tok_" + args['tokenizer'].replace('_tokenizer', '')
 
 dataset = Dataset(
 

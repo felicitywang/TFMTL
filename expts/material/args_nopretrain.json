@@ -1,7 +1,8 @@
 {
     "max_document_length": -1,
     "max_vocab_size": -1,
-    "min_frequency": 1,
+    "min_frequency": 0,
+    // "min_frequency": 0,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
@@ -15,5 +16,6 @@
     "write_bow": false,
     "write_tfidf": false,
     "preproc": true,
-    "tokenizer": "tweet_tokenizer"
+    "tokenizer": "split_tokenizer"
+    // "tokenizer": "tweet_tokenizer"
 }

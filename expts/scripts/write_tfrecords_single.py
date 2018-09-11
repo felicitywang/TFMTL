@@ -21,11 +21,11 @@ Usage: python write_tfrecords_single.py DATASET [config file name]
 If config name not given, this would automatically search for args_DATASET.json
 """
 
-import json
 import os
 import sys
 
 from mtl.util.dataset import Dataset
+from mtl.util.util import load_json
 
 
 def main(argv):
@@ -34,8 +34,7 @@ def main(argv):
   else:
     args_name = argv[2]
 
-  with open(args_name, 'rt') as file:
-    args = json.load(file)
+  args = load_json(args_name)
 
   json_dir = "data/json/" + argv[1]
 
@@ -53,7 +52,10 @@ def main(argv):
     "min_" + str(args['min_frequency']) + \
     "_max_" + str(args['max_frequency']) + \
     "_vocab_" + str(args['max_vocab_size']) + \
-    "_doc_" + str(args['max_document_length'])
+    "_doc_" + str(args['max_document_length']) + \
+    "_tok_" + args['tokenizer'].replace('_tokenizer', '')
+
+  print(tfrecord_dir_name)
 
   if 'pretrained_file' not in args or not args[
     'pretrained_file']:

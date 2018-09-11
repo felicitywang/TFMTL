@@ -19,7 +19,7 @@ For Python package requirements and other general info see `../../requirement.tx
             - `data.json.gz`: json data that should include text field and label field(if labeled)
             - `index.json.gz`(optional): train/dev/test splits
         - `data/tf/`: TFRecord files
-                - `data/tf/merged/DATASETA_DATASETB_.../min_(min_freq)_max_(max_freq)_vocab_(max_vocab_size)_doc_(max_doc_len)/`: generated data using particular arguments, e.g. `data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000_doc_-1/`
+                - `data/tf/merged/DATASETA_DATASETB_.../min_(min_freq)_max_(max_freq)_vocab_(max_vocab_size)_doc_(max_doc_len)_tok_(tokenizer_name)/`: generated data using particular arguments, e.g. `data/tf/merged/LMRD_SSTb/min_0_max_-1_vocab_10000_doc_-1_tok_tweet/`
                     - `vocab_freq.json`: frequency of all the words that appeared in the training data(merged vocabulary)
                     - `vocab_v2i.json`: mapping from word to id of the used vocabulary(only words appeared > min_frequency and < max_frequency)
                     - `vocab_i2v.json`: mapping from id to word(sorted by frequency) of the used vocabulary
@@ -27,7 +27,7 @@ For Python package requirements and other general info see `../../requirement.tx
                         - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                         - `unlabeled.tf`: unlabeled TFRecord file(if there is unlabeled data)
                         - `args.json`: arguments used to generate the TFRecord files
-                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)_doc_(max_doc_len)`: generated data for the given min/max vocab frequency and limited maximum vocabulary size for the single dataset, e.g., `data/tf/single/LMRD/min_0_max_-1_vocab_10000_doc_-1/`
+                - `data/tf/single/DATASET/min_(min_freq)_max_(max_freq)_doc_(max_doc_len)_tok_(tokenizer_name)`: generated data for the given min/max vocab frequency and limited maximum vocabulary size for the single dataset, e.g., `data/tf/single/LMRD/min_0_max_-1_vocab_10000_doc_-1_tok_tweet/`
                     - `train.tf`, `valid.tf`, `test.tf`: train/valid/test TFRecord files
                     - `unlabeled.tf`: unlabeled TFRecord files(if there is unlabeled data)
                     - `args.json`: arguments used to generate the TFRecord files
@@ -169,7 +169,7 @@ Use the trained model to predict unlabeled data. When writing TFRecord data for 
     - `expts/scripts/write_tfrecords_predict.py`
 
 - Make sure the data to predict is also in json format. Apart from the text field(s), every example should also have a field `id` to help you distinguish the predictions. An example script that does this is `expts/scripts/convert_TEXT_to_JSON.py`. Run `python convert_TEXT_to_JSON.py text_file_path json_file_path`. e.g., `python ../scripts/convert_TEXT_to_JSON.py data/pred/SSTb_neg.txt data/pred/SSTb_neg.json.gz`
-- Use `expts/scripts/write_tfrecords_predict.py` to write TFRecord data for it. Run `python write_tfrecords_predict.py dataset_args_path predict_json_path predict_tf_path vocab_dir`, e.g., `python ../scripts/write_tfrecords_predict.py args_SSTb.json data/pred/SSTb_neg.json.gz data/pred/SSTb_neg.tf data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+- Use `expts/scripts/write_tfrecords_predict.py` to write TFRecord data for it. Run `python write_tfrecords_predict.py dataset_args_path predict_json_path predict_tf_path vocab_dir`, e.g., `python ../scripts/write_tfrecords_predict.py args_SSTb.json data/pred/SSTb_neg.json.gz data/pred/SSTb_neg.tf data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_tweet/`
 - Run the driver script in `predict` mode to use the trained classifier to give predictions, e.g. run `./predict_SSTb_nopretrain.sh`.
 - Note that in the commands' arguments in the predict mode, `--datasets DATASET` means you're using the DATASET part of the trained model(private layers + output layer + the parameters that perform the best on the DATASET's dev set), thus the class sizes of the dataset to predict should be the same as DATASET, and the real TFRecord dataset name and data you predict using the saved model are passed in with `--predict_dataset` and `--predict_tfrecord_path`
 - Outputs would be in both tsv and json formats and saved to `--predict_output_folder` as `PREDICT_DATASET.tsv` and `PREDICT_DATASET.json`. For each example, the output contains its id, predicted label and confidence scores between 0 and 1(softmax values of the output layer) for each label. If the task is binary classification, then there would only be confidence scores for the positive label(label "1"). e.g. Check the outputs `data/pred/SSTb_neg.pred/SSTb.json` and `data/pred/SSTb_neg.pred/SSTb.tsv`.
@@ -182,7 +182,7 @@ Apart from evaluating the classifier using the test set of the previous dataset,
     - `expts/scripts/write_tfrecords_test.py`
 
 - The input should always be in JSON format. The required fields are texts and labels.
-- To write the TFRecord files with the vocabulary of the training data the model has been trained with, run `python write_tfrecords_test.py args_test_json_path test_json_dir tfrecord_dir vocab_dir`, e.g., `python ../scripts/write_tfrecords_test.py args_SSTb.json data/test/SSTb_neg/json/ data/test/SSTb_neg/tf/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+- To write the TFRecord files with the vocabulary of the training data the model has been trained with, run `python write_tfrecords_test.py args_test_json_path test_json_dir tfrecord_dir vocab_dir`, e.g., `python ../scripts/write_tfrecords_test.py args_SSTb.json data/test/SSTb_neg/json/ data/test/SSTb_neg/tf/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_tweet/`
 - Run the discriminative driver script in `test` mode they way in 2.2, changing `--dataset_path` to the path the extra test data is saved into. e.g., run `test_SSTb_neg_nopretrain.sh`
 - Similar to the `predict` mode, when testing some extra dataset other than the datasets used to train the model(e.g. testing `SSTb_neg` with the model trained with `SSTb` and `LMRD`), the `--datasets DATASET` argument refers to which part of the trained model to use; the real data are passed with `--dataset_paths`(e.g. in this example, the arguments should be `--dataset SSTb --dataset_paths path_to_SSTb_neg_data`, meaning you're using the SSTb' part of the model to evaluate the new SSTb_neg test data)
 
@@ -193,7 +193,7 @@ The `finetune` mode lets you use initialize with a trained model and fine-tune i
 - Relevant ource code
     - `expts/scripts/write_tfrecords_finetune.py`
 - Write TFRecord for the new dataset, using the same vocabulary of the previous one. `expts/scripts/write_tfrecord_finetune.py` does this. Usage: `python write_tfrecord_finetune.py dataset_name args_finetune_json_path finetune_json_dir vocab_dir`, e.g.
-    - `python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1/`
+    - `python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_tweet/`
     - This command would write TFRecord data for `SSTb_neg` using the vocabulary used to write TFRecord data for `SSTb`, and save the TFRecord data in `data/tf/SSTb_finetune`
 - Fine-tune the model with the new data with the `finetune` mode. You need to specify `checkpoint_dir_init`, which is the path where the pre-trained model is saved; and `checkpiont_dir`, which is the path whrer the fine-tuned model would be saved. e.g.,
     - `finetune_SSTb_neg_init_SSTb.sh` shows how to use the model pre-trained with SSTb and fine-tune it with the SSTb_neg data;
