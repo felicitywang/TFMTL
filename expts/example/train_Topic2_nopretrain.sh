@@ -5,7 +5,7 @@ python ../scripts/discriminative_driver.py \
     --experiment_name RUDER_NAACL_18 \
     --datasets Topic2 \
     --class_sizes 2 \
-    --dataset_paths data/tf/single/Topic2/min_1_max_-1_vocab_-1_doc_-1/ \
+    --dataset_paths data/tf/single/Topic2/min_1_max_-1_vocab_-1_doc_-1_tok_ruder/ \
     --topics_path data/json/Topic2/data.json.gz \
     --topic_field_name seq1 \
     --encoder_config_file encoders.json \

@@ -5,8 +5,8 @@ python ../scripts/discriminative_driver.py \
        --checkpoint_dir ./data/ckpt/LMRD_SSTb_nopretrain_meanmax_relu_0.1/ \
        --datasets LMRD SSTb \
        --class_sizes 2 5 \
-       --dataset_paths data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/LMRD/ data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/SSTb/ \
-       --topics_path data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/LMRD/data.json.gz data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000/SSTb/data.json.gz \
+       --dataset_paths data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000_tok_tweet/LMRD/ data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000_tok_tweet/SSTb/ \
+       --topics_path data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000_tok_tweet/LMRD/data.json.gz data/tf/merged/LMRD_SSTb/min_1_max_-1_vocab_100000_doc_1000_tok_tweet/SSTb/data.json.gz \
        --topic_field_name text \
        --encoder_config_file encoders.json \
        --architecture meanmax_relu_0.1_nopretrain \

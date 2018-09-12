@@ -5,8 +5,8 @@ python ../scripts/discriminative_driver.py \
        --checkpoint_dir ./data/ckpt/Target_Topic2_nopretrain_meanmax_relu_0.1/ \
        --datasets Target Topic2 \
        --class_sizes 3 2 \
-       --dataset_paths data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1/Target/ data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1/Topic2/ \
-       --topics_path data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1/Target/data.json.gz data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1/Topic2/data.json.gz \
+       --dataset_paths data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1_tok_ruder/Target/ data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1_tok_ruder/Topic2/ \
+       --topics_path data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1_tok_ruder/Target/data.json.gz data/tf/merged/Target_Topic2/min_1_max_-1_vocab_-1_doc_-1_tok_ruder/Topic2/data.json.gz \
        --topic_field_name text \
        --encoder_config_file encoders.json \
        --architecture meanmax_relu_0.1_nopretrain \
