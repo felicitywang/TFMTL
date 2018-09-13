@@ -184,7 +184,7 @@ Args:
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
     if not generate_basic_vocab and not generate_tf_record \
-       and vocab_given and vocab_name == 'vocab_freq.json':
+      and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
       if max_document_length == -1:
@@ -450,6 +450,10 @@ Args:
         'write_bow': self._write_bow,
         'write_tfidf': self._write_tfidf
       }
+      if self._random_size_path:
+        self._args['random_size_path'] = self._random_size_path
+      if self._reverse_vocab_path:
+        self._args['reverse_vocab_path'] = self._reverse_vocab_path
       print('Arguments for the dataset:')
       for k, v in self._args.items():
         print(k, ':', v)
@@ -708,13 +712,15 @@ Args:
 
           # save the new vocab to the disk for future use
           make_dir(self._tfrecord_dir)
-          with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
-                           mode='w', encoding='utf-8') as file:
+          self._reverse_vocab_path = os.path.join(self._tfrecord_dir,
+                                                  "vocab_i2v.json")
+          with codecs.open(self._reverse_vocab_path, mode='w',
+                           encoding='utf-8') as file:
             json.dump(self._vocab_v2i_dict, file,
                       ensure_ascii=False, indent=4)
-
-          with open(os.path.join(self._tfrecord_dir, "random_size.txt"),
-                    "w") as file:
+          self._random_size_path = os.path.join(self._tfrecord_dir,
+                                                "random_size.txt")
+          with open(self._random_size_path, "w") as file:
             file.write(str(random_size))
 
       # build vocabulary processor using the loaded mapping

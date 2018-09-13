@@ -140,7 +140,7 @@ python ../scripts/write_tfrecords_merged.py Topic2 Target args_twoinputs_nopretr
 mkdir -p data/finetune/SSTb_neg/json
 cp -f data/test/SSTb_neg/json/data.json.gz data/finetune/SSTb_neg/json
 
-python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/
+python ../scripts/write_tfrecords_finetune.py SSTb_finetune args_SSTb.json data/finetune/SSTb_neg/json/ data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_tweet/
 
 
 ### Glove usage

@@ -24,28 +24,23 @@ import os
 
 import tensorflow as tf
 
-from mtl.util.common import listify
+from mtl.embedders.pretrained import init_pretrained
 from mtl.util.embedder_factory import create_embedders
 from mtl.util.extractor_factory import create_extractors
 from mtl.util.hparams import dict2func
 
 
 def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
-  if type(inputs) != type(lengths):
-    raise TypeError("inputs and lengths must be both Tensors or \
-                     both lists of Tensors")
-
-  # Cast inputs and lengths to lists
-  inputs = listify(inputs)
-  lengths = listify(lengths)
-
-  embs = list()
-  for i in inputs:
-    emb = embed_fn(i)
-    embs.append(emb)
+  if isinstance(inputs, (list, tuple)):
+    extr = list()
+    for i in inputs:
+      emb = embed_fn(i)
+      extr += [emb]
+  else:
+    extr = embed_fn(inputs)
 
   # All extra arguments (kwargs) get passed into the extractor function
-  enc = extract_fn(embs, lengths, **kwargs)
+  enc = extract_fn(extr, lengths, **kwargs)
   return enc
 
 
@@ -84,6 +79,8 @@ def create_encoders(embedders, extractors, fully_shared, args):
 
 
 def build_encoders(args):
+  encoders = dict()
+
   # Read in architectures from config file
   with open(args.encoder_config_file, 'r') as f:
     architectures = json.load(f)
@@ -99,11 +96,8 @@ def build_encoders(args):
   embed_kwargs = {ds: architectures[arch][ds]['embed_kwargs']
                   for ds in architectures[arch]
                   if type(architectures[arch][ds]) is dict}
-  # Put 'vocab_size' into embedder_kwargs for all datasets
-  with open(os.path.join(args.dataset_paths[0], 'args.json')) as file:
-    vocab_size = int(json.load(file)['vocab_size'])
-  for ds in embed_kwargs:
-    embed_kwargs[ds]['vocab_size'] = vocab_size
+
+  embed_kwargs = get_extra_embed_kwargs(args, embed_fns, embed_kwargs)
 
   extract_fns = {ds: architectures[arch][ds]['extract_fn']
                  for ds in architectures[arch]
@@ -116,8 +110,6 @@ def build_encoders(args):
   tie_extractors = architectures[arch]['extractors_tied']
   fully_shared = tie_embedders and tie_extractors
 
-  # build word embedding lookup Variable if to load pre-trained word embeddings
-
   embedders = create_embedders(embed_fns,
                                tie_embedders,
                                args=args,
@@ -129,3 +121,22 @@ def build_encoders(args):
   encoders = create_encoders(embedders, extractors, fully_shared, args)
 
   return encoders
+
+
+def get_extra_embed_kwargs(args, embed_fns, embed_kwargs):
+  # Put 'vocab_size' into embedder_kwargs for all datasets
+  with open(os.path.join(args.dataset_paths[0], 'args.json')) as file:
+    vocab_size = int(json.load(file)['vocab_size'])
+
+  for ds in embed_kwargs:
+    embed_kwargs[ds]['vocab_size'] = vocab_size
+
+  # for embedder init_pretrained read reverse_vocab_path and random_size_path
+  for ds, dataset_path in zip(args.datasets, args.dataset_paths):
+    if embed_fns[ds] == init_pretrained:
+      with open(os.path.join(dataset_path, 'args.json')) as file:
+        tmp = json.load(file)
+        embed_kwargs[ds]['random_size_path'] = tmp['random_size_path']
+        embed_kwargs[ds]['reverse_vocab_path'] = tmp['reverse_vocab_path']
+
+  return embed_kwargs

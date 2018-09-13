@@ -55,6 +55,7 @@ def create_embedders(embed_fns,
   else:
     # all datasets use different embedders
     # embedders may be the same function but parameterized differently
+
     for ds in args.datasets:
       embedder = tf.make_template('embedder_{}'.format(ds),
                                   embed_fns[ds],

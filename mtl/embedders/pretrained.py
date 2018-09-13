@@ -160,16 +160,3 @@ def init_pretrained(x, vocab_size, embed_dim, pretrained_path,
 
   return tf.nn.embedding_lookup(word_embedding,
                                 x)
-
-
-# def init_glove(x, vocab_size, embed_dim, glove_path,
-#                reverse_vocab_path,
-#                random_size_path, trainable):
-#   return init_pretrained(x, vocab_size, embed_dim, glove_path,
-#                          reverse_vocab_path,
-#                          random_size_path, trainable)
-#
-#
-# def expand_glove(x, vocab_size, embed_dim, glove_path, trainable):
-#   return expand_pretrained(x, vocab_size, embed_dim, glove_path,
-#                            trainable)
