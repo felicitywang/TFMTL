@@ -222,10 +222,7 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
         - make sure `embed_dim` matches the dimension of the pre-trained embeddings' dimension
         - specify `pretrained_path`, the path where the pre-trained word embedding file is saved
         - `trainable`: whether to fine-tune the part of word embeddings loaded from the pre-trained file(for words that aren't in the pre-trained file's vocabulary, their embeddings would be randomly initialized and always fine-tuned)
-        - for `expand_pretrained`, no other argument is needed:
-        - for `init_pretrained`, further specify:
-            - `reverse_vocab_path`: file path of the vocabulary used, automatically written when writing TFRecord data; vocabulary would be reordered, spliting those from the training vocab and those from the pre-trained file
-            - `random_size_path`: file path of the number of words to be randomly initialized, automatically written when writing TFRecord data
+
     - e.g.
         - `expand_pretiraned`
             - Write TFRecord data with `python ../scripts/write_tfrecords_single.py SSTb args_oneinput_glove_expand.json`
