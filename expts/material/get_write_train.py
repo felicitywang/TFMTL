@@ -18,7 +18,7 @@
 Usage:
     1. Change arguments in write_train.json(or other name)
     2. Run get_write_train.py write_train.json to generate shell scripts
-    3. (Optional) Use split_qsub.sh to qsub and run in parallel
+    3. Directly run the generated commands or use split_qsub.sh to qsub and run in parallel
 """
 import sys
 from itertools import product

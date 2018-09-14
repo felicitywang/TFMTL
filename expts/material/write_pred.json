@@ -16,24 +16,24 @@
         //  "_turk_90_50",
         //  "_turk_80_50",
         //  "_turk_70_50",
-        "_turk_60_50"
+        "_turk_60_50",
         //  "_turk_50_50",
-        //  "_syn_p1000r1000",
+        "_syn_p1000r1000"
         //  "_syn_p11000r1100"
     ],
     // Which args.json file to use
-    "args_file_paths": [
-        // "args_nopretrain_split_min_0.json",
-        "args_nopretrain_tweet_min_1.json"
-        // "args_nopretrain_tweet_min_0.json",
-        // "args_glove_expand.json"
-    ],
+    // only 'text_field_name' and 'label_field_name' are used
+    // other args should be from the used args
+    "args_file_path":
+    // "args_nopretrain.json",
+    "args_pretrained.json",
     // Which args to use(according to previous args file)
-    "args_paths": [
-        "min_1_max_-1_vocab_-1_doc_-1_tok_tweet"
-        //"min_0_max_-1_vocab_-1_doc_-1_tok_tweet",
-        //  "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_expand",
-    ],
+    "args_path":
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_tweet"
+    // "min_0_max_-1_vocab_-1_doc_-1_tok_split"
+    "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_init",
+    //"min_0_max_-1_vocab_-1_doc_-1_tok_tweet",
+    //  "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_expand",
     // Which subdirectories to predict
     "subdirs": {
         "1A": [

@@ -38,38 +38,42 @@ where `data.json.gz` is saved)
 vocab_dir: directory of the vocabulary of the data used to train the model,
 the same vocabulary should be used so that the same word would have the same id
 """
-if len(sys.argv) != 5:
+
+
+def main():
+  if len(sys.argv) != 5:
     raise InputError(
-        "Usage: python write_tfrecords_finetune.py dataset_name "
-        "args_finetune_json_path finetune_json_dir vocab_dir")
+      "Usage: python write_tfrecords_finetune.py dataset_name "
+      "args_finetune_json_path finetune_json_dir vocab_dir")
 
-dataset_name = sys.argv[1]
-args_finetune_path = sys.argv[2]
-json_dir = sys.argv[3]
-vocab_dir = sys.argv[4]
+  dataset_name = sys.argv[1]
+  args_finetune_path = sys.argv[2]
+  json_dir = sys.argv[3]
+  vocab_dir = sys.argv[4]
 
-# find the used arguments
-if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
+  # find the used arguments
+  if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
     args_path = os.path.join(os.path.abspath(vocab_dir), 'args.json')
-else:
-    args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0], 'args.json')
+  else:
+    args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0],
+                             'args.json')
 
-with open(args_path) as file:
+  with open(args_path) as file:
     args_used = json.load(file)
 
-with open(args_finetune_path)as file:
+  with open(args_finetune_path)as file:
     args = json.load(file)
 
-tfrecord_dir = os.path.join("data/tf/single/", dataset_name)
-tfrecord_dir_name = \
+  tfrecord_dir = os.path.join("data/tf/single/", dataset_name)
+  tfrecord_dir_name = \
     "min_" + str(args['min_frequency']) + \
     "_max_" + str(args['max_frequency']) + \
     "_vocab_" + str(args['max_vocab_size']) + \
     "_doc_" + str(args['max_document_length']) + \
     "_tok_" + args['tokenizer'].replace('_tokenizer', '')
-tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
+  tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
 
-dataset = Dataset(
+  dataset = Dataset(
 
     # keep consistent with the training datasets
     max_document_length=args_used['max_document_length'],
@@ -98,7 +102,8 @@ dataset = Dataset(
     vocab_given=True,
     vocab_name='vocab_v2i.json',
     generate_tf_record=True
-)
+  )
 
-# with open(tfrecord_dir + 'vocab_size.txt', 'w') as f:
-#   f.write(str(dataset.vocab_size))
+
+if __name__ == '__main__':
+  main()

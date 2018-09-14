@@ -90,7 +90,7 @@ def expand_pretrained(x, vocab_size, embed_dim, pretrained_path, trainable):
 
 def init_pretrained(x, vocab_size, embed_dim, pretrained_path,
                     reverse_vocab_path,
-                    random_size_path, trainable):
+                    random_size, trainable):
   """Initialize training vocab with pretrained's pre-trained word embeddings,
   always trainable
 
@@ -102,12 +102,10 @@ def init_pretrained(x, vocab_size, embed_dim, pretrained_path,
   all the dictionary(extra train + pretrained))
   :param trainable: whether to fine-tune the part of word embeddings
   initialized from pretrained
-  :param random_size_path: path to the size of word embeddings to be
+  :param random_size: size of word embeddings to be
   randomly initialized(those not in pretrained)
   :return: embed lookup layer
   """
-  with codecs.open(random_size_path) as file:
-    random_size = int(file.readline().split()[0])
 
   tf.logging.info('Randomly initializing word embeddings for %s words not '
                   'in pretrained...' % random_size)

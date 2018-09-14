@@ -16,12 +16,12 @@
 """Generate shell scripts to write TFRecord files for files to predict
 
 Example bash script:
-python ../scripts/write_tfrecords_predict.py args_nopretrain.json data/json/predict/doc/1A/DEV/t6/mt-4.asr-s5/data.json.gz data/tf/predict/doc/1A/DEV/t6/mt-4.asr-s5/GOV/min_1_max_-1_vocab_-1_doc_1000/predict.tf data/tf/single/GOV_1000/min_1_max_-1_vocab_-1_doc_1000/
+python ../scripts/write_tfrecords_predict.py args_nopretrain.json data/pred/json/doc/1A/DEV/t6/mt-4.asr-s5/data.json.gz data/pred/tf/doc/1A/DEV/t6/mt-4.asr-s5/GOV/min_1_max_-1_vocab_-1_doc_1000/pred.tf data/tf/single/GOV_1000/min_1_max_-1_vocab_-1_doc_1000/
 
 Usage:
     1. Change arguments in write_pred.json(or other name)
     2. Run get_write_pred.py write_pred.json to generate shell scripts
-    3. (Optional) Use split_qsub.sh to qsub and run in parallel
+    3. Directly run the generated commands or use split_qsub.sh to qsub and run in parallel
 """
 
 import os
@@ -35,13 +35,13 @@ import sys
 
 
 def main():
+    from json_minify import json_minify
+    # print(json_minify(open(sys.argv[1]).read())[410:430])
     args = load_json(sys.argv[1])
     eval_dirs = args['eval_dirs']
     text_types = args['text_types']
     subdirs = args['subdirs']
     dataset_suffixes = args['dataset_suffixes']
-    args_file_paths = args['args_file_paths']
-    args_paths = args['args_paths']
     root_dir = args['root_dir']
     python_path = args['python_path']
     code_path = args['code_path']
@@ -59,33 +59,29 @@ def main():
         else:
             all_dirs[directory] = subdirs[lang]
 
-    print(all_dirs)
-
-    for basedir, domain, dataset_suffix, args_file_path, args_path in product(
-            all_dirs, domains, dataset_suffixes, args_file_paths, args_paths):
+    for basedir, domain, dataset_suffix in product(
+            all_dirs, domains, dataset_suffixes):
         dataset_path = domain + dataset_suffix
         for subdir in all_dirs[basedir]:
             num += 1
             directory = os.path.join(basedir, subdir)
 
-            json_path = os.path.join(root_dir, 'data/json/predict', directory,
+            json_path = os.path.join(root_dir, 'data/pred/json', directory,
                                      'data.json.gz')
-            tf_path = os.path.join(root_dir, 'data/tf/predict/', directory,
-                                   dataset_path, args_path, 'predict.tf')
+            tf_path = os.path.join(root_dir, 'data/pred/tf/', directory,
+                                   dataset_path, args['args_path'], 'pred.tf')
             arch_path = os.path.join(root_dir, 'data/tf/single',
-                                     dataset_path, args_path)
-
-            print(arch_path)
+                                     dataset_path, args['args_path'])
 
             if os.path.exists(tf_path):
-                print('{} already exists! Skipping...')
+                # print('{} already exists! Skipping...')
                 continue
 
             command = 'cd {}\n{} {} {} {} {} {}'.format(
                 root_dir,
                 python_path,
                 code_path,
-                os.path.join(root_dir, args_file_path),
+                os.path.join(root_dir, args['args_file_path']),
                 json_path,
                 tf_path,
                 arch_path

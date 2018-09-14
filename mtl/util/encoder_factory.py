@@ -136,7 +136,7 @@ def get_extra_embed_kwargs(args, embed_fns, embed_kwargs):
     if embed_fns[ds] == init_pretrained:
       with open(os.path.join(dataset_path, 'args.json')) as file:
         tmp = json.load(file)
-        embed_kwargs[ds]['random_size_path'] = tmp['random_size_path']
+        embed_kwargs[ds]['random_size'] = int(tmp['random_size'])
         embed_kwargs[ds]['reverse_vocab_path'] = tmp['reverse_vocab_path']
 
   return embed_kwargs

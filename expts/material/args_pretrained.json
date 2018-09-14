@@ -16,7 +16,7 @@
     "write_bow": false,
     "write_tfidf": false,
     "preproc": true,
-    "tokenizer": "split_tokenizer",
+    "tokenizer": "tweet_tokenizer",
     // "tokenizer": "tweet_tokenizer",
     "pretrained_file": "../../pretrained_word_embeddings/glove/glove.6B.300d.txt",
     //    "pretrained_file": "../../pretrained_word_embeddings/fasttext/wiki-news-300d-1M.vec.zip",

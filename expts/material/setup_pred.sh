@@ -9,16 +9,24 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific lang governing permissions and
+# See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
 
-#!/bin/sh
 
-# e.g. python get_write.py json_file_path tmpwrite
+#!/usr/bin/env sh
 
-python $1 $2 > $3.sh
+# json format evaluation sets would be saved in data/pred/json
 
-split -l 2 $3.sh $3split
+# data to pred
+mkdir -p data/pred/json/
 
-for file in $3split*; do qsub -e e -l mem_free=10G,ram_free=10G -M cnfxwang@gmail.com $file; done
+# document level
+cp /export/a05/mahsay/domain/data/json/doc -fr data/pred/json
+
+# sentence level
+cp /export/a05/mahsay/domain/data/json/sent -fr data/pred/json
+
+
+cp /export/a05/mahsay/domain/data/json/doc/1B/EVAL3/tt20.bop/concat/data.json.gz data/pred/json/doc/1B/EVAL3/tt20.bop/concat
+

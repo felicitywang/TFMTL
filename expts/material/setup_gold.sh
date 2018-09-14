@@ -81,5 +81,5 @@ ls -1 data/raw/gold/translations/one/1B/text | wc -l
 ls -1 data/raw/gold/translations/bop/1B/text | wc -l
 
 
-# convert to json 
+# convert to json
 python convert_GOLD_to_JSON.py

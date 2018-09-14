@@ -450,10 +450,9 @@ Args:
         'write_bow': self._write_bow,
         'write_tfidf': self._write_tfidf
       }
-      if self._random_size_path:
-        self._args['random_size_path'] = self._random_size_path
-      if self._reverse_vocab_path:
+      if hasattr(self, '_random_size'):
         self._args['reverse_vocab_path'] = self._reverse_vocab_path
+        self._args['random_size'] = self._random_size
       print('Arguments for the dataset:')
       for k, v in self._args.items():
         print(k, ':', v)
@@ -712,16 +711,14 @@ Args:
 
           # save the new vocab to the disk for future use
           make_dir(self._tfrecord_dir)
+          self._random_size = random_size
           self._reverse_vocab_path = os.path.join(self._tfrecord_dir,
                                                   "vocab_i2v.json")
           with codecs.open(self._reverse_vocab_path, mode='w',
                            encoding='utf-8') as file:
             json.dump(self._vocab_v2i_dict, file,
                       ensure_ascii=False, indent=4)
-          self._random_size_path = os.path.join(self._tfrecord_dir,
-                                                "random_size.txt")
-          with open(self._random_size_path, "w") as file:
-            file.write(str(random_size))
+
 
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(
