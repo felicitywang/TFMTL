@@ -24,13 +24,13 @@ Usage:
 import collections
 import itertools
 import json
+import os
 import re
 import subprocess
 import sys
 import time
 from functools import reduce
 
-from constants import *
 from tqdm import tqdm
 
 from mtl.util.util import load_json
