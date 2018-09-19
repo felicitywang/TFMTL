@@ -35,6 +35,10 @@ MATERIAL_TASKS = [
 # extractors
 
 extractors = {
+    'no_op': {
+        'extract_fn': 'concat_extractor',
+        'extract_kwargs': {}
+    },
     'meanpool_relu': {
         'extract_fn': 'dan',
         'extract_kwargs': {
@@ -334,6 +338,10 @@ embedding_filepath_dict = {
 }
 
 embedders = {
+    'no_op': {
+        'embed_fn': 'no_op_embedding',
+        'embed_kwargs': {}
+    },
     'nopretrain': {
         'embed_fn': 'embed_sequence',
         'embed_kwargs': {
