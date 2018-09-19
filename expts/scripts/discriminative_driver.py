@@ -138,12 +138,11 @@ def parse_args():
   p.add_argument('--encoder_config_file', type=str,
                  help='Path of the args file of the architectures of the '
                       'experiment.')
-  p.add_argument('--shared_hidden_dims', nargs='?', type=int,
-                 default=[128, 128],
+  p.add_argument('--shared_hidden_dims', nargs='+', type=int, default=[100],
                  help='Sizes of the hidden layers shared by all datasets.')
-  p.add_argument('--private_hidden_dims', nargs='?', type=int, default=None,
+  p.add_argument('--private_hidden_dims', nargs='+', type=int,
                  help='Sizes of the hidden layers private to each dataset.')
-  p.add_argument('--shared_mlp_layers', type=int, default=2,
+  p.add_argument('--shared_mlp_layers', type=int, default=1,
                  help='Number of hidden layers of the MLP model shared between'
                       ' datasets.')
   p.add_argument('--private_mlp_layers', type=int, default=0,
@@ -301,7 +300,6 @@ def train_model(model,
   all_variables = tf.global_variables()
   trainable_variables = tf.trainable_variables()
   total_trainable_parameters = 0
-  print(type(all_variables))
   for var in all_variables:
     if var in trainable_variables:
       print('(t) {}'.format(var))

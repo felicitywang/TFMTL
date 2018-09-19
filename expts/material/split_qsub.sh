@@ -15,7 +15,12 @@
 
 #!/bin/sh
 
-# e.g. python get_write.py json_file_path tmpwrite
+
+# Usage:
+# bash split_qsub.sh get_write_train.py write_train.json tmp
+# bash split_qsub.sh get_write_pred.py write_pred.json tmp
+
+
 
 python $1 $2 > $3.sh
 
