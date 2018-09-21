@@ -90,6 +90,7 @@ def main():
     # may be different
     text_field_names=args['text_field_names'],
     label_field_name=args['label_field_name'],
+    label_type=args.get('label_type', 'int'),
 
     train_ratio=args['train_ratio'],
     valid_ratio=args['train_ratio'],

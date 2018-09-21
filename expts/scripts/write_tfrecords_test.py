@@ -67,6 +67,7 @@ def main():
     # may be different
     text_field_names=args['text_field_names'],
     label_field_name=args['label_field_name'],
+    label_type=args.get('label_type','int'),
 
     # test split only
     train_ratio=0.0,

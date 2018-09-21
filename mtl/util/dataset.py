@@ -85,6 +85,7 @@ class Dataset:
                max_frequency=-1,
                text_field_names=['text'],
                label_field_name='label',
+               label_type='int',
                train_ratio=TRAIN_RATIO,
                valid_ratio=VALID_RATIO,
                random_seed=RANDOM_SEED,
@@ -123,6 +124,7 @@ Args:
     text_field_names: string of a list of text field names joined
         with spaces, read from json_dir if None
     label_field_name: label field name(only 1), read from json_dir if None
+    label_type: type of label, 'int' or 'float'
     valid_ratio: how many data out of all data to use as valid
         data if not splits are given, or how many data out of train data to
         use as valid if train/test splits are given
@@ -210,7 +212,15 @@ Args:
       data = json.load(file, encoding='utf-8')
 
     print('Generating label list...')
-    self._label_list = [int(item[label_field_name])
+    self._label_type = label_type
+    if self._label_type == 'int':
+      transfer = int
+    elif self._label_type == 'float':
+      transfer = float
+    else:
+      raise TypeError('Label type other than "int" and "float" is not '
+                      'implemetned!')
+    self._label_list = [transfer(item[label_field_name])
                         if label_field_name in item else None for
                         item in tqdm(data)]
     # TODO: is it possible that the label list read doesn't cover all the
@@ -242,8 +252,6 @@ Args:
       self._sequences[text_field_name] = list()
       self._sequence_lengths[text_field_name] = list()
 
-    # TODO
-    # String ID(name) for predict mode
     self._ids = []
 
     print("Generating text lists...")
@@ -251,8 +259,6 @@ Args:
     for index, item in tqdm(enumerate(data)):
       num_examples += 1
 
-      # TODO
-      # String ID(name) for predict mode
       if predict_mode:
         if 'id' in item:
           self._ids.append(item['id'])
@@ -430,6 +436,7 @@ Args:
         'max_frequency': max_frequency,
         'text_field_names': self._text_field_names,
         'label_field_name': self._label_field_name,
+        'label_type': self._label_type,
         'random_seed': random_seed,
         'train_size': len(self._train_index),
         'valid_size': len(self._valid_index),
@@ -720,7 +727,6 @@ Args:
             json.dump(self._vocab_v2i_dict, file,
                       ensure_ascii=False, indent=4)
 
-
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(
         unknown_token=OOV, mapping=self._vocab_v2i_dict)
@@ -809,9 +815,18 @@ Args:
         if labeled:
           label = self._label_list[index]
           assert label is not None
-          feature['label'] = tf.train.Feature(
-            int64_list=tf.train.Int64List(
-              value=[label]))
+
+          if self._label_type == 'int':
+            feature['label'] = tf.train.Feature(
+              int64_list=tf.train.Int64List(
+                value=[label]))
+          elif self._label_type == 'float':
+            feature['label'] = tf.train.Feature(
+              float_list=tf.train.FloatList(
+                value=[label]))
+          else:
+            raise TypeError('Label type other than "int" or "float" not '
+                            'implemented!')
         else:
           # label = self._label_list[index]
           # assert label is None
@@ -995,6 +1010,7 @@ def merge_dict_write_tfrecord(json_dirs,
                               max_frequency=-1,
                               text_field_names=['text'],
                               label_field_name='label',
+                              label_type='int',
                               tokenizer_="tweet_tokenizer",
                               train_ratio=TRAIN_RATIO,
                               valid_ratio=VALID_RATIO,
@@ -1033,6 +1049,7 @@ def merge_dict_write_tfrecord(json_dirs,
                       max_frequency=-max_frequency,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
+                      label_type=label_type,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
@@ -1063,6 +1080,9 @@ def merge_dict_write_tfrecord(json_dirs,
                     vocab_given=True,
                     vocab_name='vocab_freq.json',
                     generate_tf_record=False,
+                    text_field_names=text_field_names,
+                    label_field_name=label_field_name,
+                    label_type=label_type,
                     max_document_length=max_document_length,
                     min_frequency=min_frequency,
                     max_frequency=max_frequency,
@@ -1104,6 +1124,7 @@ def merge_dict_write_tfrecord(json_dirs,
                       generate_tf_record=True,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
+                      label_type=label_type,
                       max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
                       min_frequency=min_frequency,
@@ -1134,6 +1155,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   max_document_length=-1,
                                   text_field_names=['text'],
                                   label_field_name='label',
+                                  label_type='int',
                                   tokenizer_="tweet_tokenizer",
                                   train_ratio=TRAIN_RATIO,
                                   valid_ratio=VALID_RATIO,
@@ -1182,6 +1204,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       max_frequency=max_frequency,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
+                      label_type=label_type,
                       tokenizer_=tokenizer_,
                       generate_basic_vocab=True,
                       vocab_given=False,
@@ -1251,6 +1274,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       generate_tf_record=True,
                       text_field_names=text_field_names,
                       label_field_name=label_field_name,
+                      label_type=label_type,
                       max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
                       min_frequency=min_frequency,

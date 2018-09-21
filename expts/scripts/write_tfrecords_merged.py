@@ -73,6 +73,7 @@ def main(argv):
                               max_frequency=args['max_frequency'],
                               text_field_names=args['text_field_names'],
                               label_field_name=args['label_field_name'],
+                              label_type=args.get('label_type', 'int'),
                               train_ratio=args['train_ratio'],
                               valid_ratio=args['valid_ratio'],
                               tokenizer_=args['tokenizer'],
@@ -123,6 +124,7 @@ def main(argv):
                                     'text_field_names'],
                                   label_field_name=args[
                                     'label_field_name'],
+                                  label_type=args.get('label_type', 'int'),
                                   max_document_length=args[
                                     'max_document_length'],
                                   max_vocab_size=args['max_vocab_size'],
