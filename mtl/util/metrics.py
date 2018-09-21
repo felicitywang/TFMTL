@@ -77,6 +77,17 @@ def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
   return np.mean([f1_scores[0], f1_scores[1]])
 
 
+def mse(y_trues, y_preds, labels, topics):
+  """
+  mean squared error
+
+  :param y_trues: list of ground truth scores
+  :param y_preds: list of predicted scores
+  :return: float
+  """
+  return sklearn.metrics.mean_squared_error(y_trues, y_preds)
+
+
 def mae_macro(y_trues, y_preds, labels, topics):
   """
   macro-averaged (unweighted mean) over topics of mean absolute error
@@ -242,7 +253,9 @@ def metric2func(metric_name):
     'F1_PosNeg_Macro': f1_pos_neg_macro,
     'Recall_Macro': recall_macro,
     'Precision_Macro': precision_macro,
-    'Confusion_Matrix': confusion_matrix
+    'Confusion_Matrix': confusion_matrix,
+    # TODO
+    'MSE': mse,
   }
 
   if metric_name in METRIC2FUNC:
