@@ -192,7 +192,7 @@ def write_exp_bash_script(temp_script_filename, meta_config, exp_params_comb):
       shell_command += '{}\n'.format(meta_config.cpu_venv)
     shell_command += 'cd {}\n'.format(meta_config.root_dir)
     if meta_config.cpu_or_gpu == 'gpu':
-          shell_command += 'CUDA_VISIBLE_DEVICES=`free-gpu` '
+      shell_command += 'CUDA_VISIBLE_DEVICES=`free-gpu` '
     shell_command += 'python {} {}'.format(
       meta_config.code_path, exp_flags)
     f.write(shell_command)

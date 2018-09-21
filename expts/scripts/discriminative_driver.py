@@ -48,9 +48,10 @@ logging = tf.logging
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str,
+  p.add_argument('--model', type=str, default='mult',
                  help='Which model to use [mlvae|mult]')
-
+  p.add_argument('--regression', type=bool, default=False,
+                 help='Whether to use classification or regression.')
   p.add_argument('--mode', choices=['train', 'test', 'predict', 'finetune'],
                  required=True,
                  help='Whether to train, test, predict or finetune. \n'
@@ -61,11 +62,11 @@ def parse_args():
                       'predict: restore the saved model and predict the '
                       'labels of the given text file. \n'
                       'finetune: restore the saved model and continue training.')
-  p.add_argument('--experiment_name', default='', type=str,
+  p.add_argument('--experiment_name', type=str, default='',
                  help='Name of experiment.')
-  p.add_argument('--tuning_metric', default='Acc', type=str,
+  p.add_argument('--tuning_metric', type=str, default='Acc',
                  help='Metric used to tune hyper-parameters')
-  p.add_argument('--reporting_metric', default='Acc', type=str,
+  p.add_argument('--reporting_metric', type=str, default='Acc',
                  help='Metric to report')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '

@@ -12,16 +12,15 @@
 # See the License for the specific lang governing permissions and
 # limitations under the License.
 # =============================================================================
+
 """Read the tsv Turk data and convert to json format
 
-Each domain would have a positive and a negative cut to convert their
-average score to binary labels
+Instead of binary labels, scores ranging in [0, 1] would be kept
 """
 
 import gzip
 import json
 import os
-from itertools import product
 
 import pandas as pd
 
@@ -29,57 +28,39 @@ from mtl.util.util import make_dir
 
 
 def main():
-  pos_cuts = [90, 80, 70, 60, 50]
-  neg_cuts = [50, 50, 50, 50, 50]
-
   raw_dir = 'data/raw/TURK'
   json_dir = 'data/json/'
 
   domains = ['GOV', 'LIF', 'BUS', 'LAW', 'HEA', 'MIL', 'SPO']
 
-  for pos, neg, domain in product(pos_cuts, neg_cuts, domains):
+  for domain in domains:
     tsvpath = os.path.join(raw_dir, domain + '.tsv')
     df = pd.read_csv(tsvpath, sep='\t')
     data = []
     index = 0
     for item in df.to_dict('records'):
-      score = float(item['score_mean'])
-      if neg <= score <= pos:
-        # print(score)
-        continue
-      # print(score)
-      if score < neg:
-        label = 0
-      else:
-        assert score > pos
-        label = 1
       data.append({
         'index': index,
         'id': item['id'],
         'text': item['sent'],
-        'score': score / 100.0,
-        'label': label
+        'label': float(item['score_mean']) / 100.0,
       })
       index += 1
 
-    directory = os.path.join(json_dir,
-                             domain + '_turk_' + str(pos) + '_' + str(neg))
+    directory = os.path.join(json_dir, domain + '_turk_reg')
     make_dir(directory)
-    with gzip.open(
-      os.path.join(directory, 'data.json.gz'), mode='wt') as file:
+    with gzip.open(os.path.join(directory, 'data.json.gz'), mode='wt') as file:
       json.dump(data, file, ensure_ascii=False)
 
   # open test
-  for pos, neg, domain in product(pos_cuts, neg_cuts, domains):
-    directory = os.path.join(json_dir,
-                             domain + '_turk_' + str(pos) + '_' + str(neg))
+  for domain in domains:
+    directory = os.path.join(json_dir, domain + '_turk_reg')
     # print(directory)
-    with gzip.open(
-      os.path.join(directory, 'data.json.gz'), mode='rt') as file:
+    with gzip.open(os.path.join(directory, 'data.json.gz'), mode='rt') as file:
       test = json.load(file)
-      print('{}: pos={} neg={} all={}'.format(
-        directory, len([i for i in test if int(i['label']) == 1]),
-        len([i for i in test if int(i['label']) == 0]), len(test)))
+      print('{}: all={}'.format(
+        directory,
+        len(test)))
 
 
 if __name__ == '__main__':

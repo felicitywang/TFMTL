@@ -15,13 +15,14 @@
         // "_turk_90_50",
         // "_turk_80_50",
         // "_turk_70_50",
-        "_turk_60_50",
+        // "_turk_60_50",
         // "_turk_50_50",
-        "_syn_p1000r1000"
+        // "_syn_p1000r1000"
         // "_syn_p11000r11000"
+        "_train_syn_p1000r1000_valid_gold_one"
     ],
     "args_file_paths": [
-        // "args_nopretrain.json",
+        "args_nopretrain.json",
         "args_pretrained.json"
     ]
 }

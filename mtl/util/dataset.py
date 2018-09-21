@@ -459,6 +459,7 @@ Args:
       args_path = os.path.join(tfrecord_dir, "args.json")
       with codecs.open(args_path, mode='w', encoding='utf-8') as file:
         json.dump(self._args, file, ensure_ascii=False, indent=4)
+      assert os.path.exists(args_path), 'Failed to save args.json!'
 
   def build_vocab(self):
     """Builds vocabulary for this dataset only using tensorflow's

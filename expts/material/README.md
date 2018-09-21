@@ -109,8 +109,7 @@ Run `setup_{gold, turk, syn}.py` to copy original files and convert them to json
 `convert_{GOLD,TURK}_to_JSON.py` are examples that convert datasets from their original formats to JSON.
 
 
-TODO: Combine data: combine data as train/valid/test splits
-
+`combine_data_splits.py` can take two json datasets and combine them together as train and validation splits of one dataset.  Run `python combine_data_splits.py --train training_split_suffix --valid validation_data_split`, e.g. `python combine_data_spltis.py --train syn_p1000r1000 --valid gold_one` would use `data/json/DOMAIN_syn_p1000r1000/data.json.gz` as training split and `data/json/DOMAIN_gold_one/data.json.gz` as validation split for the six domains(except SPO, which doesn't have gold data.
 
 
 ## 1. Write TFRecord data
