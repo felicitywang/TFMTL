@@ -48,10 +48,10 @@ logging = tf.logging
 
 def parse_args():
   p = ap.ArgumentParser()
-  p.add_argument('--model', type=str, default='mult',
+  p.add_argument('--model', type=str,
                  help='Which model to use [mlvae|mult]')
-  p.add_argument('--regression', type=bool, default=False,
-                 help='Whether to use classification or regression.')
+  p.add_argument('--task', type=str, default='classification',
+                 help='Whether to train a classification or regression model')
   p.add_argument('--mode', choices=['train', 'test', 'predict', 'finetune'],
                  required=True,
                  help='Whether to train, test, predict or finetune. \n'
@@ -62,11 +62,11 @@ def parse_args():
                       'predict: restore the saved model and predict the '
                       'labels of the given text file. \n'
                       'finetune: restore the saved model and continue training.')
-  p.add_argument('--experiment_name', type=str, default='',
+  p.add_argument('--experiment_name', default='', type=str,
                  help='Name of experiment.')
-  p.add_argument('--tuning_metric', type=str, default='Acc',
+  p.add_argument('--tuning_metric', default='Acc', type=str,
                  help='Metric used to tune hyper-parameters')
-  p.add_argument('--reporting_metric', type=str, default='Acc',
+  p.add_argument('--reporting_metric', default='Acc', type=str,
                  help='Metric to report')
   p.add_argument('--predict_tfrecord_path', type=str,
                  help='File path of the tf record file path of the text to '
@@ -705,10 +705,12 @@ def predict(model, dataset_info, args):
   str_ = 'Predictions of the given text data of dataset %s using different ' \
          'saved models:' % args.predict_dataset
   labels = [str(i) for i in dataset_info[args.predict_dataset]['labels']]
-  if len(labels) == 2:
+  if len(labels) == 2 or args.task == 'regression':
+    # TODO currently just hard code for binary
     header = 'id\tlabel\t' + labels[1] + '\n'
   else:
     header = 'id\tlabel\t' + '\t'.join(labels) + '\n'
+
   saver = tf.train.Saver(max_to_keep=100)
 
   model_names = args.datasets
@@ -745,7 +747,7 @@ def predict(model, dataset_info, args):
           'label': pred
         }
         for l, s in zip(labels, score):
-          record[l] = s
+          record[str(l)] = s
         data.append(record)
 
         # output positive score for binary classification
@@ -753,8 +755,8 @@ def predict(model, dataset_info, args):
           score = str(score[1])
         else:
           score = '\t'.join([str(i) for i in score])
-        str_ += id + '\t' + str(pred) + '\t' + score + '\n'
-        output += id + '\t' + str(pred) + '\t' + score + '\n'
+        str_ += id + '\t' + str(int(pred)) + '\t' + score + '\n'
+        output += id + '\t' + str(int(pred)) + '\t' + score + '\n'
 
       make_dir(args.predict_output_folder)
 
@@ -887,15 +889,49 @@ def compute_held_out_performance(session,
   evaluation_loss = float(total_eval_loss) / float(num_eval_iter)
 
   ntotal = len(y_trues)
-  ncorrect = accurate_number(y_trues=y_trues,
-                             y_preds=y_preds,
-                             labels=labels,
-                             topics=y_topics)
 
-  scores = dict()
-  for metric in metrics:
-    func = metric2func(metric)
-    scores[metric] = func(y_trues, y_preds, labels, y_topics)
+  if args.task == 'classification':
+    scores = dict()
+    for metric in metrics:
+      func = metric2func(metric)
+      scores[metric] = func(y_trues, y_preds, labels, y_topics)
+
+    ncorrect = accurate_number(y_trues=y_trues,
+                               y_preds=y_preds,
+                               labels=labels,
+                               topics=y_topics)
+
+  elif args.task == 'regression':
+
+    # TODO convert for accurate number
+    pos_cut = 0.5
+    y_true_classes = []
+    y_pred_classes = []
+    for i, y_true in enumerate(y_trues):
+      if y_true < pos_cut:
+        y_true_classes.append(0)
+      else:
+        y_true_classes.append(1)
+
+    for i, y_pred in enumerate(y_preds):
+      if y_pred < pos_cut:
+        y_pred_classes.append(0)
+      else:
+        y_pred_classes.append(1)
+
+    scores = dict()
+
+    for metric in metrics:
+      func = metric2func('MSE')
+      if metric == 'MSE':
+        scores[metric] = func(y_trues, y_preds, labels, y_topics)
+      else:
+        scores[metric] = func(y_true_classes, y_pred_classes, labels, y_topics)
+
+    ncorrect = accurate_number(y_trues=y_true_classes,
+                               y_preds=y_pred_classes,
+                               labels=labels,
+                               topics=y_topics)
 
   res = dict()
   res['ntotal'] = ntotal
@@ -1025,28 +1061,14 @@ def main():
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
   if args.mode in ['train', 'test', 'finetune']:
-    FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
+    if args.task == 'classification':
+      FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
+    else:
+      FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.float32)
 
   # String ID(name) for predict mode
   if args.mode == 'predict':
     FEATURES['id'] = tf.FixedLenFeature([], dtype=tf.string)
-
-  # FEATURES = {
-  #  'tokens_length': tf.FixedLenFeature([], dtype=tf.int64),
-  #  # 'types': tf.VarLenFeature(dtype=tf.int64),
-  #  # 'type_counts': tf.VarLenFeature(dtype=tf.int64),
-  #  # 'types_length': tf.FixedLenFeature([], dtype=tf.int64),
-  # }
-  # if args.input_key == 'tokens':
-  #  FEATURES['tokens'] = tf.VarLenFeature(dtype=tf.int64)
-  # elif args.input_key == 'bow':
-  #  FEATURES['bow'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  # elif args.input_key == 'tfidf':
-  #  FEATURES['tfidf'] = tf.FixedLenFeature([vocab_size], dtype=tf.float32)
-  # else:
-  #  raise ValueError("Input key %s not supported!" % args.input_key)
-  # if args.mode == 'train' or args.mode == 'test':
-  #  FEATURES['label'] = tf.FixedLenFeature([], dtype=tf.int64)
 
   logging.info("Creating computation graph...")
   with tf.Graph().as_default() as graph:
@@ -1333,6 +1355,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         model_info[dataset_name]['pred_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
+        args.task,
         additional_extractor_kwargs=additional_extractor_kwargs)
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
 

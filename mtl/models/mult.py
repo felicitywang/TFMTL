@@ -45,14 +45,17 @@ class Mult(object):
     if set(class_sizes.keys()) != set(dataset_order):
       raise ValueError("class_sizes must have same elements as dataset_order")
 
-    self._class_sizes = class_sizes
     self._dataset_order = dataset_order
     self._hps = hps
+
+    self._class_sizes = class_sizes
+    if self._hps.task == 'regression':
+      self._class_sizes = {i: 1 for i in self._class_sizes.keys()}
 
     self._encoders = build_encoders(self._hps)  # encoders: one per dataset
     self._mlps_shared = build_mlps(hps, is_shared=True)
     self._mlps_private = build_mlps(hps, is_shared=False)
-    self._logit_layers = build_logit_layers(class_sizes,
+    self._logit_layers = build_logit_layers(self._class_sizes,
                                             self._hps.experiment_name)
 
   # Encoding (feature extraction)
@@ -115,7 +118,7 @@ class Mult(object):
     if self._hps.experiment_name in [EXP.EMNLP_18]:
       if batch_source != dataset_name:
         raise ValueError("Batch and labels must come from same dataset: exp=%s"
-                         % (self._hps.experiment_name))
+                         % self._hps.experiment_name)
 
     if batch_source not in self._hps.datasets:
       raise ValueError("Unrecognized batch source=%s" % batch_source)
@@ -138,9 +141,17 @@ class Mult(object):
                    batch,
                    batch_source,
                    dataset_name,
-                   additional_extractor_kwargs=dict()):
+                   task,
+                   additional_extractor_kwargs=dict(),
+                   ):
     # Return id, predicted label and confidence scores for each class,
     # used in predict mode
+
+    # TODO regression:
+    # score: output value
+    # prediction: labels converted from output value
+
+    id = batch['id']
 
     x = self.get_logits(batch,
                         batch_source,
@@ -148,20 +159,36 @@ class Mult(object):
                         is_training=False,
                         additional_extractor_kwargs=
                         additional_extractor_kwargs)
-    res = tf.argmax(x, axis=1)
 
-    x = tf.nn.softmax(x)
+    if task == 'classification':
 
-    id = batch['id']
+      prediction = tf.argmax(x, axis=1)
 
-    return id, res, x
+      score = tf.nn.softmax(x)
+      return id, prediction, score
+
+    elif task == 'regression':
+      score = x
+      # binary only TODO
+      # TODO some pos cut?
+
+      prediction = tf.round(score)
+
+      return id, prediction, score
+
+
+    else:
+      # TODO
+      pass
 
   def get_predictions(self,
                       batch,
                       batch_source,
                       dataset_name,
                       additional_extractor_kwargs=dict()):
-    # Returns most likely label given conditioning variables
+    # For classification: returns most likely label given conditioning
+    # variables
+    # For regression: returns scalar value of the output layer TOOD
     # (run this on eval data ONLY)
 
     x = self.get_logits(batch,
@@ -170,8 +197,14 @@ class Mult(object):
                         is_training=False,
                         additional_extractor_kwargs=
                         additional_extractor_kwargs)
-    res = tf.argmax(x, axis=1)
-    # res = tf.expand_dims(res, axis=1)
+    # TODO regression
+    if self._hps.task == 'classification':
+      res = tf.argmax(x, axis=1)
+      # res = tf.expand_dims(res, axis=1)
+    else:
+      res = tf.reshape(x, [-1])
+
+    # TODO directly return int labels with some pos cut ? etc. for regression
 
     return res
 
@@ -193,10 +226,21 @@ class Mult(object):
     labels = batch[self._hps.label_key]
 
     # loss
-    softmax_xent = tf.nn.sparse_softmax_cross_entropy_with_logits
-    ce = softmax_xent(logits=x, labels=tf.cast(labels, dtype=tf.int32))
 
-    loss = tf.reduce_mean(ce)  # average loss per training example
+    if self._hps.task == 'classification':
+      softmax_xent = tf.nn.sparse_softmax_cross_entropy_with_logits
+      ce = softmax_xent(logits=x, labels=tf.cast(labels, dtype=tf.int32))
+      loss = tf.reduce_mean(ce)  # average loss per training example
+    elif self._hps.task == 'regression':
+      x = tf.reshape(x, [-1])
+      # TODO huber loss shape
+      # loss = tf.losses.huber_loss(labels, x, delta=1.0, reduction='none')
+      loss = tf.losses.mean_squared_error(labels, x)
+    else:
+      raise TypeError('Task type other than "classification" and '
+                      '"regression" is not supported!')
+
+    # TODO regression
 
     return loss
 
@@ -297,8 +341,7 @@ def build_mlps(hps, is_shared):
   return mlps
 
 
-def build_logit_layers(class_sizes,
-                       experiment_name):
+def build_logit_layers(class_sizes, experiment_name):
   if experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
     activation = tf.tanh
   else:

@@ -775,7 +775,7 @@ Args:
         if self._ids:
           feature['id'] = tf.train.Feature(
             bytes_list=tf.train.BytesList(
-              value=[self._ids[index].encode('utf-8')]))
+              value=[str(self._ids[index]).encode('utf-8')]))
 
         for text_field_name in self._text_field_names:
           feature[text_field_name] = tf.train.Feature(
