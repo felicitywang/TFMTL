@@ -26,7 +26,3 @@ cp /export/a05/mahsay/domain/data/json/doc -fr data/pred/json
 
 # sentence level
 cp /export/a05/mahsay/domain/data/json/sent -fr data/pred/json
-
-
-cp /export/a05/mahsay/domain/data/json/doc/1B/EVAL3/tt20.bop/concat/data.json.gz data/pred/json/doc/1B/EVAL3/tt20.bop/concat
-

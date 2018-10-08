@@ -104,6 +104,8 @@ class Mult(object):
         x.append(batch[text_field_name + '_bow'])
       elif self._hps.input_key == 'tfidf':
         x.append(batch[text_field_name + '_tfidf'])
+      elif self._hps.input_key == 'unique':
+        x.append(batch[text_field_name + '_unique'])
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
 
@@ -178,7 +180,7 @@ class Mult(object):
 
 
     else:
-      # TODO
+      # TODOw
       pass
 
   def get_predictions(self,

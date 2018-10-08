@@ -28,17 +28,17 @@ from mtl.util.dataset import Dataset
 from mtl.util.util import load_json
 
 
-def main(argv):
-  if len(argv) == 2:
-    args_name = 'args_' + argv[1] + '.json'
+def main():
+  if len(sys.argv) == 2:
+    args_name = 'args_' + sys.argv[1] + '.json'
   else:
-    args_name = argv[2]
+    args_name = sys.argv[2]
 
   args = load_json(args_name)
 
-  json_dir = "data/json/" + argv[1]
+  json_dir = "data/json/" + sys.argv[1]
 
-  tfrecord_dir = os.path.join("data/tf/single/", argv[1])
+  tfrecord_dir = os.path.join("data/tf/single/", sys.argv[1])
 
   preproc = True
   if 'preproc' in args:
@@ -140,4 +140,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  main(sys.argv)
+  main()

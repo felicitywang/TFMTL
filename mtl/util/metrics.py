@@ -28,10 +28,12 @@ precision_macro:  macro-averaged(unweighted mean) precision score
 More details see sklearn documentation
 http://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 """
-
 import numpy as np
+import scipy
 import sklearn.metrics
 
+
+# TODO add p_miss and p_fa
 
 def accuracy_score(y_trues, y_preds, labels, topics):
   return sklearn.metrics.accuracy_score(y_true=y_trues,
@@ -245,6 +247,10 @@ def confusion_matrix(y_trues, y_preds, labels, topics):
                                           labels=labels)
 
 
+def pearson_r(y_trues, y_preds, labels=None):
+  return scipy.stats.pearsonr(y_trues, y_preds)
+
+
 def metric2func(metric_name):
   METRIC2FUNC = {
     'Acc': accuracy_score,
@@ -256,6 +262,7 @@ def metric2func(metric_name):
     'Confusion_Matrix': confusion_matrix,
     # TODO
     'MSE': mse,
+    'Pearson_R': pearson_r
   }
 
   if metric_name in METRIC2FUNC:

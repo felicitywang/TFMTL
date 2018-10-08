@@ -52,6 +52,9 @@ def parse_args():
                  help='Which model to use [mlvae|mult]')
   p.add_argument('--task', type=str, default='classification',
                  help='Whether to train a classification or regression model')
+  p.add_argument('--pos_cut', type=float, default=0.5,
+                 help='Threshold to cut positive example from regression '
+                      'value to classification prediction.')
   p.add_argument('--mode', choices=['train', 'test', 'predict', 'finetune'],
                  required=True,
                  help='Whether to train, test, predict or finetune. \n'
@@ -235,7 +238,8 @@ def train_model(model,
   for dataset_name in model_info:
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+      extract_fn = json.load(
+        f)[args.architecture][dataset_name]['extract_fn']
     if extract_fn == "serial_lbirnn":
       additional_extractor_kwargs[dataset_name]['is_training'] = True
       if args.experiment_name == "RUDER_NAACL_18":
@@ -243,7 +247,8 @@ def train_model(model,
         indices = train_batches[dataset_name][
           'seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        # last token is at pos. length-1
+        indices = tf.subtract(indices, ones)
         additional_extractor_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
       additional_extractor_kwargs[dataset_name]['is_training'] = True
@@ -271,7 +276,8 @@ def train_model(model,
 
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
-  zero_global_step_op = global_step_tensor.assign(0)  # TODO this is never used
+  zero_global_step_op = global_step_tensor.assign(
+    0)  # TODO this is never used
 
   train_ops = dict()
   optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
@@ -392,12 +398,13 @@ def train_model(model,
       #  #  training example*
       # assert num_iter > 0
       #
-      ## average loss per batch (which is in turn averaged across examples)
+      # average loss per batch (which is in turn averaged across examples)
       # train_loss = float(total_loss) / float(num_iter)
 
       for _ in tqdm(xrange(steps_per_epoch)):
         for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
-          loss_v, _ = sess.run([losses[dataset_name], train_ops[dataset_name]])
+          loss_v, _ = sess.run(
+            [losses[dataset_name], train_ops[dataset_name]])
           total_loss += alpha * loss_v
         step = sess.run(global_step_tensor)
         num_iter += 1
@@ -408,7 +415,8 @@ def train_model(model,
       if args.summaries_dir:
         train_loss_summary = tf.Summary(
           value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
-        train_file_writer.add_summary(train_loss_summary, global_step=step)
+        train_file_writer.add_summary(
+          train_loss_summary, global_step=step)
 
       # Evaluate held-out accuracy
       # if not args.test:  # Validation mode
@@ -445,12 +453,14 @@ def train_model(model,
         valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics'][
           'eval_loss']
 
-      main_task_acc = model_info[args.datasets[0]]['valid_metrics']['Acc']
+      main_task_acc = model_info[args.datasets[0]
+      ]['valid_metrics']['Acc']
 
       if args.summaries_dir:
         valid_loss_summary = tf.Summary(
           value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
-        valid_file_writer.add_summary(valid_loss_summary, global_step=step)
+        valid_file_writer.add_summary(
+          valid_loss_summary, global_step=step)
         valid_main_task_accuracy_summary = tf.Summary(value=[
           tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
         valid_file_writer.add_summary(valid_main_task_accuracy_summary,
@@ -707,7 +717,7 @@ def predict(model, dataset_info, args):
   labels = [str(i) for i in dataset_info[args.predict_dataset]['labels']]
   if len(labels) == 2 or args.task == 'regression':
     # TODO currently just hard code for binary
-    header = 'id\tlabel\t' + labels[1] + '\n'
+    header = 'id\tlabel\t' + str(1) + '\n'
   else:
     header = 'id\tlabel\t' + '\t'.join(labels) + '\n'
 
@@ -739,18 +749,21 @@ def predict(model, dataset_info, args):
       _pred_op = model_info[dataset_name]['pred_pred_op']
       _pred_iter = model_info[dataset_name]['pred_iter']
       _ids, _predictions, _scores = get_all_pred_res(sess, _pred_op,
-                                                     _pred_iter)
-
+                                                     _pred_iter, args)
       for id, pred, score in zip(_ids, _predictions, _scores):
         record = {
           'id': id,
           'label': pred
         }
-        for l, s in zip(labels, score):
-          record[str(l)] = s
+        if args.task == 'classification':
+          for l, s in zip(labels, score):
+            record[str(l)] = s
+        else:
+          record['score'] = score[0]
         data.append(record)
 
         # output positive score for binary classification
+
         if len(score) == 2:
           score = str(score[1])
         else:
@@ -788,7 +801,7 @@ def get_all_predictions(session, pred_op, pred_iterator):
   return predictions
 
 
-def get_all_pred_res(session, pred_op, pred_iterator):
+def get_all_pred_res(session, pred_op, pred_iterator, args):
   """Get all the predict results for a predict batch
 
   (id, predicted label and softmax values for each class)
@@ -803,8 +816,12 @@ def get_all_pred_res(session, pred_op, pred_iterator):
     try:
       id, pred_class, score = session.run(pred_op)
       id_list = [i.decode('utf-8') for i in id.tolist()]
-      pred_class_list = pred_class.tolist()
       score_list = score.tolist()
+      if args.task == 'regression':
+        pred_class_list, score_list = score_to_prediction(score_list,
+                                                          args.pos_cut)
+      else:  # classification
+        pred_class_list = pred_class.tolist()
       ids += id_list  # TODO bytes to string
       predictions += pred_class_list
       scores += score_list
@@ -926,7 +943,8 @@ def compute_held_out_performance(session,
       if metric == 'MSE':
         scores[metric] = func(y_trues, y_preds, labels, y_topics)
       else:
-        scores[metric] = func(y_true_classes, y_pred_classes, labels, y_topics)
+        scores[metric] = func(
+          y_true_classes, y_pred_classes, labels, y_topics)
 
     ncorrect = accurate_number(y_trues=y_true_classes,
                                y_preds=y_pred_classes,
@@ -1049,15 +1067,20 @@ def main():
         FEATURES[text_field_name + '_length'] = tf.FixedLenFeature([],
                                                                    dtype=tf.int64)
         if args.input_key == 'tokens':
-          FEATURES[text_field_name] = tf.VarLenFeature(dtype=tf.int64)
+          FEATURES[text_field_name] = tf.VarLenFeature(
+            dtype=tf.int64)
         elif args.input_key == 'bow':
           FEATURES[text_field_name + '_bow'] = tf.FixedLenFeature([vocab_size],
                                                                   dtype=tf.float32)
         elif args.input_key == 'tfidf':
           FEATURES[text_field_name + '_tfidf'] = tf.FixedLenFeature(
             [vocab_size], dtype=tf.float32)
+        # elif args.input_key == 'unique':
+        #   FEATURES[text_field_name + '_unique'] = tf.VarLenFeature(
+        #       dtype=tf.int64)
         else:
-          raise ValueError("Input key %s not supported!" % (args.input_key))
+          raise ValueError(
+            "Input key %s not supported!" % (args.input_key))
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
   if args.mode in ['train', 'test', 'finetune']:
@@ -1312,7 +1335,8 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
   for dataset_name in model_info:
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+      extract_fn = json.load(
+        f)[args.architecture][dataset_name]['extract_fn']
     if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
@@ -1326,7 +1350,8 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        # last token is at pos. length-1
+        indices = tf.subtract(indices, ones)
         additional_extractor_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
       additional_extractor_kwargs[dataset_name]['is_training'] = False
@@ -1365,7 +1390,8 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
   for dataset_name in model_info:
     additional_extractor_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(f)[args.architecture][dataset_name]['extract_fn']
+      extract_fn = json.load(
+        f)[args.architecture][dataset_name]['extract_fn']
     if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
@@ -1377,7 +1403,8 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-        indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+        # last token is at pos. length-1
+        indices = tf.subtract(indices, ones)
         additional_extractor_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
       additional_extractor_kwargs[dataset_name]['is_training'] = False
@@ -1408,7 +1435,8 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 def fill_topic_op(args, model_info):
   for dataset_name in model_info:
     if args.mode in ['train', 'finetune']:
-      _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
+      _valid_topic_op = get_topic(
+        model_info[dataset_name]['valid_batch'])
       model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
     elif args.mode == 'test':
       _test_topic_op = get_topic(model_info[dataset_name]['test_batch'])
@@ -1446,6 +1474,18 @@ def model_exists(checkpoint_path):
   # print('Checking path ', model_index_path)
   # print(os.listdir(os.path.dirname(checkpoint_path)))
   return os.path.exists(model_index_path)
+
+
+def score_to_prediction(score_list, pos_cut):
+  # TODO binary only
+  # print(type(score_list), score_list)
+  pred_list = [1 if score[0] > pos_cut else 0 for score in score_list]
+  # for i, s in enumerate(score_list):
+  # if s[0] < 0:
+  #   score_list[i] = [0.0]
+  # if s[0] > 1:
+  #   score_list[i] = [1.0]
+  return pred_list, score_list
 
 
 if __name__ == "__main__":
