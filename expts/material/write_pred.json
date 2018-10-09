@@ -16,22 +16,25 @@
         //  "_turk_90_50",
         //  "_turk_80_50",
         //  "_turk_70_50",
-        "_turk_60_50",
-        //  "_turk_50_50",
-        "_syn_p1000r1000"
+        // "_turk_60_50",
+        // "_turk_50_50"
+        // "_syn_p1000r1000"
         //  "_syn_p11000r1100"
+        // "_turk_reg"
+        "_train_syn_p1000r1000_valid_gold_one"
+        // "_init_train_syn_p1000r1000_valid_gold_one_finetune_train_syn_turk_60_50_valid_gold_one"
     ],
     // Which args.json file to use
     // only 'text_field_name' and 'label_field_name' are used
     // other args should be from the used args
-    "args_file_path":
-    // "args_nopretrain.json",
-    "args_pretrained.json",
+    // "args_file_path": "args_nopretrain.json",
+    "args_file_path": "args_nopretrain.json",
+    // "args_pretrained.json",
+    // "args_reg.json",
     // Which args to use(according to previous args file)
-    "args_path":
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_tweet"
+    "args_path": "min_1_max_-1_vocab_-1_doc_-1_tok_tweet",
     // "min_0_max_-1_vocab_-1_doc_-1_tok_split"
-    "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_init",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_init",
     //"min_0_max_-1_vocab_-1_doc_-1_tok_tweet",
     //  "min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.300d_expand",
     // Which subdirectories to predict

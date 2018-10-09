@@ -23,6 +23,7 @@ import sys
 from docutils.io import InputError
 
 from mtl.util.dataset import Dataset
+from mtl.util.util import load_json
 
 """Write TFRecord for the dataset to fine-tune the model with.
 
@@ -64,8 +65,7 @@ def main():
   with open(args_path) as file:
     args_used = json.load(file)
 
-  with open(args_finetune_path)as file:
-    args = json.load(file)
+  args = load_json(args_finetune_path)
 
   tfrecord_dir = os.path.join("data/tf/single/", dataset_name)
   tfrecord_dir_name = \

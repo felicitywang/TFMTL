@@ -53,9 +53,17 @@
     // mode for driver script: train/test/predict/finetune
     // Modify these!!!
     "mode": "train",
+    //    "mode": "predict",
+    // "mode": "finetune",
+    // comment if classification(default)
+    // "task": "regression",
     "architecture":
     // "dan_meanmax_relu_0.1_glove_expand_finetune",
+    // "dan_meanmax_relu_0.1_nopretrain",
     "dan_meanmax_relu_0.1_nopretrain",
+    // "bilstm_attention_3_nopretrain",
+    // input key: default tokens
+    // "input_key": "unique",
     // which domains to use
     "domains": [
         "GOV",
@@ -71,15 +79,29 @@
     // dataset suffixes
     "dataset_suffixes": [
         // syn
-        // "_syn_p1000r1000",
+        //        "_syn_p1000r1000"
         // turk
         //        "_turk_90_50",
         //        "_turk_80_50",
         //        "_turk_70_50",
-        // "_turk_60_50"
-        //        "_turk_50_50"
+        // "_turk_60_50",
+        // "_turk_50_50"
         "_train_syn_p1000r1000_valid_gold_one"
+        //         "_train_turk_60_50_valid_gold_one"
+        // "_turk_reg"
+        // finetune mode _init_(...)_finetune_(...)
+        // "_init_train_syn_p1000r1000_valid_gold_one_finetune_train_turk_60_50_valid_gold_one"
     ],
+    /****************for finetune mode only*****************/
+    // INIT(PRE-TRAIN) dataset name
+    "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
+    "init_dataset_name": "<domains><init_dataset_suffix>",
+    // FINE-TUNE dataset name
+    "finetune_dataset_suffix": "_train_turk_60_50_valid_gold_one",
+    "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
+    // where to load the INIT model
+    "checkpoint_dir_init": "<root_dir>/data/results/<expt_setup_name>/<init_name>/ckpt",
+    /****************for finetune mode only*****************/
     // which args to use
     "args_paths": [
         "min_1_max_-1_vocab_-1_doc_-1_tok_tweet"
@@ -118,6 +140,7 @@
     "results_dir": "<root_dir>/data/results/<expt_setup_name>/<name>",
     // where to store models(checkpoints)
     "checkpoint_dir": "<root_dir>/data/results/<expt_setup_name>/<name>/ckpt",
+    // for finetune mode only
     // where to store summaries(for tensorboard), comment if not storing summaries
     // "summaries_dir": "<root_dir>/data/results/<expt_setup_name>/<name>/summ",
     // where to store logs
@@ -149,8 +172,13 @@
     "l2_weight": 0.0,
     "optimizer": "rmsprop",
     "lr0": 0.001,
-    "tuning_metric": "Acc",
-    "reporting_metric": "Acc",
+    // classification
+    // "metrics": "Acc Precision_Macro Recall_Macro F1_Macro",
+    // "tuning_metric": "Acc",
+    // regression
+    "metrics": "Acc MSE",
+    "tuning_metric": "MSE",
+    // "reporting_metric": "Acc MSE",
     "seed": [
         42
     ]
