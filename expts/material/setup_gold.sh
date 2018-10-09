@@ -83,3 +83,15 @@ ls -1 data/raw/gold/translations/bop/1B/text | wc -l
 
 # convert to json
 python convert_GOLD_to_JSON.py
+
+
+# for SPO which doesn't have gold data, make empty data.json.gz
+echo "[]" > data/raw/empty.json
+gzip data/raw/empty.json
+mkdir -p data/json/SPO_gold_one
+mkdir -p data/json/SPO_gold_bop
+mkdir -p data/json/SPO_gold_oracle
+cp data/raw/empty.json.gz data/json/SPO_gold_oracle/data.json.gz
+cp data/raw/empty.json.gz data/json/SPO_gold_one/data.json.gz
+cp data/raw/empty.json.gz data/json/SPO_gold_bop/data.json.gz
+

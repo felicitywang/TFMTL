@@ -42,6 +42,21 @@ TOKENIZER_RE = re.compile(r"[A-Z]{2,}(?![a-z])|[A-Z][a-z]+(?=[A-Z])|[\'\w\-]+",
                           re.UNICODE)
 
 
+def tokenizer_simple(iterator):
+  """Tokenizer generator.
+
+  Tokenize each string with the given tokenizer.
+
+  Args:
+    iterator: Input iterator with strings.
+
+  Yields:
+    array of tokens per each value in the input.
+  """
+  for value in iterator:
+    yield value
+
+
 def tokenizer(iterator):
     """Tokenizer generator.
 

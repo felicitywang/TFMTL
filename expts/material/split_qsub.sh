@@ -24,6 +24,8 @@
 
 python $1 $2 > $3.sh
 
-split -l 2 $3.sh $3split
+split -l 2 $3.sh $3splited
 
-for file in $3split*; do qsub -e e -l mem_free=10G,ram_free=10G -M cnfxwang@gmail.com $file; done
+rm -fr $3.sh
+
+for file in $3splited*; do qsub -e e -l mem_free=10G,ram_free=10G -M cnfxwang@gmail.com $file; done

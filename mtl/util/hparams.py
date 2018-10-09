@@ -57,15 +57,13 @@ def str2func(s):
   from mtl.embedders.no_op import no_op_embedding
   from mtl.embedders.pretrained import (init_pretrained,
                                         expand_pretrained)
-
-  from mtl.extractors.paragram import paragram_phrase
   from mtl.extractors.cnn import cnn_extractor
-  from mtl.extractors.rnn import rnn_and_pool
+  from mtl.extractors.dan import dan
   from mtl.extractors.lbirnn import (lbirnn,
                                      lbirnn_stock)
   from mtl.extractors.no_op import concat_extractor
-  from mtl.extractors.dan import dan
-
+  from mtl.extractors.paragram import paragram_phrase
+  from mtl.extractors.rnn import rnn_and_pool
   from mtl.util.reducers import (reduce_avg_over_time,
                                  reduce_var_over_time,
                                  reduce_max_over_time,

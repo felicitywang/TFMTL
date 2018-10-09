@@ -37,14 +37,15 @@ from tqdm import tqdm
 
 from mtl.util.categorical_vocabulary import CategoricalVocabulary
 from mtl.util.constants import OLD_LINEBREAKS, LINEBREAK, EOS, BOS, OOV
-from mtl.util.constants import TRAIN_RATIO, VALID_RATIO, RANDOM_SEED
+from mtl.util.constants import RANDOM_SEED
+from mtl.util.constants import TRAIN_RATIO, VALID_RATIO
 from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer,
                                 split_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
-from mtl.util.text import VocabularyProcessor
+from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
 flags = tf.flags
@@ -53,135 +54,104 @@ logging = tf.logging
 FLAGS = flags.FLAGS
 
 
-# TRAIN_RATIO = 0.8  # train out of all
-# VALID_RATIO = 0.1  # valid out of all / valid out of train
-# RANDOM_SEED = 42
-
-# BOS = 'BOS'
-# EOS = 'EOS'
-
-
-# TRAIN_RATIO = 0.8  # train out of all
-# VALID_RATIO = 0.1  # valid out of all / valid out of train
-# RANDOM_SEED = 42
-
-# BOS = 'BOS'
-# EOS = 'EOS'
-
-
 class Dataset:
-
   def __init__(self,
                json_dir,
                vocab_given,
                generate_basic_vocab,
                generate_tf_record,
-               vocab_dir,
                tfrecord_dir,
+               vocab_dir,
                vocab_name='vocab_freq.json',
-               max_document_length=-1,
-               max_vocab_size=-1,
-               min_frequency=0,
-               max_frequency=-1,
-               text_field_names=['text'],
-               label_field_name='label',
-               label_type='int',
-               train_ratio=TRAIN_RATIO,
-               valid_ratio=VALID_RATIO,
-               random_seed=RANDOM_SEED,
-               subsample_ratio=1,
-               padding=False,
-               write_bow=False,
-               write_tfidf=False,
-               predict_mode=False,
                predict_json_path='predict.json.gz',
                predict_tf_path='predict.tf',
-               tokenizer_="tweet_tokenizer",
-               expand_vocab=False,
-               preproc=True,
-               vocab_all=False
-               ):
-    """
-Args:
-    json_dir: where data.json.gz and index.json.gz are
-        located, and vocabulary/TFRecords built from the single
-        datasets are to be saved
-    vocab_given: True if to use the given vocabulary
-    tfrecord_dir: directory to save generated TFRecord files
-    vocab_dir: directory to load the given (e.g. merged) vocabulary
-        frequency dict json file or to save the self-generated vocabulary
-    vocab_name: 'vocab_freq.json' or 'vocab_v2i.json'
-    max_document_length: maximum document length for the mapped
-        word ids, computed as the maximum document length of all the
-        training data if -1, used when padding is True
-    max_vocab_size: maximum size of the vocabulary allowed
-    min_frequency: minimum frequency to build the vocabulary,
-        words that appear lower than or equal to this number would be
-        discarded
-    max_frequency: maximum frequency to build the vocabulary,
-        words that appear more than or equal to this number would be
-        discarded
-    text_field_names: string of a list of text field names joined
-        with spaces, read from json_dir if None
-    label_field_name: label field name(only 1), read from json_dir if None
-    label_type: type of label, 'int' or 'float'
-    valid_ratio: how many data out of all data to use as valid
-        data if not splits are given, or how many data out of train data to
-        use as valid if train/test splits are given
-    train_ratio: how many data to use as train data if train
-        split not given
-    random_seed: random seed used in random spliting, makeing
-        sure the same random split is used when given the same random seed
-    subsample_ratio: randomly takes part of the datasets when it's
-        too large
-    generate_basic_vocab: True if the basic vocabulary(which
-        shall be used to merge the public vocabulary) needs to be generated
-    generate_tf_record: True if TFRecord files need generating
-    padding: True if token(word id) list needs padding to
-        max_document_length
-    write_bow: True if to write bag of words as a feature in the TFRecord
-    write_tfidf: True if to write tf-idf as a feature in the TFRecord
-    predict_mode: True if to only write unlabeled text to predict
-    predict_json_path: File path of the gzipped json file of the text to
-    predict
-    predict_tf_path: File path of the TFRecord file of the text to predict
-    expand_vocab: whether to expand the training vocab with pre-trained
-    word embeddings' vocab
-    preproc: whether to remove urls, trailing/leading whitespaces and
-    replace linebreaks
-    vocab_all: whether to use all three splits when buildilng vocabulary
+               **kwargs):
+
+    """TODO Args:
+
+    :param json_dir: where data.json.gz and index.json.gz are
+            located, and vocabulary/TFRecords built from the single
+            datasets are to be saved
+    :param vocab_given: True if to use the given vocabulary
+    :param tfrecord_dir: directory to save generated TFRecord files
+    :param vocab_dir: directory to load the given (e.g. merged) vocabulary
+            frequency dict json file or to save the self-generated vocabulary
+    :param vocab_name: 'vocab_freq.json' or 'vocab_v2i.json'
+    :param max_document_length: maximum document length for the mapped
+            word ids, computed as the maximum document length of all the
+            training data if -1, used when padding is True
+    :param max_vocab_size: maximum size of the vocabulary allowed
+    :param min_frequency: minimum frequency to build the vocabulary,
+            words that appear lower than or equal to this number would be
+            discarded
+    :param max_frequency: maximum frequency to build the vocabulary,
+            words that appear more than or equal to this number would be
+            discarded
+    :param text_field_names: string of a list of text field names joined
+            with spaces, read from json_dir if None
+    :param label_field_name: label field name(only 1), read from json_dir if None
+    :param label_type: type of label, 'int' or 'float'
+    :param valid_ratio: how many data out of all data to use as valid
+            data if not splits are given, or how many data out of train data to
+            use as valid if train/test splits are given
+    :param train_ratio: how many data to use as train data if train
+            split not given
+    :param random_seed: random seed used in random spliting, making
+            sure the same random split is used when given the same random seed
+    :param subsample_ratio: randomly takes part of the datasets when it's
+            too large
+    :param generate_basic_vocab: True if the basic vocabulary(which
+            shall be used to merge the public vocabulary) needs to be generated
+    :param generate_tf_record: True if TFRecord files need generating
+    :param padding: True if token(word id) list needs padding to
+            max_document_length
+    :param write_bow: True if to write bag of words as a feature in the TFRecord
+    :param write_tfidf: True if to write tf-idf as a feature in the TFRecord
+    :param predict_mode: True if to only write unlabeled text to predict
+    :param predict_json_path: File path of the gzipped json file of the text to
+        predict
+    :param predict_tf_path: File path of the TFRecord file of the text to predict
+    :param expand_vocab: whether to expand the training vocab with pre-trained
+        word embeddings' vocab
+    :param preproc: whether to remove urls, trailing/leading whitespaces and
+        replace linebreaks
+    :param vocab_all: whether to use all three splits when building vocabulary
     """
 
-    self._preproc = preproc
-    self._vocab_all = vocab_all
-
-    if max_vocab_size == -1 or max_vocab_size is None:
-      self._max_vocab_size = float('inf')
-    else:
-      self._max_vocab_size = max_vocab_size
-
-    self._min_frequency = min_frequency
-    self._max_frequency = max_frequency
-
-    self._padding = padding
-    self._write_bow = write_bow
-    self._write_tfidf = write_tfidf
+    self._json_dir = json_dir
+    self._tfrecord_dir = tfrecord_dir
     self._load_vocab_name = vocab_name
+    self._predict_tf_path = predict_tf_path
 
-    self._tokenizer_name = tokenizer_
-    if tokenizer_ == "tweet_tokenizer":
-      self._tokenizer = tweet_tokenizer.tokenize
-    elif tokenizer_ == "tweet_tokenizer_keep_handles":
-      self._tokenizer = tweet_tokenizer_keep_handles.tokenize
-    elif tokenizer_ == "ruder_tokenizer":
-      self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
-    elif tokenizer_ == "split_tokenizer":
-      self._tokenizer = functools.partial(split_tokenizer)
-    else:
-      raise ValueError("unrecognized tokenizer: %s" % tokenizer_)
+    self._args = {
+      'predict_mode': False,
+      'text_field_names': ['text'],
+      'label_field_name': ['label'],
+      'label_type': 'int',
+      'max_document_length': -1,
+      'min_frequency': 0,
+      'max_frequency': -1,
+      'max_vocab_size': -1,
+      'tokenizer_': 'tweet_tokenizer',
+      'expand_vocab': False,
+      'preproc': True,
+      'vocab_all': False,
+      'padding': False,
+      'write_bow': False,
+      'write_tfidf': False,
+      'train_ratio': TRAIN_RATIO,
+      'valid_ratio': VALID_RATIO,
+      'random_seed': RANDOM_SEED,
+      'subsample_ratio': 1
+    }
+    for k, v in kwargs.items():
+      print(k)
+      self._args[k] = v
 
-    self._text_field_names = text_field_names
-    self._label_field_name = label_field_name
+    if self._args['max_document_length'] == -1:
+      self._args['max_document_length'] = float('inf')
+
+    print(self._args)
 
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
@@ -189,44 +159,197 @@ Args:
       and vocab_given and vocab_name == 'vocab_freq.json':
       print(
         "Generating word id mapping using given word frequency dictionary...")
-      if max_document_length == -1:
-        self._max_document_length = float('inf')
-      else:
-        self._max_document_length = max_document_length
       self._vocab_dir = vocab_dir
       self._categorical_vocab = self.load_make_vocab()
-      self._vocab_size = len(self._categorical_vocab.mapping)
-      print("Vocabulary size =", self._vocab_size)
+      self._args['vocab_size'] = len(self._categorical_vocab.mapping)
+      print("Vocabulary size =", self._args['vocab_size'])
       return
-      # TODO
 
-    if predict_mode:
+    if self._args['predict_mode']:
       assert predict_json_path is not None
-      data_file_name = predict_json_path
+      self._data_file_name = predict_json_path
     else:
       assert json_dir is not None
-      data_file_name = os.path.join(json_dir, 'data.json.gz')
+      self._data_file_name = os.path.join(json_dir, 'data.json.gz')
 
-    print('Loading data from', data_file_name)
-    with gzip.open(data_file_name, mode='rt') as file:
-      data = json.load(file, encoding='utf-8')
+    self._tokenizer = None
+    self.get_tokenizer()
 
+    self._data = None
+    self.read_data()
+
+    self._label_list = None
+    self._label_set = None
+    self._num_classes = None
+    self.get_label()
+
+    self._num_examples = 0
+    self._sequences = dict()
+    self._sequence_lengths = dict()
+    self._ids = []
+    self.get_text()
+
+    self.get_index()
+    self.get_max_doc_len()  # TODO remove?
+
+    self._vocab_dict = None
+    self._categorical_vocab = None
+    self._vocab_freq_dict = None
+    self._vocab_dir = None
+    self._save_vocab_dir = None
+    self._vocab_processor = None
+
+    # generate and save the vocabulary which contains all the words
+    if generate_basic_vocab:
+      print("Generating the basic vocabulary.")
+      self._vocab_dir = json_dir
+      self.build_save_basic_vocab()
+
+    if generate_tf_record is False:
+      print("No need to generate TFRecords. Done.")
+      return
+
+    if vocab_given is False:
+      print("No vocabulary given. Generate a new one.")
+      self._categorical_vocab = self.build_vocab()
+      self._vocab_dir = tfrecord_dir
+      self._save_vocab_dir = self._vocab_dir
+      self.save_vocab()
+
+    else:
+      print("Public vocabulary given. Use that to build vocabulary "
+            "processor.")
+      assert vocab_name in VOCAB_NAMES, vocab_name
+      self._vocab_dir = vocab_dir
+      self._tfrecord_dir = tfrecord_dir  # used to save the combined
+      # vocabulary when loading pretrained word embeddings
+      self._categorical_vocab = self.load_vocab()
+
+    # save mapping/reverse mapping to the disk
+    # freq:            vocab_dir/vocab_freq.json
+    # mapping:         vocab_dir/vocab_v2i.json
+    # reverse mapping: vocab_dir/vocab_i2v.json(sorted according to freq)
+
+    self._args['vocab_size'] = len(self._categorical_vocab.mapping)
+    print("used vocab size =", self._args['vocab_size'])
+
+    # generate tfidf list if write_tfidf is True
+    if self._args['write_tfidf']:
+      # TODO: determine if tfidf should be calculated based on each
+      # sequence kind or on all sequences regardless of kind
+      raise NotImplementedError("tfidf (%s) not currently supported" % tfidf)
+
+    self.write_tfrecord()
+
+    if not self._args['predict_mode']:
+      self.write_args()
+
+  def get_max_doc_len(self):
+    # TODO remove ?
+    # only compute from training data
+    if self._args['max_document_length'] == -1:
+      if self._args['padding']:
+        print('Maximum document length not given, computing from training '
+              'data..')
+        for text_field_name in tqdm(self._args['text_field_names']):
+          tmp_max = max(len(self._sequences[text_field_name][i])
+                        for i in self._train_index)
+        self._args['max_document_length'] = max(tmp_max,
+                                                self._args[
+                                                  'max_document_length'])
+        print("Max document length computed =",
+              self._args['max_document_length'])
+      else:
+        self._args['max_document_length'] = float('inf')
+        print('Maximum document length given: ',
+              self._args['max_document_length'])
+    else:
+      print('Maximum document length given:',
+            self._args['max_document_length'])
+
+  def get_index(self):
+    if self._args['predict_mode']:
+      self._predict_index = np.asarray(range(self._num_examples))
+    else:
+      assert self._ids == []
+      print("Generating train/valid/test splits...")
+      index_path = os.path.join(self._json_dir, "index.json.gz")
+      (self._train_index, self._valid_index, self._test_index,
+       self._unlabeled_index) = self.split(index_path,
+                                           self._args['train_ratio'],
+                                           self._args['valid_ratio'],
+                                           self._args['random_seed'],
+                                           self._args['subsample_ratio']
+                                           )
+
+  def write_tfrecord(self):
+    # write TFRecords for predict data
+    if self._args['predict_mode']:
+      self._args['predict_path'] = self._predict_tf_path
+      print("Writing TFRecord file for the predicting file...")
+      self.write_examples(self._args['predict_path'], self._predict_index,
+                          labeled=False)
+      return
+
+    # write TFRecords for train/valid/test data
+
+    # write labeled data to TFRecord files
+    make_dir(self._tfrecord_dir)
+    self._args['train_path'] = os.path.join(self._tfrecord_dir, 'train.tf')
+    self._args['valid_path'] = os.path.join(self._tfrecord_dir, 'valid.tf')
+    self._args['test_path'] = os.path.join(self._tfrecord_dir, 'test.tf')
+
+    print("Writing TFRecord file for the training data...")
+    self.write_examples(
+      self._args['train_path'], self._train_index, labeled=True)
+    print("Writing TFRecord file for the validation data...")
+    self.write_examples(
+      self._args['valid_path'], self._valid_index, labeled=True)
+    print("Writing TFRecord file for the test data...")
+    self.write_examples(
+      self._args['test_path'], self._test_index, labeled=True)
+
+    # write unlabeled data to TFRecord files if there're any
+
+    if len(self._unlabeled_index) == 0:
+      print("Unlabeled data not found.")
+      self._args['unlabeled_path'] = None
+      self._args['has_unlabeled'] = False
+    else:
+      print("Unlabeled data found.")
+      self._args['_has_unlabeled'] = True
+      print("Writing TFRecord files for the unlabeled data...")
+      self._args['unlabeled_path'] = os.path.join(self._tfrecord_dir,
+                                                  'unlabeled.tf')
+      self.write_examples(
+        self._args['unlabeled_path'], self._unlabeled_index, labeled=False)
+
+  def get_label(self):
     print('Generating label list...')
-    self._label_type = label_type
-    if self._label_type == 'int':
+    if self._args['label_type'] == 'int':
       transfer = int
-    elif self._label_type == 'float':
+    elif self._args['label_type'] == 'float':
       transfer = float
     else:
       raise TypeError('Label type other than "int" and "float" is not '
                       'implemetned!')
-    self._label_list = [transfer(item[label_field_name])
-                        if label_field_name in item else None for
-                        item in tqdm(data)]
+    self._label_list = [transfer(item[self._args['label_field_name']])
+                        if self._args['label_field_name'] in item else None for
+                        item in tqdm(self._data)]
     # TODO: is it possible that the label list read doesn't cover all the
     # labels?
     self._label_set = set(self._label_list)
+    self._args['labels'] = list(self._label_set)
     self._num_classes = len(set(self._label_list))
+
+  def read_data(self):
+    print('Loading data from', self._data_file_name)
+    with gzip.open(self._data_file_name, mode='rt') as file:
+      self._data = json.load(file, encoding='utf-8')
+
+  def get_text(self):
+    # tokenize and reconstruct as string(which vocabulary processor
+    # takes as input)
 
     # Iterate through data in the following order:
     #   -data example
@@ -244,28 +367,22 @@ Args:
     #   self._sequences[text_field_name][index_of_interest]
     # for each text_field_name because the sequences for an example are
     # indexed by the same number.
-
-    num_examples = 0
-    self._sequences = dict()
-    self._sequence_lengths = dict()
-    for text_field_name in self._text_field_names:
+    for text_field_name in self._args['text_field_names']:
       self._sequences[text_field_name] = list()
       self._sequence_lengths[text_field_name] = list()
 
-    self._ids = []
-
     print("Generating text lists...")
     min_seq_len = sys.maxsize
-    for index, item in tqdm(enumerate(data)):
-      num_examples += 1
+    for index, item in tqdm(enumerate(self._data)):
+      self._num_examples += 1
 
-      if predict_mode:
+      if self._args['predict_mode']:
         if 'id' in item:
           self._ids.append(item['id'])
 
-      for text_field_name in self._text_field_names:
+      for text_field_name in self._args['text_field_names']:
         text = item[text_field_name]
-        if self._preproc:
+        if self._args['preproc']:
 
           # remove leading and trailing whitespaces(to get rid of redundant
           # linebreaks)
@@ -289,7 +406,7 @@ Args:
         text = [BOS] + self._tokenizer(text) + [EOS]
 
         if len(text) < 3:
-          print("!!!!!", json_dir, index)
+          print("!!!!!", self._json_dir, index)
         # assert len(text) >= 3, old_text
 
         if len(text) < min_seq_len:
@@ -297,176 +414,30 @@ Args:
 
         # print('{}: {} ({})'.format(item['index'], text, text_field_name))
         self._sequences[text_field_name].append(text)
+
         # length of cleaned text (including BOS and EOS)
         self._sequence_lengths[text_field_name].append(len(text))
 
     print('Minimum sequence length: %d' % min_seq_len)
 
-    for text_field_name in text_field_names:
+    for text_field_name in self._args['text_field_names']:
       # Check that every example has every field
-      assert len(self._sequences[text_field_name]) == num_examples, \
-        str(num_examples) + ' ' + str(len(self._sequences[text_field_name]))
-      assert len(self._sequence_lengths[text_field_name]) == num_examples
+      assert len(self._sequences[text_field_name]) == self._num_examples, \
+        str(self._num_examples) + ' ' + str(
+          len(self._sequences[text_field_name]))
+      assert len(self._sequence_lengths[text_field_name]) == self._num_examples
 
-    self._num_examples = num_examples
-
-    # tokenize and reconstruct as string(which vocabulary processor
-    # takes as input)
-
-    # get index
-    if predict_mode:
-      self._predict_index = np.asarray(range(num_examples))
+  def get_tokenizer(self):
+    if self._args['tokenizer_'] == "tweet_tokenizer":
+      self._tokenizer = tweet_tokenizer.tokenize
+    elif self._args['tokenizer_'] == "tweet_tokenizer_keep_handles":
+      self._tokenizer = tweet_tokenizer_keep_handles.tokenize
+    elif self._args['tokenizer_'] == "ruder_tokenizer":
+      self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
+    elif self._args['tokenizer_'] == "split_tokenizer":
+      self._tokenizer = functools.partial(split_tokenizer)
     else:
-      assert self._ids == []
-      print("Generating train/valid/test splits...")
-      index_path = os.path.join(json_dir, "index.json.gz")
-      (self._train_index, self._valid_index, self._test_index,
-       self._unlabeled_index) = self.split(index_path, train_ratio,
-                                           valid_ratio, random_seed,
-                                           subsample_ratio)
-
-    # only compute from training data
-    if max_document_length == -1:
-      if padding:
-        print('Maximum document length not given, computing from training '
-              'data..')
-        for text_field_name in tqdm(text_field_names):
-          tmp_max = max(len(self._sequences[text_field_name][i])
-                        for i in self._train_index)
-        self._max_document_length = max(tmp_max, max_document_length)
-        print("Max document length computed =", self._max_document_length)
-      else:
-        self._max_document_length = float('inf')
-        print('Maximum document length given: ', self._max_document_length)
-    else:
-      self._max_document_length = max_document_length
-      print('Maximum document length given:', max_document_length)
-
-    self._vocab_dict = None
-    self._categorical_vocab = None
-    self._vocab_freq_dict = None
-    self._vocab_dir = None
-
-    # generate and save the vocabulary which contains all the words
-    if generate_basic_vocab:
-      print("Generating the basic vocabulary.")
-      self._vocab_dir = json_dir
-      self.build_save_basic_vocab()
-
-    if generate_tf_record is False:
-      print("No need to generate TFRecords. Done.")
-      return
-
-    if vocab_given is False:
-      print("No vocabulary given. Generate a new one.")
-      self._categorical_vocab = self.build_vocab()
-      self._vocab_dir = tfrecord_dir
-      self.save_vocab(self._vocab_dir)
-
-    else:
-      print("Public vocabulary given. Use that to build vocabulary "
-            "processor.")
-      assert vocab_name in VOCAB_NAMES, vocab_name
-      self._vocab_dir = vocab_dir
-      self._tfrecord_dir = tfrecord_dir  # used to save the combined
-      # vocabulary when loading pretrained word embeddings
-      self._expand_vocab = expand_vocab
-      self._categorical_vocab = self.load_vocab()
-
-    # save mapping/reverse mapping to the disk
-    # freq:            vocab_dir/vocab_freq.json
-    # mapping:         vocab_dir/vocab_v2i.json
-    # reverse mapping: vocab_dir/vocab_i2v.json(sorted according to freq)
-
-    self._vocab_size = len(self._categorical_vocab.mapping)
-    print("used vocab size =", self._vocab_size)
-
-    # generate tfidf list if write_tfidf is True
-    if write_tfidf:
-      # TODO: determine if tfidf should be calculated based on each
-      # sequence kind or on all sequences regardless of kind
-      raise NotImplementedError("tfidf (%s) not currently supported" % (tfidf))
-
-    if predict_mode:
-      self._predict_path = predict_tf_path
-      print("Writing TFRecord file for the predicting file...")
-      self.write_examples(self._predict_path, self._predict_index,
-                          labeled=False)
-    else:
-      # write TFRecords for train/valid/test data
-
-      # write labeled data to TFRecord files
-      make_dir(tfrecord_dir)
-      self._train_path = os.path.join(tfrecord_dir, 'train.tf')
-      self._valid_path = os.path.join(tfrecord_dir, 'valid.tf')
-      self._test_path = os.path.join(tfrecord_dir, 'test.tf')
-
-      print("Writing TFRecord file for the training data...")
-      self.write_examples(
-        self._train_path, self._train_index, labeled=True)
-      print("Writing TFRecord file for the validation data...")
-      self.write_examples(
-        self._valid_path, self._valid_index, labeled=True)
-      print("Writing TFRecord file for the test data...")
-      self.write_examples(
-        self._test_path, self._test_index, labeled=True)
-
-      # write unlabeled data to TFRecord files if there're any
-
-      if len(self._unlabeled_index) == 0:
-        print("Unlabeled data not found.")
-        self._unlabeled_path = None
-        self._has_unlabeled = False
-      else:
-        print("Unlabeled data found.")
-        self._has_unlabeled = True
-        print("Writing TFRecord files for the unlabeled data...")
-        self._unlabeled_path = os.path.join(
-          tfrecord_dir, 'unlabeled.tf')
-        self.write_examples(
-          self._unlabeled_path, self._unlabeled_index, labeled=False)
-
-      # save dataset arguments
-      self._args = {
-        'num_classes': self._num_classes,
-        'max_document_length': self._max_document_length,
-        'vocab_size': self._vocab_size,
-        'max_vocab_size_allowed': self._max_vocab_size,
-        'min_frequency': min_frequency,
-        'max_frequency': max_frequency,
-        'text_field_names': self._text_field_names,
-        'label_field_name': self._label_field_name,
-        'label_type': self._label_type,
-        'random_seed': random_seed,
-        'train_size': len(self._train_index),
-        'valid_size': len(self._valid_index),
-        'test_size': len(self._test_index),
-        'train_path': os.path.abspath(self._train_path),
-        'valid_path': os.path.abspath(self._valid_path),
-        'test_path': os.path.abspath(self._test_path),
-        'has_unlabeled': self._has_unlabeled,
-        'unlabeled_size': len(self._unlabeled_index),
-        'unlabeled_path': os.path.abspath(
-          self._unlabeled_path
-        ) if self._unlabeled_path is not None else None,
-        'labels': list(self._label_set),
-        'preproc': self._preproc,
-        'vocab_all': self._vocab_all,
-        'tokenizer': self._tokenizer_name,
-        'padding': self._padding,
-        'write_bow': self._write_bow,
-        'write_tfidf': self._write_tfidf
-      }
-      if hasattr(self, '_random_size'):
-        self._args['reverse_vocab_path'] = self._reverse_vocab_path
-        self._args['random_size'] = self._random_size
-      print('Arguments for the dataset:')
-      for k, v in self._args.items():
-        print(k, ':', v)
-      args_path = os.path.join(tfrecord_dir, "args.json")
-      with codecs.open(args_path, mode='w', encoding='utf-8') as file:
-        json.dump(self._args, file, ensure_ascii=False, indent=4)
-      assert os.path.exists(args_path), 'Failed to save args.json!'
+      raise ValueError("unrecognized tokenizer: %s" % self._args['tokenizer_'])
 
   def build_vocab(self):
     """Builds vocabulary for this dataset only using tensorflow's
@@ -474,70 +445,72 @@ Args:
     VocabularyProcessor
     This vocabulary is only used for this dataset('s training data)
     """
-    vocab_processor = VocabularyProcessor(
-      max_document_length=self._max_document_length,
-      max_vocab_size=self._max_vocab_size,
-      min_frequency=self._min_frequency,
-      max_frequency=self._max_frequency,
-      tokenizer_fn=tokenizer)
+    self.init_vocab_processor()
 
-    # build vocabulary only according to training data
-    training_docs = [self._sequences[text_field_name][i]
-                     for text_field_name in self._text_field_names
-                     for i in self._train_index]
+    training_docs = self.get_training_docs()
 
-    if self._vocab_all:
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._valid_index]
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._test_index]
+    self._vocab_processor.fit(training_docs)
 
-    vocab_processor.fit(training_docs)
+    self.get_vocab()
 
-    if self._padding:
-      # TODO: update implementation of transform_pad() to take a max length
-      # as different kinds of sequences within a single example will have
-      # different max lengths
-      for text_field_name in self._text_field_names:
-        self._sequences[text_field_name] = list(
-          vocab_processor.transform_pad(self._sequences[text_field_name]))
-    else:
-      for text_field_name in self._text_field_names:
-        self._sequences[text_field_name] = list(
-          vocab_processor.transform(self._sequences[text_field_name]))
+    self._vocab_freq_dict = self._vocab_processor.vocabulary_.freq
 
-    for text_field_name in self._text_field_names:
-      self._sequences[text_field_name] = [list(i)
-                                          for i
-                                          in self._sequences[text_field_name]]
+    return self._vocab_processor.vocabulary_
 
-    self._vocab_freq_dict = vocab_processor.vocabulary_.freq
+  def save_vocab_extra(self):
+    make_dir(self._save_vocab_dir)
+    with codecs.open(os.path.join(self._tfrecord_dir,
+                                  "vocab_extra_v2i.json"),
+                     mode='w', encoding='utf-8') as file:
+      json.dump(self._vocab_extra, file,
+                ensure_ascii=False, indent=4)
 
-    return vocab_processor.vocabulary_
-
-  def save_vocab(self, save_vocab_dir):
-
-    # save the built vocab to the disk for future use
-    make_dir(save_vocab_dir)
-
-    with codecs.open(os.path.join(save_vocab_dir, "vocab_freq.json"),
+  def save_vocab_freq(self):
+    make_dir(self._save_vocab_dir)
+    with codecs.open(os.path.join(self._save_vocab_dir, "vocab_freq.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(self._vocab_freq_dict, file,
                 ensure_ascii=False, indent=4)
 
-    with codecs.open(os.path.join(save_vocab_dir, "vocab_v2i.json"),
+  def save_v2i_dict(self):
+    make_dir(self._save_vocab_dir)
+    with codecs.open(os.path.join(self._save_vocab_dir, "vocab_v2i.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(self._categorical_vocab.mapping, file,
                 ensure_ascii=False, indent=4)
 
+  def save_i2v_dict(self):
+    make_dir(self._save_vocab_dir)
     vocab_i2v_dict = dict()
     for i in range(len(self._categorical_vocab.reverse_mapping)):
       vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
-    with codecs.open(os.path.join(save_vocab_dir, "vocab_i2v.json"),
+    with codecs.open(os.path.join(self._save_vocab_dir, "vocab_i2v.json"),
                      mode='w', encoding='utf-8')as file:
       json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
+
+  def save_vocab(self):
+
+    # TODO vocab_dir  vs save_vocab_dir
+
+    # save the built vocab to the disk for future use
+    make_dir(self._save_vocab_dir)
+    self.save_vocab_freq()
+    self.save_v2i_dict()
+    self.save_i2v_dict()
+
+  def get_training_docs(self):
+    # build vocabulary only according to training data
+    training_docs = [self._sequences[text_field_name][i]
+                     for text_field_name in self._args['text_field_names']
+                     for i in self._train_index]
+    if self._args['vocab_all']:
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._args['text_field_names']
+                        for i in self._valid_index]
+      training_docs += [self._sequences[text_field_name][i]
+                        for text_field_name in self._args['text_field_names']
+                        for i in self._test_index]
+    return training_docs
 
   def build_save_basic_vocab(self):
     """Build vocabulary with min_frequency=0 for this dataset'
@@ -547,32 +520,21 @@ Args:
     's training data) are taken into account when merging with other
     vocabularies"""
 
-    vocab_processor = VocabularyProcessor(
-      max_document_length=self._max_document_length,
-      tokenizer_fn=tokenizer)
+    self._vocab_processor = VocabularyProcessor(
+      max_document_length=self._args['max_document_length'],
+      tokenizer_fn=tokenizer_simple)
 
     # build vocabulary only according to training data
-    training_docs = [self._sequences[text_field_name][i]
-                     for text_field_name in self._text_field_names
-                     for i in self._train_index]
-    if self._vocab_all:
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._valid_index]
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._test_index]
+    training_docs = self.get_training_docs()
 
-    vocab_processor.fit(training_docs)
-    self._categorical_vocab = vocab_processor.vocabulary_
+    self._vocab_processor.fit(training_docs)
+    self._categorical_vocab = self._vocab_processor.vocabulary_
 
-    vocab_freq_dict = vocab_processor.vocabulary_.freq
-    print("total word size =", len(vocab_freq_dict))
+    self._vocab_freq_dict = self._vocab_processor.vocabulary_.freq
+    print("total word size =", len(self._vocab_freq_dict))
 
-    make_dir(self._vocab_dir)
-    with codecs.open(os.path.join(self._vocab_dir, "vocab_freq.json"),
-                     mode='w', encoding='utf-8') as file:
-      json.dump(vocab_freq_dict, file, ensure_ascii=False, indent=4)
+    self._save_vocab_dir = self._vocab_dir
+    self.save_vocab_freq()
 
   def load_make_vocab(self):
     """Load word frequency vocabulary and generate word id mapping"""
@@ -586,11 +548,19 @@ Args:
     categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
     for word in self._vocab_freq_dict:
       categorical_vocab.add(word, count=self._vocab_freq_dict[word])
-    categorical_vocab.trim(min_frequency=self._min_frequency,
-                           max_frequency=self._max_frequency,
-                           max_vocab_size=self._max_vocab_size)
+    categorical_vocab.trim(min_frequency=self._args['min_frequency'],
+                           max_frequency=self._args['max_frequency'],
+                           max_vocab_size=self._args['max_vocab_size'])
     categorical_vocab.freeze()
     return categorical_vocab
+
+  def init_vocab_processor(self):
+    self._vocab_processor = VocabularyProcessor(
+      max_document_length=self._args['max_document_length'],
+      max_vocab_size=self._args['max_vocab_size'],
+      min_frequency=self._args['min_frequency'],
+      max_frequency=self._args['max_frequency'],
+      tokenizer_fn=tokenizer_simple)
 
   def get_train_vocab_list(self):
     """Get all the word types in the training docs
@@ -598,29 +568,13 @@ Args:
     :param doc_list: a list of documents
     :return: list, all the word types in the docs; use list to keep order
     """
+    self.init_vocab_processor()
 
-    vocab_processor = VocabularyProcessor(
-      max_document_length=self._max_document_length,
-      max_vocab_size=self._max_vocab_size,
-      min_frequency=self._min_frequency,
-      max_frequency=self._max_frequency,
-      tokenizer_fn=tokenizer)
+    training_docs = self.get_training_docs()
 
-    # build vocabulary only according to training data
-    training_docs = [self._sequences[text_field_name][i]
-                     for text_field_name in self._text_field_names
-                     for i in self._train_index]
-    if self._vocab_all:
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._valid_index]
-      training_docs += [self._sequences[text_field_name][i]
-                        for text_field_name in self._text_field_names
-                        for i in self._test_index]
+    self._vocab_processor.fit(training_docs)
 
-    vocab_processor.fit(training_docs)
-
-    return vocab_processor.vocabulary_.reverse_mapping
+    return self._vocab_processor.vocabulary_.reverse_mapping
 
   def load_vocab(self):
     make_dir(self._vocab_dir)
@@ -638,18 +592,13 @@ Args:
       categorical_vocab = CategoricalVocabulary(unknown_token=OOV)
       for word in self._vocab_freq_dict:
         categorical_vocab.add(word, count=self._vocab_freq_dict[word])
-      categorical_vocab.trim(min_frequency=self._min_frequency,
-                             max_frequency=self._max_frequency,
-                             max_vocab_size=self._max_vocab_size)
+      categorical_vocab.trim(min_frequency=self._args['min_frequency'],
+                             max_frequency=self._args['max_frequency'],
+                             max_vocab_size=self._args['max_vocab_size'])
       categorical_vocab.freeze()
 
-      vocab_processor = VocabularyProcessor(
-        vocabulary=categorical_vocab,
-        max_document_length=self._max_document_length,
-        min_frequency=self._min_frequency,
-        max_frequency=self._max_frequency,
-        max_vocab_size=self._max_vocab_size,
-        tokenizer_fn=tokenizer)
+      self.init_vocab_processor()
+
 
     else:
       # used when to directly use the vocabulary given
@@ -665,7 +614,7 @@ Args:
 
         train_vocab_list = self.get_train_vocab_list()
 
-        if self._expand_vocab:
+        if self._args['expand_vocab']:
           print('Combine pre-trained word embeddings\' vocabulary mapping '
                 'with all the word types appearing in the training data.')
           # TODO multiple training data for merged vocabulary
@@ -678,24 +627,16 @@ Args:
           # TODO other pre-trained word embedding
           pretrained_path = os.path.join(self._vocab_dir,
                                          self._load_vocab_name)
-          self._vocab_v2i_dict, vocab_extra = combine_vocab(pretrained_path,
-                                                            train_vocab_list)
+          self._vocab_v2i_dict, self._vocab_extra = combine_vocab(
+            pretrained_path,
+            train_vocab_list)
 
-          self._vocab_size = len(self._vocab_v2i_dict)
+          self._args['vocab_size'] = len(self._vocab_v2i_dict)
 
           # save the combined vocab to the disk for future use
-          make_dir(self._tfrecord_dir)
-          with codecs.open(os.path.join(self._tfrecord_dir, "vocab_v2i.json"),
-                           mode='w', encoding='utf-8') as file:
-            json.dump(self._vocab_v2i_dict, file,
-                      ensure_ascii=False, indent=4)
-            # TODO save vocab_extra
-
-          with codecs.open(os.path.join(self._tfrecord_dir,
-                                        "vocab_extra_v2i.json"),
-                           mode='w', encoding='utf-8') as file:
-            json.dump(vocab_extra, file,
-                      ensure_ascii=False, indent=4)
+          self._save_vocab_dir = self._tfrecord_dir
+          self.save_v2i_dict()
+          self.save_vocab_extra()
         else:
           # use pre-trained word embeddings' dictionary + EOS + OOV + LINEBREAK
           # print('Use pre-trained word embeddings\' vocabulary mapping only.')
@@ -712,17 +653,17 @@ Args:
           # TODO other pre-trained word embedding
           pretrained_path = os.path.join(self._vocab_dir,
                                          self._load_vocab_name)
-          random_size, self._vocab_v2i_dict = reorder_vocab(pretrained_path,
-                                                            train_vocab_list)
+          self._args['random_size'], self._vocab_v2i_dict = reorder_vocab(
+            pretrained_path,
+            train_vocab_list)
 
-          self._vocab_size = len(self._vocab_v2i_dict)
+          self._args['vocab_size'] = len(self._vocab_v2i_dict)
 
           # save the new vocab to the disk for future use
           make_dir(self._tfrecord_dir)
-          self._random_size = random_size
-          self._reverse_vocab_path = os.path.join(self._tfrecord_dir,
-                                                  "vocab_i2v.json")
-          with codecs.open(self._reverse_vocab_path, mode='w',
+          self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
+                                                          "vocab_i2v.json")
+          with codecs.open(self._args['reverse_vocab_path'], mode='w',
                            encoding='utf-8') as file:
             json.dump(self._vocab_v2i_dict, file,
                       ensure_ascii=False, indent=4)
@@ -730,35 +671,40 @@ Args:
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(
         unknown_token=OOV, mapping=self._vocab_v2i_dict)
-      vocab_processor = VocabularyProcessor(
+      self._vocab_processor = VocabularyProcessor(
         vocabulary=categorical_vocab,
-        max_document_length=self._max_document_length,
-        tokenizer_fn=tokenizer)
+        max_document_length=self._args['max_document_length'],
+        tokenizer_fn=tokenizer_simple)
       assert categorical_vocab.mapping == self._vocab_v2i_dict
 
     # save the vocab if using pre-trained word embeddings
     if not self._load_vocab_name == 'vocab_v2i.json':
       self._categorical_vocab = categorical_vocab
-      self.save_vocab(self._tfrecord_dir)
+      self._save_vocab_dir = self._tfrecord_dir
+      self.save_vocab()
 
-    if self._padding:
+    self.get_vocab()
+
+    return self._vocab_processor.vocabulary_
+
+  def get_vocab(self):
+    if self._args['padding']:
       # TODO: update implementation of transform_pad() to take a max length
       # as different kinds of sequences within a single example will have
       # different max lengths
-      for text_field_name in self._text_field_names:
+      for text_field_name in self._args['text_field_names']:
         self._sequences[text_field_name] = list(
-          vocab_processor.transform_pad(self._sequences[text_field_name]))
+          self._vocab_processor.transform_pad(
+            self._sequences[text_field_name]))
     else:
-      for text_field_name in self._text_field_names:
+      for text_field_name in self._args['text_field_names']:
         self._sequences[text_field_name] = list(
-          vocab_processor.transform(self._sequences[text_field_name]))
+          self._vocab_processor.transform(self._sequences[text_field_name]))
 
-    for text_field_name in self._text_field_names:
+    for text_field_name in self._args['text_field_names']:
       self._sequences[text_field_name] = [list(i)
                                           for i
                                           in self._sequences[text_field_name]]
-
-    return vocab_processor.vocabulary_
 
   def write_examples(self, file_name, split_index, labeled):
     # write to TFRecord data file
@@ -777,7 +723,7 @@ Args:
             bytes_list=tf.train.BytesList(
               value=[str(self._ids[index]).encode('utf-8')]))
 
-        for text_field_name in self._text_field_names:
+        for text_field_name in self._args['text_field_names']:
           feature[text_field_name] = tf.train.Feature(
             int64_list=tf.train.Int64List(
               value=self._sequences[text_field_name][index]))
@@ -791,7 +737,7 @@ Args:
           assert len(types) > 0
           for t in types:
             assert t >= 0
-            assert t < self._vocab_size
+            assert t < self._args['vocab_size']
           for c in counts:
             assert c > 0
             assert c <= len(self._sequences[text_field_name][index])
@@ -803,12 +749,18 @@ Args:
           feature[text_field_name + '_types_length'] = tf.train.Feature(
             int64_list=tf.train.Int64List(value=[len(types)]))
 
-          if self._write_bow:
+          if self._args['write_bow']:
             # This assumes a single vocabulary shared among all sequence kinds
             bow = bag_of_words(self._sequences[text_field_name][index],
-                               self._vocab_size).tolist()
+                               self._args['vocab_size']).tolist()
             feature[text_field_name + '_bow'] = tf.train.Feature(
               float_list=tf.train.FloatList(value=bow))
+
+          # if self._args['write_unique']:
+          #   feature[text_field_name + '_unique'] = tf.train.Feature(
+          #     int64_list=tf.train.Int64List(
+          #       value=list(OrderedDict.fromkeys(
+          #         self._sequences[text_field_name][index]))))  # keep order
 
         # Gather label
 
@@ -816,11 +768,11 @@ Args:
           label = self._label_list[index]
           assert label is not None
 
-          if self._label_type == 'int':
+          if self._args['label_type'] == 'int':
             feature['label'] = tf.train.Feature(
               int64_list=tf.train.Int64List(
                 value=[label]))
-          elif self._label_type == 'float':
+          elif self._args['label_type'] == 'float':
             feature['label'] = tf.train.Feature(
               float_list=tf.train.FloatList(
                 value=[label]))
@@ -832,7 +784,7 @@ Args:
           # assert label is None
           pass
 
-        if self._write_tfidf:
+        if self._args['write_tfidf']:
           raise NotImplementedError("tfidf not supported")
           # feature['tfidf'] = tf.train.Feature(
           #   float_list=tf.train.FloatList(
@@ -926,6 +878,17 @@ Args:
 
     return train_ind, valid_ind, test_ind, unlabeled_ind
 
+  def write_args(self):
+    # save dataset arguments
+    self._args['max_vocab_size_allowed'] = self._args.pop('max_vocab_size')
+    print('Arguments for the dataset:')
+    for k, v in self._args.items():
+      print(k, ':', v)
+    args_path = os.path.join(self._tfrecord_dir, "args.json")
+    with codecs.open(args_path, mode='w', encoding='utf-8') as file:
+      json.dump(self._args, file, ensure_ascii=False, indent=4)
+    assert os.path.exists(args_path), 'Failed to save args.json!'
+
   @staticmethod
   def subsample(index, random_seed, subsample_ratio=0.1):
     np.random.seed(random_seed)
@@ -957,11 +920,11 @@ Args:
 
   @property
   def vocab_size(self):
-    return self._vocab_size
+    return self._args['vocab_size']
 
   @property
   def max_document_length(self):
-    return self._max_document_length
+    return self._args['max_document_length']
 
   @property
   def mapping(self):
@@ -1041,7 +1004,8 @@ def merge_dict_write_tfrecord(json_dirs,
   # the same text_field_names and label_field_name TODO
   # max_document_lengths = []
   for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
-    dataset = Dataset(json_dir, tfrecord_dir=tfrecord_dir,
+    dataset = Dataset(json_dir,
+                      tfrecord_dir=tfrecord_dir,
                       vocab_dir=merged_dir,
                       max_document_length=max_document_length,
                       max_vocab_size=max_vocab_size,
@@ -1107,8 +1071,8 @@ def merge_dict_write_tfrecord(json_dirs,
                    mode='w', encoding='utf-8') as file:
     json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
 
-  with open(os.path.join(merged_dir, "vocab_size.txt"), "w") as file:
-    file.write(str(dataset.vocab_size))
+  # with open(os.path.join(merged_dir, "vocab_size.txt"), "w") as file:
+  #   file.write(str(dataset.vocab_size))
 
   # write TFRecords for each dataset with the same word id mapping
   args_dicts = []
@@ -1257,8 +1221,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                    mode='w', encoding='utf-8') as file:
     json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
 
-  with open(os.path.join(merged_dir, 'vocab_size.txt'), 'w') as file:
-    file.write(str(len(vocab_v2i_all)))
+  # with open(os.path.join(merged_dir, 'vocab_size.txt'), 'w') as file:
+  #   file.write(str(len(vocab_v2i_all)))
 
   # write TFRecords for each dataset with the same word id mapping
   args_dicts = []
@@ -1296,21 +1260,6 @@ def merge_pretrain_write_tfrecord(json_dirs,
 def get_types_and_counts(token_list):
   counts = {x: token_list.count(x) for x in token_list}
   return counts.keys(), counts.values()
-
-
-def tokenizer(iterator):
-  """Tokenizer generator.
-
-  Tokenize each string with the given tokenizer.
-
-  Args:
-    iterator: Input iterator with strings.
-
-  Yields:
-    array of tokens per each value in the input.
-  """
-  for value in iterator:
-    yield value
 
 
 def main():

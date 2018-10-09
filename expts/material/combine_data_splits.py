@@ -15,16 +15,15 @@
 """Combine different datasets into one's splits
 
 Usage:
-    python combine_data_splits.py --train training_split_suffix --valid validation_data_split
+    python combine_data_splits.py --train training_split_suffixes --valid validation_data_split
 e.g.
-    python combine_data_splits.py --train syn_p1000r1000 --valid gold_one
+    python combine_data_splits.py --train syn_p1000r1000 --valid gold_one gold_oracle
 """
 
 import argparse as ap
 import gzip
 import json
 import os
-
 
 from tqdm import tqdm
 
@@ -37,7 +36,7 @@ DOMAINS = [
     'LIF',
     'BUS',
     'LAW',
-    # 'SPO',
+    'SPO',
     'HEA',
     'MIL'
 ]
@@ -46,37 +45,42 @@ DOMAINS = [
 def parse_args():
     p = ap.ArgumentParser()
     p.add_argument(
-        '--train_suffix',
+        '--train_suffixes',
+        nargs='+',
         type=str,
         required=True,
-        help='Suffix of the name of the dataset to be the train split')
+        help='suffixes of the names of the datasets to be the train split')
     p.add_argument(
-        '--valid_suffix',
+        '--valid_suffixes',
+        nargs='+',
         type=str,
         required=True,
-        help='Suffix of the ame of the dataset to be used as the valid split')
+        help='suffixes of the names of the datasets to be used as the valid split')
     # test currently not supported
     # p.add_argument('--test', type=str, nargs='?', required=False
     #                help='Name of the dataset to be used as the test split')
     return p.parse_args()
 
 
+def get_data(domain, suffix):
+    path = os.path.join(base_dir, domain + '_' + suffix, 'data.json.gz')
+    with gzip.open(path, 'rt') as file:
+        data = json.load(file)
+    return data
+
+
 def main():
     args = parse_args()
 
     for domain in tqdm(DOMAINS):
-        train_path = os.path.join(base_dir, domain + '_' + args.train_suffix,
-                                  'data.json.gz')
-        valid_path = os.path.join(base_dir, domain + '_' + args.valid_suffix,
-                                  'data.json.gz')
 
-        with gzip.open(train_path, 'rt') as file:
-            train_data = json.load(file)
-        with gzip.open(valid_path, 'rt') as file:
-            valid_data = json.load(file)
+        train_data = []
+        valid_data = []
+        for train_suffix in args.train_suffixes:
+            train_data.extend(get_data(domain, train_suffix))
 
-        data = train_data
-        data.extend(valid_data)
+        for valid_suffix in args.valid_suffixes:
+            valid_data.extend(get_data(domain, valid_suffix))
 
         index_dict = {
             'train':
@@ -88,9 +92,17 @@ def main():
         }
 
         dout = os.path.join(
-            base_dir, domain + '_train_' + args.train_suffix + '_valid_' +
-            args.valid_suffix)
+            base_dir,
+            domain + '_train_' + '_'.join(args.train_suffixes) + '_valid_' +
+            '_'.join(args.valid_suffixes))
         make_dir(dout)
+
+        print(dout)
+        print('train:', len(train_data))
+        print('valid:', len(valid_data))
+
+        data = train_data
+        data.extend(valid_data)
 
         with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
             json.dump(data, file, ensure_ascii=False)

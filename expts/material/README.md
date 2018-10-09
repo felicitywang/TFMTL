@@ -108,8 +108,9 @@ Run `setup_{gold, turk, syn}.py` to copy original files and convert them to json
 
 `convert_{GOLD,TURK}_to_JSON.py` are examples that convert datasets from their original formats to JSON.
 
+`SPO` doesn't have any gold data, for convenience, `setup_gold.sh` would create an empty `data.json.gz` for it.
 
-`combine_data_splits.py` can take two json datasets and combine them together as train and validation splits of one dataset.  Run `python combine_data_splits.py --train training_split_suffix --valid validation_data_split`, e.g. `python combine_data_spltis.py --train syn_p1000r1000 --valid gold_one` would use `data/json/DOMAIN_syn_p1000r1000/data.json.gz` as training split and `data/json/DOMAIN_gold_one/data.json.gz` as validation split for the six domains(except SPO, which doesn't have gold data.
+`combine_data_splits.py` can take multiple json datasets and combine them together as train and validation splits of one dataset.  Run `python combine_data_splits.py --train training_split_suffixes --valid validation_split_suffixes`, e.g. `python combine_data_spltis.py --train syn_p1000r1000 --valid gold_one [gold_oracle]` would use `data/json/DOMAIN_syn_p1000r1000/data.json.gz` as training split and `data/json/DOMAIN_gold_one/data.json.gz`(and `data/json/DOMAIN_gold_oracle`) as validation split for all the domains. The data would be saved into `data/json/DOMAIN_train_syn_p1000r1000_valid_gold_one[_gold_oracle]`.
 
 
 ## 1. Write TFRecord data
@@ -144,15 +145,27 @@ Write TFRecord data for the evaluation splits to predict according to the traini
 
 ## 1.3. Write data to fine-tune with
 
-TODO
+Write TFRecord data for the new data to fine tune with according to the vocabulary of the dataset the model has been pre-trained with.
+
+- Modify `args_file_path`(`args_nopretrain.json` / `args_nopretrained.json` or other such files). Only these fields will be used: `text_field_name`/`label_field_name`/`label_type`/`train_ratio`/`valid_ratio`. Other arguments are read from the training data's `args.json`.
+- Modify `write_finetune.json` (See comments)
+    - Same as 1.1
+    - `init_dataset_suffix` refers to the dataset used to pre-train the model; `finetune_dataset_suffix` refers to the new dataset to fine-tune the model
+    - `args_path` is the `min_(min_freq)_max(max_freq)_doc_(max_doc_len)_tok_(tokenizer_name)` path generated automatically when writing the INIT data. This is how you decide which training data's vocabulary you want to use. Note that when using one model you should always make sure that you're using the same vocabulary.
+    - the data would be saved to `data/tf/single/init_DOMAIN_{init_dataset_suffix}_finetune_DOMAIN_{finetune_dataset_suffix}/args_path`
+
+- Run `python get_write_finetune.py write_finetune.json` to get all the commands
+    - Run all at once: `python get_write_finetune.py write_finetune.json > some_name.sh; bash some_name.sh`
+    - Qsub and run in parallel: `bash split_qsub.sh get_write_finetune.py write_finetune.json some_name`
+
 
 ## 2. Run experiments
 
 Basic pipeline:
 - write TFRecord data with train and dev splits
-- train the classifier
-- maybe finetune the classifier with other data
-- give predictions for the evaluation sets with the trained classifier
+- `train` the classifier
+- maybe `finetune` the classifier with other data
+- `predict` for the evaluation sets with the trained classifier
 - submit the formatted predictions to the server
 - collect results from the server to analyze
 
@@ -172,8 +185,6 @@ Refer to `expts/README.md` and examples in `expts/example/` for how to train/tes
 Modify `qsub_config_expt.json`. See comments to see what each item does and which ones to modify.
 
 Run `python qsub_stl_jobs.py qsub_config_expt.json qsub_config_encod.json` to write all the running scripts and maybe submit the jobs.
-
-(TODO fine-tune mode to be added)
 
 ## 3. Get submissions
 

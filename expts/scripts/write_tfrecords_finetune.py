@@ -23,6 +23,7 @@ import sys
 from docutils.io import InputError
 
 from mtl.util.dataset import Dataset
+from mtl.util.util import load_json
 
 """Write TFRecord for the dataset to fine-tune the model with.
 
@@ -37,6 +38,9 @@ finetune_json_dir: directory of the json file of the dataset to fine tune(
 where `data.json.gz` is saved)
 vocab_dir: directory of the vocabulary of the data used to train the model,
 the same vocabulary should be used so that the same word would have the same id
+
+All the arguments should keep consistent with the INIT dataset, except for 
+text_field_name/label_field_name/label_type/train_ratio/valid_ratio
 """
 
 
@@ -61,8 +65,7 @@ def main():
   with open(args_path) as file:
     args_used = json.load(file)
 
-  with open(args_finetune_path)as file:
-    args = json.load(file)
+  args = load_json(args_finetune_path)
 
   tfrecord_dir = os.path.join("data/tf/single/", dataset_name)
   tfrecord_dir_name = \
@@ -75,17 +78,23 @@ def main():
 
   dataset = Dataset(
 
-    # keep consistent with the training datasets
+    # TODO keep consistent with the training datasets?
     max_document_length=args_used['max_document_length'],
     max_vocab_size=args_used['max_vocab_size_allowed'],
     min_frequency=args_used['min_frequency'],
     max_frequency=args_used['max_frequency'],
-    padding=args_used.get('padding', args['padding']),
-    write_bow=args_used.get('write_bow', args['write_bow']),
-    write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
-    tokenizer_=args_used.get('tokenizer', args['tokenizer']),
-    preproc=args_used.get('preproc', args.get('preproc', True)),
-    vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
+    # padding=args_used.get('padding', args['padding']),
+    # write_bow=args_used.get('write_bow', args['write_bow']),
+    # write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
+    # tokenizer_=args_used.get('tokenizer', args['tokenizer']),
+    # preproc=args_used.get('preproc', args.get('preproc', True)),
+    # vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
+    padding=args_used['padding'],
+    write_bow=args_used['write_bow'],
+    write_tfidf=args_used['write_tfidf'],
+    tokenizer_=args_used['tokenizer_'],
+    preproc=args_used['preproc'],
+    vocab_all=args_used['vocab_all'],
 
     # may be different
     text_field_names=args['text_field_names'],
