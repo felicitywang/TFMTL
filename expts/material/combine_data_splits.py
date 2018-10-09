@@ -31,70 +31,70 @@ from tqdm import tqdm
 base_dir = 'data/json/'
 
 DOMAINS = [
-  'GOV',
-  'LIF',
-  'BUS',
-  'LAW',
-  # 'SPO',
-  'HEA',
-  'MIL'
+    'GOV',
+    'LIF',
+    'BUS',
+    'LAW',
+    # 'SPO',
+    'HEA',
+    'MIL'
 ]
 
 
 def parse_args():
-  p = ap.ArgumentParser()
-  p.add_argument(
-    '--train_suffix',
-    type=str,
-    required=True,
-    help='Suffix of the name of the dataset to be the train split')
-  p.add_argument(
-    '--valid_suffix',
-    type=str,
-    required=True,
-    help='Suffix of the ame of the dataset to be used as the valid split')
-  # test currently not supported
-  # p.add_argument('--test', type=str, nargs='?', required=False
-  #                help='Name of the dataset to be used as the test split')
-  return p.parse_args()
+    p = ap.ArgumentParser()
+    p.add_argument(
+        '--train_suffix',
+        type=str,
+        required=True,
+        help='Suffix of the name of the dataset to be the train split')
+    p.add_argument(
+        '--valid_suffix',
+        type=str,
+        required=True,
+        help='Suffix of the ame of the dataset to be used as the valid split')
+    # test currently not supported
+    # p.add_argument('--test', type=str, nargs='?', required=False
+    #                help='Name of the dataset to be used as the test split')
+    return p.parse_args()
 
 
 def main():
-  args = parse_args()
+    args = parse_args()
 
-  for domain in tqdm(DOMAINS):
-    train_path = os.path.join(base_dir, domain + '_' + args.train_suffix,
-                              'data.json.gz')
-    valid_path = os.path.join(base_dir, domain + '_' + args.valid_suffix,
-                              'data.json.gz')
+    for domain in tqdm(DOMAINS):
+        train_path = os.path.join(base_dir, domain + '_' + args.train_suffix,
+                                  'data.json.gz')
+        valid_path = os.path.join(base_dir, domain + '_' + args.valid_suffix,
+                                  'data.json.gz')
 
-    with gzip.open(train_path, 'rt') as file:
-      train_data = json.load(file)
-    with gzip.open(valid_path, 'rt') as file:
-      valid_data = json.load(file)
+        with gzip.open(train_path, 'rt') as file:
+            train_data = json.load(file)
+        with gzip.open(valid_path, 'rt') as file:
+            valid_data = json.load(file)
 
-    index_dict = {
-      'train':
-        list(range(len(train_data))),
-      'valid':
-        list(range(len(train_data),
-                   len(train_data) + len(valid_data))),
-      'test': []
-    }
+        index_dict = {
+            'train':
+            list(range(len(train_data))),
+            'valid':
+            list(range(len(train_data),
+                       len(train_data) + len(valid_data))),
+            'test': []
+        }
 
-    data = train_data
-    data.extend(valid_data)
+        data = train_data
+        data.extend(valid_data)
 
-    dout = os.path.join(
-      base_dir, domain + '_train_' + args.train_suffix + '_valid_' +
-                args.valid_suffix)
-    make_dir(dout)
+        dout = os.path.join(
+            base_dir, domain + '_train_' + args.train_suffix + '_valid_' +
+            args.valid_suffix)
+        make_dir(dout)
 
-    with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
-      json.dump(data, file, ensure_ascii=False)
-    with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
-      json.dump(index_dict, file, ensure_ascii=False)
+        with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
+            json.dump(data, file, ensure_ascii=False)
+        with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
+            json.dump(index_dict, file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
-  main()
+    main()
