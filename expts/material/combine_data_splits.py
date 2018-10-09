@@ -25,9 +25,8 @@ import gzip
 import json
 import os
 
-from tqdm import tqdm
-
 from mtl.util.util import make_dir
+from tqdm import tqdm
 
 base_dir = 'data/json/'
 
@@ -74,9 +73,6 @@ def main():
     with gzip.open(valid_path, 'rt') as file:
       valid_data = json.load(file)
 
-    data = train_data
-    data.extend(valid_data)
-
     index_dict = {
       'train':
         list(range(len(train_data))),
@@ -85,6 +81,9 @@ def main():
                    len(train_data) + len(valid_data))),
       'test': []
     }
+
+    data = train_data
+    data.extend(valid_data)
 
     dout = os.path.join(
       base_dir, domain + '_train_' + args.train_suffix + '_valid_' +
