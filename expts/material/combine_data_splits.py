@@ -95,6 +95,13 @@ def main():
         with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
             json.dump(index_dict, file, ensure_ascii=False)
 
+    # soft copy SPO
+    din = os.path.join(base_dir, 'SPO'+'_'+args.train_suffix, 'data.json.gz')
+    dout = os.path.join(base_dir, 'SPO' + '_train_' +
+                        args.train_suffix + '_valid_' + args.valid_suffix, 'data.json.gz')
+    make_dir(os.path.dirname(dout))
+    os.symlink(din, dout)
+
 
 if __name__ == '__main__':
     main()
