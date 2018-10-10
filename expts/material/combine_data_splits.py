@@ -106,8 +106,10 @@ def main():
 
         with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
             json.dump(data, file, ensure_ascii=False)
-        with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
-            json.dump(index_dict, file, ensure_ascii=False)
+
+        if domain != 'SPO':
+            with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
+                json.dump(index_dict, file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
