@@ -254,6 +254,8 @@ def train_model(model,
       additional_extractor_kwargs[dataset_name]['is_training'] = True
     elif extract_fn == "serial_lbirnn_stock":
       additional_extractor_kwargs[dataset_name]['is_training'] = True
+    elif extract_fn == "dan":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
     else:
       pass
   # losses = model.get_multi_task_loss(train_batches,
@@ -1357,6 +1359,9 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
       additional_extractor_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "serial_lbirnn_stock":
       additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "dan":
+      additional_extractor_kwargs[dataset_name]['is_training'] = False
+
     else:
       pass
 
@@ -1410,6 +1415,9 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
       additional_extractor_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "serial_lbirnn_stock":
       additional_extractor_kwargs[dataset_name]['is_training'] = False
+    elif extract_fn == "dan":
+      additional_extractor_kwargs[dataset_name]['is_training'] = True
+
     else:
       pass
 
