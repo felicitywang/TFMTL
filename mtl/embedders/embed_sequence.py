@@ -23,6 +23,7 @@ import tensorflow as tf
 def embed_sequence(x, vocab_size, embed_dim):
   init = tf.contrib.layers.xavier_initializer(uniform=True)
   return tf.contrib.layers.embed_sequence(x,
+                                          is_unique=True,  # save memory ?
                                           vocab_size=vocab_size,
                                           embed_dim=embed_dim,
                                           initializer=init)
