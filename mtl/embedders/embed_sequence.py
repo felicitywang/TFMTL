@@ -33,6 +33,14 @@ def embed_sequence(x, vocab_size, embed_dim):
 
 
 def embed_sequence_weighted(x, weights, vocab_size, embed_dim):
+  """
+
+  :param x: word id sequences, shape of [batch_size, seq_len]
+  :param weights: weight sequences, shape of [batch_size, seq_len]
+  :param vocab_size: size of vocabulary
+  :param embed_dim: dimension of word embeddings
+  :return: weighted word embedding sequences, shape of [batch_size, seq_len, embed_dim]
+  """
   init = tf.contrib.layers.xavier_initializer(uniform=True)
 
   assert x.get_shape().as_list() == weights.get_shape().as_list(), \
@@ -43,21 +51,10 @@ def embed_sequence_weighted(x, weights, vocab_size, embed_dim):
                                                 vocab_size=vocab_size,
                                                 embed_dim=embed_dim,
                                                 initializer=init)
-
-  print(embeddings.get_shape())
-
   embeddings = tf.transpose(embeddings, perm=[0, 2, 1])
-  print(embeddings.get_shape())
-
   weights = tf.expand_dims(weights, 1)
-  print(weights.get_shape())
-
   embeddings = tf.multiply(embeddings, weights)
-  print(embeddings.get_shape())
-
   embeddings = tf.transpose(embeddings, perm=[0, 2, 1])
-  print(embeddings.get_shape())
-
   return embeddings
 
 
