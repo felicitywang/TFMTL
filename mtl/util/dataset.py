@@ -43,7 +43,7 @@ from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer,
-                                split_tokenizer)
+                                split_tokenizer, lower_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -451,6 +451,8 @@ class Dataset:
       self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
     elif self._args['tokenizer_'] == "split_tokenizer":
       self._tokenizer = functools.partial(split_tokenizer)
+    elif self._args['tokenizer_'] == "lower_tokenizer":
+      self._tokenizer = functools.partial(lower_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % self._args['tokenizer_'])
 

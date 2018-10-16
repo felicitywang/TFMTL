@@ -65,13 +65,8 @@ class Mult(object):
              # is_training,
              lengths=None,
              additional_encoder_kwargs=dict()):
-    # TODO add kwargs to all embedders and extractors
     # Also apply arguments that aren't `inputs` or `lengths`
     # (such as `indices` for the serial bi-RNN extractor)
-
-    print('!!!')
-    print(additional_encoder_kwargs)
-    # TODO
 
     return self._encoders[dataset_name](inputs,
                                         lengths,
@@ -145,10 +140,6 @@ class Mult(object):
 
     x, input_lengths = self.get_inputs_and_lengths(batch, text_field_names)
 
-    # TODO probably move additional_embedder_kwargs here ??
-    weights = self.get_weights(batch, text_field_names)
-
-    # TODO
     x = self.encode(x,
                     dataset_name,
                     lengths=input_lengths,

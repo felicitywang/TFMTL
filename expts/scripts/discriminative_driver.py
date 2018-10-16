@@ -377,18 +377,6 @@ def train_model(model,
 
       sess.run([_train_init_op, _valid_init_op])
 
-      # # TODO
-      # test = model_info[dataset_name]['train_batch']['text_weights']
-      # test = sess.run(test)
-      # print(test)
-      #
-      # test2 = model_info[dataset_name]['train_batch']['text']
-      # test2 = sess.run(test2)
-      # print(test2)
-      #
-      # # import pdb
-      # # pdb.set_trace()
-
       best_eval_performance[dataset_name] = {"epoch": -1,
                                              "acc": float('-inf'),
                                              "performance": None

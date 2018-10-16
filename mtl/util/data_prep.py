@@ -41,6 +41,10 @@ tweet_tokenizer_keep_handles = TweetTokenizer(strip_handles=False,
                                               reduce_len=True)
 
 
+def lower_tokenizer(tokens):
+  return [i.lower() for i in tokens.split()]
+
+
 def split_tokenizer(tokens):
   return tokens.split()
 
