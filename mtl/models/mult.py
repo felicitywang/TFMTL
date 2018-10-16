@@ -164,7 +164,7 @@ class Mult(object):
                    batch_source,
                    dataset_name,
                    task,
-                   additional_kwargs=dict()):
+                   additional_encoder_kwargs=dict()):
     # Return id, predicted label and confidence scores for each class,
     # used in predict mode
 
@@ -178,7 +178,7 @@ class Mult(object):
                         batch_source,
                         dataset_name,
                         is_training=False,
-                        additional_encoder_kwargs=additional_kwargs)
+                        additional_encoder_kwargs=additional_encoder_kwargs)
 
     if task == 'classification':
 
