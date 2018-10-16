@@ -54,7 +54,7 @@ def parse_args():
         '--valid_suffixes',
         nargs='+',
         type=str,
-        required=True,
+        default=[],
         help='suffixes of the names of the datasets to be used as the valid split')
     # test currently not supported
     # p.add_argument('--test', type=str, nargs='?', required=False
@@ -91,15 +91,21 @@ def main():
             'test': []
         }
 
+        suffix = '_'.join(args.train_suffixes)
+        if args.valid_suffixes:
+            suffix = 'train_'+suffix+'_valid_'+' '.join(args.valid_suffixes)
+
         dout = os.path.join(
             base_dir,
-            domain + '_train_' + '_'.join(args.train_suffixes) + '_valid_' +
-            '_'.join(args.valid_suffixes))
+            domain+'_' + suffix
+        )
         make_dir(dout)
 
         print(dout)
         print('train:', len(train_data))
         print('valid:', len(valid_data))
+
+        # continue
 
         data = train_data
         data.extend(valid_data)
@@ -107,7 +113,7 @@ def main():
         with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
             json.dump(data, file, ensure_ascii=False)
 
-        if domain != 'SPO':
+        if domain != 'SPO' and args.valid_suffixes:
             with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
                 json.dump(index_dict, file, ensure_ascii=False)
 
