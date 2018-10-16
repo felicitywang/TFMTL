@@ -16,8 +16,8 @@
 import tensorflow as tf
 from six.moves import xrange
 
-from mtl.util.reducers import reduce_max_over_time
 from mtl.util.common import validate_extractor_inputs
+from mtl.util.reducers import reduce_max_over_time
 
 
 def _conv_and_pool(inputs,
@@ -68,13 +68,14 @@ def _conv_and_pool(inputs,
 
   return tf.concat(filters, 1)
 
+
 def cnn_extractor(inputs,
                   lengths,
                   num_filter,
                   max_width,
                   activation_fn,
-                  reducer):
-
+                  reducer,
+                  **kwargs):
   validate_extractor_inputs(inputs, lengths)
 
   num_stages = len(inputs)
@@ -91,14 +92,17 @@ def cnn_extractor(inputs,
         # condition reading of seq_n on learned features of seq_n-1
         p = tf.expand_dims(p, axis=1)
 
-        max_len = tf.reduce_max(lengths[n_stage], axis=0)  # get length of longest seq_n in batch)
+        max_len = tf.reduce_max(lengths[n_stage],
+                                axis=0)  # get length of longest seq_n in batch)
         max_len = tf.reshape(max_len, [1])
         max_len = tf.cast(max_len, dtype=tf.int32)
-        max_len = tf.concat([tf.constant([1]), max_len, tf.constant([1])], axis=0)  # [1, max_len, 1]
+        max_len = tf.concat([tf.constant([1]), max_len, tf.constant([1])],
+                            axis=0)  # [1, max_len, 1]
 
         p = tf.tile(p, max_len)  # tile over time dimension
 
-        cond_inputs = tf.concat([inputs[n_stage], p], axis=2)  # condition via concatenation
+        cond_inputs = tf.concat([inputs[n_stage], p],
+                                axis=2)  # condition via concatenation
 
         # mask out p for padded tokens
         mask = tf.sequence_mask(lengths[n_stage], dtype=tf.int32)
@@ -114,7 +118,6 @@ def cnn_extractor(inputs,
                          reducer=reducer)
 
       prev_varscope = varscope
-
 
   outputs = p
 

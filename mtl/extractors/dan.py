@@ -48,22 +48,22 @@ def dan(inputs,
         apply_activation,
         num_layers,
         activation_fns,
-        is_training=False):
-  """
-  TODO fill out comment
-  TODO wordcount too much None
+        is_training,
+        **kwargs):
+  """Deep Averaging Network
   https://www.cs.umd.edu/~miyyer/pubs/2015_acl_dan.pdf
 
-  :param inputs:
-  :param lengths:
-  :param word_dropout_rate:
-  :param reducer:
+  :param inputs: a sequence of word embeddings
+  :param lengths: length of the sequence
+  :param word_dropout_rate: how much word embeddings to drop
+  :param reducer: which pooling(s) to use
   :param apply_activation: whether to add layers
-  :param num_layers:
-  :param activation_fns:
+  :param num_layers: number of hidden layers
+  :param activation_fns: list of activation functions, None if not applying
   :param is_training: when not in training mode, do not drop word embeddings
-  :return:
+  :return: concatenation of poolings of all the word embeddings
   """
+
   validate_extractor_inputs(inputs, lengths)
 
   if apply_activation:

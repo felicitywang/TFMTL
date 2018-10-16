@@ -29,7 +29,8 @@ def _paragram_phrase_helper(inputs,
                             lengths,
                             reducer=reduce_avg_over_time,
                             apply_activation=False,
-                            activation_fn=None):
+                            activation_fn=None,
+                            **kwargs):
   """Processes inputs using the paragram_phrase
   method of Wieting et al. (https://arxiv.org/abs/1511.08198)
 

@@ -64,14 +64,21 @@ class Mult(object):
              dataset_name,
              # is_training,
              lengths=None,
-             additional_extractor_kwargs=dict()):
+             additional_encoder_kwargs=dict()):
+    # TODO add kwargs to all embedders and extractors
     # Also apply arguments that aren't `inputs` or `lengths`
     # (such as `indices` for the serial bi-RNN extractor)
+
+    print('!!!')
+    print(additional_encoder_kwargs)
+    # TODO
+
     return self._encoders[dataset_name](inputs,
                                         lengths,
                                         # is_training,
-                                        **additional_extractor_kwargs[
-                                          dataset_name])
+                                        **additional_encoder_kwargs[
+                                          dataset_name]
+                                        )
 
   def get_text_field_names(self,
                            batch_source):
@@ -90,6 +97,15 @@ class Mult(object):
 
     return text_field_names
 
+  # TODO remove
+  def get_weights(self, batch, text_field_names):
+    if self._hps.input_key != 'weights':
+      return None
+    weights = list()
+    for text_field_name in text_field_names:
+      weights.append(batch[text_field_name + '_weights'])
+    return weights
+
   def get_inputs_and_lengths(self,
                              batch,
                              text_field_names):
@@ -98,17 +114,17 @@ class Mult(object):
     for text_field_name in text_field_names:
       # TODO: un-hard-code this
       input_lengths.append(batch[text_field_name + '_length'])
-      if self._hps.input_key == 'tokens':
+      if self._hps.input_key in ['tokens', 'weights']:
         x.append(batch[text_field_name])
       elif self._hps.input_key == 'bow':
         x.append(batch[text_field_name + '_bow'])
       elif self._hps.input_key == 'tfidf':
         x.append(batch[text_field_name + '_tfidf'])
-      elif self._hps.input_key == 'unique':
-        x.append(batch[text_field_name + '_unique'])
+      # elif self._hps.input_key == 'unique':
+      #   x.append(batch[text_field_name + '_unique'])
+
       else:
         raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
-
     return x, input_lengths
 
   def get_logits(self,
@@ -116,7 +132,7 @@ class Mult(object):
                  batch_source,  # name of dataset that batch is from
                  dataset_name,  # name of dataset whose labels we predict wrt
                  is_training,
-                 additional_extractor_kwargs=dict()):
+                 additional_encoder_kwargs=dict()):
     if self._hps.experiment_name in [EXP.EMNLP_18]:
       if batch_source != dataset_name:
         raise ValueError("Batch and labels must come from same dataset: exp=%s"
@@ -129,10 +145,14 @@ class Mult(object):
 
     x, input_lengths = self.get_inputs_and_lengths(batch, text_field_names)
 
+    # TODO probably move additional_embedder_kwargs here ??
+    weights = self.get_weights(batch, text_field_names)
+
+    # TODO
     x = self.encode(x,
                     dataset_name,
                     lengths=input_lengths,
-                    additional_extractor_kwargs=additional_extractor_kwargs)
+                    additional_encoder_kwargs=additional_encoder_kwargs)
     x = self._mlps_shared[dataset_name](x, is_training=is_training)
     x = self._mlps_private[dataset_name](x, is_training=is_training)
     x = self._logit_layers[dataset_name](x)
@@ -144,8 +164,7 @@ class Mult(object):
                    batch_source,
                    dataset_name,
                    task,
-                   additional_extractor_kwargs=dict(),
-                   ):
+                   addition_kwargs=dict()):
     # Return id, predicted label and confidence scores for each class,
     # used in predict mode
 
@@ -159,8 +178,7 @@ class Mult(object):
                         batch_source,
                         dataset_name,
                         is_training=False,
-                        additional_extractor_kwargs=
-                        additional_extractor_kwargs)
+                        additional_encoder_kwargs=addition_kwargs)
 
     if task == 'classification':
 
@@ -180,14 +198,14 @@ class Mult(object):
 
 
     else:
-      # TODOw
+      # TODO
       pass
 
   def get_predictions(self,
                       batch,
                       batch_source,
                       dataset_name,
-                      additional_extractor_kwargs=dict()):
+                      additional_encoder_kwargs=dict()):
     # For classification: returns most likely label given conditioning
     # variables
     # For regression: returns scalar value of the output layer TOOD
@@ -197,8 +215,7 @@ class Mult(object):
                         batch_source,
                         dataset_name,
                         is_training=False,
-                        additional_extractor_kwargs=
-                        additional_extractor_kwargs)
+                        additional_encoder_kwargs=additional_encoder_kwargs)
     # TODO regression
     if self._hps.task == 'classification':
       res = tf.argmax(x, axis=1)
@@ -214,7 +231,7 @@ class Mult(object):
                batch,
                batch_source,  # which dataset the batch is from
                dataset_name,  # we predict labels w.r.t. this dataset
-               additional_extractor_kwargs=dict(),
+               additional_encoder_kwargs=dict(),
                is_training=True):
 
     # returns a scalar loss for each batch
@@ -223,8 +240,7 @@ class Mult(object):
                         batch_source,
                         dataset_name,
                         is_training=is_training,
-                        additional_extractor_kwargs=
-                        additional_extractor_kwargs)
+                        additional_encoder_kwargs=additional_encoder_kwargs)
     labels = batch[self._hps.label_key]
 
     # loss
@@ -263,7 +279,7 @@ class Mult(object):
   def get_multi_task_loss(self,
                           dataset_batches,
                           is_training,
-                          additional_extractor_kwargs=dict()):
+                          additional_encoder_kwargs=dict()):
     # dataset_batches: map from dataset names to training batches
     # (one batch per dataset)
     #
@@ -287,14 +303,14 @@ class Mult(object):
       if self._hps.experiment_name in [EXP.EMNLP_18]:
         # encode/decode wrt same dataset that batch came from
         dataset_name = batch_source
-        additional_extractor_kwargs = additional_extractor_kwargs
+        additional_encoder_kwargs = additional_encoder_kwargs  # TODO ???
+        # additional_extractor_kwargs = additional_extractor_kwargs
       else:
         raise NotImplementedError("Must specify wrt which dataset to get loss")
       loss = self.get_loss(batch=batch,
                            batch_source=batch_source,
                            dataset_name=dataset_name,
-                           additional_extractor_kwargs=
-                           additional_extractor_kwargs,
+                           additional_encoder_kwargs=additional_encoder_kwargs,
                            is_training=is_training)
       total_loss += alpha * loss
       losses[dataset_name] = loss
