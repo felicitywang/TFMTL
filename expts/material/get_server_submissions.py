@@ -40,6 +40,11 @@ def main():
         '1A': {},
         '1B': {},
     }
+    # TODO
+    thresholds = {
+        '1A': {},
+        '1B': {},
+    }
     submission_dir = sys.argv[1]
     eval_dir = sys.argv[2]
 
@@ -51,10 +56,11 @@ def main():
                 if not line.strip():
                     continue
                 line = line.split()
-                print(line)
+                # print(line)
                 domain = line[0]
                 encoder = line[1]
                 threshold = float(line[2])
+                # print(domain, threshold)
                 dir_name = eval_dir
                 dirs = DIRS[translation]
                 for basedir, subdirs in dirs.items():
@@ -71,8 +77,12 @@ def main():
                             pred_filenames[lang][domain] = []
                         pred_filenames[lang][domain].append(
                             pred_filename)
+                if domain not in thresholds[lang]:
+                    thresholds[lang][domain] = []
+                thresholds[lang][domain] = threshold
 
     pprint(pred_filenames)
+    pprint(thresholds)
 
     for lang, domains in LANG_DIRS.items():
         dout = os.path.join(submission_dir, eval_dir, translation, lang)
@@ -82,11 +92,11 @@ def main():
         print(dout)
 
         for domain in domains:
+            threshold = thresholds[lang][domain]
+
             fout = open(os.path.join(dout, DOMAIN_NAMES[domain]), 'a')
             fout.write(DOMAIN_NAMES[domain][2:-4] + '\n')
-
             for filename in pred_filenames[lang][domain]:
-
                 with open(filename) as fin:
                     for line in fin.readlines()[1:]:
                         line = line.split()
