@@ -43,7 +43,7 @@ from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer,
-                                split_tokenizer)
+                                split_tokenizer, lower_tokenizer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -187,6 +187,7 @@ class Dataset:
     self._sequences = dict()
     self._sequence_lengths = dict()
     self._ids = []
+    self._weights = dict()
     self.get_text()
 
     self.get_index()
@@ -382,6 +383,20 @@ class Dataset:
 
       for text_field_name in self._args['text_field_names']:
         text = item[text_field_name]
+
+        # import pdb
+        # pdb.set_trace()
+
+        if 'weight' in item:
+
+          if text_field_name not in self._weights:
+            self._weights[text_field_name] = []
+          weights = [float(weight) for weight in item['weight'].split()]
+          # TODO un-hardcode
+          # add 1.0 for BOS and EOS
+          weights = [1.0] + weights + [1.0]
+          self._weights[text_field_name].append(weights)
+
         if self._args['preproc']:
 
           # remove leading and trailing whitespaces(to get rid of redundant
@@ -436,6 +451,8 @@ class Dataset:
       self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
     elif self._args['tokenizer_'] == "split_tokenizer":
       self._tokenizer = functools.partial(split_tokenizer)
+    elif self._args['tokenizer_'] == "lower_tokenizer":
+      self._tokenizer = functools.partial(lower_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % self._args['tokenizer_'])
 
@@ -731,6 +748,13 @@ class Dataset:
             int64_list=tf.train.Int64List(
               value=[self._sequence_lengths[text_field_name][index]]))
 
+          # TODO weights
+          if self._weights:
+            feature[text_field_name + '_weights'] = tf.train.Feature(
+              float_list=tf.train.FloatList(
+                value=self._weights[text_field_name][index])
+            )
+
           types, counts = get_types_and_counts(
             self._sequences[text_field_name][index])  # including BOS and EOS
           assert len(types) == len(counts)
@@ -880,10 +904,15 @@ class Dataset:
 
   def write_args(self):
     # save dataset arguments
+
+    self._args['has_ids'] = self._ids is not None
+    self._args['has_weights'] = self._weights is not None
     self._args['max_vocab_size_allowed'] = self._args.pop('max_vocab_size')
+
     print('Arguments for the dataset:')
     for k, v in self._args.items():
       print(k, ':', v)
+
     args_path = os.path.join(self._tfrecord_dir, "args.json")
     with codecs.open(args_path, mode='w', encoding='utf-8') as file:
       json.dump(self._args, file, ensure_ascii=False, indent=4)

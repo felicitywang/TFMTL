@@ -16,7 +16,7 @@
 import tensorflow as tf
 
 
-def concat_extractor(inputs, lengths):
+def concat_extractor(inputs, lengths, **kwargs):
   """A no-op encoder, e.g., for use with bag-of-words features
   that have already been encoded.
 

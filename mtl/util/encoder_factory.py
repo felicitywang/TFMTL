@@ -34,10 +34,10 @@ def encoder_fn(inputs, lengths, embed_fn, extract_fn, **kwargs):
   if isinstance(inputs, (list, tuple)):
     extr = list()
     for i in inputs:
-      emb = embed_fn(i)
+      emb = embed_fn(i, **kwargs)
       extr += [emb]
   else:
-    extr = embed_fn(inputs)
+    extr = embed_fn(inputs, **kwargs)
 
   # All extra arguments (kwargs) get passed into the extractor function
   enc = extract_fn(extr, lengths, **kwargs)
@@ -79,8 +79,6 @@ def create_encoders(embedders, extractors, fully_shared, args):
 
 
 def build_encoders(args):
-  encoders = dict()
-
   # Read in architectures from config file
   with open(args.encoder_config_file, 'r') as f:
     architectures = json.load(f)

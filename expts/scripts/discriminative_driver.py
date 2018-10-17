@@ -234,14 +234,24 @@ def train_model(model,
 
   train_batches = {name: model_info[name]['train_batch']
                    for name in model_info}
-  additional_extractor_kwargs = dict()
+
+  additional_encoder_kwargs = dict()
+
   for dataset_name in model_info:
-    additional_extractor_kwargs[dataset_name] = dict()
+    additional_encoder_kwargs[dataset_name] = dict()
+
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(
-        f)[args.architecture][dataset_name]['extract_fn']
+      encoders = json.load(f)
+      extract_fn = encoders[args.architecture][dataset_name]['extract_fn']
+      embed_fn = encoders[args.architecture][dataset_name]['embed_fn']
+
+    if embed_fn == 'embed_sequence_weighted':
+      # TODO text_field_name ?
+      additional_encoder_kwargs[dataset_name]['weights'] = train_batches[
+        dataset_name]['text_weights']
+
     if extract_fn == "serial_lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = train_batches[dataset_name][
@@ -249,37 +259,38 @@ def train_model(model,
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         # last token is at pos. length-1
         indices = tf.subtract(indices, ones)
-        additional_extractor_kwargs[dataset_name]['indices'] = indices
+        additional_encoder_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
     elif extract_fn == "serial_lbirnn_stock":
-      additional_extractor_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
     elif extract_fn == "dan":
-      additional_extractor_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
     else:
       pass
   # losses = model.get_multi_task_loss(train_batches,
   #                                   is_training=True,
-  #                                   additional_extractor_kwargs=additional_extractor_kwargs)
+  #                                   additional_encoder_kwargs=additional_encoder_kwargs)
+
+  # TODO multi loss
   losses = dict()
   for dataset in args.datasets:
     losses[dataset] = model.get_loss(train_batches[dataset],
                                      dataset,
                                      dataset,
-                                     additional_extractor_kwargs=additional_extractor_kwargs,
+                                     # TODO currently no weighted embed ???
+                                     additional_encoder_kwargs=additional_encoder_kwargs,
+                                     # sequence in train mode
                                      is_training=True)
 
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
 
-  # TODO loss on each dataset
-
   # Done building compute graph; set up training ops.
 
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
-  zero_global_step_op = global_step_tensor.assign(
-    0)  # TODO this is never used
+  zero_global_step_op = global_step_tensor.assign(0)  # TODO this is never used
 
   train_ops = dict()
   optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
@@ -343,10 +354,9 @@ def train_model(model,
   with tf.train.SingularMonitoredSession(hooks=[saver_hook],
                                          config=config) as sess:
 
-    # Initialize model parameters
-
     if args.mode == 'train':
       sess.run(init_ops)
+
     else:
       # finetune TODO
       assert len(args.datasets) == 1
@@ -364,7 +374,9 @@ def train_model(model,
     for dataset_name in model_info:
       _train_init_op = model_info[dataset_name]['train_init_op']
       _valid_init_op = model_info[dataset_name]['valid_init_op']
+
       sess.run([_train_init_op, _valid_init_op])
+
       best_eval_performance[dataset_name] = {"epoch": -1,
                                              "acc": float('-inf'),
                                              "performance": None
@@ -1080,9 +1092,14 @@ def main():
         # elif args.input_key == 'unique':
         #   FEATURES[text_field_name + '_unique'] = tf.VarLenFeature(
         #       dtype=tf.int64)
+        elif args.input_key == 'weights':
+          FEATURES[text_field_name] = tf.VarLenFeature(
+            dtype=tf.int64)
+          FEATURES[text_field_name + '_weights'] = tf.VarLenFeature(
+            dtype=tf.float32)
         else:
           raise ValueError(
-            "Input key %s not supported!" % (args.input_key))
+            "Input key %s not supported!" % args.input_key)
 
   FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
   if args.mode in ['train', 'test', 'finetune']:
@@ -1332,13 +1349,17 @@ def fill_info_dicts(dataset_info, args):
 
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
-  # TODO(seth): refactor populating `additional_extractor_kwargs` into a function?
-  additional_extractor_kwargs = dict()
+  # TODO(seth): refactor populating `additional_encoder_kwargs` into a function?
+  additional_encoder_kwargs = dict()
+
   for dataset_name in model_info:
-    additional_extractor_kwargs[dataset_name] = dict()
+    additional_encoder_kwargs[dataset_name] = dict()
+
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(
-        f)[args.architecture][dataset_name]['extract_fn']
+      encoders = json.load(f)
+      extract_fn = encoders[args.architecture][dataset_name]['extract_fn']
+      embed_fn = encoders[args.architecture][dataset_name]['embed_fn']
+
     if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
@@ -1346,21 +1367,26 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     elif args.mode == 'predict':
       batch = model_info[dataset_name]['pred_batch']
 
+    if embed_fn == 'embed_sequence_weighted':
+      # TODO text field name???
+      weights = batch['text_weights']
+      additional_encoder_kwargs[dataset_name]['weights'] = weights
+
     if extract_fn == "serial_lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         # last token is at pos. length-1
         indices = tf.subtract(indices, ones)
-        additional_extractor_kwargs[dataset_name]['indices'] = indices
+        additional_encoder_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "serial_lbirnn_stock":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "dan":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
 
     else:
       pass
@@ -1371,14 +1397,14 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         model_info[dataset_name]['valid_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
-        additional_extractor_kwargs=additional_extractor_kwargs)
+        additional_encoder_kwargs=additional_encoder_kwargs)
       model_info[dataset_name]['valid_pred_op'] = _valid_pred_op
     elif args.mode == 'test':
       _test_pred_op = model.get_predictions(
         model_info[dataset_name]['test_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
-        additional_extractor_kwargs=additional_extractor_kwargs)
+        additional_encoder_kwargs=additional_encoder_kwargs)
       model_info[dataset_name]['test_pred_op'] = _test_pred_op
     elif args.mode == 'predict':
       _pred_pred_op = model.get_pred_res(
@@ -1386,37 +1412,45 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
         args.task,
-        additional_extractor_kwargs=additional_extractor_kwargs)
+        additional_encoder_kwargs=additional_encoder_kwargs)
       model_info[dataset_name]['pred_pred_op'] = _pred_pred_op
 
 
 def fill_eval_loss_op(args, model, dataset_info, model_info):
-  additional_extractor_kwargs = dict()
+  additional_encoder_kwargs = dict()
+
   for dataset_name in model_info:
-    additional_extractor_kwargs[dataset_name] = dict()
+    additional_encoder_kwargs[dataset_name] = dict()
     with open(args.encoder_config_file, 'r') as f:
-      extract_fn = json.load(
-        f)[args.architecture][dataset_name]['extract_fn']
+      encoders = json.load(f)
+      extract_fn = encoders[args.architecture][dataset_name]['extract_fn']
+      embed_fn = encoders[args.architecture][dataset_name]['embed_fn']
+
     if args.mode in ['train', 'finetune']:
       batch = model_info[dataset_name]['valid_batch']
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
 
+    if embed_fn == 'embed_sequence_weighted':
+      # TODO text field name???
+      weights = batch['text_weights']
+      additional_encoder_kwargs[dataset_name]['weights'] = weights
+
     if extract_fn == "serial_lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
         # use last token of last sequence as feature representation
         indices = batch['seq2_length']  # TODO(seth): un-hard code this
         ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
         # last token is at pos. length-1
         indices = tf.subtract(indices, ones)
-        additional_extractor_kwargs[dataset_name]['indices'] = indices
+        additional_encoder_kwargs[dataset_name]['indices'] = indices
     elif extract_fn == "lbirnn":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "serial_lbirnn_stock":
-      additional_extractor_kwargs[dataset_name]['is_training'] = False
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "dan":
-      additional_extractor_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
 
     else:
       pass
@@ -1427,7 +1461,8 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
         model_info[dataset_name]['valid_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
-        additional_extractor_kwargs=additional_extractor_kwargs,
+        # TODO currently no weighted embed sequence in training step
+        additional_encoder_kwargs=additional_encoder_kwargs,
         is_training=False)
       model_info[dataset_name]['valid_loss_op'] = _valid_loss_op
     elif args.mode == 'test':
@@ -1435,7 +1470,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
         model_info[dataset_name]['test_batch'],
         dataset_name,
         dataset_info[dataset_name]['dataset_name'],
-        additional_extractor_kwargs=additional_extractor_kwargs,
+        additional_encoder_kwargs=additional_encoder_kwargs,
         is_training=False)
       model_info[dataset_name]['test_loss_op'] = _test_loss_op
 

@@ -17,12 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import xrange
-
-import numpy as np
 import tensorflow as tf
-from mtl.layers.rnn import stacked_rnn_cell
+
 import mtl.util.registry as registry
+from mtl.layers.rnn import stacked_rnn_cell
 
 
 @registry.register_hparams

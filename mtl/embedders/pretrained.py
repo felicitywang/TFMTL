@@ -29,7 +29,14 @@ from mtl.util.load_embeds import (load_pretrained_matrix,
                                   load_pretrianed_vocab_dict)
 
 
-def expand_pretrained(x, vocab_size, embed_dim, pretrained_path, trainable):
+# TODO add weights
+
+def expand_pretrained(x,
+                      vocab_size,
+                      embed_dim,
+                      pretrained_path,
+                      trainable,
+                      **kwargs):
   """Expand training vocab with pretrained
 
   :param x: list of word ids
@@ -88,9 +95,14 @@ def expand_pretrained(x, vocab_size, embed_dim, pretrained_path, trainable):
                                 x)
 
 
-def init_pretrained(x, vocab_size, embed_dim, pretrained_path,
+def init_pretrained(x,
+                    vocab_size,
+                    embed_dim,
+                    pretrained_path,
                     reverse_vocab_path,
-                    random_size, trainable):
+                    random_size,
+                    trainable,
+                    **kwargs):
   """Initialize training vocab with pretrained's pre-trained word embeddings,
   always trainable
 

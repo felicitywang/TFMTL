@@ -19,6 +19,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from mtl.embedders.embed_sequence import embed_sequence_weighted
+
 
 def get_activation_fn(s):
   if s == 'elu':
@@ -72,6 +74,7 @@ def str2func(s):
 
   functions = {
     "embed_sequence": embed_sequence,
+    "embed_sequence_weighted": embed_sequence_weighted,
     "no_op_embedding": no_op_embedding,
     "init_pretrained": init_pretrained,
     "expand_pretrained": expand_pretrained,
@@ -121,7 +124,8 @@ def update_hparams_from_args(hps, args, log=True):
 
   Inputs:
     hps: HParams object
-    args: argparse Namespace returned from parse_args()
+    args: argparse Namesp
+    ace returned from parse_args()
   """
   if log:
     tf.logging.info("Updating hyperparameters from command line arguments")
