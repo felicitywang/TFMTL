@@ -13,3 +13,4 @@ sklearn
 scipy
 gensim
 json_minify
+bs4

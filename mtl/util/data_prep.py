@@ -19,8 +19,25 @@ import itertools
 import re
 from collections import Counter
 
+from bs4 import BeautifulSoup
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import TweetTokenizer
+
+NLTK_STOPWORDS = set(
+  ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your',
+   'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she',
+   'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
+   'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that',
+   'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+   'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+   'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of',
+   'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through',
+   'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+   'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then',
+   'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any',
+   'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor',
+   'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can',
+   'will', 'just', 'don', 'should', 'now'])
 
 # stemmer and tokenizer in NLTK
 stemmer = PorterStemmer()
@@ -105,8 +122,24 @@ def clean_str(string):
   string = re.sub(r"\(", " \( ", string)
   string = re.sub(r"\)", " \) ", string)
   string = re.sub(r"\?", " \? ", string)
+  string = re.sub(r"\\'", "\'", string)
+  string = re.sub(r"\\""", "\"", string)
   string = re.sub(r"\s{2,}", " ", string)
-  return string.strip().lower()
+
+  return string
+
+
+def remove_urls(string):
+  toks = []
+  for tok in string.split():
+    if re.match('https?:.*[\r\n]*', tok):
+      tok = tok.split('http')[0]
+      # keep everything before hand in cases where there is not space
+      # between previous token and url
+    if tok.strip():
+      toks.append(tok)
+  string = " ".join(toks)
+  return string.strip()
 
 
 def build_vocab(text_list):
@@ -118,9 +151,35 @@ def build_vocab(text_list):
   return vocabulary, vocabulary_inv
 
 
+def remove_tags(string):
+  string = BeautifulSoup(string, "html5lib").get_text()
+  return string
+
+
+def remove_stopwords(tokens):
+  stop_words = NLTK_STOPWORDS
+  return [tok for tok in tokens if tok not in stop_words]
+
+
+def preproc(string):
+  string = remove_urls(string)
+  string = remove_tags(string)
+  string = clean_str(string)
+  return string
+
+
 def main():
-  sentence = 'this is aaaaaaaaa a aaaaaa badly beautiful day . , / ? ! :) '
+  sentence = 'this is aaaaaaaaa a aaaaaa badly beautiful day . , / ? ! \' :) ' \
+             '" \' ' \
+             '<img<!-- --> src=x onerror=alert(1);//><!-- -->' \
+             '<ref/> test ref <ref>' \
+             'http://www.test.com' \
+             '<td><a href="http://www.fakewebsite.com">Please can you strip me?</a>' \
+             '<br/><a href="http://www.fakewebsite.com">I am waiting....</a></td>'
+  print(clean_str(sentence))
   print(tweet_clean(sentence))
+  print(BeautifulSoup(sentence).get_text())
+  print(preproc(sentence))
 
 
 if __name__ == "__main__":

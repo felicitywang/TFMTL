@@ -26,7 +26,6 @@ import itertools
 import json
 import operator
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -43,7 +42,8 @@ from mtl.util.constants import VOCAB_NAMES
 from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer,
-                                split_tokenizer, lower_tokenizer)
+                                split_tokenizer, lower_tokenizer, preproc,
+                                remove_stopwords)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -402,23 +402,17 @@ class Dataset:
           # remove leading and trailing whitespaces(to get rid of redundant
           # linebreaks)
           text = text.strip()
-
-          # remove urls
-          toks = []
-          for tok in text.split():
-            if re.match('https?:.*[\r\n]*', tok):
-              tok = tok.split('http')[0]
-              # keep everything before hand in cases where there is not space
-              # between previous token and url
-            if tok.strip():
-              toks.append(tok)
-          text = " ".join(toks)
+          text = preproc(text)
 
           # replace line breaks
           for old_linebreak in OLD_LINEBREAKS:
             text = text.replace(old_linebreak, LINEBREAK)
 
         text = [BOS] + self._tokenizer(text) + [EOS]
+
+        if self._args['preproc']:
+          # remove stop words
+          text = remove_stopwords(text)
 
         if len(text) < 3:
           print("!!!!!", self._json_dir, index)
