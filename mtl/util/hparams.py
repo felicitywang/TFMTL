@@ -19,8 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.embedders.embed_sequence import embed_sequence_weighted
-
 
 def get_activation_fn(s):
   if s == 'elu':

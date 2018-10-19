@@ -45,6 +45,7 @@ def main():
     root_dir = args['root_dir']
     python_path = args['python_path']
     code_path = args['code_path']
+    domains = args['domains']
 
     num = 0
 
@@ -73,9 +74,9 @@ def main():
             arch_path = os.path.join(root_dir, 'data/tf/single',
                                      dataset_path, args['args_path'])
 
-            if os.path.exists(tf_path):
-                # print('{} already exists! Skipping...')
-                continue
+            # if os.path.exists(tf_path):
+            #     # print('{} already exists! Skipping...')
+            #     continue
 
             command = 'cd {}\n{} {} {} {} {} {}'.format(
                 root_dir,

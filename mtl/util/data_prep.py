@@ -156,9 +156,30 @@ def remove_tags(string):
   return string
 
 
-def remove_stopwords(tokens):
+def remove_stopwords(tokens, **kwargs):
   stop_words = NLTK_STOPWORDS
-  return [tok for tok in tokens if tok not in stop_words]
+
+  if 'weights' not in kwargs:
+    tokens_kept = [token for token in tokens if token not in stop_words]
+    # print('Removed {} stop words. (Before: {}; After: {}).'.format(len(
+    #   tokens) - len(tokens_kept), len(tokens), len(tokens_kept)))
+    return tokens_kept
+
+  assert len(tokens) == len(kwargs['weights']), \
+    'Token list(len {}) and weight list(len {}) are of different ' \
+    'lengths!'.format({len(tokens), len(kwargs['weights'])})
+
+  tokens_kept = []
+  weights_kept = []
+
+  for token, weight in zip(tokens, kwargs['weights']):
+    if token not in stop_words:
+      tokens_kept.append(token)
+      weights_kept.append(weight)
+
+  # print('Removed {} stop words. (Before: {}; After: {}).'.format(len(
+  #   tokens) - len(tokens_kept), len(tokens), len(tokens_kept)))
+  return tokens_kept, weights_kept
 
 
 def preproc(string):

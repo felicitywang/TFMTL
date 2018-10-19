@@ -43,36 +43,36 @@ def unlistify(x):
 
 
 def maybe_concat(x):
-    if type(x) is list:
-        return tf.concat(x, axis=1)
-    else:
-        return x
-
-
-def preoutput_MLP(inputs, hidden_dim=512, num_layers=2, activation=tf.nn.selu):
-    assert type(inputs) is list or type(inputs) is tf.Tensor, type(inputs)
-    x = maybe_concat(inputs)
-    for i in xrange(num_layers):
-        x = dense_layer(x, hidden_dim, 'l{}'.format(i + 1),
-                        activation=activation)
+  if type(x) is list:
+    return tf.concat(x, axis=1)
+  else:
     return x
 
 
+def preoutput_MLP(inputs, hidden_dim=512, num_layers=2, activation=tf.nn.selu):
+  assert type(inputs) is list or type(inputs) is tf.Tensor, type(inputs)
+  x = maybe_concat(inputs)
+  for i in xrange(num_layers):
+    x = dense_layer(x, hidden_dim, 'l{}'.format(i + 1),
+                    activation=activation)
+  return x
+
+
 def MLP_gaussian_posterior(inputs, latent_dim, **kwargs):
-    x = preoutput_MLP(inputs, **kwargs)
-    zm = dense_layer(x, latent_dim, 'zm', activation=None)
-    zv = dense_layer(x, latent_dim, 'zv', tf.nn.softplus)
-    return zm, zv
+  x = preoutput_MLP(inputs, **kwargs)
+  zm = dense_layer(x, latent_dim, 'zm', activation=None)
+  zv = dense_layer(x, latent_dim, 'zv', tf.nn.softplus)
+  return zm, zv
 
 
 def MLP_unnormalized_log_categorical(inputs, output_size, **kwargs):
-    return dense_layer(preoutput_MLP(inputs, **kwargs), output_size,
-                       'logits', activation=None)
+  return dense_layer(preoutput_MLP(inputs, **kwargs), output_size,
+                     'logits', activation=None)
 
 
 def MLP_ordinal(inputs, **kwargs):
-    return dense_layer(preoutput_MLP(inputs, **kwargs), 1, 'output',
-                       activation=None)
+  return dense_layer(preoutput_MLP(inputs, **kwargs), 1, 'output',
+                     activation=None)
 
 
 def validate_extractor_inputs(*inputs):

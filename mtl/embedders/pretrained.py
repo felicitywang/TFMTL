@@ -25,13 +25,14 @@ import tensorflow as tf
 # TODO other word embeddings
 from tqdm import tqdm
 
+from mtl.embedders.embed_sequence import get_weighted_embeddings
 from mtl.util.load_embeds import (load_pretrained_matrix,
                                   load_pretrianed_vocab_dict)
 
 
 # TODO add weights
 
-def expand_pretrained(x,
+def expand_pretrained(word_ids,
                       vocab_size,
                       embed_dim,
                       pretrained_path,
@@ -39,7 +40,7 @@ def expand_pretrained(x,
                       **kwargs):
   """Expand training vocab with pretrained
 
-  :param x: list of word ids
+  :param word_ids: list of word ids
   :param vocab_size: size of the vocabulary given in the config file
   :param embed_dim: dimension of the embeddings given in the config file
   :param pretrained_path: path to the pre-trained word embedding file
@@ -91,11 +92,16 @@ def expand_pretrained(x,
 
   assert word_embedding.shape.as_list() == [vocab_size, embed_dim]
 
-  return tf.nn.embedding_lookup(word_embedding,
-                                x)
+  embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
+                                                         word_ids)
+
+  if 'weights' in kwargs:
+    embeddings = get_weighted_embeddings(embeddings, weights=kwargs['weights'])
+
+  return embeddings
 
 
-def init_pretrained(x,
+def init_pretrained(word_ids,
                     vocab_size,
                     embed_dim,
                     pretrained_path,
@@ -106,7 +112,7 @@ def init_pretrained(x,
   """Initialize training vocab with pretrained's pre-trained word embeddings,
   always trainable
 
-  :param x: list of word ids
+  :param word_ids: list of word ids
   :param vocab_size: size of the vocabulary given in the config file
   :param embed_dim: dimension of the embeddings given in the config file
   :param pretrained_path: path to the pre-trained word embedding file
@@ -168,5 +174,10 @@ def init_pretrained(x,
 
   assert word_embedding.shape.as_list() == [vocab_size, embed_dim]
 
-  return tf.nn.embedding_lookup(word_embedding,
-                                x)
+  embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
+                                                         word_ids)
+
+  if 'weights' in kwargs:
+    embeddings = get_weighted_embeddings(embeddings, weights=kwargs['weights'])
+
+  return embeddings

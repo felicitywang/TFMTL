@@ -119,7 +119,7 @@ class Mult(object):
       #   x.append(batch[text_field_name + '_unique'])
 
       else:
-        raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+        raise ValueError("unrecognized input key: %s" % self._hps.input_key)
     return x, input_lengths
 
   def get_logits(self,

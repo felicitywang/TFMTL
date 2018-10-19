@@ -245,10 +245,11 @@ def train_model(model,
       extract_fn = encoders[args.architecture][dataset_name]['extract_fn']
       embed_fn = encoders[args.architecture][dataset_name]['embed_fn']
 
-    if embed_fn == 'embed_sequence_weighted':
+    if embed_fn == 'embed_sequence':
       # TODO text_field_name ?
-      additional_encoder_kwargs[dataset_name]['weights'] = train_batches[
-        dataset_name]['text_weights']
+      if 'input_key' == 'weights':
+        additional_encoder_kwargs[dataset_name]['weights'] = train_batches[
+          dataset_name]['text_weights']
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = True
@@ -290,7 +291,8 @@ def train_model(model,
 
   # Training ops
   global_step_tensor = tf.train.get_or_create_global_step()
-  zero_global_step_op = global_step_tensor.assign(0)  # TODO this is never used
+  zero_global_step_op = global_step_tensor.assign(
+    0)  # TODO this is never used
 
   train_ops = dict()
   optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
@@ -760,10 +762,18 @@ def predict(model, dataset_info, args):
       saver.restore(sess, checkpoint_path)
 
       dataset_name = args.predict_dataset
+
+      # import pdb
+      # sess.run(model_info[dataset_name]['pred_iter'].initializer)
+      # batch = model_info[dataset_name]['pred_batch']
+      # text, weights = sess.run([batch['text'], batch['text_weights']])
+      # pdb.set_trace()
+
       _pred_op = model_info[dataset_name]['pred_pred_op']
       _pred_iter = model_info[dataset_name]['pred_iter']
       _ids, _predictions, _scores = get_all_pred_res(sess, _pred_op,
                                                      _pred_iter, args)
+
       for id, pred, score in zip(_ids, _predictions, _scores):
         record = {
           'id': id,
@@ -1081,8 +1091,7 @@ def main():
         FEATURES[text_field_name + '_length'] = tf.FixedLenFeature([],
                                                                    dtype=tf.int64)
         if args.input_key == 'tokens':
-          FEATURES[text_field_name] = tf.VarLenFeature(
-            dtype=tf.int64)
+          FEATURES[text_field_name] = tf.VarLenFeature(dtype=tf.int64)
         elif args.input_key == 'bow':
           FEATURES[text_field_name + '_bow'] = tf.FixedLenFeature([vocab_size],
                                                                   dtype=tf.float32)
@@ -1367,10 +1376,13 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     elif args.mode == 'predict':
       batch = model_info[dataset_name]['pred_batch']
 
-    if embed_fn == 'embed_sequence_weighted':
+    # TODO change to input key
+    if embed_fn in ['embed_sequence', 'pretrained']:
       # TODO text field name???
-      weights = batch['text_weights']
-      additional_encoder_kwargs[dataset_name]['weights'] = weights
+
+      if args.input_key == 'weights':
+        additional_encoder_kwargs[dataset_name]['weights'] = batch[
+          'text_weights']
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False
@@ -1431,10 +1443,11 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
     elif args.mode == 'test':
       batch = model_info[dataset_name]['test_batch']
 
-    if embed_fn == 'embed_sequence_weighted':
+    if embed_fn in ['embed_sequence', 'pretrained']:
       # TODO text field name???
-      weights = batch['text_weights']
-      additional_encoder_kwargs[dataset_name]['weights'] = weights
+      if args.input_key == 'weights':
+        additional_encoder_kwargs[dataset_name]['weights'] = batch[
+          'text_weights']
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False

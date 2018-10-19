@@ -135,6 +135,8 @@ class Dataset:
       'tokenizer_': 'tweet_tokenizer',
       'expand_vocab': False,
       'preproc': True,
+      'remove_stopwords': True,  # TODO add in write_tfrecords_....py / mix
+      # with preproc
       'vocab_all': False,
       'padding': False,
       'write_bow': False,
@@ -145,13 +147,13 @@ class Dataset:
       'subsample_ratio': 1
     }
     for k, v in kwargs.items():
-      print(k)
+      # print(k)
       self._args[k] = v
 
     if self._args['max_document_length'] == -1:
       self._args['max_document_length'] = float('inf')
 
-    print(self._args)
+    # print(self._args)
 
     # used to generate word id mapping from word frequency dictionary and
     # arguments(min_frequency, max_frequency, max_document_length)
@@ -284,6 +286,10 @@ class Dataset:
                                            )
 
   def write_tfrecord(self):
+
+    # import pdb
+    # pdb.set_trace()
+
     # write TFRecords for predict data
     if self._args['predict_mode']:
       self._args['predict_path'] = self._predict_tf_path
@@ -387,16 +393,6 @@ class Dataset:
         # import pdb
         # pdb.set_trace()
 
-        if 'weight' in item:
-
-          if text_field_name not in self._weights:
-            self._weights[text_field_name] = []
-          weights = [float(weight) for weight in item['weight'].split()]
-          # TODO un-hardcode
-          # add 1.0 for BOS and EOS
-          weights = [1.0] + weights + [1.0]
-          self._weights[text_field_name].append(weights)
-
         if self._args['preproc']:
 
           # remove leading and trailing whitespaces(to get rid of redundant
@@ -410,12 +406,27 @@ class Dataset:
 
         text = [BOS] + self._tokenizer(text) + [EOS]
 
-        if self._args['preproc']:
+        if 'weight' in item:
+
+          if text_field_name not in self._weights:
+            self._weights[text_field_name] = []
+          weights = [float(weight) for weight in item['weight'].split()]
+          # TODO un-hardcode
+          # add 1.0 for BOS and EOS
+          weights = [1.0] + weights + [1.0]
+          self._weights[text_field_name].append(weights)
+
+        if self._args['remove_stopwords']:  # TODO refactor
           # remove stop words
-          text = remove_stopwords(text)
+          if 'weight' in item:
+            text, self._weights[text_field_name][index] = \
+              remove_stopwords(text, weights=self._weights[text_field_name][
+                index])
+          else:
+            text = remove_stopwords(text)
 
         if len(text) < 3:
-          print("!!!!!", self._json_dir, index)
+          print(" Empty text in", self._json_dir, 'index', index)
         # assert len(text) >= 3, old_text
 
         if len(text) < min_seq_len:
