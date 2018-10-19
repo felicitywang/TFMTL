@@ -2,13 +2,12 @@
     "max_document_length": -1,
     "max_vocab_size": -1,
     "min_frequency": 1,
-    // "min_frequency": 0,
     "max_frequency": -1,
     "label_field_name": "label",
     "text_field_names": [
         "text"
     ],
-    "train_ratio": 0.9,
+    "train_ratio": 0.8,
     "valid_ratio": 0.1,
     "random_seed": 42,
     "subsample_ratio": 1,
@@ -16,8 +15,6 @@
     "write_bow": false,
     "write_tfidf": false,
     "preproc": true,
-    // "tokenizer": "split_tokenizer"
-    // "tokenizer": "tweet_tokenizer",
     "tokenizer": "lower_tokenizer",
     "stemmer": "porter_stemmer",
     "stopwords": "nltk"

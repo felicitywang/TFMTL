@@ -15,5 +15,7 @@
     "write_bow": true,
     "write_tfidf": false,
     "preproc": true,
-    "tokenizer": "tweet_tokenizer"
+    "tokenizer": "tweet_tokenizer",
+    "stemmer": "porter_stemmer",
+    "stopwords": "nltk"
 }

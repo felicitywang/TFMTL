@@ -43,7 +43,8 @@ from mtl.util.data_prep import (tweet_tokenizer,
                                 tweet_tokenizer_keep_handles,
                                 ruder_tokenizer,
                                 split_tokenizer, lower_tokenizer, preproc,
-                                remove_stopwords)
+                                remove_stopwords, porter_stemmer,
+                                snowball_stemmer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -133,10 +134,10 @@ class Dataset:
       'max_frequency': -1,
       'max_vocab_size': -1,
       'tokenizer_': 'tweet_tokenizer',
+      'stemmer': None,
       'expand_vocab': False,
       'preproc': True,
-      'remove_stopwords': True,  # TODO add in write_tfrecords_....py / mix
-      # with preproc
+      'stopwords': 'nltk',
       'vocab_all': False,
       'padding': False,
       'write_bow': False,
@@ -176,6 +177,9 @@ class Dataset:
 
     self._tokenizer = None
     self.get_tokenizer()
+
+    self._stemmer = None
+    self.get_stemmer()
 
     self._data = None
     self.read_data()
@@ -404,7 +408,11 @@ class Dataset:
           for old_linebreak in OLD_LINEBREAKS:
             text = text.replace(old_linebreak, LINEBREAK)
 
-        text = [BOS] + self._tokenizer(text) + [EOS]
+        text = self._tokenizer(text)
+        if self._stemmer:
+          text = self._stemmer(text)
+
+        text = [BOS] + text + [EOS]
 
         if 'weight' in item:
 
@@ -416,14 +424,13 @@ class Dataset:
           weights = [1.0] + weights + [1.0]
           self._weights[text_field_name].append(weights)
 
-        if self._args['remove_stopwords']:  # TODO refactor
-          # remove stop words
+        if self._args['stopwords']:
           if 'weight' in item:
             text, self._weights[text_field_name][index] = \
-              remove_stopwords(text, weights=self._weights[text_field_name][
-                index])
+              remove_stopwords(text, stopwords='nltk',
+                               weights=self._weights[text_field_name][index])
           else:
-            text = remove_stopwords(text)
+            text = remove_stopwords(text, stopwords='nltk')
 
         if len(text) < 3:
           print(" Empty text in", self._json_dir, 'index', index)
@@ -460,6 +467,16 @@ class Dataset:
       self._tokenizer = functools.partial(lower_tokenizer)
     else:
       raise ValueError("unrecognized tokenizer: %s" % self._args['tokenizer_'])
+
+  def get_stemmer(self):
+    if self._args['stemmer'] == 'porter_stemmer':
+      self._stemmer = porter_stemmer
+    elif self._args['stemmer'] == 'snowball_stemmer':
+      self._stemmer = snowball_stemmer
+    elif not self._args['stemmer']:
+      self._stemmer = None
+    else:
+      raise ValueError("unrecognized stemmer: %s" % self._args['stemmer'])
 
   def build_vocab(self):
     """Builds vocabulary for this dataset only using tensorflow's
@@ -646,7 +663,6 @@ class Dataset:
           # vocab_all = union(vocab_pretrained, vocab_train)
           # train_vocab_list = self.get_train_vocab_list()
 
-          # TODO other pre-trained word embedding
           pretrained_path = os.path.join(self._vocab_dir,
                                          self._load_vocab_name)
           self._vocab_v2i_dict, self._vocab_extra = combine_vocab(
@@ -672,7 +688,6 @@ class Dataset:
           # use training vocab only, reorder vocab to [not in glove, in glove]
           print('Use training vocab only.')
 
-          # TODO other pre-trained word embedding
           pretrained_path = os.path.join(self._vocab_dir,
                                          self._load_vocab_name)
           self._args['random_size'], self._vocab_v2i_dict = reorder_vocab(
@@ -753,7 +768,6 @@ class Dataset:
             int64_list=tf.train.Int64List(
               value=[self._sequence_lengths[text_field_name][index]]))
 
-          # TODO weights
           if self._weights:
             feature[text_field_name + '_weights'] = tf.train.Feature(
               float_list=tf.train.FloatList(
@@ -1008,7 +1022,9 @@ def merge_dict_write_tfrecord(json_dirs,
                               text_field_names=['text'],
                               label_field_name='label',
                               label_type='int',
-                              tokenizer_="tweet_tokenizer",
+                              tokenizer_='tweet_tokenizer',
+                              stemmer='porter_stemmer',
+                              stopwords='nltk',
                               train_ratio=TRAIN_RATIO,
                               valid_ratio=VALID_RATIO,
                               subsample_ratio=1,
@@ -1049,6 +1065,8 @@ def merge_dict_write_tfrecord(json_dirs,
                       label_field_name=label_field_name,
                       label_type=label_type,
                       tokenizer_=tokenizer_,
+                      stemmer=stemmer,
+                      stopwords=stopwords,
                       generate_basic_vocab=True,
                       vocab_given=False,
                       generate_tf_record=False,
@@ -1134,6 +1152,8 @@ def merge_dict_write_tfrecord(json_dirs,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
                       tokenizer_=tokenizer_,
+                      stemmer=stemmer,
+                      stopwords='nltk',
                       preproc=preproc,
                       vocab_all=vocab_all
                       )
@@ -1155,6 +1175,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   label_field_name='label',
                                   label_type='int',
                                   tokenizer_="tweet_tokenizer",
+                                  stemmer=None,
+                                  stopwords='nltk',
                                   train_ratio=TRAIN_RATIO,
                                   valid_ratio=VALID_RATIO,
                                   subsample_ratio=1,
@@ -1204,6 +1226,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       label_field_name=label_field_name,
                       label_type=label_type,
                       tokenizer_=tokenizer_,
+                      stemmer=stemmer,
+                      stopwords=stopwords,
                       generate_basic_vocab=True,
                       vocab_given=False,
                       generate_tf_record=False,
@@ -1284,6 +1308,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       write_bow=write_bow,
                       write_tfidf=write_tfidf,
                       tokenizer_=tokenizer_,
+                      stemmer=stemmer,
+                      stopwords='nltk',
                       preproc=preproc,
                       vocab_all=vocab_all)
     args_dicts.append(dataset.args)

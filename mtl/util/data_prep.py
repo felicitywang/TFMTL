@@ -21,8 +21,10 @@ from collections import Counter
 
 from bs4 import BeautifulSoup
 from nltk.stem.porter import PorterStemmer
+from nltk.stem.snowball import EnglishStemmer
 from nltk.tokenize import TweetTokenizer
 
+"""STOP WORDS"""
 NLTK_STOPWORDS = set(
   ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your',
    'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she',
@@ -39,20 +41,11 @@ NLTK_STOPWORDS = set(
    'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can',
    'will', 'just', 'don', 'should', 'now'])
 
-# stemmer and tokenizer in NLTK
-stemmer = PorterStemmer()
-
-
-def stem_tokens(tokens, porter_stemmer):
-  stemmed = []
-  for item in tokens:
-    stemmed.append(porter_stemmer.stem(item))
-  return stemmed
-
-
+"""Tokenizers"""
 tweet_tokenizer = TweetTokenizer(strip_handles=True,
                                  preserve_case=False,
                                  reduce_len=True)  # e.g. waaaayyyyyy -> waayyy
+
 tweet_tokenizer_keep_handles = TweetTokenizer(strip_handles=False,
                                               preserve_case=False,
                                               reduce_len=True)
@@ -98,6 +91,40 @@ def my_tokenizer(text):
   # return stems
 
   return tokens
+
+
+"""Stemmers"""
+
+
+def porter_stemmer(tokens):
+  """Stem the tokens using nltk.stem.porter.PorterStemmer(
+  https://www.nltk.org/api/nltk.stem.html), which follows the
+  Porter stemming algorithm presented in
+  Porter, M. “An algorithm for suffix stripping.” Program 14.3 (1980): 130-137.
+  with some optional deviations that can be turned on or off with the mode
+  argument to the constructor.
+
+  :param tokens: a list of tokens
+  :return: list of stemmed tokens
+  """
+  stemmer = PorterStemmer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.stem(item))
+  return stemmed
+
+
+def snowball_stemmer(tokens):
+  """
+
+  :param tokens:
+  :return:
+  """
+  stemmer = EnglishStemmer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.stem(item))
+  return stemmed
 
 
 # transform data['text'](string) to ngram model using
@@ -156,24 +183,28 @@ def remove_tags(string):
   return string
 
 
-def remove_stopwords(tokens, **kwargs):
-  stop_words = NLTK_STOPWORDS
+def remove_stopwords(tokens, stopwords, **kwargs):
+  if stopwords == 'nltk':
+    stopwords = NLTK_STOPWORDS
+  else:
+    raise NotImplementedError('No such stopwords as {}!'.format(stopwords))
 
   if 'weights' not in kwargs:
-    tokens_kept = [token for token in tokens if token not in stop_words]
+    tokens_kept = [token for token in tokens if token not in stopwords]
     # print('Removed {} stop words. (Before: {}; After: {}).'.format(len(
     #   tokens) - len(tokens_kept), len(tokens), len(tokens_kept)))
     return tokens_kept
 
+  # TODO redundant ? (both of fixed max length)
   assert len(tokens) == len(kwargs['weights']), \
     'Token list(len {}) and weight list(len {}) are of different ' \
-    'lengths!'.format({len(tokens), len(kwargs['weights'])})
+    'lengths!'.format(len(tokens), len(kwargs['weights']))
 
   tokens_kept = []
   weights_kept = []
 
   for token, weight in zip(tokens, kwargs['weights']):
-    if token not in stop_words:
+    if token not in stopwords:
       tokens_kept.append(token)
       weights_kept.append(weight)
 

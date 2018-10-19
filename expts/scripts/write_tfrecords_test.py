@@ -61,13 +61,15 @@ def main():
     write_bow=args_used.get('write_bow', args['write_bow']),
     write_tfidf=args_used.get('write_tfidf', args['write_tfidf']),
     tokenizer_=args_used.get('tokenizer', args['tokenizer']),
+    stemmer=args_used.get('stemmer', args['stemmer']),
+    stopwords=args_used.get('stopwords', args['stopwords']),
     preproc=args_used.get('preproc', args.get('preproc', True)),
     vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
 
     # may be different
     text_field_names=args['text_field_names'],
     label_field_name=args['label_field_name'],
-    label_type=args.get('label_type','int'),
+    label_type=args.get('label_type', 'int'),
 
     # test split only
     train_ratio=0.0,

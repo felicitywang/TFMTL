@@ -77,6 +77,8 @@ def main(argv):
                               train_ratio=args['train_ratio'],
                               valid_ratio=args['valid_ratio'],
                               tokenizer_=args['tokenizer'],
+                              stemmer=args['stemmer'],
+                              stopwords=args['stopwords'],
                               subsample_ratio=args['subsample_ratio'],
                               padding=args['padding'],
                               write_bow=args['write_bow'],
@@ -138,6 +140,8 @@ def main(argv):
                                   write_bow=args['write_bow'],
                                   write_tfidf=args['write_tfidf'],
                                   tokenizer_=args['tokenizer'],
+                                  stemmer=args['stemmer'],
+                                  stopwords=args['stopwords'],
                                   expand_vocab=expand_vocab,
                                   preproc=preproc,
                                   vocab_all=vocab_all)

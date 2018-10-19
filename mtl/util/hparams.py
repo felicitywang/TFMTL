@@ -72,7 +72,6 @@ def str2func(s):
 
   functions = {
     "embed_sequence": embed_sequence,
-    "embed_sequence_weighted": embed_sequence_weighted,
     "no_op_embedding": no_op_embedding,
     "init_pretrained": init_pretrained,
     "expand_pretrained": expand_pretrained,

@@ -1,5 +1,6 @@
 {
-    // meta-config
+    // this is for train mode only
+    //////// meta-config ////////
     // Modify these!!!
     // Change these paths to yours
     "bashrc_path": "/home/fwang/.bashrc",
@@ -12,55 +13,9 @@
     // main expts folder
     "root_dir": "/export/a08/fwang/tfmtl/expts/material",
     // "root_dir": ".",
-    /****************for predict mode only*****************/
-    // for bag-of-phrase data uncomment this line
-    "input_key": "weights",
-    "subdirs": [
-        // //        1A one-best
-        // "1A/t6/mt-4.asr-s5",
-        // "1A/tt18",
-        // //        1B one-best
-        // "1B/t6/mt-5.asr-s5",
-        // "1B/tt20"
-        // 1A bag of phrase
-        // "1A/t6.bop/concat",
-        // "1A/tt18.bop/concat",
-        //    1B bag of phrase
-        // "1B/t6.bop/concat",
-        "1B/tt20.bop/concat"
-    ],
-    //    Which eval sets to predict
-    "eval_dirs": [
-        "DEV"
-        //   "EVAL1",
-        //   "EVAL2",
-        //   "EVAL3",
-        //   "ANALYSIS1",
-        //   "ANALYSIS2",
-        //   "goldDOMAIN"
-    ],
-    //    Which type of texts to predict
-    "text_types": [
-        //        "sent",
-        "doc"
-    ],
-    // no need to modify
-    "predict_dataset": "<domains>",
-    "predict_tfrecord_path": "<root_dir>/data/pred/tf/<text_types>/<lang>/<eval_dirs>/<subdir>/<dataset_name>/<args_paths>/pred.tf",
-    "predict_output_folder": "<root_dir>/data/predictions/<text_types>/<lang>/<eval_dirs>/<subdir>/<name>",
-    // When in debug mode, write shell scripts but do to qsub
-    // You can also run shell scripts manually
-    // NOTE: for predict mode, set debug to false and directly output to some
-    // file and run it, instead of using qsub
-    "debug": true,
-    /****************for predict mode only*****************/
-    // mode for driver script: train/test/predict/finetune
-    // Modify these!!!
-    // "mode": "train",
-    "mode": "predict",
-    // "mode": "finetune",
-    // comment if classification(default)
-    // "task": "regression",
+    //////// meta-config ////////
+    "debug": false,
+    "mode": "train",
     "architecture":
     // "dan_meanmax_relu_0.1_glove_expand_finetune",
     "dan_meanmax_relu_0.0_nopretrain",
@@ -81,47 +36,18 @@
     "expt_setup_name": "",
     // dataset suffixes
     "dataset_suffixes": [
-        // syn
         // "_syn_p1000r1000"
-        // "_train_syn_p1000r1000_valid_gold_oracle"
         // "_syn_p1000r1000_syn_p1000r1000_para"
         "_train_syn_p1000r1000_valid_gold_oracle"
-        // "_syn_p1000r1000_syn_p1000r1000_para",
-        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
-        // "_train_syn_p1000r1000_valid_gold_one"
-        // "_train_syn_p1000r1000_valid_gold_one_valid_oracle"
-        // turk
-        // "_turk_60_50",
-        // "_turk_reg"
-        // finetune mode _init_(...)_finetune_(...)
-        // "_init_train_syn_p1000r1000_valid_gold_one_finetune_train_turk_60_50_valid_gold_one"
     ],
-    /****************for finetune mode only*****************/
-    // INIT(PRE-TRAIN) dataset name
-    // "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
-    "init_dataset_suffix":
-    // "_syn_p1000r1000",
-    // "_syn_p1000r1000_syn_p1000r1000_para",
-    "_train_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle",
-    "init_dataset_name": "<domains><init_dataset_suffix>",
-    // TODO combine turk finetune data
-    // FINE-TUNE dataset name
-    "finetune_dataset_suffix":
-    // "_train_turk_60_50_valid_gold_one",
-    // "_turk_60_50_turk_60_50_para",
-    "_train_turk_60_50_turk_60_50_para_vaild_gold",
-    "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
-    // where to load the INIT model
-    "checkpoint_dir_init": "<root_dir>/data/results/<expt_setup_name>/<init_name>/ckpt",
-    /****************for finetune mode only*****************/
     // which args to use
-    "args_paths": "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
-    // "min_0_max_-1_vocab_-1_doc_-1_tok_lower",
-    // "min_0_max_-1_vocab_-1_doc_-1_tok_split"
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+    "args_paths": [
+        "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+    ],
     // No need to modify
     // CLSP Grid related
     // for gpu: total_slots = gpu quota (=5)
