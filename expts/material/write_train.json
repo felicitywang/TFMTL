@@ -12,21 +12,15 @@
     "code_path": "/export/a08/fwang/tfmtl/expts/scripts/write_tfrecords_single.py",
     "root_dir": "/export/a08/fwang/tfmtl/expts/material/",
     "dataset_suffixes": [
-        // "_turk_90_50",
-        // "_turk_80_50",
-        // "_turk_70_50",
-        // "_turk_60_50",
-        // "_turk_50_50"
-        // "_syn_p1000r1000"
-        // "_syn_p11000r11000"
-        "_train_syn_p1000r1000_valid_gold_one"
+        // "_syn_p1000r1000",
+        // "_syn_p1000r1000_syn_p1000r1000_para",
+        // "_train_syn_p1000r1000_valid_gold_oracle",
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
         // "_turk_reg"
     ],
     "args_file_paths": [
-        "args_nopretrain.json"
-        // "args_unique.json"
-        //     "args_pretrained.json"
-        // ]
+        "args_nopretrain.json",
+        "args_pretrained.json"
         // "args_reg.json"
     ]
 }

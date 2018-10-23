@@ -93,6 +93,8 @@ def main():
     write_bow=args_used['write_bow'],
     write_tfidf=args_used['write_tfidf'],
     tokenizer_=args_used['tokenizer_'],
+    stemmer=args_used['stemmer'],
+    stopwords=args_used['stopwords'],
     preproc=args_used['preproc'],
     vocab_all=args_used['vocab_all'],
 

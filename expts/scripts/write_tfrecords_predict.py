@@ -56,6 +56,7 @@ def main():
   # vocabulary
 
   args = load_json(dataset_args_path)
+  print(args)
 
   dataset = Dataset(
 
@@ -64,12 +65,23 @@ def main():
     max_vocab_size=args_used['max_vocab_size_allowed'],
     min_frequency=args_used['min_frequency'],
     max_frequency=args_used['max_frequency'],
-    padding=args_used.get('padding', args.get('padding', False)),
-    write_bow=args_used.get('write_bow', args.get('write_bow', False)),
-    write_tfidf=args_used.get('write_tfidf', args.get('write_tfidf', False)),
-    tokenizer_=args_used.get('tokenizer', args['tokenizer']),
-    preproc=args_used.get('preproc', args.get('preproc', True)),
-    vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
+    # padding=args_used.get('padding', args.get('padding', False)),
+    # write_bow=args_used.get('write_bow', args.get('write_bow', False)),
+    # write_tfidf=args_used.get('write_tfidf', args.get('write_tfidf', False)),
+    # tokenizer_=args_used.get('tokenizer', args['tokenizer']),
+    # preproc=args_used.get('preproc', args.get('preproc', True)),
+    # vocab_all=args_used.get('vocab_all', args.get('vocab_all', False)),
+
+    # use new arguments
+    padding=args.get('padding', args_used.get('padding', False)),
+    write_bow=args.get('write_bow', args_used.get('write_bow', False)),
+    write_tfidf=args.get('write_tfidf', args_used.get('write_tfidf', False)),
+    tokenizer_=args.get('tokenizer', args_used.get('tokenizer_',
+                                                   'lower_tokenizer')),
+    stemmer=args.get('stemmer', args_used.get('stemmer', 'porter_stemmer')),
+    stopword=args.get('stopwords', args_used.get('stopwords', 'nltk')),
+    preproc=args.get('preproc', args_used.get('preproc', True)),
+    vocab_all=args.get('vocab_all', args_used.get('vocab_all', False)),
 
     # may be different
     text_field_names=args['text_field_names'],

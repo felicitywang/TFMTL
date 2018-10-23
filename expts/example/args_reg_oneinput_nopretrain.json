@@ -3,6 +3,7 @@
     "max_vocab_size": -1,
     "min_frequency": 1,
     "max_frequency": -1,
+    "label_type": "float",
     "label_field_name": "label",
     "text_field_names": [
         "text"

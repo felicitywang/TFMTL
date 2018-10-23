@@ -20,56 +20,76 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-def embed_sequence(x, vocab_size, embed_dim, **kwargs):
-  init = tf.contrib.layers.xavier_initializer(uniform=True)
-  return tf.contrib.layers.embed_sequence(x,
-                                          unique=True,  # TODO save memory ?
-                                          vocab_size=vocab_size,
-                                          embed_dim=embed_dim,
-                                          initializer=init)
+# def embed_sequence(x, vocab_size, embed_dim, **kwargs):
+#   init = tf.contrib.layers.xavier_initializer(uniform=True)
+#   return tf.contrib.layers.embed_sequence(x,
+#                                           unique=True,  # TODO save memory ?
+#                                           vocab_size=vocab_size,
+#                                           embed_dim=embed_dim,
+#                                           initializer=init)
 
-  # weights = tf.fill(tf.shape(x), 1.0)
-  # return embed_sequence_weighted(x, weights, vocab_size, embed_dim)
+# weights = tf.fill(tf.shape(x), 1.0)
+# return embed_sequence_weighted(x, weights, vocab_size, embed_dim)
 
 
-def embed_sequence_weighted(x, weights, vocab_size, embed_dim, **kwargs):
+def embed_sequence(word_ids, vocab_size, embed_dim, **kwargs):
   """Call tf.contrib.layers.embed_sequence() to get the initial word embedding
 
   sequences, then multiply the corresponding weight for each word
 
-  :param x: word id sequences, shape of [batch_size, seq_len]
+  :param word_ids: word id sequences, shape of [batch_size, seq_len]
   :param weights: weight sequences, shape of [batch_size, seq_len]
   :param vocab_size: size of vocabulary
   :param embed_dim: dimension of word embeddings
-  :return: weighted word embedding sequences,
+  :return: (maybe weighted) sequence of word embeddings,
            shape of [batch_size, seq_len, embed_dim]
   """
 
-  assert x.get_shape().as_list() == weights.get_shape().as_list(), \
-    "{} != {}".format(tf.shape(x).as_list(), tf.shape(weights).as_list())
-
   init = tf.contrib.layers.xavier_initializer(uniform=True)
-  embeddings = tf.contrib.layers.embed_sequence(x,
+  embeddings = tf.contrib.layers.embed_sequence(word_ids,
                                                 unique=True,
                                                 # TODO save memory ?
                                                 vocab_size=vocab_size,
                                                 embed_dim=embed_dim,
                                                 initializer=init)
 
+  if 'weights' not in kwargs:
+    return embeddings
+
+  weights = kwargs['weights']
+
+  assert word_ids.get_shape().as_list() == weights.get_shape().as_list(), \
+    "{} != {}".format(tf.shape(word_ids).as_list(),
+                      tf.shape(weights).as_list())
+
+  embeddings = get_weighted_embeddings(embeddings, weights=weights)
+
+  return embeddings
+
+
+def get_weighted_embeddings(embeddings, weights):
+  """Multiply a sequence of word embeddings with their weights
+
+  :param embeddings: a sequence of word embeddings got from
+  embedding_lookup, size of [batch_size, seq_len, embed_dim]
+  :param weights: a sequence of weights for each word, size of [batch_size,
+  seq_len]
+  :return: a sequence of weighted word embeddings, size of [batch_size,
+  seq_len, embed_dim]
+  """
   # import pdb
   # pdb.set_trace()
-
   embeddings = tf.transpose(embeddings, perm=[0, 2, 1])
-  print(embeddings.get_shape())
+  # print(embeddings.get_shape())
 
   weights = tf.expand_dims(weights, 1)
-  print(weights.get_shape())
+  # print(weights.get_shape())
 
   embeddings = tf.multiply(embeddings, weights)
-  print(embeddings.get_shape())
+  # print(embeddings.get_shape())
 
   embeddings = tf.transpose(embeddings, perm=[0, 2, 1])
-  print(embeddings.get_shape())
+  # print(embeddings.get_shape())
 
   return embeddings
 

@@ -77,6 +77,8 @@ def main():
                       write_bow=args['write_bow'],
                       write_tfidf=args['write_tfidf'],
                       tokenizer_=args['tokenizer'],
+                      stemmer=args['stemmer'],
+                      stopwords=args['stopwords'],
                       generate_basic_vocab=False,
                       vocab_given=False,
                       generate_tf_record=True,

@@ -19,23 +19,34 @@ import itertools
 import re
 from collections import Counter
 
+from bs4 import BeautifulSoup
+from nltk import WordNetLemmatizer
 from nltk.stem.porter import PorterStemmer
+from nltk.stem.snowball import EnglishStemmer
 from nltk.tokenize import TweetTokenizer
 
-# stemmer and tokenizer in NLTK
-stemmer = PorterStemmer()
+"""STOP WORDS"""
+NLTK_STOPWORDS = set(
+  ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your',
+   'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she',
+   'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
+   'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that',
+   'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+   'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+   'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of',
+   'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through',
+   'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+   'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then',
+   'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any',
+   'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor',
+   'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can',
+   'will', 'just', 'don', 'should', 'now'])
 
-
-def stem_tokens(tokens, porter_stemmer):
-  stemmed = []
-  for item in tokens:
-    stemmed.append(porter_stemmer.stem(item))
-  return stemmed
-
-
+"""Tokenizers"""
 tweet_tokenizer = TweetTokenizer(strip_handles=True,
                                  preserve_case=False,
                                  reduce_len=True)  # e.g. waaaayyyyyy -> waayyy
+
 tweet_tokenizer_keep_handles = TweetTokenizer(strip_handles=False,
                                               preserve_case=False,
                                               reduce_len=True)
@@ -83,6 +94,53 @@ def my_tokenizer(text):
   return tokens
 
 
+"""Stemmers"""
+
+
+def porter_stemmer(tokens):
+  """Stem the tokens using nltk.stem.porter.PorterStemmer(
+  https://www.nltk.org/api/nltk.stem.html), which follows the
+  Porter stemming algorithm presented in
+  Porter, M. “An algorithm for suffix stripping.” Program 14.3 (1980): 130-137.
+  with some optional deviations that can be turned on or off with the mode
+  argument to the constructor.
+
+  :param tokens: a list of tokens
+  :return: list of stemmed tokens
+  """
+  stemmer = PorterStemmer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.stem(item))
+  return stemmed
+
+
+def snowball_stemmer(tokens):
+  """TODO
+
+  :param tokens:
+  :return:
+  """
+  stemmer = EnglishStemmer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.stem(item))
+  return stemmed
+
+
+def wordnet_stemmer(tokens):
+  """TODO
+
+  :param tokens:
+  :return:
+  """
+  stemmer = WordNetLemmatizer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.lemmatize(item))
+  return stemmed
+
+
 # transform data['text'](string) to ngram model using
 # sklearn.feature_extraction.text.TfidfVectorizer
 
@@ -105,8 +163,24 @@ def clean_str(string):
   string = re.sub(r"\(", " \( ", string)
   string = re.sub(r"\)", " \) ", string)
   string = re.sub(r"\?", " \? ", string)
+  string = re.sub(r"\\'", "\'", string)
+  string = re.sub(r"\\""", "\"", string)
   string = re.sub(r"\s{2,}", " ", string)
-  return string.strip().lower()
+
+  return string
+
+
+def remove_urls(string):
+  toks = []
+  for tok in string.split():
+    if re.match('https?:.*[\r\n]*', tok):
+      tok = tok.split('http')[0]
+      # keep everything before hand in cases where there is not space
+      # between previous token and url
+    if tok.strip():
+      toks.append(tok)
+  string = " ".join(toks)
+  return string.strip()
 
 
 def build_vocab(text_list):
@@ -118,9 +192,60 @@ def build_vocab(text_list):
   return vocabulary, vocabulary_inv
 
 
+def remove_tags(string):
+  string = BeautifulSoup(string, "html5lib").get_text()
+  return string
+
+
+def remove_stopwords(tokens, stopwords, **kwargs):
+  if stopwords == 'nltk':
+    stopwords = NLTK_STOPWORDS
+  else:
+    raise NotImplementedError('No such stopwords as {}!'.format(stopwords))
+
+  if 'weights' not in kwargs:
+    tokens_kept = [token for token in tokens if token not in stopwords]
+    # print('Removed {} stop words. (Before: {}; After: {}).'.format(len(
+    #   tokens) - len(tokens_kept), len(tokens), len(tokens_kept)))
+    return tokens_kept
+
+  # TODO redundant ? (both of fixed max length)
+  assert len(tokens) == len(kwargs['weights']), \
+    'Token list(len {}) and weight list(len {}) are of different ' \
+    'lengths!'.format(len(tokens), len(kwargs['weights']))
+
+  tokens_kept = []
+  weights_kept = []
+
+  for token, weight in zip(tokens, kwargs['weights']):
+    if token not in stopwords:
+      tokens_kept.append(token)
+      weights_kept.append(weight)
+
+  # print('Removed {} stop words. (Before: {}; After: {}).'.format(len(
+  #   tokens) - len(tokens_kept), len(tokens), len(tokens_kept)))
+  return tokens_kept, weights_kept
+
+
+def preproc(string):
+  string = remove_urls(string)
+  string = remove_tags(string)
+  string = clean_str(string)
+  return string
+
+
 def main():
-  sentence = 'this is aaaaaaaaa a aaaaaa badly beautiful day . , / ? ! :) '
+  sentence = 'this is aaaaaaaaa a aaaaaa badly beautiful day . , / ? ! \' :) ' \
+             '" \' ' \
+             '<img<!-- --> src=x onerror=alert(1);//><!-- -->' \
+             '<ref/> test ref <ref>' \
+             'http://www.test.com' \
+             '<td><a href="http://www.fakewebsite.com">Please can you strip me?</a>' \
+             '<br/><a href="http://www.fakewebsite.com">I am waiting....</a></td>'
+  print(clean_str(sentence))
   print(tweet_clean(sentence))
+  print(BeautifulSoup(sentence).get_text())
+  print(preproc(sentence))
 
 
 if __name__ == "__main__":
