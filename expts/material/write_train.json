@@ -13,10 +13,9 @@
     "root_dir": "/export/a08/fwang/tfmtl/expts/material/",
     "dataset_suffixes": [
         // "_syn_p1000r1000",
-        "_train_syn_p1000r1000_valid_gold_oracle"
         // "_syn_p1000r1000_syn_p1000r1000_para",
         // "_train_syn_p1000r1000_valid_gold_oracle",
-        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
         // "_turk_reg"
     ],
     "args_file_paths": [

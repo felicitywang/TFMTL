@@ -15,10 +15,10 @@
     "padding": false,
     "write_bow": false,
     "write_tfidf": false,
-    "preproc": true,
+    "preproc": false,
     // "tokenizer": "split_tokenizer"
     // "tokenizer": "tweet_tokenizer",
     "tokenizer": "lower_tokenizer",
-    "stemmer": "porter_stemmer",
+    "stemmer": "wordnet_stemmer",
     "stopwords": "nltk"
 }

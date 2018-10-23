@@ -16,11 +16,6 @@
     //////// meta-config ////////
     "debug": false,
     "mode": "train",
-    "architecture":
-    // "dan_meanmax_relu_0.1_glove_expand_finetune",
-    "dan_meanmax_relu_0.0_nopretrain",
-    // "dan_meanmax_relu_0.1_nopretrain",
-    // "bilstm_attention_3_nopretrain",
     // input key: default tokens
     // which domains to use
     "domains": [
@@ -29,22 +24,30 @@
         "BUS",
         "LAW",
         "HEA",
-        "MIL"
+        "MIL",
         "SPO"
     ],
     // experiment name
     "expt_setup_name": "",
     // dataset suffixes
     "dataset_suffixes": [
-        // "_syn_p1000r1000"
-        // "_syn_p1000r1000_syn_p1000r1000_para"
-        "_train_syn_p1000r1000_valid_gold_oracle"
+        "_syn_p1000r1000",
+        "_syn_p1000r1000_syn_p1000r1000_para",
+        "_train_syn_p1000r1000_valid_gold_oracle",
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
     ],
+    // what architecture in encoders.json to use
+    "architecture":
+    // "dan_meanmax_relu_0.1_nopretrain",
+    // "dan_meanmax_relu_0.0_nopretrain",
+    "dan_meanmax_relu_0.0_glove_expand_nofinetune",
+    // "dan_meanmax_relu_0.1_nopretrain",
+    // "bilstm_attention_3_nopretrain",
     // which args to use
     "args_paths": [
-        "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
+        "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
     ],
@@ -83,7 +86,6 @@
     "log_file": "<root_dir>/data/results/<expt_setup_name>/<name>/<mode>.log",
     // configuration of encoders.json, will be read to generate encoders.json for each dataset
     "encoder_config_file": "<root_dir>/data/results/<expt_setup_name>/<name>/encoders.json",
-    // what architecture in encoders.json to use
     // default to false in stl mode
     "embedders_tied": false,
     "extractors_tied": false,

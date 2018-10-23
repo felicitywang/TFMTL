@@ -15,37 +15,42 @@
     "dataset_suffixes": [
         // "_turk_60_50",
         // "_turk_reg"
-        // "_syn_p1000r1000"
-        "_train_syn_p1000r1000_valid_gold_oracle"
+        "_syn_p1000r1000",
+        "_syn_p1000r1000_syn_p1000r1000_para",
+        "_train_syn_p1000r1000_valid_gold_oracle",
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
     ],
     // Which args.json file to use
     // only 'text_field_name' and 'label_field_name' are used
     // other args should be from the used args
     "args_file_path":
-    // "args_pretrained.json",
+    //
     "args_nopretrain.json",
+    // "args_pretrained.json",
     // "args_reg.json",
     // Which args to use(according to previous args file)
-    "args_path": "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
+    "args_path":
+    //
+    "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init",
-    //  "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
     // Which subdirectories to predict
     "subdirs": {
         "1A": [
             // one-best
-            "t6/mt-4.asr-s5",
-            "tt18",
-            // // bag-of-phrase
-            // "t6.bop/concat",
-            // "tt18.bop/concat"
+            // "t6/mt-4.asr-s5",
+            // "tt18",
+            // bag-of-phrase
+            "t6.bop/concat",
+            "tt18.bop/concat"
         ],
         "1B": [
             // one-best
-            "t6/mt-5.asr-s5",
-            "tt20",
-            // // bag-of-phrase
-            // "t6.bop/concat",
-            // "tt20.bop/concat"
+            // "t6/mt-5.asr-s5",
+            // "tt20",
+            // bag-of-phrase
+            "t6.bop/concat",
+            "tt20.bop/concat"
         ]
     },
     //    Which eval sets to predict

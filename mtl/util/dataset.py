@@ -44,7 +44,7 @@ from mtl.util.data_prep import (tweet_tokenizer,
                                 ruder_tokenizer,
                                 split_tokenizer, lower_tokenizer, preproc,
                                 remove_stopwords, porter_stemmer,
-                                snowball_stemmer)
+                                snowball_stemmer, wordnet_stemmer)
 from mtl.util.load_embeds import combine_vocab, reorder_vocab
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
@@ -473,6 +473,8 @@ class Dataset:
       self._stemmer = porter_stemmer
     elif self._args['stemmer'] == 'snowball_stemmer':
       self._stemmer = snowball_stemmer
+    elif self._args['stemmer'] == 'wordnet_stemmer':
+      self._stemmer = wordnet_stemmer
     elif not self._args['stemmer']:
       self._stemmer = None
     else:
@@ -515,8 +517,13 @@ class Dataset:
     make_dir(self._save_vocab_dir)
     with codecs.open(os.path.join(self._save_vocab_dir, "vocab_v2i.json"),
                      mode='w', encoding='utf-8')as file:
-      json.dump(self._categorical_vocab.mapping, file,
-                ensure_ascii=False, indent=4)
+      # TODO
+      if self._categorical_vocab:
+        json.dump(self._categorical_vocab.mapping, file,
+                  ensure_ascii=False, indent=4)
+      else:
+        json.dump(self._vocab_v2i_dict, file,
+                  ensure_ascii=False, indent=4)
 
   def save_i2v_dict(self):
     make_dir(self._save_vocab_dir)
@@ -635,7 +642,8 @@ class Dataset:
                              max_frequency=self._args['max_frequency'],
                              max_vocab_size=self._args['max_vocab_size'])
       categorical_vocab.freeze()
-
+      self._categorical_vocab = categorical_vocab
+      # TODO bug ?
       self.init_vocab_processor()
 
 

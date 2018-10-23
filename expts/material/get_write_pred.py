@@ -28,8 +28,6 @@ import os
 
 from mtl.util.util import load_json
 
-domains = ['GOV', 'LIF', 'BUS', 'LAW', 'HEA', 'MIL', 'SPO']
-
 from itertools import product
 import sys
 

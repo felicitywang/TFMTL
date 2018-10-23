@@ -20,6 +20,7 @@ import re
 from collections import Counter
 
 from bs4 import BeautifulSoup
+from nltk import WordNetLemmatizer
 from nltk.stem.porter import PorterStemmer
 from nltk.stem.snowball import EnglishStemmer
 from nltk.tokenize import TweetTokenizer
@@ -115,7 +116,7 @@ def porter_stemmer(tokens):
 
 
 def snowball_stemmer(tokens):
-  """
+  """TODO
 
   :param tokens:
   :return:
@@ -124,6 +125,19 @@ def snowball_stemmer(tokens):
   stemmed = []
   for item in tokens:
     stemmed.append(stemmer.stem(item))
+  return stemmed
+
+
+def wordnet_stemmer(tokens):
+  """TODO
+
+  :param tokens:
+  :return:
+  """
+  stemmer = WordNetLemmatizer()
+  stemmed = []
+  for item in tokens:
+    stemmed.append(stemmer.lemmatize(item))
   return stemmed
 
 
