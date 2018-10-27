@@ -248,8 +248,12 @@ class Dataset:
 
     self.write_tfrecord()
 
-    if not self._args['predict_mode']:
-      self.write_args()
+    if self._args['predict_mode']:
+      self._tfrecord_dir = os.path.dirname(predict_tf_path)
+    self.write_args()
+
+    self.save_vocab()
+
 
   def get_max_doc_len(self):
     # TODO remove ?
@@ -539,10 +543,16 @@ class Dataset:
     # TODO vocab_dir  vs save_vocab_dir
 
     # save the built vocab to the disk for future use
+    if not self._save_vocab_dir:
+          self._save_vocab_dir = self._tfrecord_dir
     make_dir(self._save_vocab_dir)
-    self.save_vocab_freq()
-    self.save_v2i_dict()
-    self.save_i2v_dict()
+    if self._vocab_freq_dict:
+      self.save_vocab_freq()
+    if self._vocab_v2i_dict:
+      self.save_v2i_dict()
+    # TODO??
+    if self._categorical_vocab:
+      self.save_i2v_dict()
 
   def get_training_docs(self):
     # build vocabulary only according to training data
