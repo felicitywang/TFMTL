@@ -102,7 +102,7 @@ def parse_args():
   p.add_argument('--early_stopping_acc_threshold', default=1.0, type=float,
                  help='Threshold for early stopping on dev set of main task. If 1.0, there is no early stopping.')
   p.add_argument('--print_trainable_variables', action='store_true',
-                 default=False,
+                 default=True,
                  help='Diagnostic: print trainable variables')
   p.add_argument('--seed', default=42, type=int,
                  help='RNG seed')
@@ -245,11 +245,15 @@ def train_model(model,
       extract_fn = encoders[args.architecture][dataset_name]['extract_fn']
       embed_fn = encoders[args.architecture][dataset_name]['embed_fn']
 
-    if embed_fn == 'embed_sequence':
+    if embed_fn in ['embed_sequence', 'pretrained']:
       # TODO text_field_name ?
       if 'input_key' == 'weights':
         additional_encoder_kwargs[dataset_name]['weights'] = train_batches[
           dataset_name]['text_weights']
+    elif embed_fn == 'pretrained':
+      additional_encoder_kwargs[dataset_name]['is_training'] = True
+    else:
+      pass
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = True
@@ -269,6 +273,7 @@ def train_model(model,
       additional_encoder_kwargs[dataset_name]['is_training'] = True
     else:
       pass
+
   # losses = model.get_multi_task_loss(train_batches,
   #                                   is_training=True,
   #                                   additional_encoder_kwargs=additional_encoder_kwargs)
@@ -1384,6 +1389,9 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         additional_encoder_kwargs[dataset_name]['weights'] = batch[
           'text_weights']
 
+    if embed_fn == 'pretrained':
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
+
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
@@ -1448,6 +1456,9 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
       if args.input_key == 'weights':
         additional_encoder_kwargs[dataset_name]['weights'] = batch[
           'text_weights']
+
+    if embed_fn == 'pretrained':
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False
