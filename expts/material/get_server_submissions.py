@@ -15,6 +15,8 @@
 
 """Convert DOMAIN.tsv file to format to submit to the server
 
+Note: this is the new version for the new evaluation plan
+
 input: directory path that contains 1A.txt and 1B.txt
 submission files would be written into input/1A and input/1B
 
@@ -32,7 +34,7 @@ from material_constants import *
 from mtl.util.util import make_dir
 
 text_type = 'doc'  # TODO
-translation = 'one'  # TODO
+# translation = 'one'  # TODO
 
 
 def main():
@@ -46,7 +48,10 @@ def main():
         '1B': {},
     }
     submission_dir = sys.argv[1]
-    eval_dir = sys.argv[2]
+    eval_dir = sys.argv[2]  # DEV
+    translation = sys.argv[3]  # one / bop
+
+    exist = True
 
     for lang in LANG_DIRS:
         filename = os.path.join(submission_dir, lang + '.txt')
@@ -70,9 +75,11 @@ def main():
                     for subdir in subdirs:
                         pred_filename = os.path.join(
                             'data/predictions', basedir, subdir, encoder, domain + '.tsv')
-                        print(pred_filename)
-                        # if not os.path.exists(pred_filename):
-                        #     continue
+                        # print(pred_filename)
+                        if not os.path.exists(pred_filename):
+                            print(pred_filename, 'doesnt exist!')
+                            exist = False
+                            continue
                         if domain not in pred_filenames[lang]:
                             pred_filenames[lang][domain] = []
                         pred_filenames[lang][domain].append(
@@ -81,7 +88,11 @@ def main():
                     thresholds[lang][domain] = []
                 thresholds[lang][domain] = threshold
 
-    pprint(pred_filenames)
+    if not exist:
+        print('Some files do not exist. Exiting...')
+        exit()
+
+    # pprint(pred_filenames)
     pprint(thresholds)
 
     for lang, domains in LANG_DIRS.items():
@@ -94,8 +105,8 @@ def main():
         for domain in domains:
             threshold = thresholds[lang][domain]
 
-            fout = open(os.path.join(dout, DOMAIN_NAMES[domain]), 'a')
-            fout.write(DOMAIN_NAMES[domain][2:-4] + '\n')
+            fout = open(os.path.join(dout, domain + '.tsv'), 'a')
+            # fout.write(DOMAIN_NAMES[domain][2:-4] + '\n')
             for filename in pred_filenames[lang][domain]:
                 with open(filename) as fin:
                     for line in fin.readlines()[1:]:
@@ -111,8 +122,10 @@ def main():
                         # assert int(label) == 1 and float(score) >= 0.5 or int(
                         #   label) == 0 and \
                         #        float(score) < 0.5
-                        if float(score) >= threshold:  # TODO
-                            fout.write(id + '\t' + score[:5] + '\n')
+                        if float(score) > threshold:  # TODO
+                            fout.write(id + '\tY\t' + score[:5] + '\n')
+                        else:
+                            fout.write(id + '\tN\t' + score[:5] + '\n')
 
             fout.close()
 
@@ -124,7 +137,8 @@ def main():
         with tarfile.open(os.path.join(dout, 'd-domain.tgz'),
                           mode='w:gz') as tar:
             for domain in domains:
-                arcname = DOMAIN_NAMES[domain]
+                # arcname = DOMAIN_NAMES[domain]
+                arcname = domain + '.tsv'
                 fullpath = os.path.join(dout, arcname)
                 tar.add(fullpath, arcname=arcname)
 
