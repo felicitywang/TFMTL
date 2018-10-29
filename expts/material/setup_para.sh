@@ -38,10 +38,10 @@ cp /export/a05/mahsay/domain/data/json/syn/p1000r1000-para/SPO/data.json.gz data
 
 # parabank-extended turk data
 
-cp -fr /export/a05/mahsay/domain/tfmtl/expts/material/data/json-para/ data/raw
+cp -fr /export/a05/mahsay/domain/data/json/turk/para/ data/raw
 
-for file in data/raw/json-para/* ; do mv "$file" "$file"_para ;  done
+for file in data/raw/para/* ; do mv "$file" "$file"_para ;  done
 
-mv data/raw/json-para/* data/json
+mv data/raw/para/* data/json
 
 
