@@ -12,18 +12,34 @@
     "code_path": "/export/a08/fwang/tfmtl/expts/scripts/write_tfrecords_finetune.py",
     "root_dir": "/export/a08/fwang/tfmtl/expts/material/",
     // suffix of the dataset which the model is trained with
-    "init_dataset_suffix":
-    // "_syn_p1000r1000",
-    "_train_syn_p1000r1000_valid_gold_one",
-    // "_syn_p1000r1000_syn_p1000r1000_para",
+    "init_dataset_suffix": [
+        "_syn_p1000r1000",
+        "_train_syn_p1000r1000_valid_gold_oracle",
+        "_syn_p1000r1000_syn_p1000r1000_para",
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+    ],
     // base directory of the directories in which all domains' json data to
     // write are saved
-    "finetune_dataset_suffix": "_turk_60_50",
+    "finetune_dataset_suffix": [
+        "_turk_60_50",
+        "_train_turk_60_50_valid_gold_oracle",
+        "_turk_60_50_turk_60_50_para",
+        "_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
+        // "_turk_60_50_1",
+        // "_turk_60_50_2",
+        // "_turk_60_50_3",
+        // "_turk_60_50_4",
+        // "_turk_60_50_5"
+    ],
     // "_turk_reg"
     "args_file_path":
-    //     "args_pretrained.json",
+    //
+    // "args_pretrained.json",
     "args_nopretrain.json",
     // "args_reg.json"
     // directory of the vocabulary of the data used to train the model
-    "args_path": "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+    "args_path":
+    //
+    "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
 }

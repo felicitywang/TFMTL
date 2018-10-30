@@ -20,6 +20,7 @@ Usage:
     2. Run get_write_finetune.py write_finetune.json to generate shell scripts
     3. Directly run the generated commands or use split_qsub.sh to qsub and run in parallel
 """
+import itertools
 import sys
 
 from mtl.util.util import load_json
@@ -28,20 +29,23 @@ from mtl.util.util import load_json
 def main():
   args = load_json(sys.argv[1])
 
-  for domain in args['domains']:
+  # TODO
+  for domain, init_dataset_suffix, finetune_dataset_suffix in itertools.product(
+    args['domains'], args['init_dataset_suffix'],
+    args['finetune_dataset_suffix']):
     print('cd {}'.format(args['root_dir']))
     print(
       '{} {} {}_init{}_finetune{} {} data/json/{}{} data/tf/single/{}{}/{}'.format(
         args['python_path'],
         args['code_path'],
         domain,
-        args['init_dataset_suffix'],
-        args['finetune_dataset_suffix'],
+        init_dataset_suffix,
+        finetune_dataset_suffix,
         args['args_file_path'],
         domain,
-        args['finetune_dataset_suffix'],
+        finetune_dataset_suffix,
         domain,
-        args['init_dataset_suffix'],
+        init_dataset_suffix,
         args['args_path']
       )
     )
