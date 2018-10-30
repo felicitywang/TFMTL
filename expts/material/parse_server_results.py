@@ -21,60 +21,61 @@ from material_constants import *
 
 
 def main():
-    dir = sys.argv[1]
+  dir = sys.argv[1]
 
-    domains = ['BUS', 'GOV-A', 'GOV-B', 'HEA', 'LAW', 'LIF-A', 'LIF-B', 'MIL',
-               'SPO-A', 'SPO-B']
+  domains = ['BUS', 'GOV-A', 'GOV-B', 'HEA', 'LAW', 'LIF-A', 'LIF-B', 'MIL',
+             'SPO-A', 'SPO-B']
 
-    p_misses = dict()
-    p_fas = dict()
+  p_misses = dict()
+  p_fas = dict()
 
-    for filename in os.listdir(dir):
-        if not filename.endswith('.csv'):
-            continue
-        with open(os.path.join(dir, filename)) as file:
-            lines = [line.strip() for line in file.readlines() if
-                     line.strip()]
-            # print(len(lines))
-            # print(lines)
-            for i in range(int(len(lines) / 3)):
-                domain_name = DOMAIN_NAMES_REVERSE[lines[i * 3]]
-                if domain_name in ['GOV', 'LIF', 'SPO']:
-                    if '1A' in filename:
-                        domain_name += '-A'
-                    elif '1B' in filename:
-                        domain_name += '-B'
-                    else:
-                        raise ValueError('wrong name ' + filename)
-                score_names = lines[i * 3 + 1].split(',')
+  for filename in os.listdir(dir):
+    if not filename.endswith('.csv'):
+      continue
+    with open(os.path.join(dir, filename)) as file:
+      lines = [line.strip() for line in file.readlines() if
+               line.strip()]
+      # print(len(lines))
+      # print(lines)
+      for i in range(int(len(lines))):
+        # score_names = lines[i * 3 + 1].split(',')
 
-                assert score_names == [
-                    'P_truePositive', 'P_miss', 'P_falseAlarm', 'P_trueNegative']
+        # assert score_names == [
+        #    'P_truePositive', 'P_miss', 'P_falseAlarm', 'P_trueNegative']
 
-                scores = lines[i * 3 + 2].split(',')
+        scores = lines[i].split(',')
+        domain_name = scores[0]
+        scores = scores[1:]
+        if domain_name in ['GOV', 'LIF', 'SPO']:
+          if '1A' in filename:
+            domain_name += '-A'
+          elif '1B' in filename:
+            domain_name += '-B'
+          else:
+            raise ValueError('wrong name ' + filename)
 
-                # print(domain_name)
-                # print(scores)
+        # print(domain_name)
+        # print(scores)
 
-                p_misses[domain_name] = scores[1]
-                p_fas[domain_name] = scores[2]
+        p_misses[domain_name] = scores[1]
+        p_fas[domain_name] = scores[2]
 
-    # print(p_misses)
-    # print(p_fas)
+  # print(p_misses)
+  # print(p_fas)
 
-    print(' '.join(domains))
+  print(' '.join(domains))
 
-    print('p_miss')
-    for domain_name in domains:
-        print(p_misses[domain_name], end=',')
+  print('p_miss')
+  for domain_name in domains:
+    print(p_misses[domain_name], end=',')
 
-    print()
-    print('p_fa')
-    for domain_name in domains:
-        print(p_fas[domain_name], end=',')
+  print()
+  print('p_fa')
+  for domain_name in domains:
+    print(p_fas[domain_name], end=',')
 
-    print()
+  print()
 
 
 if __name__ == '__main__':
-    main()
+  main()

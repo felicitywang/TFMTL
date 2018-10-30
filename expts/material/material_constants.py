@@ -49,24 +49,26 @@ DOMAINS = [
 ]
 
 
-DOMAIN_NAMES = {
-    'GOV': 'd-Government-And-Politics.tsv',
-    'LIF': 'd-Lifestyle.tsv',
-    'BUS': 'd-Business-And-Commerce.tsv',
-    'LAW': 'd-Law-And-Order.tsv',
-    'SPO': 'd-Sports.tsv',
-    'HEA': 'd-Physical-And-Mental-Health.tsv',
-    'MIL': 'd-Military.tsv'
-}
-DOMAIN_NAMES_REVERSE = {
-    'Government-And-Politics': 'GOV',
-    'Lifestyle': 'LIF',
-    'Business-And-Commerce': 'BUS',
-    'Law-And-Order': 'LAW',
-    'Sports': 'SPO',
-    'Physical-And-Mental-Health': 'HEA',
-    'Military': 'MIL',
-}
+# DOMAIN_NAMES = {
+#     'GOV': 'd-Government-And-Politics.tsv',
+#     'LIF': 'd-Lifestyle.tsv',
+#     'BUS': 'd-Business-And-Commerce.tsv',
+#     'LAW': 'd-Law-And-Order.tsv',
+#     'SPO': 'd-Sports.tsv',
+#     'HEA': 'd-Physical-And-Mental-Health.tsv',
+#     'MIL': 'd-Military.tsv'
+# }
+
+
+# DOMAIN_NAMES_REVERSE = {
+#     'Government-And-Politics': 'GOV',
+#     'Lifestyle': 'LIF',
+#     'Business-And-Commerce': 'BUS',
+#     'Law-And-Order': 'LAW',
+#     'Sports': 'SPO',
+#     'Physical-And-Mental-Health': 'HEA',
+#     'Military': 'MIL',
+# }
 
 LANG_DIRS = {
     '1A': ['GOV', 'LIF', 'BUS', 'LAW', 'SPO'],
