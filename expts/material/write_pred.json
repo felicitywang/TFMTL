@@ -15,10 +15,32 @@
     "dataset_suffixes": [
         // "_turk_60_50",
         // "_turk_reg"
-        "_syn_p1000r1000",
-        "_syn_p1000r1000_syn_p1000r1000_para",
-        "_train_syn_p1000r1000_valid_gold_oracle",
-        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+        // "_syn_p1000r1000",
+        // "_syn_p1000r1000_syn_p1000r1000_para",
+        // "_train_syn_p1000r1000_valid_gold_oracle",
+        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+        //
+        "_init_syn_p1000r1000_finetune_turk_60_50_1",
+        "_init_syn_p1000r1000_finetune_turk_60_50_2",
+        "_init_syn_p1000r1000_finetune_turk_60_50_3",
+        "_init_syn_p1000r1000_finetune_turk_60_50_4",
+        "_init_syn_p1000r1000_finetune_turk_60_50_5"
+        // "_init_syn_p1000r1000_finetune_turk_60_50",
+        // "_init_syn_p1000r1000_finetune_train_turk_60_50_valid_gold_oracle",
+        // "_init_syn_p1000r1000_finetune_turk_60_50_turk_60_50_para",
+        // "_init_syn_p1000r1000_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_train_turk_60_50_valid_gold_oracle",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50_turk_60_50_para",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_turk_60_50",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_train_turk_60_50_valid_gold_oracle",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_turk_60_50_turk_60_50_para",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
+        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_turk_60_50",
+        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_train_turk_60_50_valid_gold_oracle",
+        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_turk_60_50_turk_60_50_para",
+        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
     ],
     // Which args.json file to use
     // only 'text_field_name' and 'label_field_name' are used
@@ -38,19 +60,19 @@
     "subdirs": {
         "1A": [
             // one-best
-            // "t6/mt-4.asr-s5",
-            // "tt18",
-            // bag-of-phrase
-            "t6.bop/concat",
-            "tt18.bop/concat"
+            "t6/mt-4.asr-s5",
+            "tt18"
+            // // bag-of-phrase
+            // "t6.bop/concat",
+            // "tt18.bop/concat"
         ],
         "1B": [
             // one-best
-            // "t6/mt-5.asr-s5",
-            // "tt20",
-            // bag-of-phrase
-            "t6.bop/concat",
-            "tt20.bop/concat"
+            "t6/mt-5.asr-s5",
+            "tt20"
+            // // bag-of-phrase
+            // "t6.bop/concat",
+            // "tt20.bop/concat"
         ]
     },
     //    Which eval sets to predict

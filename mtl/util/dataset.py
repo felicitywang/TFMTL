@@ -45,7 +45,8 @@ from mtl.util.data_prep import (tweet_tokenizer,
                                 split_tokenizer, lower_tokenizer, preproc,
                                 remove_stopwords, porter_stemmer,
                                 snowball_stemmer, wordnet_stemmer)
-from mtl.util.load_embeds import combine_vocab, reorder_vocab
+from mtl.util.load_embeds import combine_vocab, reorder_vocab, \
+  load_pretrianed_vocab_dict
 from mtl.util.text import VocabularyProcessor, tokenizer_simple
 from mtl.util.util import bag_of_words, tfidf, make_dir
 
@@ -135,6 +136,7 @@ class Dataset:
       'max_vocab_size': -1,
       'tokenizer_': 'tweet_tokenizer',
       'stemmer': None,
+      'pretrained_only': False,
       'expand_vocab': False,
       'preproc': True,
       'stopwords': 'nltk',
@@ -254,7 +256,6 @@ class Dataset:
 
     self.save_vocab()
 
-
   def get_max_doc_len(self):
     # TODO remove ?
     # only compute from training data
@@ -294,9 +295,6 @@ class Dataset:
                                            )
 
   def write_tfrecord(self):
-
-    # import pdb
-    # pdb.set_trace()
 
     # write TFRecords for predict data
     if self._args['predict_mode']:
@@ -398,9 +396,6 @@ class Dataset:
       for text_field_name in self._args['text_field_names']:
         text = item[text_field_name]
 
-        # import pdb
-        # pdb.set_trace()
-
         if self._args['preproc']:
 
           # remove leading and trailing whitespaces(to get rid of redundant
@@ -496,7 +491,7 @@ class Dataset:
 
     self._vocab_processor.fit(training_docs)
 
-    self.get_vocab()
+    self.transform_text()
 
     self._vocab_freq_dict = self._vocab_processor.vocabulary_.freq
 
@@ -544,7 +539,7 @@ class Dataset:
 
     # save the built vocab to the disk for future use
     if not self._save_vocab_dir:
-          self._save_vocab_dir = self._tfrecord_dir
+      self._save_vocab_dir = self._tfrecord_dir
     make_dir(self._save_vocab_dir)
     if self._vocab_freq_dict:
       self.save_vocab_freq()
@@ -670,58 +665,63 @@ class Dataset:
         # use the pretrained word embeddings' dictionary
 
         train_vocab_list = self.get_train_vocab_list()
+        pretrained_path = os.path.join(self._vocab_dir,
+                                       self._load_vocab_name)
 
-        if self._args['expand_vocab']:
-          print('Combine pre-trained word embeddings\' vocabulary mapping '
-                'with all the word types appearing in the training data.')
-          # TODO multiple training data for merged vocabulary
-          # raise NotImplementedError('Combine pre-trained word embedding '
-          #                           'and training data dictionary Not '
-          #                           'Implemented!')
-          # vocab_all = union(vocab_pretrained, vocab_train)
-          # train_vocab_list = self.get_train_vocab_list()
-
-          pretrained_path = os.path.join(self._vocab_dir,
-                                         self._load_vocab_name)
-          self._vocab_v2i_dict, self._vocab_extra = combine_vocab(
-            pretrained_path,
-            train_vocab_list)
-
-          self._args['vocab_size'] = len(self._vocab_v2i_dict)
-
-          # save the combined vocab to the disk for future use
-          self._save_vocab_dir = self._tfrecord_dir
-          self.save_v2i_dict()
-          self.save_vocab_extra()
+        if self._args['pretrained_only']:
+          # Using the pre-trained word embeddings' vocab only
+          # Converting everything else into OOV
+          # TODO
+          self._vocab_v2i_dict = load_pretrianed_vocab_dict(pretrained_path)
         else:
-          # use pre-trained word embeddings' dictionary + EOS + OOV + LINEBREAK
-          # print('Use pre-trained word embeddings\' vocabulary mapping only.')
-          # # use the pretrained word embeddings' dictionary solely
-          # glove_embedding = glove.Glove.load_stanford(os.path.join(
-          #   self._vocab_dir, self._load_vocab_name))
-          # reverse_mapping = ['<UNK>', '<EOS>', 'LINEBREAK'] + list(
-          #   glove_embedding.dictionary)
-          # self._vocab_v2i_dict ={w: i for i, w in enumerate(reverse_mapping)}
+          # Vocab must contain all training data's vocab
+          if self._args['expand_vocab']:
+            print('Combine pre-trained word embeddings\' vocabulary mapping '
+                  'with all the word types appearing in the training data.')
+            # TODO multiple training data for merged vocabulary
+            # raise NotImplementedError('Combine pre-trained word embedding '
+            #                           'and training data dictionary Not '
+            #                           'Implemented!')
+            # vocab_all = union(vocab_pretrained, vocab_train)
+            # train_vocab_list = self.get_train_vocab_list()
 
-          # use training vocab only, reorder vocab to [not in glove, in glove]
-          print('Use training vocab only.')
+            self._vocab_v2i_dict, self._vocab_extra = combine_vocab(
+              pretrained_path,
+              train_vocab_list)
 
-          pretrained_path = os.path.join(self._vocab_dir,
-                                         self._load_vocab_name)
-          self._args['random_size'], self._vocab_v2i_dict = reorder_vocab(
-            pretrained_path,
-            train_vocab_list)
+            self._args['vocab_size'] = len(self._vocab_v2i_dict)
 
-          self._args['vocab_size'] = len(self._vocab_v2i_dict)
+            # save the combined vocab to the disk for future use
+            self._save_vocab_dir = self._tfrecord_dir
+            self.save_v2i_dict()
+            self.save_vocab_extra()
+          else:
+            # use pre-trained word embeddings' dictionary + EOS + OOV + LINEBREAK
+            # print('Use pre-trained word embeddings\' vocabulary mapping only.')
+            # # use the pretrained word embeddings' dictionary solely
+            # glove_embedding = glove.Glove.load_stanford(os.path.join(
+            #   self._vocab_dir, self._load_vocab_name))
+            # reverse_mapping = ['<UNK>', '<EOS>', 'LINEBREAK'] + list(
+            #   glove_embedding.dictionary)
+            # self._vocab_v2i_dict ={w: i for i, w in enumerate(reverse_mapping)}
 
-          # save the new vocab to the disk for future use
-          make_dir(self._tfrecord_dir)
-          self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
-                                                          "vocab_i2v.json")
-          with codecs.open(self._args['reverse_vocab_path'], mode='w',
-                           encoding='utf-8') as file:
-            json.dump(self._vocab_v2i_dict, file,
-                      ensure_ascii=False, indent=4)
+            # use training vocab only, reorder vocab to [not in glove, in glove]
+            print('Use training vocab only.')
+
+            self._args['random_size'], self._vocab_v2i_dict = reorder_vocab(
+              pretrained_path,
+              train_vocab_list)
+
+            self._args['vocab_size'] = len(self._vocab_v2i_dict)
+
+            # save the new vocab to the disk for future use
+            make_dir(self._tfrecord_dir)
+            self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
+                                                            "vocab_i2v.json")
+            with codecs.open(self._args['reverse_vocab_path'], mode='w',
+                             encoding='utf-8') as file:
+              json.dump(self._vocab_v2i_dict, file,
+                        ensure_ascii=False, indent=4)
 
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(
@@ -733,16 +733,17 @@ class Dataset:
       assert categorical_vocab.mapping == self._vocab_v2i_dict
 
     # save the vocab if using pre-trained word embeddings
+    # TODO ???
     if not self._load_vocab_name == 'vocab_v2i.json':
       self._categorical_vocab = categorical_vocab
       self._save_vocab_dir = self._tfrecord_dir
       self.save_vocab()
 
-    self.get_vocab()
+    self.transform_text()
 
     return self._vocab_processor.vocabulary_
 
-  def get_vocab(self):
+  def transform_text(self):
     if self._args['padding']:
       # TODO: update implementation of transform_pad() to take a max length
       # as different kinds of sequences within a single example will have
@@ -1180,6 +1181,7 @@ def merge_dict_write_tfrecord(json_dirs,
   return args_dicts
 
 
+# TODO pretrained_only
 def merge_pretrain_write_tfrecord(json_dirs,
                                   tfrecord_dirs,
                                   merged_dir,
@@ -1202,6 +1204,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   write_bow=False,
                                   write_tfidf=False,
                                   expand_vocab=False,
+                                  pretrained_only=False,
                                   preproc=True,
                                   vocab_all=True):
   """Use the dictionary of the pre-trained word embedding, combine the words

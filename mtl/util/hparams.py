@@ -56,7 +56,8 @@ def str2func(s):
   from mtl.embedders.embed_sequence import embed_sequence
   from mtl.embedders.no_op import no_op_embedding
   from mtl.embedders.pretrained import (init_pretrained,
-                                        expand_pretrained)
+                                        expand_pretrained,
+                                        only_pretrained)
   from mtl.extractors.cnn import cnn_extractor
   from mtl.extractors.dan import dan
   from mtl.extractors.lbirnn import (lbirnn,
@@ -75,6 +76,7 @@ def str2func(s):
     "no_op_embedding": no_op_embedding,
     "init_pretrained": init_pretrained,
     "expand_pretrained": expand_pretrained,
+    "only_pretrained": only_pretrained,
 
     "paragram": paragram_phrase,
     "serial_paragram": paragram_phrase,  # deprecated key

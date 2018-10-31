@@ -23,6 +23,7 @@
     "architecture":
     // "dan_meanmax_relu_0.1_glove_expand_finetune",
     "dan_meanmax_relu_0.0_nopretrain",
+    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
     // "dan_meanmax_relu_0.1_nopretrain",
     // "bilstm_attention_3_nopretrain",
     // input key: default tokens
@@ -33,7 +34,7 @@
         "BUS",
         "LAW",
         "HEA",
-        "MIL"
+        "MIL",
         "SPO"
     ],
     // experiment name
@@ -41,23 +42,36 @@
     /****************for finetune mode only*****************/
     // INIT(PRE-TRAIN) dataset name
     // "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
-    "init_dataset_suffix":
-    // "_syn_p1000r1000",
-    // "_syn_p1000r1000_syn_p1000r1000_para",
-    "_train_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle",
+    "init_dataset_suffix": [
+        //
+        "_syn_p1000r1000",
+        "_train_syn_p1000r1000_valid_gold_oracle",
+        "_syn_p1000r1000_syn_p1000r1000_para",
+        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+    ],
     "init_dataset_name": "<domains><init_dataset_suffix>",
     // TODO combine turk finetune data
     // FINE-TUNE dataset name
-    "finetune_dataset_suffix":
-    // "_train_turk_60_50_valid_gold_one",
-    // "_turk_60_50_turk_60_50_para",
-    "_train_turk_60_50_turk_60_50_para_vaild_gold",
+    "finetune_dataset_suffix": [
+        //
+        "_turk_60_50",
+        "_turk_60_50_valid_oracle",
+        "_turk_60_50_turk_60_50_para",
+        "_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
+        // "_turk_60_50_1",
+        // "_turk_60_50_2",
+        // "_turk_60_50_3",
+        // "_turk_60_50_4",
+        // "_turk_60_50_5"
+    ],
     "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
     // where to load the INIT model
     "checkpoint_dir_init": "<root_dir>/data/results/<expt_setup_name>/<init_name>/ckpt",
     /****************for finetune mode only*****************/
     // which args to use
-    "args_paths": "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
+    "args_paths":
+    //
+    "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",

@@ -89,26 +89,22 @@ def main():
     vocab_dir = os.path.dirname(vocab_path)
     vocab_name = os.path.basename(vocab_path)
 
-    expand_vocab = False
-    if 'expand_vocab' in args:
-      expand_vocab = args['expand_vocab']
+    pretrained_only = args.get('pretrained_only', False)
+    expand_vocab = args.get('expand_vocab', False)
 
-    if expand_vocab:
-      tfrecord_dir = os.path.join(
-        tfrecord_dir,
-        tfrecord_dir_name + '_' +
-        vocab_name[:max(vocab_name.find('.txt'),
-                        vocab_name.find('.bin.gz'),
-                        vocab_name.find('.vec.zip'))] +
-        '_expand')
+    if pretrained_only:
+      suffix = '_only'
     else:
-      tfrecord_dir = os.path.join(
-        tfrecord_dir,
-        tfrecord_dir_name + '_' +
-        vocab_name[:max(vocab_name.find('.txt'),
-                        vocab_name.find('.bin.gz'),
-                        vocab_name.find('.vec.zip'))] +
-        '_init')
+      if expand_vocab:
+        suffix = '_expand'
+      else:
+        suffix = '_init'
+    tfrecord_dir = os.path.join(
+      tfrecord_dir,
+      tfrecord_dir_name + '_' +
+      vocab_name[:max(vocab_name.find('.txt'),
+                      vocab_name.find('.bin.gz'),
+                      vocab_name.find('.vec.zip'))] + suffix)
 
     dataset = Dataset(json_dir=json_dir,
                       tfrecord_dir=tfrecord_dir,
@@ -129,9 +125,12 @@ def main():
                       write_bow=args['write_bow'],
                       write_tfidf=args['write_tfidf'],
                       tokenizer_=args['tokenizer'],
+                      stemmer=args['stemmer'],
+                      stopwords=args['stopwords'],
                       generate_basic_vocab=False,
                       generate_tf_record=True,
                       expand_vocab=expand_vocab,
+                      pretrained_only=pretrained_only,
                       preproc=preproc,
                       vocab_all=vocab_all)
 

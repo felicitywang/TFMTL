@@ -30,7 +30,72 @@ from mtl.util.load_embeds import (load_pretrained_matrix,
                                   load_pretrianed_vocab_dict)
 
 
-# TODO add weights
+# TODO refactor
+
+
+def only_pretrained(word_ids,
+                    vocab_size,
+                    embed_dim,
+                    pretrained_path,
+                    trainable,
+                    **kwargs):
+  """Use the pre-trained word embeddings only
+
+  :param word_ids: list of word ids
+  :param vocab_size: size of the vocabulary given in the config file
+  :param embed_dim: dimension of the embeddings given in the config file
+  :param pretrained_path: path to the pre-trained word embedding file
+  :param trainable: whether to train the pred-trained word embeddings
+  :return: embed lookup layer
+  """
+  tf.logging.info('Loading pretrained embeddings from %s' %
+                  pretrained_path)
+  pretrained_matrix = load_pretrained_matrix(pretrained_path)
+  assert pretrained_matrix.shape[
+           0] == vocab_size, "Given vocab size (%d) not equal to than that " \
+                             "of the pre-trained embedding (%d)!" % (
+                               vocab_size, pretrained_matrix.shape[0])
+  assert pretrained_matrix.shape[
+           1] == embed_dim, "Given embed dim (%d) and that of the " \
+                            "pre-trained embedding (%d) don't match!" % (
+                              embed_dim, pretrained_matrix.shape[1])
+  # pretrained file name - .txt
+  # word_embedding_name = os.path.basename(pretrained_path)[:-4]
+  tf.logging.info('Generating embedding lookup layer from %s and the words '
+                  'from the training set' %
+                  pretrained_path)
+
+  if kwargs['is_training']:
+    # initialize word_embedding layer from pre-trained matrix
+    word_embedding = tf.get_variable(
+      name='embedding_pretrained',
+      initializer=tf.constant_initializer(np.float32(pretrained_matrix)),
+      dtype=tf.float32,
+      shape=[pretrained_matrix.shape[0], embed_dim],
+      trainable=trainable)
+  else:
+    # not initializing again but only define placeholders with same names
+    word_embedding = tf.get_variable(
+      name='embedding_pretrained',
+      initializer=tf.zeros(shape=[pretrained_matrix.shape[0], embed_dim],
+                           dtype=tf.float32),
+      dtype=tf.float32,
+      trainable=trainable
+    )
+  assert word_embedding.shape.as_list() == [vocab_size, embed_dim]
+  embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
+                                                         word_ids)
+  # add a projection layer
+  if 'proj_dim' in kwargs:
+    embeddings = tf.layers.dense(embeddings,
+                                 kwargs['proj_dim'],
+                                 name='projected_embeddings',
+                                 activation=None)
+  if 'weights' in kwargs:
+    embeddings = get_weighted_embeddings(embeddings,
+                                         weights=kwargs['weights'])
+  return embeddings
+
 
 def expand_pretrained(word_ids,
                       vocab_size,
@@ -100,6 +165,13 @@ def expand_pretrained(word_ids,
     embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
                                                            word_ids)
 
+    # add a projection layer
+    if 'proj_dim' in kwargs:
+      embeddings = tf.layers.dense(embeddings,
+                                   kwargs['proj_dim'],
+                                   name='projected_embeddings',
+                                   activation=None)
+
     if 'weights' in kwargs:
       embeddings = get_weighted_embeddings(embeddings,
                                            weights=kwargs['weights'])
@@ -165,6 +237,12 @@ def expand_pretrained(word_ids,
     embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
                                                            word_ids)
 
+    # add a projection layer
+    if 'proj_dim' in kwargs:
+      embeddings = tf.layers.dense(embeddings,
+                                   kwargs['proj_dim'],
+                                   name='projected_embeddings',
+                                   activation=None)
     if 'weights' in kwargs:
       embeddings = get_weighted_embeddings(embeddings,
                                            weights=kwargs['weights'])
@@ -247,6 +325,12 @@ def init_pretrained(word_ids,
 
   embeddings = tf.contrib.layers.embedding_lookup_unique(word_embedding,
                                                          word_ids)
+  # add a projection layer
+  if 'proj_dim' in kwargs:
+    embeddings = tf.layers.dense(embeddings,
+                                 kwargs['proj_dim'],
+                                 name='projected_embeddings',
+                                 activation=None)
 
   if 'weights' in kwargs:
     embeddings = get_weighted_embeddings(
