@@ -18,7 +18,7 @@ import codecs
 import json
 import os
 
-EMBED_DIM = 300
+EMBED_DIM = 100
 ATTN_LENGTH = 3
 CELL_SIZE = 128
 OUTPUT_KEEP_PROB = 0.5
@@ -328,13 +328,13 @@ extractors = {
 
 embedding_filepath_dict = {
     'glove': os.path.join(
-        root_dir, 'pretrained_word_embeddings/', 'glove/glove.6B.300d.txt'),
+        root_dir, 'pretrained_word_embeddings/', 'glove/glove.6B.100d.txt'),
     'fasttext': os.path.join(
         root_dir, 'pretrained_word_embeddings/',
-        'fasttext/wiki-news-300d-1M.vec.zip'),
+        'fasttext/wiki-news-100d-1M.vec.zip'),
     'word2vec_slim': os.path.join(
         root_dir, 'pretrained_word_embeddings/',
-        'word2vec/GoogleNews-vectors-negative300-SLIM.bin.gz')
+        'word2vec/GoogleNews-vectors-negative100-SLIM.bin.gz')
 }
 
 embedders = {
@@ -354,6 +354,22 @@ embedders = {
             'embed_dim': EMBED_DIM,
             "pretrained_path": embedding_filepath_dict['fasttext'],
             "trainable": True
+        }
+    },
+    'glove_only_finetune': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": True
+        }
+    },
+    'glove_only_nofinetune': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": False
         }
     },
     'glove_expand': {

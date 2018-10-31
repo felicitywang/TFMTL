@@ -24,5 +24,6 @@
     "pretrained_file": "../../pretrained_word_embeddings/glove/glove.6B.300d.txt",
     //    "pretrained_file": "../../pretrained_word_embeddings/fasttext/wiki-news-300d-1M.vec.zip",
     //    "pretrained_file": "../../pretrained_word_embeddings/word2vec/GoogleNews-vectors-negative300-SLIM.bin.gz",
-    "expand_vocab": true
+    "expand_vocab": false,
+    "pretrained_only": true
 }
