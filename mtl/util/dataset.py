@@ -204,6 +204,8 @@ class Dataset:
     self._vocab_dict = None
     self._categorical_vocab = None
     self._vocab_freq_dict = None
+    self._vocab_v2i_dict = None
+    self._vocab_i2v_dict = None
     self._vocab_dir = None
     self._save_vocab_dir = None
     self._vocab_processor = None
@@ -516,7 +518,7 @@ class Dataset:
     make_dir(self._save_vocab_dir)
     with codecs.open(os.path.join(self._save_vocab_dir, "vocab_v2i.json"),
                      mode='w', encoding='utf-8')as file:
-      # TODO
+      # TODO ???
       if self._categorical_vocab:
         json.dump(self._categorical_vocab.mapping, file,
                   ensure_ascii=False, indent=4)
@@ -541,12 +543,12 @@ class Dataset:
     if not self._save_vocab_dir:
       self._save_vocab_dir = self._tfrecord_dir
     make_dir(self._save_vocab_dir)
+
     if self._vocab_freq_dict:
       self.save_vocab_freq()
     if self._vocab_v2i_dict:
       self.save_v2i_dict()
-    # TODO??
-    if self._categorical_vocab:
+    if self._vocab_i2v_dict:
       self.save_i2v_dict()
 
   def get_training_docs(self):
