@@ -546,7 +546,7 @@ class Dataset:
 
     if self._vocab_freq_dict:
       self.save_vocab_freq()
-    if self._vocab_v2i_dict:
+    if self._vocab_v2i_dict or self._categorical_vocab:
       self.save_v2i_dict()
     if self._vocab_i2v_dict:
       self.save_i2v_dict()
