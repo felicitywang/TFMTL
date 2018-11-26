@@ -1,1 +1,0 @@
-https://nlp.stanford.edu/wiki/Software/Classifier/20_Newsgroups
