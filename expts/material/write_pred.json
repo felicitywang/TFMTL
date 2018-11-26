@@ -5,7 +5,7 @@
         "BUS",
         "LAW",
         "HEA",
-        "MIL",
+        "MIL"
         "SPO"
     ],
     "python_path": "/home/fwang/cpu/bin/python",
@@ -15,32 +15,28 @@
     "dataset_suffixes": [
         // "_turk_60_50",
         // "_turk_reg"
-        // "_syn_p1000r1000",
+        // "_syn_p1000r1000"
         // "_syn_p1000r1000_syn_p1000r1000_para",
         // "_train_syn_p1000r1000_valid_gold_oracle",
         // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
         //
-        "_init_syn_p1000r1000_finetune_turk_60_50_1",
-        "_init_syn_p1000r1000_finetune_turk_60_50_2",
-        "_init_syn_p1000r1000_finetune_turk_60_50_3",
-        "_init_syn_p1000r1000_finetune_turk_60_50_4",
-        "_init_syn_p1000r1000_finetune_turk_60_50_5"
-        // "_init_syn_p1000r1000_finetune_turk_60_50",
-        // "_init_syn_p1000r1000_finetune_train_turk_60_50_valid_gold_oracle",
-        // "_init_syn_p1000r1000_finetune_turk_60_50_turk_60_50_para",
-        // "_init_syn_p1000r1000_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
-        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50",
-        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_train_turk_60_50_valid_gold_oracle",
-        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50_turk_60_50_para",
-        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
-        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_turk_60_50",
-        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_train_turk_60_50_valid_gold_oracle",
-        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_turk_60_50_turk_60_50_para",
-        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle",
-        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_turk_60_50",
-        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_train_turk_60_50_valid_gold_oracle",
-        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_turk_60_50_turk_60_50_para",
-        // "_init_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
+        // "_init_syn_p1000r1000_finetune_turk_60_50_1",
+        // "_init_syn_p1000r1000_finetune_turk_60_50_2",
+        // "_init_syn_p1000r1000_finetune_turk_60_50_3",
+        // "_init_syn_p1000r1000_finetune_turk_60_50_4",
+        // "_init_syn_p1000r1000_finetune_turk_60_50_5",
+        // // "_init_syn_p1000r1000_finetune_turk_80_50"
+        // "_init_syn_p1000r1000_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        "_init_syn_p1000r1000_finetune_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
+        // "_init_syn_p1000r1000_finetune_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_init_syn_p1000r1000_syn_p1000r1000_para_finetune_turk_60_50_turk_60_50_para_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_train_turk_60_50_turk_60_50_para_valid_gold_oracle_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_init_train_syn_p1000r1000_valid_gold_oracle_finetune_turk_60_50_turk_60_50_para_min_1_max_-1_vocab_-1_doc_-1_tok_lower_dan_meanmax_relu_0.0_nopretrain",
+        // "_syn_p1000r1000_syn_p1000r1000_para_min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand_dan_meanmax_relu_0.0_glove_expand_nofinetune",
+        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle_min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand_dan_meanmax_relu_0.0_glove_expand_nofinetune",
+        // "_train_syn_p1000r1000_valid_gold_oracle_min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand_dan_meanmax_relu_0.0_glove_expand_nofinetune"
     ],
     // Which args.json file to use
     // only 'text_field_name' and 'label_field_name' are used
@@ -54,25 +50,34 @@
     "args_path":
     //
     "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
     // Which subdirectories to predict
     "subdirs": {
-        "1A": [
+        // "1A": [
+        //     // one-best
+        //     "t6/mt-4.asr-s5",
+        //     "tt18"
+        //     // // bag-of-phrase
+        //     // "t6.bop/concat",
+        //     // "tt18.bop/concat"
+        // ],
+        // "1B": [
+        //     // one-best
+        //     "t6/mt-5.asr-s5",
+        //     "tt20"
+        //     // // bag-of-phrase
+        //     // "t6.bop/concat",
+        //     // "tt20.bop/concat"
+        // ],
+        "1S": [
             // one-best
-            "t6/mt-4.asr-s5",
-            "tt18"
-            // // bag-of-phrase
-            // "t6.bop/concat",
-            // "tt18.bop/concat"
-        ],
-        "1B": [
-            // one-best
-            "t6/mt-5.asr-s5",
-            "tt20"
-            // // bag-of-phrase
-            // "t6.bop/concat",
-            // "tt20.bop/concat"
+            "tt12",
+            "mt-12.asr-s5init"
+            // bag-of-phrase
+            // "tt12.bop/concat",
+            // "mt-12.asr-s5init.bop/concat"
         ]
     },
     //    Which eval sets to predict

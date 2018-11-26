@@ -21,6 +21,7 @@
 # translations: data/raw/gold/translations/{oracle, one, bop}
 
 
+### gold DOMAIN
 # gold labels
 mkdir -p data/raw/gold/labels/GOV/1A
 mkdir -p data/raw/gold/labels/LIF/1A

@@ -289,6 +289,12 @@ def train_model(model,
                                      # sequence in train mode
                                      is_training=True)
 
+    # import pdb
+    # sess.run(model_info[dataset_name]['pred_iter'].initializer)
+    # batch = model_info[dataset_name]['pred_batch']
+    # text, weights = sess.run([batch['text'], batch['text_weights']])
+    # pdb.set_trace()
+
   # # see if dropout and is_training working
   # # by checking train loss with different is_training the same
 
@@ -1474,7 +1480,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
     elif extract_fn == "serial_lbirnn_stock":
       additional_encoder_kwargs[dataset_name]['is_training'] = False
     elif extract_fn == "dan":
-      additional_encoder_kwargs[dataset_name]['is_training'] = True
+      additional_encoder_kwargs[dataset_name]['is_training'] = False
 
     else:
       pass

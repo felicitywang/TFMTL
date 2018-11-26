@@ -1,0 +1,57 @@
+{
+    "domains": [
+        "GOV",
+        "BUS",
+        "LAW",
+        "MIL"
+    ],
+    "python_path": "/home/fwang/cpu/bin/python",
+    "code_path": "/export/a08/fwang/tfmtl/expts/scripts/write_tfrecords_predict.py",
+    "root_dir": "/export/a08/fwang/tfmtl/expts/material/",
+    // Which dataset to use
+    "dataset_suffixes": [
+        "_tmp",
+        "_init_tmp_finetune_turk_80_50"
+        //        "_init_tmp_finetune_turk_80_50_turk_80_50_para",
+        //        "_init_tmp_finetune_train_turk_80_50_turk_80_50_para_valid_gold_oracle",
+        //        "_init_syn_p1000r1000_finetune_turk_80_50",
+        //        "_init_syn_p1000r1000_finetune_turk_80_50_turk_80_50_para",
+        //        "_init_syn_p1000r1000_finetune_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
+    ],
+    // Which args.json file to use
+    // only 'text_field_name' and 'label_field_name' are used
+    // other args should be from the used args
+    "args_file_path":
+    //
+    // "args_nopretrain.json",
+    "args_pretrained.json",
+    // "args_reg.json",
+    // Which args to use(according to previous args file)
+    "args_path": //
+    //    "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
+    "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
+    // Which subdirectories to predict
+    "subdirs": {
+        "1S": [
+            // one-best
+            //            "tt33",
+            //            "mt-25.asr-s5init",
+            // // bag-of-phrase
+            "tt33.bop/concat",
+            "mt-25.asr-s5init.bop/concat"
+        ]
+    },
+    //    Which eval sets to predict
+    "eval_dirs": [
+        "DEV",
+        "EVAL1",
+        "EVAL2"
+    ],
+    //    Which type of texts to predict
+    "text_types": [
+        //        "sent",
+        "doc"
+    ]
+}

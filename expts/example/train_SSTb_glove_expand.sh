@@ -4,7 +4,7 @@ python ../scripts/discriminative_driver.py \
        --num_train_epochs 30 \
        --datasets SSTb \
        --class_sizes 5 \
-       --dataset_paths data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_tweet_glove.6B.100d_expand/ \
+       --dataset_paths data/tf/single/SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.100d_expand/ \
        --topics_path data/json/SSTb/data.json.gz \
        --topic_field_name text \
        --encoder_config_file encoders.json \

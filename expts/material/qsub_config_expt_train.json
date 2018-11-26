@@ -31,23 +31,27 @@
     "expt_setup_name": "",
     // dataset suffixes
     "dataset_suffixes": [
-        "_syn_p1000r1000",
-        "_syn_p1000r1000_syn_p1000r1000_para",
-        "_train_syn_p1000r1000_valid_gold_oracle",
-        "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+        "_syn_p1000r1000"
+        // "_syn_p1000r1000_syn_p1000r1000_para",
+        // "_train_syn_p1000r1000_valid_gold_oracle",
+        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
     ],
     // what architecture in encoders.json to use
     "architecture":
     // "dan_meanmax_relu_0.1_nopretrain",
     // "dan_meanmax_relu_0.0_nopretrain",
-    "dan_meanmax_relu_0.0_glove_expand_nofinetune",
+    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
+    "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_100",
+    // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_150"
+    // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_200"
     // "dan_meanmax_relu_0.1_nopretrain",
     // "bilstm_attention_3_nopretrain",
     // which args to use
     "args_paths": [
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+        "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-        "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
     ],

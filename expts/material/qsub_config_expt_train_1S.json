@@ -1,5 +1,6 @@
 {
-    // meta-config
+    // this is for train mode only
+    //////// meta-config ////////
     // Modify these!!!
     // Change these paths to yours
     "bashrc_path": "/home/fwang/.bashrc",
@@ -12,73 +13,39 @@
     // main expts folder
     "root_dir": "/export/a08/fwang/tfmtl/expts/material",
     // "root_dir": ".",
-    // When in debug mode, write shell scripts but do to qsub
-    // You can also run shell scripts manually
+    //////// meta-config ////////
     "debug": false,
-    // mode for driver script: train/test/predict/finetune
-    // Modify these!!!
-    "mode": "finetune",
-    // comment if classification(default)
-    // "task": "regression",
-    "architecture":
-    // "dan_meanmax_relu_0.1_glove_expand_finetune",
-    "dan_meanmax_relu_0.0_nopretrain",
-    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
-    // "dan_meanmax_relu_0.1_nopretrain",
-    // "bilstm_attention_3_nopretrain",
+    "mode": "train",
     // input key: default tokens
     // which domains to use
     "domains": [
         "GOV",
-        "LIF",
         "BUS",
         "LAW",
-        "HEA",
-        "MIL",
-        "SPO"
+        "MIL"
     ],
     // experiment name
     "expt_setup_name": "",
-    /****************for finetune mode only*****************/
-    // INIT(PRE-TRAIN) dataset name
-    // "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
-    "init_dataset_suffix": [
-        //
-        "_syn_p1000r1000"
-        // "_train_syn_p1000r1000_valid_gold_oracle",
-        // "_syn_p1000r1000_syn_p1000r1000_para",
-        // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
+    // dataset suffixes
+    "dataset_suffixes": [
+        "_tmp"
     ],
-    "init_dataset_name": "<domains><init_dataset_suffix>",
-    // TODO combine turk finetune data
-    // FINE-TUNE dataset name
-    "finetune_dataset_suffix": [
-        //
-        // "_turk_60_50",
-        // "_turk_80_50"
-        // "_turk_60_50_valid_oracle",
-        // "_turk_60_50_turk_60_50_para",
-        // "_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
-        // "_turk_80_50_turk_80_50_para",
-        "_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
-        // "_turk_60_50_1",
-        // "_turk_60_50_2",
-        // "_turk_60_50_3",
-        // "_turk_60_50_4",
-        // "_turk_60_50_5"
-    ],
-    "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
-    // where to load the INIT model
-    "checkpoint_dir_init": "<root_dir>/data/results/<expt_setup_name>/<init_name>/ckpt",
-    /****************for finetune mode only*****************/
-    // which args to use
-    "args_paths":
+    // what architecture in encoders.json to use
+    "architecture":
     //
-    "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+    // "dan_meanmax_relu_0.1_nopretrain",
+    "dan_meanmax_relu_0.0_nopretrain",
+    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
+    // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_100",
+    // which args to use
+    "args_paths": [
+        "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+    ],
     // No need to modify
     // CLSP Grid related
     // for gpu: total_slots = gpu quota (=5)
@@ -114,7 +81,6 @@
     "log_file": "<root_dir>/data/results/<expt_setup_name>/<name>/<mode>.log",
     // configuration of encoders.json, will be read to generate encoders.json for each dataset
     "encoder_config_file": "<root_dir>/data/results/<expt_setup_name>/<name>/encoders.json",
-    // what architecture in encoders.json to use
     // default to false in stl mode
     "embedders_tied": false,
     "extractors_tied": false,

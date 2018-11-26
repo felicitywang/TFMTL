@@ -1,0 +1,18 @@
+{
+    "domains": [
+        "GOV",
+        "BUS",
+        "LAW",
+        "MIL"
+    ],
+    "python_path": "/home/fwang/cpu/bin/python",
+    "code_path": "/export/a08/fwang/tfmtl/expts/scripts/write_tfrecords_single.py",
+    "root_dir": "/export/a08/fwang/tfmtl/expts/material/",
+    "dataset_suffixes": [
+        "_tmp"
+    ],
+    "args_file_paths": [
+        "args_nopretrain.json"
+        // "args_pretrained.json"
+    ]
+}

@@ -396,6 +396,33 @@ embedders = {
             "trainable": False
         }
     },
+    'glove_only_nofinetune_proj_100': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": False,
+            "proj": 100
+        }
+    },
+    'glove_only_nofinetune_proj_150': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": False,
+            "proj": 150
+        }
+    },
+    'glove_only_nofinetune_proj_200': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": False,
+            "proj": 200
+        }
+    },
     'word2vec_slim_expand_finetune': {
         'embed_fn': 'expand_pretrained',
         'embed_kwargs': {

@@ -30,12 +30,9 @@
     // which domains to use
     "domains": [
         "GOV",
-        "LIF",
         "BUS",
         "LAW",
-        "HEA",
-        "MIL",
-        "SPO"
+        "MIL"
     ],
     // experiment name
     "expt_setup_name": "",
@@ -44,7 +41,8 @@
     // "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
     "init_dataset_suffix": [
         //
-        "_syn_p1000r1000"
+        "_tmp"
+        // "_syn_p1000r1000"
         // "_train_syn_p1000r1000_valid_gold_oracle",
         // "_syn_p1000r1000_syn_p1000r1000_para",
         // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
@@ -54,18 +52,9 @@
     // FINE-TUNE dataset name
     "finetune_dataset_suffix": [
         //
-        // "_turk_60_50",
-        // "_turk_80_50"
-        // "_turk_60_50_valid_oracle",
-        // "_turk_60_50_turk_60_50_para",
-        // "_train_turk_60_50_turk_60_50_para_valid_gold_oracle"
-        // "_turk_80_50_turk_80_50_para",
+        "_turk_80_50",
+        "_turk_80_50_turk_80_50_para",
         "_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
-        // "_turk_60_50_1",
-        // "_turk_60_50_2",
-        // "_turk_60_50_3",
-        // "_turk_60_50_4",
-        // "_turk_60_50_5"
     ],
     "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
     // where to load the INIT model

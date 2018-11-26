@@ -12,18 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
+"""Transform original LMRD files into json format"""
+
+# -*- coding: utf-8 -*-
+
+import codecs
+import gzip
+import json
+import os
+import re
+import sys
 
 
-#!/usr/bin/env sh
+def main():
 
-# json format evaluation sets would be saved in data/pred/json
+    dir = sys.argv[1]
 
-# 1A and 1B
-# data to pred
-mkdir -p data/pred/json/
+    train_list = []
+    test_list = []
 
-# document level
-cp /export/a05/mahsay/domain/data/json/doc -fr data/pred/json
+    index = 0
 
-# sentence level
-cp /export/a05/mahsay/domain/data/json/sent -fr data/pred/json
+
+if __name__ == '__main__':
+    main()

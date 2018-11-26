@@ -29,116 +29,116 @@ from mtl.util.util import load_json
 
 
 def main():
-  if len(sys.argv) == 2:
-    args_name = 'args_' + sys.argv[1] + '.json'
-  else:
-    args_name = sys.argv[2]
-
-  args = load_json(args_name)
-
-  json_dir = "data/json/" + sys.argv[1]
-
-  tfrecord_dir = os.path.join("data/tf/single/", sys.argv[1])
-
-  preproc = True
-  if 'preproc' in args:
-    preproc = args['preproc']
-
-  vocab_all = False
-  if 'vocab_all' in args:
-    vocab_all = args['vocab_all']
-
-  tfrecord_dir_name = \
-    "min_" + str(args['min_frequency']) + \
-    "_max_" + str(args['max_frequency']) + \
-    "_vocab_" + str(args['max_vocab_size']) + \
-    "_doc_" + str(args['max_document_length']) + \
-    "_tok_" + args['tokenizer'].replace('_tokenizer', '')
-
-  print(tfrecord_dir_name)
-
-  if 'pretrained_file' not in args or not args[
-    'pretrained_file']:
-    tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
-    dataset = Dataset(json_dir=json_dir,
-                      tfrecord_dir=tfrecord_dir,
-                      vocab_dir=tfrecord_dir,
-                      text_field_names=args['text_field_names'],
-                      label_field_name=args['label_field_name'],
-                      label_type=args.get('label_type', 'int'),
-                      max_document_length=args['max_document_length'],
-                      max_vocab_size=args['max_vocab_size'],
-                      min_frequency=args['min_frequency'],
-                      max_frequency=args['max_frequency'],
-                      train_ratio=args['train_ratio'],
-                      valid_ratio=args['valid_ratio'],
-                      subsample_ratio=args['subsample_ratio'],
-                      padding=args['padding'],
-                      write_bow=args['write_bow'],
-                      write_tfidf=args['write_tfidf'],
-                      tokenizer_=args['tokenizer'],
-                      stemmer=args['stemmer'],
-                      stopwords=args['stopwords'],
-                      generate_basic_vocab=False,
-                      vocab_given=False,
-                      generate_tf_record=True,
-                      preproc=preproc,
-                      vocab_all=vocab_all)
-  else:
-    vocab_path = args['pretrained_file']
-    vocab_dir = os.path.dirname(vocab_path)
-    vocab_name = os.path.basename(vocab_path)
-
-    pretrained_only = args.get('pretrained_only', False)
-    expand_vocab = args.get('expand_vocab', False)
-
-    if pretrained_only:
-      suffix = '_only'
+    if len(sys.argv) == 2:
+        args_name = 'args_' + sys.argv[1] + '.json'
     else:
-      if expand_vocab:
-        suffix = '_expand'
-      else:
-        suffix = '_init'
-    tfrecord_dir = os.path.join(
-      tfrecord_dir,
-      tfrecord_dir_name + '_' +
-      vocab_name[:max(vocab_name.find('.txt'),
-                      vocab_name.find('.bin.gz'),
-                      vocab_name.find('.vec.zip'))] + suffix)
+        args_name = sys.argv[2]
 
-    dataset = Dataset(json_dir=json_dir,
-                      tfrecord_dir=tfrecord_dir,
-                      vocab_given=True,
-                      vocab_dir=vocab_dir,
-                      vocab_name=vocab_name,
-                      text_field_names=args['text_field_names'],
-                      label_field_name=args['label_field_name'],
-                      label_type=args.get('label_type', 'int'),
-                      max_document_length=args['max_document_length'],
-                      max_vocab_size=args['max_vocab_size'],
-                      min_frequency=args['min_frequency'],
-                      max_frequency=args['max_frequency'],
-                      train_ratio=args['train_ratio'],
-                      valid_ratio=args['valid_ratio'],
-                      subsample_ratio=args['subsample_ratio'],
-                      padding=args['padding'],
-                      write_bow=args['write_bow'],
-                      write_tfidf=args['write_tfidf'],
-                      tokenizer_=args['tokenizer'],
-                      stemmer=args['stemmer'],
-                      stopwords=args['stopwords'],
-                      generate_basic_vocab=False,
-                      generate_tf_record=True,
-                      expand_vocab=expand_vocab,
-                      pretrained_only=pretrained_only,
-                      preproc=preproc,
-                      vocab_all=vocab_all)
+    args = load_json(args_name)
 
-  with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
-    f.write(str(dataset.vocab_size))
+    json_dir = "data/json/" + sys.argv[1]
 
-  return tfrecord_dir
+    tfrecord_dir = os.path.join("data/tf/single/", sys.argv[1])
+
+    preproc = True
+    if 'preproc' in args:
+        preproc = args['preproc']
+
+    vocab_all = False
+    if 'vocab_all' in args:
+        vocab_all = args['vocab_all']
+
+    tfrecord_dir_name = \
+        "min_" + str(args['min_frequency']) + \
+        "_max_" + str(args['max_frequency']) + \
+        "_vocab_" + str(args['max_vocab_size']) + \
+        "_doc_" + str(args['max_document_length']) + \
+        "_tok_" + args['tokenizer'].replace('_tokenizer', '')
+
+    print(tfrecord_dir_name)
+
+    if 'pretrained_file' not in args or not args[
+            'pretrained_file']:
+        tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
+        dataset = Dataset(json_dir=json_dir,
+                          tfrecord_dir=tfrecord_dir,
+                          vocab_dir=tfrecord_dir,
+                          text_field_names=args['text_field_names'],
+                          label_field_name=args['label_field_name'],
+                          label_type=args.get('label_type', 'int'),
+                          max_document_length=args['max_document_length'],
+                          max_vocab_size=args['max_vocab_size'],
+                          min_frequency=args['min_frequency'],
+                          max_frequency=args['max_frequency'],
+                          train_ratio=args['train_ratio'],
+                          valid_ratio=args['valid_ratio'],
+                          subsample_ratio=args['subsample_ratio'],
+                          padding=args['padding'],
+                          write_bow=args['write_bow'],
+                          write_tfidf=args['write_tfidf'],
+                          tokenizer_=args['tokenizer'],
+                          stemmer=args.get('stemmer', None),
+                          stopwords=args.get('stopwords', None),
+                          generate_basic_vocab=False,
+                          vocab_given=False,
+                          generate_tf_record=True,
+                          preproc=preproc,
+                          vocab_all=vocab_all)
+    else:
+        vocab_path = args['pretrained_file']
+        vocab_dir = os.path.dirname(vocab_path)
+        vocab_name = os.path.basename(vocab_path)
+
+        pretrained_only = args.get('pretrained_only', False)
+        expand_vocab = args.get('expand_vocab', False)
+
+        if pretrained_only:
+            suffix = '_only'
+        else:
+            if expand_vocab:
+                suffix = '_expand'
+            else:
+                suffix = '_init'
+        tfrecord_dir = os.path.join(
+            tfrecord_dir,
+            tfrecord_dir_name + '_' +
+            vocab_name[:max(vocab_name.find('.txt'),
+                            vocab_name.find('.bin.gz'),
+                            vocab_name.find('.vec.zip'))] + suffix)
+
+        dataset = Dataset(json_dir=json_dir,
+                          tfrecord_dir=tfrecord_dir,
+                          vocab_given=True,
+                          vocab_dir=vocab_dir,
+                          vocab_name=vocab_name,
+                          text_field_names=args['text_field_names'],
+                          label_field_name=args['label_field_name'],
+                          label_type=args.get('label_type', 'int'),
+                          max_document_length=args['max_document_length'],
+                          max_vocab_size=args['max_vocab_size'],
+                          min_frequency=args['min_frequency'],
+                          max_frequency=args['max_frequency'],
+                          train_ratio=args['train_ratio'],
+                          valid_ratio=args['valid_ratio'],
+                          subsample_ratio=args['subsample_ratio'],
+                          padding=args['padding'],
+                          write_bow=args['write_bow'],
+                          write_tfidf=args['write_tfidf'],
+                          tokenizer_=args['tokenizer'],
+                          stemmer=args['stemmer'],
+                          stopwords=args['stopwords'],
+                          generate_basic_vocab=False,
+                          generate_tf_record=True,
+                          expand_vocab=expand_vocab,
+                          pretrained_only=pretrained_only,
+                          preproc=preproc,
+                          vocab_all=vocab_all)
+
+    with open(os.path.join(tfrecord_dir, 'vocab_size.txt'), 'w') as f:
+        f.write(str(dataset.vocab_size))
+
+    return tfrecord_dir
 
 
 if __name__ == '__main__':
-  main()
+    main()

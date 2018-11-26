@@ -372,6 +372,15 @@ embedders = {
             "trainable": False
         }
     },
+    'glove_only_nofinetune_proj_100': {
+        'embed_fn': 'only_pretrained',
+        'embed_kwargs': {
+            'embed_dim': EMBED_DIM,
+            "pretrained_path": embedding_filepath_dict['glove'],
+            "trainable": False,
+            "proj_dim": 100
+        }
+    },
     'glove_expand': {
         'embed_fn': 'expand_pretrained',
         'embed_kwargs': {
