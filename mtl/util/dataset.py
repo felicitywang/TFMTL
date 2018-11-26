@@ -940,6 +940,11 @@ class Dataset:
     else:
       print('No subsampling.')
 
+    self._args['train_size'] = len(train_ind)
+    self._args['valid_size'] = len(valid_ind)
+    self._args['test_size'] = len(test_ind)
+    self._args['unlabeled_size'] = len(unlabeled_ind)
+
     return train_ind, valid_ind, test_ind, unlabeled_ind
 
   def write_args(self):
