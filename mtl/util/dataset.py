@@ -528,12 +528,16 @@ class Dataset:
 
   def save_i2v_dict(self):
     make_dir(self._save_vocab_dir)
-    vocab_i2v_dict = dict()
-    for i in range(len(self._categorical_vocab.reverse_mapping)):
-      vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
+    self._vocab_i2v_dict = dict()
+    if self._categorical_vocab and self._categorical_vocab.reverse_mapping:
+      for i in range(len(self._categorical_vocab.reverse_mapping)):
+        self._vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
+    elif self._vocab_v2i_dict:
+      for k, v in self._vocab_v2i_dict.items():
+        self._vocab_i2v_dict[int(v)] = k
     with codecs.open(os.path.join(self._save_vocab_dir, "vocab_i2v.json"),
                      mode='w', encoding='utf-8')as file:
-      json.dump(vocab_i2v_dict, file, ensure_ascii=False, indent=4)
+      json.dump(self._vocab_i2v_dict, file, ensure_ascii=False, indent=4)
 
   def save_vocab(self):
 
@@ -548,7 +552,6 @@ class Dataset:
       self.save_vocab_freq()
     if self._vocab_v2i_dict or self._categorical_vocab:
       self.save_v2i_dict()
-    if self._vocab_i2v_dict:
       self.save_i2v_dict()
 
   def get_training_docs(self):
@@ -718,12 +721,14 @@ class Dataset:
 
             # save the new vocab to the disk for future use
             make_dir(self._tfrecord_dir)
-            self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
-                                                            "vocab_i2v.json")
-            with codecs.open(self._args['reverse_vocab_path'], mode='w',
-                             encoding='utf-8') as file:
-              json.dump(self._vocab_v2i_dict, file,
-                        ensure_ascii=False, indent=4)
+            # import pdb; pdb.set_trace()
+            self.save_vocab()
+            # self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
+            #                                                 "vocab_i2v.json")
+            # with codecs.open(self._args['reverse_vocab_path'], mode='w',
+            #                  encoding='utf-8') as file:
+            #   json.dump(self._vocab_i2v_dict, file,
+            #             ensure_ascii=False, indent=4)
 
       # build vocabulary processor using the loaded mapping
       categorical_vocab = CategoricalVocabulary(
@@ -953,6 +958,8 @@ class Dataset:
     self._args['has_ids'] = self._ids is not None
     self._args['has_weights'] = self._weights is not None
     self._args['max_vocab_size_allowed'] = self._args.pop('max_vocab_size')
+    self._args['reverse_vocab_path'] = os.path.join(self._tfrecord_dir,
+                                                    "vocab_i2v.json")
 
     print('Arguments for the dataset:')
     for k, v in self._args.items():
@@ -1274,6 +1281,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
 
   train_vocab_set.difference_update(set(specials))
   train_vocab_list = specials + list(train_vocab_set)
+  random_size = None
+  reverse_vocab_path = None
 
   if not expand_vocab:
     print('Use training vocab only.')

@@ -227,13 +227,24 @@ def init_pretrained(word_ids,
   tf.logging.info('Randomly initializing word embeddings for %s words not '
                   'in pretrained...' % random_size)
 
-  random_embedding = tf.get_variable(
-    name='embedding_training',
-    initializer=tf.random_uniform(shape=[random_size, embed_dim],
-                                  dtype=tf.float32),
-    dtype=tf.float32,
-    trainable=True
-  )
+  if kwargs['is_training']:
+
+    random_embedding = tf.get_variable(
+      name='embedding_training',
+      initializer=tf.random_uniform(shape=[random_size, embed_dim],
+                                    dtype=tf.float32),
+      dtype=tf.float32,
+      trainable=True
+    )
+
+  else:
+    random_embedding = tf.get_variable(
+      name='embedding_training',
+      initializer=tf.zeros(shape=[random_size, embed_dim],
+                           dtype=tf.float32),
+      dtype=tf.float32,
+      trainable=True
+    )
 
   # load training vocab
   with codecs.open(reverse_vocab_path) as file:
