@@ -257,6 +257,7 @@ def metric2func(metric_name):
     'MAE_Macro': mae_macro,
     'F1_Macro': f1_macro,
     'F1_PosNeg_Macro': f1_pos_neg_macro,
+    'Neg_MAE_Macro': neg_mae_macro,
     'Recall_Macro': recall_macro,
     'Precision_Macro': precision_macro,
     'Confusion_Matrix': confusion_matrix,
