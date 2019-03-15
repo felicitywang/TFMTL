@@ -1,6 +1,5 @@
-import json
-import pandas as pd
 import gzip
+import json
 
 index = 0
 

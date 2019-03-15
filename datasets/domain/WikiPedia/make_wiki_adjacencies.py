@@ -23,7 +23,8 @@ def get_embedding_rep(words, embeddings):
     num_embedded_words = 0
     for i, word in enumerate(words):
         if word.lower() in embeddings.keys():
-            final_vector = np.add(final_vector, np.array(embeddings[word.lower()]))
+            final_vector = np.add(final_vector,
+                                  np.array(embeddings[word.lower()]))
             num_embedded_words += 1
         else:
             print(word)
@@ -49,10 +50,12 @@ def get_stop_words(stopwords_file):
 
 
 def get_cosine_sim(rep1, rep2):
-    return np.divide(float(np.dot(rep1, rep2)), (np.linalg.norm(rep1) * np.linalg.norm(rep2)))
+    return np.divide(float(np.dot(rep1, rep2)),
+                     (np.linalg.norm(rep1) * np.linalg.norm(rep2)))
 
 
-def add_adjacencies(G, input_filename, embeddings_file=None, stopwords_file=None, only_attached=False):
+def add_adjacencies(G, input_filename, embeddings_file=None,
+                    stopwords_file=None, only_attached=False):
     print("loading adjacencies from dbpedia file (" + input_filename + ")")
     import re
     beginningstr = "<http://dbpedia.org/resource/"
@@ -76,7 +79,8 @@ def add_adjacencies(G, input_filename, embeddings_file=None, stopwords_file=None
             page1 = page1[0].replace(beginningstr, "").replace(endingstr, "")
             page2 = page2[0].replace(beginningstr, "").replace(endingstr, "")
             # print(page1,page2)
-            if only_attached and (page1 not in G.nodes()) and (page2 not in G.nodes()):
+            if only_attached and (page1 not in G.nodes()) and (
+                page2 not in G.nodes()):
                 if (i + 1) % 100000 == 0: print(i + 1)
                 continue
             G.add_node(page1)
@@ -84,8 +88,10 @@ def add_adjacencies(G, input_filename, embeddings_file=None, stopwords_file=None
             if embeddings_file:
                 # FIXME: need to figure out a way to handle Nan, "Trek:", "Anti-blabla", and "(Caribbean)", "Kerby's", "Metalogic"
                 # also, this is extremely slow
-                words1 = [word for word in page1[9:].split("_") if word not in dumbwords]
-                words2 = [word for word in page2[9:].split("_") if word not in dumbwords]
+                words1 = [word for word in page1[9:].split("_") if
+                          word not in dumbwords]
+                words2 = [word for word in page2[9:].split("_") if
+                          word not in dumbwords]
                 # print(len(words1),len(words2))
                 rep1 = get_embedding_rep(words1, embeddings)
                 rep2 = get_embedding_rep(words2, embeddings)
@@ -110,7 +116,9 @@ def write_adjacency_file(G, adjacencies_file):
     print("writing adjacencies to file (" + adjacencies_file + ")")
     with open(adjacencies_file, "w") as adjfile:
         for node in G.nodes():
-            adjfile.write(node + " " + str([(n, G.edge[node][n]["weight"]) for n in G.neighbors(node)]) + "\n")
+            adjfile.write(node + " " + str(
+                [(n, G.edge[node][n]["weight"]) for n in
+                 G.neighbors(node)]) + "\n")
     print("done writing to file")
 
 
@@ -120,9 +128,11 @@ def write_adjacency_file(G, adjacencies_file):
 '''
 
 
-def main(skos_file, adjacencies_file, embeddings_file=None, stopwords_file=None):
+def main(skos_file, adjacencies_file, embeddings_file=None,
+         stopwords_file=None):
     G = DiGraph()
-    add_adjacencies(G, skos_file, embeddings_file=embeddings_file, stopwords_file=stopwords_file)
+    add_adjacencies(G, skos_file, embeddings_file=embeddings_file,
+                    stopwords_file=stopwords_file)
     write_adjacency_file(G, adjacencies_file)
 
 
@@ -138,5 +148,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.skos_file, args.adjacencies_file, embeddings_file=args.embeddings_file,
+    main(args.skos_file, args.adjacencies_file,
+         embeddings_file=args.embeddings_file,
          stopwords_file=args.stopwords_file)

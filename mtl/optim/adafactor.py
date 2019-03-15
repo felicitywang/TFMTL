@@ -19,44 +19,45 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# Dependency imports
-
 import tensorflow as tf
+
+
+# Dependency imports
 
 
 class AdafactorOptimizer(tf.train.Optimizer):
     """Optimizer that implements the Adafactor algorithm.
-  
+
     Adafactor is described in: https://arxiv.org/pdf/1804.04235.pdf
-  
+
     Adafactor is most similar to Adam (Kingma and Ba), the major differences are:
-  
+
     1. For a two-dimensional AxB weight matrix, Adafactor uses only A+B auxiliary
        parameters to maintain the second-moment estimator, instead of AB.
        This is advantageous on memory-limited systems.  In addition, beta1
        (momentum) is set to zero by default, saving an additional auxiliary
        parameter per weight.
-  
+
     2. Adafactor incorporates "update-clipping" - a scale-invariant analog of
        gradient clipping.  This adds stability
-  
+
     3. Adafactor does not require an external "learning rate".  By default, it
        incorporates a relative-update-scale schedule, corresponding to
        inverse-square-root learning-rate-decay in ADAM.  We hope this works well
        for most applications.
-  
+
     ALGORITHM:
-  
+
     parameter -= absolute_update_scale * clip(grad / grad_scale)
-  
+
     where:
-  
+
       absolute_update_scale := relative_update_scale * parameter_scale
       relative_update_scale := min((step_num + 1)**-0.5, 1e-2)
       parameter_scale := max(rms(var)), 1e-3)
       clip(x) := x / max(1.0, rms(x))
       grad_scale := tf.sqrt(v)   (v is the second-moment estimator)
-  
+
     The second-moment estimator v is maintained in a manner similar to Adam:
     We initialize
     ```
@@ -66,7 +67,7 @@ class AdafactorOptimizer(tf.train.Optimizer):
     else:
       v <- zeros(shape(var))
     ```
-  
+
     The update rule is as follows:
     ```
     decay_rate = 1 - (step_num + 1) ^ -0.8
@@ -78,10 +79,10 @@ class AdafactorOptimizer(tf.train.Optimizer):
     else:
       v <- decay_rate * v + (1 - decay_rate) * grad_squared
     ```
-  
-  
+
+
     Several parts of this algorithm are configurable from the initializer.
-  
+
       multiply_by_parameter_scale:  If True, then compute absolute_update_scale
         as described above.  If False, let absolute_update_scale be the externally
         supplied learning_rate.
@@ -95,7 +96,7 @@ class AdafactorOptimizer(tf.train.Optimizer):
       clipping_threshold: should be >=1.0 or None for no update clipping
       factored: whether to factor the second-moment estimator.  True means
         less memory usage.
-  
+
     TODO(noam): we should also apply the 2d logic to the two final dimensions.
       of >2d convolutional kernels.
     """
@@ -111,9 +112,9 @@ class AdafactorOptimizer(tf.train.Optimizer):
                  use_locking=False,
                  name="Adafactor"):
         """Construct a new Adafactor optimizer.
-    
+
         See class comment.
-    
+
         Args:
           multiply_by_parameter_scale: a boolean
           learning_rate: an optional Scalar.
@@ -127,7 +128,7 @@ class AdafactorOptimizer(tf.train.Optimizer):
           use_locking: If True use locks for update operations.
           name: Optional name for the operations created when applying gradients.
             Defaults to "AdafactorOptimizer".
-    
+
         Raises:
           ValueError: if absolute_update_scale and relative_update_scale_fn are both
             present or both absent.
@@ -135,7 +136,8 @@ class AdafactorOptimizer(tf.train.Optimizer):
         super(AdafactorOptimizer, self).__init__(use_locking, name)
         self._multiply_by_parameter_scale = multiply_by_parameter_scale
         if learning_rate is None:
-            learning_rate = self._learning_rate_default(multiply_by_parameter_scale)
+            learning_rate = self._learning_rate_default(
+                multiply_by_parameter_scale)
         self._learning_rate = learning_rate
         if decay_rate is None:
             decay_rate = self._decay_rate_default()
@@ -149,9 +151,9 @@ class AdafactorOptimizer(tf.train.Optimizer):
 
     def _should_use_factored_second_moment_estimate(self, shape):
         """Should we use a factored second moment estimator.
-    
+
         Based on the shape of the variable.
-    
+
         Args:
           shape: a list of integers
         Returns:
@@ -181,13 +183,13 @@ class AdafactorOptimizer(tf.train.Optimizer):
 
     def _parameter_scale(self, var):
         """Estimate the scale of the parameters from the current values.
-    
+
         We include a minimum value of 0.001 to give it a chance to escape 0
         if it was zero-initialized.
-    
+
         Instead of using the value, we could impute the scale from the shape,
         as initializers do.
-    
+
         Args:
           var: a variable or Tensor.
         Returns:
@@ -234,12 +236,14 @@ class AdafactorOptimizer(tf.train.Optimizer):
             updates = [v_update]
             x = grad * tf.rsqrt(new_v)
         if self._clipping_threshold is not None:
-            clipping_denom = tf.maximum(1.0, reduce_rms(x) / self._clipping_threshold)
+            clipping_denom = tf.maximum(1.0, reduce_rms(
+                x) / self._clipping_threshold)
             x /= clipping_denom
         subtrahend = update_scale * x
         if self._beta1:
             m = self.get_slot(var, "m")
-            new_m = self._beta1 * tf.to_float(m) + (1.0 - self._beta1) * subtrahend
+            new_m = self._beta1 * tf.to_float(m) + (
+                    1.0 - self._beta1) * subtrahend
             subtrahend = new_m
             new_m = tf.cast(new_m, var.dtype)
             updates.append(tf.assign(m, new_m, use_locking=self._use_locking))
@@ -266,7 +270,7 @@ class AdafactorOptimizer(tf.train.Optimizer):
 
 def adafactor_decay_rate_adam(beta2):
     """Second-moment decay rate like Adam, subsuming the correction factor.
-  
+
     Args:
       beta2: a float between 0 and 1
     Returns:
@@ -280,7 +284,7 @@ def adafactor_decay_rate_adam(beta2):
 
 def adafactor_decay_rate_pow(exponent):
     """Second moment decay rate where memory-length grows as step_num^exponent.
-  
+
     Args:
       exponent: a float between 0 and 1
     Returns:
@@ -295,7 +299,7 @@ def step_num():
 
 def adafactor_optimizer_from_hparams(hparams, lr):
     """Create an Adafactor optimizer based on model hparams.
-  
+
     Args:
       hparams: model hyperparameters
       lr: learning rate scalar.
@@ -332,36 +336,36 @@ def reduce_rms(x):
 
 def _simulated_quantize(x, num_bits, quantization_noise):
     """Simulate quantization to num_bits bits, with externally-stored scale.
-  
+
     num_bits is the number of bits used to store each value.
     quantization_noise is a float32 Tensor containing values in [0, 1).
     Each value in quantization_noise should take different values across
     different steps, approximating a uniform distribution over [0, 1).
     In the case of replicated TPU training, quantization_noise should be identical
     across replicas in order to keep the parameters identical across replicas.
-  
+
     The natural choice for quantization_noise would be tf.random_uniform(),
     but this is not possible for TPU, since there is currently no way to seed
     the different cores to produce identical values across replicas.  Instead we
     use _quantization_noise_from_step_num() (see below).
-  
+
     The quantization scheme is as follows:
-  
+
     Compute the maximum absolute value by row (call this max_abs).
     Store this either in an auxiliary variable or in an extra column.
-  
+
     Divide the parameters by (max_abs / (2^(num_bits-1)-1)).  This gives a
     float32 value in the range [-2^(num_bits-1)-1, 2^(num_bits-1)-1]
-  
+
     Unbiased randomized roundoff by adding quantization_noise and rounding down.
-  
+
     This produces a signed integer with num_bits bits which can then be stored.
-  
+
     Args:
       x: a float32 Tensor
       num_bits: an integer between 1 and 22
       quantization_noise: a float Tensor broadcastable to the shape of x.
-  
+
     Returns:
       a float32 Tensor
     """
@@ -380,9 +384,9 @@ def _simulated_quantize(x, num_bits, quantization_noise):
 
 def _quantization_noise_from_step_num():
     """A quantization noise equal to (phi * (step_num + 1)) mod 1.0.
-  
+
     See _simulated_quantize.
-  
+
     Returns:
       a float32 scalar
     """
@@ -394,26 +398,27 @@ def _quantization_noise_from_step_num():
     # alternative computation which does not suffer from these roundoff errors.
     ret = 0.0
     for i in xrange(30):
-        ret += (((phi * (2 ** i)) % 1.0)  # double-precision computation in python
+        ret += (((phi * (
+                2 ** i)) % 1.0)  # double-precision computation in python
                 * tf.to_float(tf.mod(step // (2 ** i), 2)))
     return tf.mod(ret, 1.0)
 
 
 def _randomized_roundoff_to_bfloat16(x, quantization_noise, cand1, cand2):
     """Round-off x to cand1 or to cand2 in an unbiased way.
-  
+
     Cand1 and cand2 are the same shape as x.
     For every element of x, the corresponding elements of cand1 and cand2 should
     be the two closest bfloat16 values to x.  Order does not matter.
     cand1 and cand2 must differ from each other.
-  
+
     Args:
       x: A float32 Tensor.
       quantization_noise: A Tensor broadcastable to the shape of x containing
       random uniform values in [0.0, 1.0].
       cand1: A bfloat16 Tensor the same shape as x.
       cand2: A bfloat16 Tensor the same shape as x.
-  
+
     Returns:
       A bfloat16 Tensor.
     """
@@ -427,22 +432,22 @@ def _randomized_roundoff_to_bfloat16(x, quantization_noise, cand1, cand2):
 
 def _to_bfloat16_unbiased(x):
     """Convert a float32 to a bfloat16 using randomized roundoff.
-  
+
     Note: If this ever produces worse results than using float32 all the way
     through, we should try to diagnose and fix it.  There are several things
     to try:
-  
+
     1. Encode parameter x for storage purposes as
        _to_bfloat16_unbiased(tf.pow(x, 5)) .  This gives 5x the
        resolution while incurring overflow and underflow at 10^9 and 10^-9
        instead of 10^37 and 10^-37.  Comes at a cost of extracting fifth roots
        to decode parameters.  Or use some other such scheme.
-  
+
     2. In this function, use actual random numbers, different for each parameter
        as opposed to the same for every parameter in the graph.
-  
+
     3. Look for bugs in this function.
-  
+
     Args:
       x: A float32 Tensor.
     Returns:

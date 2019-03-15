@@ -1,6 +1,7 @@
 import gzip
 import json
 import os
+
 from mtl.util.util import make_dir
 
 
@@ -25,11 +26,15 @@ def main():
                 neg_data.append(i)
 
         make_dir(os.path.join('data/json', domain + '_syn_p1000 '))
-        with gzip.open(os.path.join('data/json', domain + '_syn_p1000 ', 'data.json.gz'), mode='wt') as file:
+        with gzip.open(
+            os.path.join('data/json', domain + '_syn_p1000 ', 'data.json.gz'),
+            mode='wt') as file:
             json.dump(pos_data, file, ensure_ascii=False)
 
         make_dir(os.path.join('data/json', domain + '_syn_r1000'))
-        with gzip.open(os.path.join('data/json', domain + '_syn_r1000', 'data.json.gz'), mode='wt') as file:
+        with gzip.open(
+            os.path.join('data/json', domain + '_syn_r1000', 'data.json.gz'),
+            mode='wt') as file:
             json.dump(neg_data, file, ensure_ascii=False)
 
 

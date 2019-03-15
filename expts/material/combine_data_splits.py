@@ -93,7 +93,8 @@ def main():
 
         suffix = '_'.join(args.train_suffixes)
         if args.valid_suffixes:
-            suffix = 'train_' + suffix + '_valid_' + ' '.join(args.valid_suffixes)
+            suffix = 'train_' + suffix + '_valid_' + ' '.join(
+                args.valid_suffixes)
 
         dout = os.path.join(
             base_dir,
@@ -114,7 +115,8 @@ def main():
             json.dump(data, file, ensure_ascii=False)
 
         if domain != 'SPO' and args.valid_suffixes:
-            with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
+            with gzip.open(os.path.join(dout, 'index.json.gz'),
+                           mode='wt') as file:
                 json.dump(index_dict, file, ensure_ascii=False)
 
 

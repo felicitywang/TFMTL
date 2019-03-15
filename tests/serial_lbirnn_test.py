@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.extractors.lbirnn import lbirnn, lbirnn_stock
+from mtl.extractors.lbirnn import lbirnn_stock
 
 
 class SerialLBiRNNTests(tf.test.TestCase):

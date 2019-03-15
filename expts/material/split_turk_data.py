@@ -34,7 +34,8 @@ def main():
             folder = os.path.join('data/json', domain +
                                   turk_name + '_' + str(i + 1))
             make_dir(folder)
-            with gzip.open(os.path.join(folder, 'data.json.gz'), mode='wt') as file:
+            with gzip.open(os.path.join(folder, 'data.json.gz'),
+                           mode='wt') as file:
                 print(os.path.join(folder, 'data.json.gz'))
                 json.dump(tmp, file, ensure_ascii=False)
 

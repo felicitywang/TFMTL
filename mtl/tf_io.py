@@ -17,11 +17,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
+from collections import defaultdict
+
 import numpy as np
 import tensorflow as tf
-from collections import defaultdict
 from google.protobuf.json_format import MessageToJson
-import json
 
 
 def get_num_records(tf_record_filename):
@@ -36,7 +37,8 @@ def get_empirical_label_prior(tf_record_filename, label_key="label"):
     for record in tf.python_io.tf_record_iterator(tf_record_filename):
         jsonMessage = MessageToJson(tf.train.Example.FromString(record))
         d = json.loads(jsonMessage)
-        label = int(d['features']['feature'][label_key]['int64List']['value'][0])
+        label = int(
+            d['features']['feature'][label_key]['int64List']['value'][0])
         freq[label] += 1
     N = float(sum(freq.values()))
     p = np.zeros(len(freq))

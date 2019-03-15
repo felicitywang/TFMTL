@@ -1,5 +1,6 @@
-from networkx import *
 import pickle as pkl
+
+from networkx import *
 
 
 def remove_nodes_if(G, should_remove):
@@ -23,8 +24,10 @@ def trim_graph_nodes(G, iterations=0, useless_cuttoff=0, root=None):
             print("\ttrimming leaves")
             for i in range(iterations):
                 initial_length = len(new_graph)
-                new_graph = remove_nodes_if(new_graph, lambda x: len(new_graph.neighbors(x)) <= useless_cuttoff)
-                print("\t\tremoved " + str(initial_length - len(new_graph)) + " nodes")
+                new_graph = remove_nodes_if(new_graph, lambda x: len(
+                    new_graph.neighbors(x)) <= useless_cuttoff)
+                print("\t\tremoved " + str(
+                    initial_length - len(new_graph)) + " nodes")
                 print("\t\t" + str(i + 1) + " / " + str(iterations))
                 if (initial_length - len(new_graph)) == 0:
                     print("\tstopping iterations early")
@@ -43,11 +46,13 @@ def trim_subgraphs(components, subgraph_cuttoff=None, n_top_nodes=None):
     # cut unnecessary subgraphs
     new_components = []
     if subgraph_cuttoff:
-        print("\tcutting subgraphs with under " + str(subgraph_cuttoff) + " nodes")
+        print("\tcutting subgraphs with under " + str(
+            subgraph_cuttoff) + " nodes")
         print("\t\tinitial number of components: " + str(len(components)))
         for component in components:
             if len(component) > subgraph_cuttoff:
-                print("\t\tadding component which has " + str(len(component)) + " nodes")
+                print("\t\tadding component which has " + str(
+                    len(component)) + " nodes")
                 new_components.append(component)
         print("\t\tfinal number of components: " + str(len(new_components)))
     else:
@@ -57,7 +62,8 @@ def trim_subgraphs(components, subgraph_cuttoff=None, n_top_nodes=None):
         # get rid of cycles in remaining components
         print("\tmaking components into acyclic graphs")
         for i, component in enumerate(new_components):
-            print("\t\tfinding cycles in graph with " + str(len(component)) + " nodes")
+            print("\t\tfinding cycles in graph with " + str(
+                len(component)) + " nodes")
             cycles = simple_cycles(component)
             print("\t\t" + str(len(list(cycles))) + " cycles found")
             for cycle in cycles:
@@ -77,14 +83,16 @@ def trim_subgraphs(components, subgraph_cuttoff=None, n_top_nodes=None):
         # get rid of all nodes except for top p
         print("\ttopologically sorting and cutting bottom nodes on the graphs")
         for component in new_components:
-            component.remove_nodes_from(topological_sort(component)[n_top_nodes:])
+            component.remove_nodes_from(
+                topological_sort(component)[n_top_nodes:])
 
         # expand components into not connected subgraphs and return final components
         print("\texpanding graphs into their connected subgraphs")
         new_components2 = []
         for component in new_components:
             new_components2.extend(weakly_connected_components(component))
-        new_components = [subgraph(G, list(vertices)) for vertices in new_components2]
+        new_components = [subgraph(G, list(vertices)) for vertices in
+                          new_components2]
     new_components = sorted(new_components, key=len)
     print("done trimming subgraph")
     return new_components
@@ -94,7 +102,9 @@ def print_graph_info(G, verbose=False):
     ### PRINT INFORMATION ABOUT GRAPH ###
     n_nodes = len(G.nodes())
     n_edges = len(G.edges())
-    print("number of nodes: " + str(n_nodes) + ", total number of edges: " + str(n_edges))
+    print(
+        "number of nodes: " + str(n_nodes) + ", total number of edges: " + str(
+            n_edges))
     if verbose:
         print("directed acyclic: " + str(is_directed_acyclic_graph(G)))
         print("weakly connected: " + str(is_weakly_connected(G)))
@@ -111,7 +121,8 @@ def load_graph(adjacencies_file, verbose=False):
             nodenames = [n[0] for n in nodes]
             nodenames.append(node)
             G.add_nodes_from(nodenames)
-            G.add_edges_from([(node, n[0], {"weight": float(n[1])}) for n in nodes])
+            G.add_edges_from(
+                [(node, n[0], {"weight": float(n[1])}) for n in nodes])
             if (i + 1) % 100000 == 0: print(i + 1)
     print("done loading graph")
 
@@ -122,15 +133,19 @@ def load_graph(adjacencies_file, verbose=False):
 
 def get_center_node(G):
     centralities = betweenness_centrality(G.to_undirected())
-    node_centrality = max(((node, centrality) for node, centrality in centralities.items()), key=lambda x: x[1])
+    node_centrality = max(
+        ((node, centrality) for node, centrality in centralities.items()),
+        key=lambda x: x[1])
     return node_centrality[0]
 
 
-def write_clusters(cluster_groupings_file, cluster_groupings, cluster_names_file, cluster_names, verbose=False):
+def write_clusters(cluster_groupings_file, cluster_groupings,
+                   cluster_names_file, cluster_names, verbose=False):
     print("writing " + str(len(cluster_groupings)) + " clusters to files.")
     if verbose:
-        print("The groups contain the following numbers of categories respectively: " + str(
-            [len(group) for cluster, group in cluster_groupings.items()]))
+        print(
+            "The groups contain the following numbers of categories respectively: " + str(
+                [len(group) for cluster, group in cluster_groupings.items()]))
     with open(cluster_groupings_file, "w") as groupfile:
         '''
         for cluster, nodes in cluster_groupings.items():
@@ -147,7 +162,8 @@ def write_clusters(cluster_groupings_file, cluster_groupings, cluster_names_file
     print("done writing clusters to files")
 
 
-def compute_clustering(original_graph, components, number_of_clusters, cluster_groupings_file, cluster_names_file,
+def compute_clustering(original_graph, components, number_of_clusters,
+                       cluster_groupings_file, cluster_names_file,
                        topological_sorting_file=None):
     print("computing clustering")
     from sklearn import cluster as cl
@@ -163,12 +179,14 @@ def compute_clustering(original_graph, components, number_of_clusters, cluster_g
             print("\tdone with topological sort")
             print("\ttop 3 categories: " + str(topsort[-1][:3]))
         # print(m.todense())
-        n = int(round(number_of_clusters * (float(len(graph)) / float(n_nodes))))
+        n = int(
+            round(number_of_clusters * (float(len(graph)) / float(n_nodes))))
         if n < 1:
             print("\tthis is 1 cluster")
             clusters.append(list(zip(graph.nodes(), [0] * len(graph))))
         else:
-            print("\tdoing spectral clustering to produce " + str(n) + " clusters")
+            print("\tdoing spectral clustering to produce " + str(
+                n) + " clusters")
             # if len(graph) > 100000: print("jk, not gonna do this now"); continue
             print("\t\tcreating adjacency matrix")
             tempnodes = graph.nodes()
@@ -188,20 +206,25 @@ def compute_clustering(original_graph, components, number_of_clusters, cluster_g
     # cluster_mappings = []
     for graphcluster in clusters:
         for node, cluster in graphcluster:
-            if str(graphclusternum) + " " + str(cluster) not in cluster_groupings.keys():
-                cluster_groupings[str(graphclusternum) + " " + str(cluster)] = []
-            cluster_groupings[str(graphclusternum) + " " + str(cluster)].append(node)
+            if str(graphclusternum) + " " + str(
+                cluster) not in cluster_groupings.keys():
+                cluster_groupings[
+                    str(graphclusternum) + " " + str(cluster)] = []
+            cluster_groupings[str(graphclusternum) + " " + str(cluster)].append(
+                node)
         # cluster_mappings.append((node,str(graphclusternum)+" "+str(cluster)))
         graphclusternum += 1
     cluster_names = {}
     for clusterkey, nodes in cluster_groupings.items():
-        cluster_names[clusterkey] = get_center_node(subgraph(original_graph, nodes))[9:]
+        cluster_names[clusterkey] = get_center_node(
+            subgraph(original_graph, nodes))[9:]
     # print(cluster_mappings)
     # print(cluster_groupings)
 
     ### WRITE TO FILES ###
     print("writing clusters to files")
-    write_clusters(cluster_groupings_file, cluster_groupings, cluster_names_file, cluster_names)
+    write_clusters(cluster_groupings_file, cluster_groupings,
+                   cluster_names_file, cluster_names)
 
     if topological_sorting_file:
         with open(topological_sorting_file, "w") as topfile:
@@ -238,7 +261,8 @@ def choose_nodes(nodes, n_nodes, distribution=None):
 
 def sample_graph(original_graph, n_nodes):
     if n_nodes > len(original_graph.nodes()):
-        print("Warning: there are only " + str(len(original_graph.nodes())) + " nodes in the graph, not " + str(
+        print("Warning: there are only " + str(
+            len(original_graph.nodes())) + " nodes in the graph, not " + str(
             n_nodes) + ", so returning whole graph")
         return original_graph
     nodes = list(original_graph.nodes())
@@ -251,6 +275,7 @@ def sample_graph(original_graph, n_nodes):
             if node2 == node1: continue
             new_graph.add_node(node2)
             path = shortest_path(G, source=node1, target=node2)
-            new_weight = mul(G[node][path[i + 1]]["weight"] for i, node in enumerate(path[:-1]))
+            new_weight = mul(G[node][path[i + 1]]["weight"] for i, node in
+                             enumerate(path[:-1]))
             new_graph.add_edge(node1, node2, weight=new_weight)
     return new_graph

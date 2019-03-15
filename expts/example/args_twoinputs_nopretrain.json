@@ -16,7 +16,7 @@
     "write_bow": false,
     "write_tfidf": false,
     "preproc": false,
-    "tokenizer": "ruder_tokenizer",
-    "stemmer": "porter_stemmer",
+    "tokenizer": "lower_tokenizer",
+    "stemmer": "snowball_stemmer",
     "stopwords": "nltk"
 }

@@ -34,6 +34,7 @@ def no_op_embedding(x, *args, **kwargs):
         outputs = x
         outputs = tf.cast(outputs, dtype=tf.float32)
     else:
-        raise ValueError("x has invalid rank. rank must be 2 or 3: rank=%d" % (rank))
+        raise ValueError(
+            "x has invalid rank. rank must be 2 or 3: rank=%d" % (rank))
 
     return outputs

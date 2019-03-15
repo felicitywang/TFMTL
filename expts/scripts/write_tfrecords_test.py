@@ -43,7 +43,8 @@ def main():
     if os.path.exists(os.path.join(os.path.abspath(vocab_dir), 'args.json')):
         args_path = os.path.join(os.path.abspath(vocab_dir), 'args.json')
     else:
-        args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0], 'args.json')
+        args_path = os.path.join(vocab_dir, os.listdir(vocab_dir)[0],
+                                 'args.json')
 
     with open(args_path) as file:
         args_used = json.load(file)

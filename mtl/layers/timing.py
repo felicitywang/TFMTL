@@ -18,11 +18,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import math
+
 import numpy as np
+import tensorflow as tf
 from planar.t2t import shape_list
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import math
 
 
 def get_timing_signal_1d(length,
@@ -30,27 +31,27 @@ def get_timing_signal_1d(length,
                          min_timescale=1.0,
                          max_timescale=1.0e4):
     """Gets a bunch of sinusoids of different frequencies.
-  
+
     Each channel of the input Tensor is incremented by a sinusoid of a different
     frequency and phase.
-  
+
     The use of relative position is possible because sin(x+y) and cos(x+y) can be
     experessed in terms of y, sin(x) and cos(x).
-  
+
     In particular, we use a geometric sequence of timescales starting with
     min_timescale and ending with max_timescale.  The number of different
     timescales is equal to channels / 2. For each timescale, we
     generate the two sinusoidal signals sin(timestep/timescale) and
     cos(timestep/timescale).  All of these sinusoids are concatenated in
     the channels dimension.
-  
+
     Args:
       length: scalar, length of timing signal sequence.
       channels: scalar, size of timing embeddings to create. The number of
           different timescales is equal to channels / 2.
       min_timescale: a float
       max_timescale: a float
-  
+
     Returns:
       a Tensor of timing signals [1, length, channels]
     """
@@ -61,7 +62,8 @@ def get_timing_signal_1d(length,
         (tf.to_float(num_timescales) - 1))
     inv_timescales = min_timescale * tf.exp(
         tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
-    scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0)
+    scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales,
+                                                               0)
     signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
     signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
     signal = tf.reshape(signal, [1, length, channels])
@@ -70,58 +72,59 @@ def get_timing_signal_1d(length,
 
 def add_timing_signal_1d(x, min_timescale=1.0, max_timescale=1.0e4):
     """Adds a bunch of sinusoids of different frequencies to a Tensor.
-  
+
     Each channel of the input Tensor is incremented by a sinusoid of a different
     frequency and phase.
-  
+
     The use of relative position is possible because sin(x+y) and cos(x+y) can be
     experessed in terms of y, sin(x) and cos(x).
-  
+
     In particular, we use a geometric sequence of timescales starting with
     min_timescale and ending with max_timescale.  The number of different
     timescales is equal to channels / 2. For each timescale, we
     generate the two sinusoidal signals sin(timestep/timescale) and
     cos(timestep/timescale).  All of these sinusoids are concatenated in
     the channels dimension.
-  
+
     Args:
       x: a Tensor with shape [batch, length, channels]
       min_timescale: a float
       max_timescale: a float
-  
+
     Returns:
       a Tensor the same shape as x.
     """
     length = shape_list(x)[1]
     channels = shape_list(x)[2]
-    signal = get_timing_signal_1d(length, channels, min_timescale, max_timescale)
+    signal = get_timing_signal_1d(length, channels, min_timescale,
+                                  max_timescale)
     return x + signal
 
 
 def add_timing_signal_nd(x, min_timescale=1.0, max_timescale=1.0e4):
     """Adds a bunch of sinusoids of different frequencies to a Tensor.
-  
+
     Each channel of the input Tensor is incremented by a sinusoid of a different
     frequency and phase in one of the positional dimensions.
-  
+
     The use of relative position is possible because sin(a+b) and cos(a+b) can be
     experessed in terms of b, sin(a) and cos(a).
-  
+
     x is a Tensor with n "positional" dimensions, e.g. one dimension for a
     sequence or two dimensions for an image
-  
+
     We use a geometric sequence of timescales starting with
     min_timescale and ending with max_timescale.  The number of different
     timescales is equal to channels // (n * 2). For each timescale, we
     generate the two sinusoidal signals sin(timestep/timescale) and
     cos(timestep/timescale).  All of these sinusoids are concatenated in
     the channels dimension.
-  
+
     Args:
       x: a Tensor with shape [batch, d1 ... dn, channels]
       min_timescale: a float
       max_timescale: a float
-  
+
     Returns:
       a Tensor the same shape as x.
     """
@@ -152,16 +155,16 @@ def add_timing_signal_nd(x, min_timescale=1.0, max_timescale=1.0e4):
 
 def add_positional_embedding_nd(x, max_length, name):
     """Add n-dimensional positional embedding.
-  
+
     Adds embeddings to represent the positional dimensions of the tensor.
     The input tensor has n positional dimensions - i.e. 1 for text, 2 for images,
     3 for video, etc.
-  
+
     Args:
       x: a Tensor with shape [batch, p1 ... pn, depth]
       max_length: an integer.  static maximum size of any dimension.
       name: a name for this layer.
-  
+
     Returns:
       a Tensor the same shape as x.
     """

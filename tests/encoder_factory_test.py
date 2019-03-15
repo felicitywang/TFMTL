@@ -35,7 +35,8 @@ class EncoderTests(tf.test.TestCase):
         parser = argparse.ArgumentParser()
         parser.add_argument('--architecture', default='example')
         parser.add_argument('--datasets', default=['SSTb', 'LMRD'])
-        parser.add_argument('--encoder_config_file', default='tests/encoders.json')
+        parser.add_argument('--encoder_config_file',
+                            default='tests/encoders.json')
         args = parser.parse_args()
 
         with self.test_session() as sess:
@@ -93,13 +94,16 @@ class EncoderTests(tf.test.TestCase):
 
                 print(output_SSTb.eval())
 
-                print('SSTb output size: {}'.format(output_SSTb.get_shape().as_list()))
-                print('LMRD output size: {}'.format(output_LMRD.get_shape().as_list()))
+                print('SSTb output size: {}'.format(
+                    output_SSTb.get_shape().as_list()))
+                print('LMRD output size: {}'.format(
+                    output_LMRD.get_shape().as_list()))
 
             else:
                 encoders = build_encoders(args)
 
-                inputs1 = tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
+                inputs1 = tf.constant(
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
                 lengths1 = tf.constant([3, 3, 3, 3])
 
                 k = dict()
@@ -113,13 +117,17 @@ class EncoderTests(tf.test.TestCase):
                 k['is_training'] = False
                 #
 
-                output_SSTb_1 = encoders['SSTb'](inputs=inputs1, lengths=lengths1, **k)
-                output_LMRD_1 = encoders['LMRD'](inputs=inputs1, lengths=lengths1, **k)
+                output_SSTb_1 = encoders['SSTb'](inputs=inputs1,
+                                                 lengths=lengths1, **k)
+                output_LMRD_1 = encoders['LMRD'](inputs=inputs1,
+                                                 lengths=lengths1, **k)
 
                 inputs2 = tf.constant([[1, 1, 1], [2, 2, 0]])
                 lengths2 = tf.constant([3, 2])
-                output_SSTb_2 = encoders['SSTb'](inputs=inputs2, lengths=lengths2)
-                output_LMRD_2 = encoders['LMRD'](inputs=inputs2, lengths=lengths2)
+                output_SSTb_2 = encoders['SSTb'](inputs=inputs2,
+                                                 lengths=lengths2)
+                output_LMRD_2 = encoders['LMRD'](inputs=inputs2,
+                                                 lengths=lengths2)
 
                 all_variables = tf.global_variables()
                 trainable_variables = tf.trainable_variables()
@@ -147,8 +155,10 @@ class EncoderTests(tf.test.TestCase):
 
                 print(output_SSTb_1.eval())
 
-                print('SSTb_1 size: {}'.format(output_SSTb_1.get_shape().as_list()))
-                print('SSTb_2 size: {}'.format(output_SSTb_2.get_shape().as_list()))
+                print('SSTb_1 size: {}'.format(
+                    output_SSTb_1.get_shape().as_list()))
+                print('SSTb_2 size: {}'.format(
+                    output_SSTb_2.get_shape().as_list()))
 
 
 if __name__ == '__main__':

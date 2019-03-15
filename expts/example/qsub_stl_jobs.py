@@ -163,19 +163,19 @@ def name_from_params(params, mode=None):
     # name = '{}--{:d}'.format(key_name, int_hash)
 
     """
-  mode:
-      None: common name
-      init: pre-trained model's name
-      fine-tune: fine-tuned model's name
-  """
+    mode:
+        None: common name
+        init: pre-trained model's name
+        fine-tune: fine-tuned model's name
+    """
     if mode == 'init':
-        name_list = ['datasets', 'init_dataset_suffix',
-                     'args_paths', 'architecture', 'seed']
+        name_list = ['domains', 'init_dataset_suffix',
+                     'args_paths', 'architecture']
     else:
         name_list = ['dataset_name',
-                     'args_paths', 'architecture', 'seed']
-    name = '/'.join([
-        str(params[i]) if 'suffix' not in i else params[i][1:]
+                     'args_paths', 'architecture']
+    name = '_'.join([
+        params[i] if 'suffix' not in i else params[i][1:]
         for i in name_list])
 
     return name
@@ -191,8 +191,6 @@ def flags_from_params(params, key_prefix='\\\n    --', key_suffix=''):
 
 
 def write_exp_bash_script(temp_script_filename, meta_config, exp_params_comb):
-    # import pdb; pdb.set_trace()
-
     shell_command = ''
 
     exp_flags = flags_from_params(exp_params_comb)
@@ -272,7 +270,7 @@ def create_qsub_params(meta_config):
         # qsub_params['l'] += ',gpu=1,hostname=c*'
         # qsub_params['l'] += ',gpu=1'
         # qsub_params['q'] = "g.q,all.q"
-        qsub_params['q'] = "g.q"
+        qsub_params['q'] = "g.q,all.q"
     else:
         pass
         # qsub_params['l'] += 'hostname=b*|c*'
@@ -316,11 +314,11 @@ def write_encoder_file(exp_params_comb):
     """No grid search for encoders.json"""
     file_name = exp_params_comb['encoder_config_file']
     architecture_name = exp_params_comb['architecture']
-    datasets = exp_params_comb['datasets'].split()
+    domains = exp_params_comb['domains'].split()
 
     # get each dataset's encoder configuration
     encoder_configs = dict()
-    for domain in datasets:
+    for domain in domains:
         # tmp = exp_params_comb[dataset].copy()
         # embed_kwargs_names = tmp.pop('embed_kwargs_names').split()
         # tmp['embed_kwargs'] = {k: tmp.pop(k) for k in embed_kwargs_names}
@@ -340,33 +338,33 @@ def write_encoder_file(exp_params_comb):
     configuration[architecture_name]['extractors_tied'] = \
         exp_params_comb['extractors_tied']
 
-    for domain in datasets:
+    for domain in domains:
         configuration[architecture_name][domain] = encoder_configs[domain]
 
     if configuration[architecture_name]['embedders_tied']:
         # assert that embedder configs are the same
         assert all([
             configuration[architecture_name][a]['embed_fn'] ==
-            configuration[architecture_name][b]['embed_fn'] for a in datasets
-            for b in datasets
+            configuration[architecture_name][b]['embed_fn'] for a in domains
+            for b in domains
         ])
         assert all([
             configuration[architecture_name][a]['embed_kwargs'] ==
             configuration[architecture_name][b]['embed_kwargs']
-            for a in datasets for b in datasets
+            for a in domains for b in domains
         ])
 
     if configuration[architecture_name]['extractors_tied']:
         # assert that extractor configs are the same
         assert all([
             configuration[architecture_name][a]['extract_fn'] ==
-            configuration[architecture_name][b]['extract_fn'] for a in datasets
-            for b in datasets
+            configuration[architecture_name][b]['extract_fn'] for a in domains
+            for b in domains
         ])
         assert all([
             configuration[architecture_name][a]['extract_kwargs'] ==
             configuration[architecture_name][b]['extract_kwargs']
-            for a in datasets for b in datasets
+            for a in domains for b in domains
         ])
 
     os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -384,7 +382,8 @@ def run_single_experiment(meta_config, exp_params_comb, qsub_params, debug):
             exp_params_comb['finetune_dataset_name'], exp_params_comb)
         exp_params_comb['finetune_dataset_name'] = complete_path_name(
             exp_params_comb['finetune_dataset_name'], exp_params_comb)
-        exp_params_comb['dataset_name'] = exp_params_comb['finetune_dataset_name']
+        exp_params_comb['dataset_name'] = exp_params_comb[
+            'finetune_dataset_name']
     else:
         exp_params_comb['dataset_name'] = complete_path_name(
             exp_params_comb['dataset_name'], exp_params_comb)
@@ -399,23 +398,26 @@ def run_single_experiment(meta_config, exp_params_comb, qsub_params, debug):
 
     # Fill out any arguments that depend on other fields' values
     # res_dir = complete_path_name(meta_config.results_dir, exp_params_comb)
+
     results_dir = complete_path_name(meta_config.results_dir, exp_params_comb)
     results_dir = results_dir.replace('<root_dir>', meta_config.root_dir)
 
-    qsub_params['e'] = os.path.join(
-        results_dir, exp_params_comb['mode'] + '.e')
-    qsub_params['o'] = os.path.join(
-        results_dir, exp_params_comb['mode'] + '.o')
+    qsub_params = {
+        'e':
+            os.path.join(results_dir, 'e'),
+        'o':
+            os.path.join(results_dir, 'o'),
+        'l':
+            'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
+                                                   meta_config.mem_ram)
+    }
 
-    # qsub_params = {
-    #     'e':
-    #     os.path.join(results_dir, exp_params_comb['mode'] + '.e'),
-    #     'o':
-    #     os.path.join(results_dir, exp_params_comb['mode'] + '.o'),
-    #     'l':
-    #     'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
-    #                                            meta_config.mem_ram)
-    # }
+    # for predict paths
+    if exp_params_comb['mode'] == 'predict':
+        subdirs = exp_params_comb['subdirs']
+        exp_params_comb['lang'] = subdirs[:subdirs.find('/')]
+        exp_params_comb['subdir'] = subdirs[subdirs.find('/') + 1:]
+        # print(exp_params_comb['lang'], exp_params_comb['subdir'])
 
     for field in exp_params_comb:
         if isinstance(exp_params_comb[field], str):
@@ -455,14 +457,14 @@ def run_single_experiment(meta_config, exp_params_comb, qsub_params, debug):
 
 def remove_extra_fields(exp_params_comb):
     # Remove dataset-specific encoder information before writing bash script
-    datasets = exp_params_comb['datasets'].split()
-    for domain in datasets:
+    domains = exp_params_comb['domains'].split()
+    for domain in domains:
         exp_params_comb.pop(domain)
 
     # Remove extraneous information
     fields_to_remove = [
         'expt_setup_name', 'embedders_tied', 'extractors_tied', 'dataset_name',
-        'name', 'dataset_suffixes', 'args_paths', 'subdirs',
+        'name', 'domains', 'dataset_suffixes', 'args_paths', 'subdirs',
         'eval_dirs', 'text_types', 'lang', 'subdir', 'init_dataset_suffix',
         'init_dataset_name', 'finetune_dataset_suffix', 'init_name',
         'finetune_dataset_name'
@@ -566,7 +568,7 @@ def merge_combinations(exp_params_combs_list, encoder_params_combs_list):
     hashes = set()
 
     for exp_comb in tqdm(exp_params_combs_list):
-        datasets = exp_comb['datasets'].split()
+        datasets = exp_comb['domains'].split()
 
         # Each element of this list is itself a list of (dataset, encoder) pairs
         # At this point, all hyperparameter values have been selected
@@ -612,10 +614,6 @@ def run_all_experiments(meta_config, exp_config, encoder_config):
         # complete meta_config fields that depend on the values of other fields
         # NOTE: this assumes that `field` has the same value for all elements
         #       of exp_params_combs_list
-        setattr(
-            meta_config, field,
-            complete_path_name(
-                getattr(meta_config, field), exp_params_combs_list[0]))
         setattr(
             meta_config, field,
             complete_path_name(
@@ -693,10 +691,19 @@ def main():
     config = load_json(sys.argv[1])
 
     # remove unnecesary arguments
+    predict_specific_fields = [
+        'predict_dataset', 'predict_tfrecord_path', 'predict_output_folder',
+        'subdirs', 'text_types', 'eval_dirs'
+    ]
 
     finetune_specific_fields = [
         'checkpoint_dir_init'
     ]
+
+    if config['mode'] != 'predict':
+        for i in predict_specific_fields:
+            if i in config:
+                config.pop(i)
 
     if config['mode'] != 'finetune':
         for i in finetune_specific_fields:

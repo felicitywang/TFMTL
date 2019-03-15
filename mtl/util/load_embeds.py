@@ -47,7 +47,8 @@ def combine_vocab(pretrained_path, train_vocab_list):
         pretrained_vocab_dict)  # used to look for train vocab
 
     print(
-        '{} original vocabulary from training data.'.format(len(train_vocab_list)))
+        '{} original vocabulary from training data.'.format(
+            len(train_vocab_list)))
     print('{} original vocabulary from pretrained word embedding.'.format(len(
         pretrained_vocab_dict)))
 
@@ -101,7 +102,8 @@ def reorder_vocab(pretrained_path, training_vocab_list):
     # len(not_in_pretrained) is the size of word embeddings to be randomly
     # initialized
     return len(not_in_pretrained), {w: i for i, w in
-                                    enumerate(not_in_pretrained + in_pretrained)}
+                                    enumerate(
+                                        not_in_pretrained + in_pretrained)}
 
 
 def load_pretrained_matrix(filepath):

@@ -43,7 +43,8 @@ class Mult(object):
 
         # all feature names are present and consistent across data structures
         if set(class_sizes.keys()) != set(dataset_order):
-            raise ValueError("class_sizes must have same elements as dataset_order")
+            raise ValueError(
+                "class_sizes must have same elements as dataset_order")
 
         self._dataset_order = dataset_order
         self._hps = hps
@@ -84,8 +85,9 @@ class Mult(object):
             text_field_names = json.load(f)['text_field_names']
             if self._hps.experiment_name in [EXP.RUDER_NAACL_18, EXP.EMNLP_18]:
                 if text_field_names != ['seq1', 'seq2']:
-                    raise ValueError("Text field names must be [seq1, seq2] (exp=%s)"
-                                     % (self._hps.experiment_name))
+                    raise ValueError(
+                        "Text field names must be [seq1, seq2] (exp=%s)"
+                        % (self._hps.experiment_name))
             else:
                 # Requirements/constraints on text_field_names (for other exps) go here
                 pass
@@ -119,7 +121,8 @@ class Mult(object):
             #   x.append(batch[text_field_name + '_unique'])
 
             else:
-                raise ValueError("unrecognized input key: %s" % self._hps.input_key)
+                raise ValueError(
+                    "unrecognized input key: %s" % self._hps.input_key)
         return x, input_lengths
 
     def get_logits(self,
@@ -130,8 +133,9 @@ class Mult(object):
                    additional_encoder_kwargs=dict()):
         if self._hps.experiment_name in [EXP.EMNLP_18]:
             if batch_source != dataset_name:
-                raise ValueError("Batch and labels must come from same dataset: exp=%s"
-                                 % self._hps.experiment_name)
+                raise ValueError(
+                    "Batch and labels must come from same dataset: exp=%s"
+                    % self._hps.experiment_name)
 
         if batch_source not in self._hps.datasets:
             raise ValueError("Unrecognized batch source=%s" % batch_source)
@@ -297,7 +301,8 @@ class Mult(object):
                 additional_encoder_kwargs = additional_encoder_kwargs  # TODO ???
                 # additional_extractor_kwargs = additional_extractor_kwargs
             else:
-                raise NotImplementedError("Must specify wrt which dataset to get loss")
+                raise NotImplementedError(
+                    "Must specify wrt which dataset to get loss")
             loss = self.get_loss(batch=batch,
                                  batch_source=batch_source,
                                  dataset_name=dataset_name,

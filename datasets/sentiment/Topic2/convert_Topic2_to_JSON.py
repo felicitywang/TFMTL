@@ -1,6 +1,6 @@
-import os
-import json
 import gzip
+import json
+import os
 import sys
 
 TOPIC_LABELS = ['negative', 'positive']

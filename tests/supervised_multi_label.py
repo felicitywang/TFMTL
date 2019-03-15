@@ -20,33 +20,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-import math
-import random
 import datetime
 import json
+import os
+import random
 from enum import Enum, unique
-from six.moves import xrange
 
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.framework import sparse_tensor as sparse_tensor_lib
-from tensorflow.python.ops import parsing_ops
-
-import tflm
-
-from tflm.nets.unigram import unigram
-from tflm.nets.ngram import ngram
-from tflm.metrics.clustering import accuracy
-from tflm.data import SymbolTable
-from tflm.optim import EpochSummary
+from six.moves import xrange
 from tflm.corpora import TenSubreddits as Corpus
 from tflm.data import InputDataset
+from tflm.metrics.clustering import accuracy
 from tflm.models import M12
-from tflm.models.M12 import default_hparams as M12_hp
 from tflm.models import M2
+from tflm.models.M12 import default_hparams as M12_hp
 from tflm.models.M2 import default_hparams as M2_hp
+from tflm.nets.ngram import ngram
+from tflm.nets.unigram import unigram
+from tflm.optim import EpochSummary
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -373,7 +365,8 @@ def run_epoch(session, model, batch, num_words, writer=None,
                 global_step = tf.train.get_global_step()
                 assert global_step, "couldn't find global step"
                 global_step_value = tf.train.global_step(session, global_step)
-                writer.add_summary(vals["summary_op"], global_step=global_step_value)
+                writer.add_summary(vals["summary_op"],
+                                   global_step=global_step_value)
         except tf.errors.OutOfRangeError:
             break
 
@@ -469,7 +462,8 @@ def main(_):
     # Prepare run directory
     if FLAGS.run_id is None:
         run_prefix = FLAGS.model + "_" + FLAGS.inference
-        run_id = run_prefix + '_' + datetime.datetime.now().strftime('%m_%d_%H_%M')
+        run_id = run_prefix + '_' + datetime.datetime.now().strftime(
+            '%m_%d_%H_%M')
     else:
         run_id = FLAGS.run_id
     run_path = os.path.join(FLAGS.expt_path, run_id)
@@ -495,7 +489,8 @@ def main(_):
         Example.TARGET.value: tf.VarLenFeature(dtype=tf.int64),
         Example.LENGTH.value: tf.FixedLenFeature([], dtype=tf.int64),
         Example.LABEL.value: tf.FixedLenFeature([], dtype=tf.int64),
-        Example.TIME.value: tf.FixedLenFeature([num_time_bins], dtype=tf.float32),
+        Example.TIME.value: tf.FixedLenFeature([num_time_bins],
+                                               dtype=tf.float32),
         Example.BAG_OF_WORDS.value: tf.FixedLenFeature([vocab_size],
                                                        dtype=tf.float32),
     }
@@ -539,7 +534,8 @@ def main(_):
                 elif FLAGS.decoder is "ngram":
                     num_words = tf.reduce_sum(train_batch[Example.LENGTH.value])
                 else:
-                    raise ValueError("unrecognized decoder: %s" % (FLAGS.decoder))
+                    raise ValueError(
+                        "unrecognized decoder: %s" % (FLAGS.decoder))
                 tvars, grads = m.get_var_grads()
                 lr = get_learning_rate(FLAGS.lr)
                 train_op = get_train_op(tvars, grads, lr, FLAGS.max_grad_norm,

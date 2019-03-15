@@ -15,26 +15,20 @@
 # ==============================================================================
 
 import argparse
+import datetime
 import json
 import os
 import threading
-import datetime
 
 import model
-import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.ops import variables
-from tensorflow.python.ops import lookup_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.saved_model import signature_constants as sig_constants
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
 class EvaluationRunHook(tf.train.SessionRunHook):
     """EvaluationRunHook performs continuous evaluation of the model.
-  
+
     Args:
       checkpoint_dir (string): Dir to store model checkpoints
       fetches (dict): Dictionary of tf.Tensor ops
@@ -74,7 +68,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
             # Saver class add ops to save and restore variables to and from
             # checkpoint.
-            self._saver = tf.train.Saver(tf.trainable_variables() + [global_step])
+            self._saver = tf.train.Saver(
+                tf.trainable_variables() + [global_step])
 
         # MonitoredTrainingSession runs hooks in background threads and it
         # doesn't wait for the thread from the last session.run() call to
@@ -164,7 +159,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
             self._file_writer.flush()
 
             # Log results
-            tf.logging.info("[train_step=%s] Accuracy: %.2f" % (train_step, acc))
+            tf.logging.info(
+                "[train_step=%s] Accuracy: %.2f" % (train_step, acc))
 
 
 def run(target,
@@ -184,7 +180,8 @@ def run(target,
     if not reuse_job_dir:
         if tf.gfile.Exists(job_dir):
             tf.gfile.DeleteRecursively(job_dir)
-            tf.logging.info("Deleted job_dir {} to avoid re-use".format(job_dir))
+            tf.logging.info(
+                "Deleted job_dir {} to avoid re-use".format(job_dir))
         else:
             tf.logging.info("No job_dir available to delete")
     else:
@@ -267,7 +264,8 @@ def run(target,
             # tracked by the global step tensor.  When train epochs is
             # reached, session.should_stop() will be true.
             while not sess.should_stop():
-                step, _, _ = sess.run([global_step_tensor, train_op, merged_summary_op])
+                step, _, _ = sess.run(
+                    [global_step_tensor, train_op, merged_summary_op])
 
 
 def dispatch(hp, *args, **kwargs):
@@ -275,7 +273,7 @@ def dispatch(hp, *args, **kwargs):
     environment variable is available when running using gcloud either
     locally or on cloud. It has all the information required to create a
     ClusterSpec which is important for running distributed code.
-  
+
     """
 
     tf_config = os.environ.get('TF_CONFIG')
@@ -410,7 +408,8 @@ if __name__ == "__main__":
     del args.hparams
 
     if args.hparams_file:
-        tf.logging.info('Updating hyper-parameters from: %s.' % args.hparams_file)
+        tf.logging.info(
+            'Updating hyper-parameters from: %s.' % args.hparams_file)
         hp.read_json(args.hparams_file)
     del args.hparams_file
 

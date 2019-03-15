@@ -21,18 +21,15 @@ from collections import OrderedDict
 from operator import itemgetter
 
 import tensorflow as tf
+from tensorflow.contrib.training import HParams
 
 from mtl.layers import dense_layer
 from mtl.layers import mlp
-
-from mtl.vae.prob import enum_events
-from mtl.vae.prob import entropy
-
 from mtl.vae.common import gaussian_sample
 from mtl.vae.common import get_tau
 from mtl.vae.common import log_normal
-
-from tensorflow.contrib.training import HParams
+from mtl.vae.prob import entropy
+from mtl.vae.prob import enum_events
 
 logging = tf.logging
 tfd = tf.contrib.distributions
@@ -144,7 +141,8 @@ class MultiLabelVAE(object):
         def gaussian_prior():
             zm = tf.get_variable("mean", shape=[hp.latent_dim], trainable=True,
                                  initializer=tf.zeros_initializer())
-            zv_prm = tf.get_variable("var", shape=[hp.latent_dim], trainable=True,
+            zv_prm = tf.get_variable("var", shape=[hp.latent_dim],
+                                     trainable=True,
                                      initializer=tf.ones_initializer())
             zv = tf.nn.softplus(zv_prm)
             return (zm, zv)
@@ -218,7 +216,8 @@ class MultiLabelVAE(object):
         with tf.name_scope('sample'):
             log_qy = tfd.ExpRelaxedOneHotCategorical(self._tau,
                                                      logits=logits,
-                                                     name='log_qy_{}'.format(name))
+                                                     name='log_qy_{}'.format(
+                                                         name))
             y = tf.exp(log_qy.sample())
             return y
 
@@ -266,7 +265,8 @@ class MultiLabelVAE(object):
             g_loss = self.get_sampled_generative_loss(task_name, labels, batch,
                                                       features)
         else:
-            raise ValueError("unrecognized inference mode: %s" % self.hp.y_inference)
+            raise ValueError(
+                "unrecognized inference mode: %s" % self.hp.y_inference)
 
         # Discriminative loss
         nll_ys = []
@@ -391,7 +391,8 @@ class MultiLabelVAE(object):
                 assert task_name not in self._obs_label
                 self._obs_label[task_name] = label_val
                 qy_logits[label_key] = None
-                ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
+                ys[label_key] = tf.one_hot(label_val,
+                                           self._class_sizes[label_key])
         ys_list = ys.values()
         markov_blanket = tf.concat(ys_list, axis=1)
         self._task_nll_x[task_name] = nll_x = self.decode(batch, markov_blanket,

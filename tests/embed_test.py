@@ -20,11 +20,13 @@ import tensorflow as tf
 class EmbedTests(tf.test.TestCase):
     def test_template(self):
         with self.test_session() as sess:
-            temp1 = tf.make_template('embedding1', tf.contrib.layers.embed_sequence,
+            temp1 = tf.make_template('embedding1',
+                                     tf.contrib.layers.embed_sequence,
                                      vocab_size=10,
                                      embed_dim=2,
                                      )
-            temp2 = tf.make_template('embedding2', tf.contrib.layers.embed_sequence,
+            temp2 = tf.make_template('embedding2',
+                                     tf.contrib.layers.embed_sequence,
                                      vocab_size=10,
                                      embed_dim=2,
                                      )

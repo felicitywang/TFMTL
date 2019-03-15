@@ -50,7 +50,8 @@ def main():
             turk_dir = os.path.join(directory, domain + turk)
             turk_reg_dir = os.path.join(directory, domain + turk_reg)
             print(turk_dir, turk_reg_dir)
-            with open(os.path.join(turk_dir, domain + '.json'), mode='rt') as file:
+            with open(os.path.join(turk_dir, domain + '.json'),
+                      mode='rt') as file:
                 classification = json.load(file, encoding='utf-8')
             with open(os.path.join(turk_reg_dir, domain + '.json'),
                       mode='rt')as file:

@@ -15,26 +15,20 @@
 # ==============================================================================
 
 import argparse
+import datetime
 import json
 import os
 import threading
-import datetime
-from six.moves import xrange
-from six.moves import input
-
-# from gpu_util import setup_one_gpu
-# setup_one_gpu()
 
 import model
 import numpy as np
 import tensorflow as tf
+from six.moves import xrange
 
 from mtl.util.metrics import metric2func
 
-from tensorflow.python.ops import variables
-from tensorflow.python.ops import lookup_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.saved_model import signature_constants as sig_constants
+# from gpu_util import setup_one_gpu
+# setup_one_gpu()
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -54,7 +48,7 @@ TASK_TO_METRIC = {
 
 class EvaluationRunHook(tf.train.SessionRunHook):
     """EvaluationRunHook performs continuous evaluation of the model.
-  
+
     Args:
       checkpoint_dir (string): Dir to store model checkpoints
       fetches (dict): Dictionary of tf.Tensor ops
@@ -109,7 +103,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
             # Saver class add ops to save and restore variables to and from
             # checkpoint.
-            self._saver = tf.train.Saver(tf.trainable_variables() + [global_step])
+            self._saver = tf.train.Saver(
+                tf.trainable_variables() + [global_step])
 
         # MonitoredTrainingSession runs hooks in background threads and it
         # doesn't wait for the thread from the last session.run() call to
@@ -156,7 +151,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
     def _run_eval(self):
         #    tf.logging.info("Running model evaluation & generating summaries.")
         # config = tf.ConfigProto(device_count = {'GPU': 0})
-        config = tf.ConfigProto(inter_op_parallelism_threads=4, intra_op_parallelism_threads=4)
+        config = tf.ConfigProto(inter_op_parallelism_threads=4,
+                                intra_op_parallelism_threads=4)
         # config=None
         with tf.Session(graph=self._graph, config=config) as session:
             session.run([
@@ -221,7 +217,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
 
             # Task-specific loss
             self._mean_error = mean_error = total_error / float(eval_step)
-            assert np.isfinite(mean_error), "Non-finite error {}".format(mean_error)
+            assert np.isfinite(mean_error), "Non-finite error {}".format(
+                mean_error)
             assert not np.isnan(mean_error), "NaN error {}".format(mean_error)
 
             # Number of evaluation steps
@@ -234,7 +231,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
                                                          simple_value=acc)])
             self._file_writer.add_summary(summary, global_step=train_step)
             self._file_writer.add_summary(
-                tf.Summary(value=[tf.Summary.Value(tag="heldout_error", simple_value=mean_error)]),
+                tf.Summary(value=[tf.Summary.Value(tag="heldout_error",
+                                                   simple_value=mean_error)]),
                 global_step=train_step)
             self._file_writer.flush()
 
@@ -262,7 +260,8 @@ class EvaluationRunHook(tf.train.SessionRunHook):
                 # tf.logging.info(len(yhats))
                 assert len(topics) == len(ys)
                 assert len(topics) == len(yhats)
-                tf.logging.info("Found %d topics for evaluation." % len(topic_to_id))
+                tf.logging.info(
+                    "Found %d topics for evaluation." % len(topic_to_id))
                 pass
             else:
                 topics = [0] * len(ys)
@@ -310,7 +309,8 @@ def run(target,
     if not reuse_job_dir:
         if tf.gfile.Exists(job_dir):
             tf.gfile.DeleteRecursively(job_dir)
-            tf.logging.info("Deleted job_dir {} to avoid re-use".format(job_dir))
+            tf.logging.info(
+                "Deleted job_dir {} to avoid re-use".format(job_dir))
         else:
             tf.logging.info("No job_dir available to delete")
     else:
@@ -328,7 +328,8 @@ def run(target,
         evaluation_graph = tf.Graph()
         with evaluation_graph.as_default():
             # Seed TensorFlow RNG
-            tf.logging.info("Setting TF random seed (eval): {}".format(hp.random_seed))
+            tf.logging.info(
+                "Setting TF random seed (eval): {}".format(hp.random_seed))
             tf.set_random_seed(hp.random_seed)
 
             # if hp.TEST == 'yes':
@@ -363,7 +364,8 @@ def run(target,
                                            shuffle=False,
                                            one_shot=True,
                                            num_input_seq=hp.num_input_seq)
-                dev_fetches = model.model_fn(eval_corpus, model.EVAL, dev_batch, hp)
+                dev_fetches = model.model_fn(eval_corpus, model.EVAL, dev_batch,
+                                             hp)
 
         hooks = [EvaluationRunHook(
             job_dir,
@@ -393,7 +395,8 @@ def run(target,
     with tf.Graph().as_default():
         with tf.device(tf.train.replica_device_setter(cluster=cluster_spec)):
             # Seed TensorFlow RNG
-            tf.logging.info("Setting TF random seed (training): {}".format(hp.random_seed))
+            tf.logging.info(
+                "Setting TF random seed (training): {}".format(hp.random_seed))
             tf.set_random_seed(hp.random_seed)
 
             # Features and label tensors as read using filename queue
@@ -432,8 +435,10 @@ def run(target,
                 batches.append(batch)
                 corpora.append(corpus)
 
-                if (hp.semisup == 'eval' and len(batches) == 1) or hp.semisup == 'transductive' or hp.semisup == 'all':
-                    tf.logging.info("Eval data as unlabeled training data for target task")
+                if (hp.semisup == 'eval' and len(
+                    batches) == 1) or hp.semisup == 'transductive' or hp.semisup == 'all':
+                    tf.logging.info(
+                        "Eval data as unlabeled training data for target task")
 
                     # if hp.TEST == 'yes':
                     #   user_choice = input("TRAINING ON TEST. Are you sure? (y/N):\n")
@@ -460,7 +465,8 @@ def run(target,
                     corpora.append(corpus)
 
                 if hp.semisup == 'dev-only' or hp.semisup == 'all':
-                    tf.logging.info("Development data as unlabeled training data for target task")
+                    tf.logging.info(
+                        "Development data as unlabeled training data for target task")
 
                     # Unlabeled validation corpus
                     assert hp.TEST == 'yes'  # only in addition to test corpus
@@ -468,7 +474,8 @@ def run(target,
                                            model.EVAL,
                                            num_epochs=None,
                                            shuffle=True,
-                                           TEST_MODE=False,  # EVAL + False = dev
+                                           TEST_MODE=False,
+                                           # EVAL + False = dev
                                            batch_size=batch_size_per_corpus,
                                            num_input_seq=hp.num_input_seq)
 
@@ -494,18 +501,21 @@ def run(target,
                 tf.logging.info("%d: %s" % (variable_parameters, variable))
                 total_parameters += variable_parameters
             num_byte = total_parameters * 4
-            tf.logging.info("Model size: %d Mb (%d parameters)", num_byte / 1000000, total_parameters)
+            tf.logging.info("Model size: %d Mb (%d parameters)",
+                            num_byte / 1000000, total_parameters)
 
         tf.logging.info("Creating MonitoredTrainingSession for training.")
         tf.logging.info("Saving checkpoints every %d seconds." % save_secs)
         # tf.logging.info("Saving checkpoints every %d steps." % save_steps)
         if hp.device_type == 'CPU':
-            config = tf.ConfigProto(inter_op_parallelism_threads=4, intra_op_parallelism_threads=4)
+            config = tf.ConfigProto(inter_op_parallelism_threads=4,
+                                    intra_op_parallelism_threads=4)
             # config = None
         elif hp.device_type == 'GPU':
             config = None
         else:
-            raise ValueError("Unexpected device type: {}".format(hp.device_type))
+            raise ValueError(
+                "Unexpected device type: {}".format(hp.device_type))
         with tf.train.MonitoredTrainingSession(config=config,
                                                master=target,
                                                is_chief=is_chief,
@@ -531,7 +541,7 @@ def dispatch(hp, *args, **kwargs):
     environment variable is available when running using gcloud either
     locally or on cloud. It has all the information required to create a
     ClusterSpec which is important for running distributed code.
-  
+
     """
 
     tf_config = os.environ.get('TF_CONFIG')
@@ -578,7 +588,8 @@ def dispatch(hp, *args, **kwargs):
 
 if __name__ == "__main__":
     # Retain a reserved GPU
-    config = tf.ConfigProto(inter_op_parallelism_threads=1, intra_op_parallelism_threads=1)
+    config = tf.ConfigProto(inter_op_parallelism_threads=1,
+                            intra_op_parallelism_threads=1)
     # config = None
     sess = tf.Session(config=config)
     dummy = tf.constant(1.0)
@@ -753,7 +764,8 @@ if __name__ == "__main__":
     del args.hparams
 
     if args.hparams_file:
-        tf.logging.info('Updating hyper-parameters from: %s.' % args.hparams_file)
+        tf.logging.info(
+            'Updating hyper-parameters from: %s.' % args.hparams_file)
         hp.read_json(args.hparams_file)
     del args.hparams_file
 

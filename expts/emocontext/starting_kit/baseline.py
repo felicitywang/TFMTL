@@ -1,16 +1,17 @@
 # Please use python 3.5 or above
-import numpy as np
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
-from keras.models import Sequential
-from keras.layers import Dense, Embedding, LSTM
-from keras import optimizers
-from keras.models import load_model
-import json, argparse, os
-import re
+import argparse
 import io
-import sys
+import json
+import os
+import re
+
+import numpy as np
+from keras import optimizers
+from keras.layers import Dense, Embedding, LSTM
+from keras.models import Sequential
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from keras.utils import to_categorical
 
 # Path to training and testing data file. This data can be downloaded from a link, details of which will be provided.
 trainDataPath = ""
@@ -22,7 +23,7 @@ gloveDir = ""
 
 NUM_FOLDS = None  # Value of K in K-fold Cross Validation
 NUM_CLASSES = None  # Number of classes - Happy, Sad, Angry, Others
-MAX_NB_WORDS = None  # To set the upper limit on the number of tokens extracted using keras.preprocessing.text.Tokenizer 
+MAX_NB_WORDS = None  # To set the upper limit on the number of tokens extracted using keras.preprocessing.text.Tokenizer
 MAX_SEQUENCE_LENGTH = None  # All sentences having lesser number of words than this will be padded
 EMBEDDING_DIM = None  # The dimension of the word embeddings
 BATCH_SIZE = None  # The batch size to be chosen for training the model.
@@ -96,7 +97,7 @@ def getMetrics(predictions, ground):
         accuracy : Average accuracy
         microPrecision : Precision calculated on a micro level. Ref - https://datascience.stackexchange.com/questions/15989/micro-average-vs-macro-average-performance-in-a-multiclass-classification-settin/16001
         microRecall : Recall calculated on a micro level
-        microF1 : Harmonic mean of microPrecision and microRecall. Higher value implies better classification  
+        microF1 : Harmonic mean of microPrecision and microRecall. Higher value implies better classification
     """
     # [0.1, 0.3 , 0.2, 0.1] -> [0, 1, 0, 0]
     discretePredictions = to_categorical(predictions.argmax(axis=1))
@@ -118,15 +119,19 @@ def getMetrics(predictions, ground):
         macroPrecision += precision
         recall = truePositives[c] / (truePositives[c] + falseNegatives[c])
         macroRecall += recall
-        f1 = (2 * recall * precision) / (precision + recall) if (precision + recall) > 0 else 0
-        print("Class %s : Precision : %.3f, Recall : %.3f, F1 : %.3f" % (label2emotion[c], precision, recall, f1))
+        f1 = (2 * recall * precision) / (precision + recall) if (
+                                                                        precision + recall) > 0 else 0
+        print("Class %s : Precision : %.3f, Recall : %.3f, F1 : %.3f" % (
+        label2emotion[c], precision, recall, f1))
 
     macroPrecision /= 3
     macroRecall /= 3
-    macroF1 = (2 * macroRecall * macroPrecision) / (macroPrecision + macroRecall) if (
-                                                                                             macroPrecision + macroRecall) > 0 else 0
-    print("Ignoring the Others class, Macro Precision : %.4f, Macro Recall : %.4f, Macro F1 : %.4f" % (
-    macroPrecision, macroRecall, macroF1))
+    macroF1 = (2 * macroRecall * macroPrecision) / (
+            macroPrecision + macroRecall) if (
+                                                 macroPrecision + macroRecall) > 0 else 0
+    print(
+        "Ignoring the Others class, Macro Precision : %.4f, Macro Recall : %.4f, Macro F1 : %.4f" % (
+            macroPrecision, macroRecall, macroF1))
 
     # ------------- Micro level calculation ---------------
     truePositives = truePositives[1:].sum()
@@ -134,21 +139,24 @@ def getMetrics(predictions, ground):
     falseNegatives = falseNegatives[1:].sum()
 
     print(
-        "Ignoring the Others class, Micro TP : %d, FP : %d, FN : %d" % (truePositives, falsePositives, falseNegatives))
+        "Ignoring the Others class, Micro TP : %d, FP : %d, FN : %d" % (
+        truePositives, falsePositives, falseNegatives))
 
     microPrecision = truePositives / (truePositives + falsePositives)
     microRecall = truePositives / (truePositives + falseNegatives)
 
-    microF1 = (2 * microRecall * microPrecision) / (microPrecision + microRecall) if (
-                                                                                             microPrecision + microRecall) > 0 else 0
+    microF1 = (2 * microRecall * microPrecision) / (
+            microPrecision + microRecall) if (
+                                                 microPrecision + microRecall) > 0 else 0
     # -----------------------------------------------------
 
     predictions = predictions.argmax(axis=1)
     ground = ground.argmax(axis=1)
     accuracy = np.mean(predictions == ground)
 
-    print("Accuracy : %.4f, Micro Precision : %.4f, Micro Recall : %.4f, Micro F1 : %.4f" % (
-    accuracy, microPrecision, microRecall, microF1))
+    print(
+        "Accuracy : %.4f, Micro Precision : %.4f, Micro Recall : %.4f, Micro F1 : %.4f" % (
+            accuracy, microPrecision, microRecall, microF1))
     return accuracy, microPrecision, microRecall, microF1
 
 
@@ -188,7 +196,8 @@ def getEmbeddingMatrix(wordIndex):
     """
     embeddingsIndex = {}
     # Load the embedding vectors from ther GloVe file
-    with io.open(os.path.join(gloveDir, 'glove.6B.100d.txt'), encoding="utf8") as f:
+    with io.open(os.path.join(gloveDir, 'glove.6B.100d.txt'),
+                 encoding="utf8") as f:
         for line in f:
             values = line.split()
             word = values[0]
@@ -197,7 +206,7 @@ def getEmbeddingMatrix(wordIndex):
 
     print('Found %s word vectors.' % len(embeddingsIndex))
 
-    # Minimum word index of any word is 1. 
+    # Minimum word index of any word is 1.
     embeddingMatrix = np.zeros((len(wordIndex) + 1, EMBEDDING_DIM))
     for word, i in wordIndex.items():
         embeddingVector = embeddingsIndex.get(word)
@@ -261,8 +270,9 @@ def main():
     NUM_EPOCHS = config["num_epochs"]
 
     print("Processing training data...")
-    trainIndices, trainTexts, labels = preprocessData(trainDataPath, mode="train")
-    # Write normalised text to file to check if normalisation works. Disabled now. Uncomment following line to enable   
+    trainIndices, trainTexts, labels = preprocessData(trainDataPath,
+                                                      mode="train")
+    # Write normalised text to file to check if normalisation works. Disabled now. Uncomment following line to enable
     # writeNormalisedData(trainDataPath, trainTexts)
     print("Processing test data...")
     testIndices, testTexts = preprocessData(testDataPath, mode="test")
@@ -315,25 +325,30 @@ def main():
                   epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
 
         predictions = model.predict(xVal, batch_size=BATCH_SIZE)
-        accuracy, microPrecision, microRecall, microF1 = getMetrics(predictions, yVal)
+        accuracy, microPrecision, microRecall, microF1 = getMetrics(predictions,
+                                                                    yVal)
         metrics["accuracy"].append(accuracy)
         metrics["microPrecision"].append(microPrecision)
         metrics["microRecall"].append(microRecall)
         metrics["microF1"].append(microF1)
 
     print("\n============= Metrics =================")
-    print("Average Cross-Validation Accuracy : %.4f" % (sum(metrics["accuracy"]) / len(metrics["accuracy"])))
+    print("Average Cross-Validation Accuracy : %.4f" % (
+            sum(metrics["accuracy"]) / len(metrics["accuracy"])))
     print("Average Cross-Validation Micro Precision : %.4f" % (
-            sum(metrics["microPrecision"]) / len(metrics["microPrecision"])))
-    print("Average Cross-Validation Micro Recall : %.4f" % (sum(metrics["microRecall"]) / len(metrics["microRecall"])))
-    print("Average Cross-Validation Micro F1 : %.4f" % (sum(metrics["microF1"]) / len(metrics["microF1"])))
+        sum(metrics["microPrecision"]) / len(metrics["microPrecision"])))
+    print("Average Cross-Validation Micro Recall : %.4f" % (
+            sum(metrics["microRecall"]) / len(metrics["microRecall"])))
+    print("Average Cross-Validation Micro F1 : %.4f" % (
+            sum(metrics["microF1"]) / len(metrics["microF1"])))
 
     print("\n======================================")
 
     print("Retraining model on entire data to create solution file")
     model = buildModel(embeddingMatrix)
     model.fit(data, labels, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
-    model.save('EP%d_LR%de-5_LDim%d_BS%d.h5' % (NUM_EPOCHS, int(LEARNING_RATE * (10 ** 5)), LSTM_DIM, BATCH_SIZE))
+    model.save('EP%d_LR%de-5_LDim%d_BS%d.h5' % (
+    NUM_EPOCHS, int(LEARNING_RATE * (10 ** 5)), LSTM_DIM, BATCH_SIZE))
     # model = load_model('EP%d_LR%de-5_LDim%d_BS%d.h5'%(NUM_EPOCHS, int(LEARNING_RATE*(10**5)), LSTM_DIM, BATCH_SIZE))
 
     print("Creating solution file...")

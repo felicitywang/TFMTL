@@ -28,7 +28,7 @@ def _conv_and_pool(inputs,
                    reducer=reduce_max_over_time):
     """Processes inputs using 1D convolutions of size [2, max_width] on
     the input followed by temporal pooling.
-  
+
     Inputs
     ------
       inputs: batch of size [batch_size, batch_Len, embed_size]
@@ -37,7 +37,7 @@ def _conv_and_pool(inputs,
       max_width: maximum filter width
       activation_fn: non-linearity to apply after convolutions. Can be None.
       reducer: pooling operation to apply to each convolved output
-  
+
     Outputs
     -------
       If K different width filters are applied, the output is a Tensor of size
@@ -96,8 +96,9 @@ def cnn_extractor(inputs,
                                         axis=0)  # get length of longest seq_n in batch)
                 max_len = tf.reshape(max_len, [1])
                 max_len = tf.cast(max_len, dtype=tf.int32)
-                max_len = tf.concat([tf.constant([1]), max_len, tf.constant([1])],
-                                    axis=0)  # [1, max_len, 1]
+                max_len = tf.concat(
+                    [tf.constant([1]), max_len, tf.constant([1])],
+                    axis=0)  # [1, max_len, 1]
 
                 p = tf.tile(p, max_len)  # tile over time dimension
 

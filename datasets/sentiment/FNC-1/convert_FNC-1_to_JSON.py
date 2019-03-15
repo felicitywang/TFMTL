@@ -5,10 +5,9 @@
 import csv
 import gzip
 import json
+import math
 import os
 import sys
-
-import math
 from collections import Counter
 from random import shuffle
 
@@ -156,19 +155,19 @@ class FNCData:
 
 def split_seen(data, rand=False, prop_dev=0.2, rnd_sd=1489215):
     """
-  
+
     Split data into separate sets with overlapping headlines
-  
+
     Args:
         data: FNCData object
         rand: bool, True: random split and False: use seed for official baseline split
         prop_dev: float, proportion of data for dev set
         rnd_sd: int, random seed to use for split
-  
+
     Returns:
         train: list, of dict per instance
         dev: list, of dict per instance
-  
+
     """
 
     # Initialise
@@ -196,19 +195,19 @@ def split_seen(data, rand=False, prop_dev=0.2, rnd_sd=1489215):
 
 def split_unseen(data, rand=False, prop_dev=0.2, rnd_sd=1489215):
     """
-  
+
     Split data into completely separate sets (i.e. non-overlap of headlines and bodies)
-  
+
     Args:
         data: FNCData object
         rand: bool, True: random split and False: constant split
         prop_dev: float, target proportion of data for dev set
         rnd_sd: int, random seed to use for split
-  
+
     Returns:
         train: list, of dict per instance
         dev: list, of dict per instance
-  
+
     """
 
     # Initialise
@@ -246,7 +245,8 @@ def split_unseen(data, rand=False, prop_dev=0.2, rnd_sd=1489215):
                     if not data.instances[i]['Stance'] in ['agree', 'disagree',
                                                            'discuss']:
                         continue
-                    if i != rand_ind and (stance['Headline'] in track_heads or stance[
+                    if i != rand_ind and (
+                        stance['Headline'] in track_heads or stance[
                         'Body ID'] in track_bodies):
                         track_heads[stance['Headline']] = 1
                         track_bodies[stance['Body ID']] = 1
@@ -254,7 +254,8 @@ def split_unseen(data, rand=False, prop_dev=0.2, rnd_sd=1489215):
                 post_len_bodies = len(track_bodies)
 
             for k, stance in enumerate(data.instances):
-                if k != rand_ind and (stance['Headline'] in track_heads or stance[
+                if k != rand_ind and (
+                    stance['Headline'] in track_heads or stance[
                     'Body ID'] in track_bodies) and (
                     stance['Stance'] in ['agree', 'disagree', 'discuss']):
                     dev_ind[k] = 1
@@ -284,7 +285,8 @@ def save_csv(data_split, filepath):
         writer.writeheader()
         for instance in data_split:
             writer.writerow(
-                {'Headline': instance["Headline"], 'Body ID': instance["Body ID"],
+                {'Headline': instance["Headline"],
+                 'Body ID': instance["Body ID"],
                  'Stance': instance["Stance"]})
 
 
@@ -301,8 +303,10 @@ if __name__ == '__main__':
         create_new_dev = False
 
     if stratify:
-        print("Stratify={}, {} examples per class, creating new dev set={}".format(stratify, examples_per_class,
-                                                                                   create_new_dev))
+        print(
+            "Stratify={}, {} examples per class, creating new dev set={}".format(
+                stratify, examples_per_class,
+                create_new_dev))
     else:
         print("Not stratifying the data")
 
@@ -314,7 +318,8 @@ if __name__ == '__main__':
     train, dev = split_unseen(data)
     save_csv(train, os.path.join(datafolder,
                                  "fakenewschallenge/trainsplit_stances.csv"))
-    save_csv(dev, os.path.join(datafolder, "fakenewschallenge/devsplit_stances.csv"))
+    save_csv(dev,
+             os.path.join(datafolder, "fakenewschallenge/devsplit_stances.csv"))
 
     data_train, data_dev, data_test = readFNCData(
         datafolder=datafolder,
@@ -324,7 +329,8 @@ if __name__ == '__main__':
 
     # get a stratified sample based on the training data: ensure 25% occurrence of each label
 
-    def stratify_split(data_train, data_dev, create_new_dev, examples_per_class):
+    def stratify_split(data_train, data_dev, create_new_dev,
+                       examples_per_class):
         if create_new_dev:
             data_dev = None
 
@@ -375,16 +381,20 @@ if __name__ == '__main__':
         for label in data_train_by_label.keys():
             if len(data_train_by_label[label]) >= examples_per_class:
                 # remove examples in over-represented classes
-                data_train_by_label[label] = data_train_by_label[label][:examples_per_class]
+                data_train_by_label[label] = data_train_by_label[label][
+                                             :examples_per_class]
             else:
                 # make m copies of examples with this label
-                m = int(math.ceil(examples_per_class / len(data_train_by_label[label])))
-                data_train_by_label[label] = (data_train_by_label[label] * m)[:examples_per_class]
+                m = int(math.ceil(
+                    examples_per_class / len(data_train_by_label[label])))
+                data_train_by_label[label] = (data_train_by_label[label] * m)[
+                                             :examples_per_class]
 
             if create_new_dev:
                 if len(data_dev_by_label[label]) >= examples_per_class:
                     # remove examples in over-represented classes
-                    data_dev_by_label[label] = data_dev_by_label[label][:examples_per_class]
+                    data_dev_by_label[label] = data_dev_by_label[label][
+                                               :examples_per_class]
                 else:
                     pass  # do not up-sample dev examples
 
@@ -417,7 +427,9 @@ if __name__ == '__main__':
 
 
     if stratify:
-        data_train, data_dev = stratify_split(data_train, data_dev, create_new_dev, examples_per_class)
+        data_train, data_dev = stratify_split(data_train, data_dev,
+                                              create_new_dev,
+                                              examples_per_class)
 
     index = 0
     train_list, index, train_index = make_example_list(data_train, index)

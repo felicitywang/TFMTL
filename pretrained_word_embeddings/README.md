@@ -11,10 +11,7 @@
 - `downlaod_{glove, word2vec, word2vec_slim, fasttext}.sh`: scripts to download and word embeddings files
 - `{glove, word2vec, word2vec_slim, fasttext}/`: folders to put the downloaded files
 - `../mtl/`
-- `../expts/{glove, word2vec, word2vec_slim, fasttext}/`: example training/testing scripts
+- `../expts/example/`: example training/testing scripts
 - `../mtl/embedders/pretrained.py`: code to create embedding layer with the pre-trained word embeddings files
 - `../mtl/util/load_embeds.py`: code to load the embedding files
 - `../mtl/util/constants.py`: contains the list of all supported pretrained embedding file names (`VOCAB_NAMES`)
-
-# TODO
-Table of vocab size and dimensions of each embeddings

@@ -18,8 +18,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import mtl.util.registry as registry
 from six.moves import xrange
+
+import mtl.util.registry as registry
 
 
 @registry.register_hparams

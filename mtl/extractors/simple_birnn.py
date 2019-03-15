@@ -52,8 +52,10 @@ def simple_birnn(inputs, length, hp=None, is_training=True):
     assert len(inputs.get_shape().as_list()) == 3
     batch_size = tf.shape(inputs)[0]
     keep_prob = hp.keep_prob if is_training else 1.0
-    cell_fw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="fw")
-    cell_bw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="bw")
+    cell_fw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob,
+                               scope="fw")
+    cell_bw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob,
+                               scope="bw")
     outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
         cell_fw,
         cell_bw,

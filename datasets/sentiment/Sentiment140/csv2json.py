@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-import sys
-import getopt
 import csv
+import getopt
 import json
+import sys
 
 
 # Get Command Line Arguments

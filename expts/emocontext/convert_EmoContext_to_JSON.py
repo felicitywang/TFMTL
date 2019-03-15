@@ -1,6 +1,7 @@
-import pandas as pd
-import json
 import gzip
+import json
+
+import pandas as pd
 
 
 def main():

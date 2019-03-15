@@ -20,15 +20,13 @@ from __future__ import print_function
 from collections import OrderedDict
 
 import tensorflow as tf
-
 from tensorflow.contrib.training import HParams
 
 from mtl.util.common import MLP_gaussian_posterior
 from mtl.util.common import MLP_unnormalized_log_categorical
-
-from mtl.vae.common import log_normal
 from mtl.vae.common import gaussian_sample
 from mtl.vae.common import get_tau
+from mtl.vae.common import log_normal
 
 logging = tf.logging
 tfd = tf.contrib.distributions
@@ -191,8 +189,9 @@ class SimpleMultiLabelVAE(object):
         batch_size = tf.shape(features)[0]
         self._latent_preds[task] = {}
         for label_key, label_val in labels.items():
-            py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
-                                                       batch_size)
+            py_logits[label_key] = tile_over_batch_dim(
+                self.py_logits(label_key),
+                batch_size)
             if label_val is None:
                 qy_logits[label_key] = self.qy_logits(label_key, features)
                 preds = tf.argmax(tf.nn.softmax(qy_logits[label_key]), axis=1)
@@ -202,13 +201,15 @@ class SimpleMultiLabelVAE(object):
                 assert task not in self._obs_label
                 self._obs_label[task] = label_val
                 qy_logits[label_key] = None
-                ys[label_key] = tf.one_hot(label_val, self._class_sizes[label_key])
+                ys[label_key] = tf.one_hot(label_val,
+                                           self._class_sizes[label_key])
         ys_list = ys.values()
         zm, zv = self.qz_mean_var(features, ys_list)
         z = gaussian_sample(zm, zv)
         zm_prior, zv_prior = self.pz_mean_var(ys_list)
         markov_blanket = tf.concat([z], axis=1)
-        self._task_nll_x[task] = nll_x = self.decode(batch, markov_blanket, task)
+        self._task_nll_x[task] = nll_x = self.decode(batch, markov_blanket,
+                                                     task)
         return generative_loss(nll_x, labels, qy_logits, py_logits, z, zm, zv,
                                zm_prior, zv_prior)
 

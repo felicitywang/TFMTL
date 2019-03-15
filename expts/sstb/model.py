@@ -17,16 +17,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import xrange
-
-import numpy as np
 import tensorflow as tf
 
+from mtl.decoders import decode
+from mtl.extractors import encode
 from mtl.optim import AdafactorOptimizer
 from mtl.util.pipeline import Pipeline
-import mtl.util.registry
-from mtl.extractors import encode
-from mtl.decoders import decode
 
 VOCAB_SIZE = 8242
 NUM_LABELS = 5
@@ -104,7 +100,8 @@ def model_fn(mode, batch, hp):
     initializer = tf.truncated_normal_initializer(mean=0.0,
                                                   stddev=hp.embed_init_stddev)
     with tf.variable_scope("input_embedding", reuse=tf.AUTO_REUSE):
-        embed_matrix = tf.get_variable("embed_matrix", [VOCAB_SIZE, hp.embed_dim],
+        embed_matrix = tf.get_variable("embed_matrix",
+                                       [VOCAB_SIZE, hp.embed_dim],
                                        regularizer=regularizer,
                                        initializer=initializer)
 

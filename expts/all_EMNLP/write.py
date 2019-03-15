@@ -73,8 +73,9 @@ if __name__ == '__main__':
 
         # single dataset
         for args_file in ARGS_FILES:
-            folder_st = os.path.join('data/tf/', target_task + '-st', ARGS_FILES[
-                args_file], target_task)
+            folder_st = os.path.join('data/tf/', target_task + '-st',
+                                     ARGS_FILES[
+                                         args_file], target_task)
             if Path(folder_st).exists():
                 print("File %s already exists! Skipping..." % folder_st)
                 continue
@@ -87,16 +88,19 @@ if __name__ == '__main__':
 
         # multiple datasets
         for args_file in ARGS_FILES:
-            folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
-                args_file])
+            folder_mt = os.path.join('data/tf/', target_task + '-mt',
+                                     ARGS_FILES[
+                                         args_file])
             if Path(os.path.join(folder_mt, )).exists():
                 print("File %s already exists! Skipping..." % folder_mt)
                 continue
             print("File %s doesn't exist. Creating..." % folder_mt)
-            folder_mt = os.path.join('data/tf/', target_task + '-mt', ARGS_FILES[
-                args_file])
+            folder_mt = os.path.join('data/tf/', target_task + '-mt',
+                                     ARGS_FILES[
+                                         args_file])
             folder_mt_old = write_tfrecords_merged.main(
-                ['', target_task] + RUDER_AUX_TASK_DICT[target_task] + [args_file])
+                ['', target_task] + RUDER_AUX_TASK_DICT[target_task] + [
+                    args_file])
             shutil.move(folder_mt_old, folder_mt)
             os.symlink(os.path.abspath(folder_mt),
                        os.path.abspath(folder_mt_old))

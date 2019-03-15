@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow.contrib.seq2seq import sequence_loss
+
 import mtl.util.registry as registry
 
 
@@ -38,7 +38,8 @@ def encode(inputs, lengths, is_training,
         initializer = tf.truncated_normal_initializer(mean=0.0,
                                                       stddev=initializer_stddev)
         with tf.variable_scope("input_embedding", reuse=tf.AUTO_REUSE):
-            embed_matrix = tf.get_variable("embed_matrix", [vocab_size, embed_dim],
+            embed_matrix = tf.get_variable("embed_matrix",
+                                           [vocab_size, embed_dim],
                                            regularizer=regularizer,
                                            initializer=initializer)
         x = tf.nn.embedding_lookup(embed_matrix, inputs)

@@ -20,6 +20,7 @@ import codecs
 import gzip
 import json
 import sys
+
 import conllu
 
 

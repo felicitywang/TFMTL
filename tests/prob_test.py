@@ -69,7 +69,8 @@ def slow_conditional(ln_joint_prob, target_dim, cond_dim):
                 reduce_axis[0] = i
                 reduce_axis[cond_dim + 1] = j
                 reduce_axis[target_dim + 1] = k
-                ret[i][j][k] = np.sum(joint_prob[tuple(reduce_axis)]) / p_cond[i][j]
+                ret[i][j][k] = np.sum(joint_prob[tuple(reduce_axis)]) / \
+                               p_cond[i][j]
             assert np.sum(ret[i][j]) < 1.0 + 1.0e3
             assert np.sum(ret[i][j]) > 1.0 - 1.0e3
     return ret
@@ -171,9 +172,11 @@ class ProbTests(tf.test.TestCase):
                 self.assertAlmostEqual(np.sum(px_val[i]), 1.0, places=3)
                 self.assertAlmostEqual(np.sum(py_val[i]), 1.0, places=3)
                 for j in xrange(dims[0]):
-                    self.assertAlmostEqual(true_px[i][j], px_val[i][j], places=3)
+                    self.assertAlmostEqual(true_px[i][j], px_val[i][j],
+                                           places=3)
                 for j in xrange(dims[1]):
-                    self.assertAlmostEqual(true_py[i][j], py_val[i][j], places=3)
+                    self.assertAlmostEqual(true_py[i][j], py_val[i][j],
+                                           places=3)
 
     def test_marginal_log_prob_3d(self):
         batch_size = 2
@@ -185,7 +188,8 @@ class ProbTests(tf.test.TestCase):
         py = tf.exp(marginal_log_prob(ln_joint, 1))
         pz = tf.exp(marginal_log_prob(ln_joint, 2))
         with self.test_session() as sess:
-            ln_joint_val, px_val, py_val, pz_val = sess.run([ln_joint, px, py, pz])
+            ln_joint_val, px_val, py_val, pz_val = sess.run(
+                [ln_joint, px, py, pz])
             self.assertEqual(len(ln_joint_val.shape), 4)
             self.assertEqual(ln_joint_val.shape[0], batch_size)
             self.assertEqual(ln_joint_val.shape[1], dims[0])
@@ -205,11 +209,14 @@ class ProbTests(tf.test.TestCase):
                 self.assertAlmostEqual(np.sum(py_val[i]), 1.0, places=3)
                 self.assertAlmostEqual(np.sum(pz_val[i]), 1.0, places=3)
                 for j in xrange(dims[0]):
-                    self.assertAlmostEqual(true_px[i][j], px_val[i][j], places=3)
+                    self.assertAlmostEqual(true_px[i][j], px_val[i][j],
+                                           places=3)
                 for j in xrange(dims[1]):
-                    self.assertAlmostEqual(true_py[i][j], py_val[i][j], places=3)
+                    self.assertAlmostEqual(true_py[i][j], py_val[i][j],
+                                           places=3)
                 for j in xrange(dims[2]):
-                    self.assertAlmostEqual(true_pz[i][j], pz_val[i][j], places=3)
+                    self.assertAlmostEqual(true_pz[i][j], pz_val[i][j],
+                                           places=3)
 
     def test_conditional_log_prob_2d(self):
         batch_size = 2
@@ -236,13 +243,15 @@ class ProbTests(tf.test.TestCase):
             for i in xrange(batch_size):
                 for j in xrange(dims[1]):
                     for k in xrange(dims[0]):
-                        self.assertAlmostEqual(true_px_y[i][j][k], px_y_val[i][j][k],
+                        self.assertAlmostEqual(true_px_y[i][j][k],
+                                               px_y_val[i][j][k],
                                                places=3)
 
             for i in xrange(batch_size):
                 for j in xrange(dims[0]):
                     for k in xrange(dims[1]):
-                        self.assertAlmostEqual(true_py_x[i][j][k], py_x_val[i][j][k],
+                        self.assertAlmostEqual(true_py_x[i][j][k],
+                                               py_x_val[i][j][k],
                                                places=3)
 
     def test_conditional_log_prob_3d(self):
@@ -286,25 +295,29 @@ class ProbTests(tf.test.TestCase):
             for i in xrange(batch_size):
                 for j in xrange(dims[1]):
                     for k in xrange(dims[0]):
-                        self.assertAlmostEqual(true_px_y[i][j][k], px_y_val[i][j][k],
+                        self.assertAlmostEqual(true_px_y[i][j][k],
+                                               px_y_val[i][j][k],
                                                places=3)
 
             for i in xrange(batch_size):
                 for j in xrange(dims[0]):
                     for k in xrange(dims[1]):
-                        self.assertAlmostEqual(true_py_x[i][j][k], py_x_val[i][j][k],
+                        self.assertAlmostEqual(true_py_x[i][j][k],
+                                               py_x_val[i][j][k],
                                                places=3)
 
             for i in xrange(batch_size):
                 for j in xrange(dims[0]):
                     for k in xrange(dims[2]):
-                        self.assertAlmostEqual(true_pz_x[i][j][k], pz_x_val[i][j][k],
+                        self.assertAlmostEqual(true_pz_x[i][j][k],
+                                               pz_x_val[i][j][k],
                                                places=3)
 
             for i in xrange(batch_size):
                 for j in xrange(dims[2]):
                     for k in xrange(dims[1]):
-                        self.assertAlmostEqual(true_py_z[i][j][k], py_z_val[i][j][k],
+                        self.assertAlmostEqual(true_py_z[i][j][k],
+                                               py_z_val[i][j][k],
                                                places=3)
 
 

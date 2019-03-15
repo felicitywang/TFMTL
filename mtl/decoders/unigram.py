@@ -18,8 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow.contrib.training import HParams
 from tensorflow.contrib.seq2seq import sequence_loss
+from tensorflow.contrib.training import HParams
 
 
 def default_hparams():

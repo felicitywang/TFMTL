@@ -19,34 +19,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import argparse as ap
-from six.moves import xrange
-from time import time
+import os
 from collections import Counter
 from collections import defaultdict
 from itertools import product
+from time import time
+
 import numpy as np
 import tensorflow as tf
-
 from decoder_factory import build_decoders
-
-from mtl.tf_io import get_num_records
-from mtl.tf_io import get_empirical_label_prior
 from mtl.hparams import update_hparams_from_args
-from mtl.util.pipeline import Pipeline
+from six.moves import xrange
 
 from mtl.embedders.embed_sequence import embed_sequence
 from mtl.extractors.cnn import conv_and_pool
-
-from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
-from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
-
-from mtl.mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
-from mtl.mlvae.mlvae_model import MultiLabelVAE
-
-from mtl.mlvae.joint_mlvae_model import default_hparams as joint_mlvae_hparams
 from mtl.mlvae.joint_mlvae_model import JointMultiLabelVAE
+from mtl.mlvae.joint_mlvae_model import default_hparams as joint_mlvae_hparams
+from mtl.mlvae.mlvae_model import MultiLabelVAE
+from mtl.mlvae.mlvae_model import default_hparams as normal_mlvae_hparams
+from mtl.mlvae.simple_mlvae_model import SimpleMultiLabelVAE
+from mtl.mlvae.simple_mlvae_model import default_hparams as simple_mlvae_hparams
+from mtl.tf_io import get_num_records
+from mtl.util.pipeline import Pipeline
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -111,7 +106,8 @@ def parse_args():
     p.add_argument('--no-share-embed', action='store_false', dest='share-embed',
                    help='Do not share word embeddings between tasks')
     p.set_defaults(share_embed=True)
-    p.add_argument('--share-decoders', action='store_true', dest='share-decoder',
+    p.add_argument('--share-decoders', action='store_true',
+                   dest='share-decoder',
                    help='Share decoders between tasks')
     p.add_argument('--no-share-decoders', action='store_false',
                    dest='share-decoder',
@@ -324,7 +320,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 # Get performance metrics on each dataset
                 for dataset_name in model_info:
                     pred_op = model_info[dataset_name]['test_pred_op']
-                    eval_labels = model_info[dataset_name]['test_batch'][args.label_key]
+                    eval_labels = model_info[dataset_name]['test_batch'][
+                        args.label_key]
                     eval_iter = model_info[dataset_name]['test_iter']
                     metrics = compute_held_out_performance(sess, pred_op,
                                                            eval_labels,
@@ -336,7 +333,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
                 # Log performance(s)
                 str_ = '[epoch=%d/%d step=%d (%d s)] loss=%.2f' % (
-                    epoch + 1, args.num_train_epochs, np.asscalar(step), elapsed,
+                    epoch + 1, args.num_train_epochs, np.asscalar(step),
+                    elapsed,
                     train_loss)
                 str_ += ' SSTb_loss=%.2f IMDB_loss=%.2f' % (train_SSTb_loss,
                                                             train_IMDB_loss)
@@ -350,8 +348,10 @@ def train_model(model, dataset_info, steps_per_epoch, args):
 
                 tot_eval_acc = 0.0
                 for dataset_name in model_info:
-                    num_eval_total = model_info[dataset_name]['test_metrics']['ntotal']
-                    eval_acc = model_info[dataset_name]['test_metrics']['accuracy']
+                    num_eval_total = model_info[dataset_name]['test_metrics'][
+                        'ntotal']
+                    eval_acc = model_info[dataset_name]['test_metrics'][
+                        'accuracy']
                     tot_eval_acc += eval_acc
                     str_ += '\n(%s) num_eval_total=%d eval_acc=%f' % (
                         dataset_name, num_eval_total, eval_acc)
@@ -360,7 +360,8 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                     for event, count in events[dataset_name].most_common(5):
                         str_ += '\n%s: %d' % (event, count)
 
-                str_ += '\nmean_eval_acc=%f' % (tot_eval_acc / float(len(model_info)))
+                str_ += '\nmean_eval_acc=%f' % (
+                        tot_eval_acc / float(len(model_info)))
                 logging.info(str_)
             else:
                 raise "final evaluation mode not implemented"
@@ -572,7 +573,8 @@ def fill_info_dicts(dataset_info, model, args):
             logging.info("[%s] WARNING: Using test data for evaluation.",
                          dataset_name)
         else:
-            logging.info("[%s] Using validation data for evaluation.", dataset_name)
+            logging.info("[%s] Using validation data for evaluation.",
+                         dataset_name)
 
     # Return dataset_info dict and model_info dict
     return dataset_info, model_info

@@ -9,7 +9,8 @@ doc_domain_list = []
 next(doc_domain_file)  # skip the first line
 
 for line in doc_domain_file:
-    if (".wav" not in line) and ("\tD" in line):  # .txt files with non-empty domains
+    if (".wav" not in line) and (
+        "\tD" in line):  # .txt files with non-empty domains
         line = line.replace('\n', '')
         doc_domain = line.split("\t")
         labelD = doc_domain[1]

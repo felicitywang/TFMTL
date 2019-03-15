@@ -18,9 +18,6 @@
 # runs under DailyDialogue-Parse-master/ folder
 
 import json
-import re
-from os import listdir
-import pandas as pd
 
 text = open('dialogues_text.txt', 'r')
 act = open('dialogues_act.txt', 'r')

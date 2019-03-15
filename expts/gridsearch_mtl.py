@@ -7,8 +7,8 @@ import re
 import subprocess
 import sys
 import time
-
 from functools import reduce
+
 from tqdm import tqdm
 
 NUM_ARGS = 2
@@ -308,7 +308,8 @@ def run_single_experiment(meta_config,
     # Fill out any arguments that depend on other fields' values
     # res_dir = complete_path_name(meta_config.results_dir, exp_params_comb)
     jobs_dir = complete_path_name(meta_config.jobs_dir, exp_params_comb)
-    for field in ['checkpoint_dir', 'log_file', 'summaries_dir', 'encoder_config_file']:
+    for field in ['checkpoint_dir', 'log_file', 'summaries_dir',
+                  'encoder_config_file']:
         exp_params_comb[field] = complete_path_name(exp_params_comb[field],
                                                     exp_params_comb)
 
@@ -371,7 +372,8 @@ def consistent(encoders, exp_comb):
             # different embedding functions
             return False
 
-        embed_kwargs_names = set([enc['embed_kwargs_names'] for enc in encoders])
+        embed_kwargs_names = set(
+            [enc['embed_kwargs_names'] for enc in encoders])
         if len(embed_kwargs_names) != 1:
             # different kinds of embedder arguments
             return False
@@ -402,7 +404,8 @@ def consistent(encoders, exp_comb):
         all_extract_kwargs = list()
         for enc in encoders:
             extract_kwargs_names = enc['extract_kwargs_names'].split()
-            extract_kwargs = {e_k_n: enc[e_k_n] for e_k_n in extract_kwargs_names}
+            extract_kwargs = {e_k_n: enc[e_k_n] for e_k_n in
+                              extract_kwargs_names}
             all_extract_kwargs.append(extract_kwargs)
 
         if not all([d1 == d2

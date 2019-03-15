@@ -17,27 +17,24 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from operator import mul
-from operator import itemgetter
 from collections import OrderedDict
 from functools import reduce
+from operator import itemgetter
+from operator import mul
 
 import tensorflow as tf
-
 from tensorflow.contrib.training import HParams
 
 from mtl.layers import dense_layer
 from mtl.layers import mlp
-
-from mtl.vae.prob import enum_events
-from mtl.vae.prob import entropy
-from mtl.vae.prob import normalize_logits
-from mtl.vae.prob import marginal_log_prob
-from mtl.vae.prob import conditional_log_prob
-
-from mtl.vae.common import log_normal
 from mtl.vae.common import gaussian_sample
 from mtl.vae.common import get_tau
+from mtl.vae.common import log_normal
+from mtl.vae.prob import conditional_log_prob
+from mtl.vae.prob import entropy
+from mtl.vae.prob import enum_events
+from mtl.vae.prob import marginal_log_prob
+from mtl.vae.prob import normalize_logits
 
 logging = tf.logging
 tfd = tf.contrib.distributions
@@ -282,7 +279,8 @@ class JointMultiLabelVAE(object):
         with tf.name_scope('sample'):
             log_qy = tfd.ExpRelaxedOneHotCategorical(self._tau,
                                                      logits=logits,
-                                                     name='log_qy_{}'.format(name))
+                                                     name='log_qy_{}'.format(
+                                                         name))
             y = tf.exp(log_qy.sample())
             return y
 
@@ -328,8 +326,9 @@ class JointMultiLabelVAE(object):
         # Set up observed / latent variables
         obs_label = None
         for label_key, label_val in labels.items():
-            py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
-                                                       batch_size)
+            py_logits[label_key] = tile_over_batch_dim(
+                self.py_logits(label_key),
+                batch_size)
             if label_val is None:
                 target_axis = self.label_index(label_key)
                 qy_logits[label_key] = self.qy_given_x_logits(log_joint,
@@ -425,11 +424,13 @@ class JointMultiLabelVAE(object):
         # Accumulate predicted or observed labels
         self._latent_preds[task] = {}
         for label_key, label_val in labels.items():
-            py_logits[label_key] = tile_over_batch_dim(self.py_logits(label_key),
-                                                       batch_size)
+            py_logits[label_key] = tile_over_batch_dim(
+                self.py_logits(label_key),
+                batch_size)
             if label_val is None:
                 target_axis = self.label_index(label_key)
-                qy_logits[label_key] = self.qy_given_x_logits(log_joint, target_axis,
+                qy_logits[label_key] = self.qy_given_x_logits(log_joint,
+                                                              target_axis,
                                                               observed_axis,
                                                               cond_val=observed_label)
                 preds = tf.argmax(tf.nn.softmax(qy_logits[label_key]), axis=1)
@@ -440,7 +441,8 @@ class JointMultiLabelVAE(object):
                 assert label_key == task
                 self._obs_label[label_key] = label_val
                 qy_logits[label_key] = None
-                ys[label_key] = tf.one_hot(label_val, self.class_sizes[label_key])
+                ys[label_key] = tf.one_hot(label_val,
+                                           self.class_sizes[label_key])
 
         # p(z | ys) and q(z | x, ys)
         tf.logging.info('Labels:')
@@ -509,7 +511,8 @@ class JointMultiLabelVAE(object):
                                                      features,
                                                      log_joint, batch)
         else:
-            raise ValueError("unrecognized inference mode: %s" % self.hp.y_inference)
+            raise ValueError(
+                "unrecognized inference mode: %s" % self.hp.y_inference)
 
         d_loss = self.get_task_discriminative_loss(task_name, labels,
                                                    log_joint)

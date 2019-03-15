@@ -69,7 +69,7 @@ class Dataset:
                  predict_tf_path='predict.tf',
                  **kwargs):
 
-        """TODO Args:
+        """
 
         :param json_dir: where data.json.gz and index.json.gz are
                 located, and vocabulary/TFRecords built from the single
@@ -248,7 +248,8 @@ class Dataset:
         if self._args['write_tfidf']:
             # TODO: determine if tfidf should be calculated based on each
             # sequence kind or on all sequences regardless of kind
-            raise NotImplementedError("tfidf (%s) not currently supported" % tfidf)
+            raise NotImplementedError(
+                "tfidf (%s) not currently supported" % tfidf)
 
         self.write_tfrecord()
 
@@ -259,12 +260,12 @@ class Dataset:
         self.save_vocab()
 
     def get_max_doc_len(self):
-        # TODO remove ?
         # only compute from training data
         if self._args['max_document_length'] == -1:
             if self._args['padding']:
-                print('Maximum document length not given, computing from training '
-                      'data..')
+                print(
+                    'Maximum document length not given, computing from training '
+                    'data..')
                 for text_field_name in tqdm(self._args['text_field_names']):
                     tmp_max = max(len(self._sequences[text_field_name][i])
                                   for i in self._train_index)
@@ -337,7 +338,8 @@ class Dataset:
             self._args['unlabeled_path'] = os.path.join(self._tfrecord_dir,
                                                         'unlabeled.tf')
             self.write_examples(
-                self._args['unlabeled_path'], self._unlabeled_index, labeled=False)
+                self._args['unlabeled_path'], self._unlabeled_index,
+                labeled=False)
 
     def get_label(self):
         print('Generating label list...')
@@ -349,7 +351,8 @@ class Dataset:
             raise TypeError('Label type other than "int" and "float" is not '
                             'implemetned!')
         self._label_list = [transfer(item[self._args['label_field_name']])
-                            if self._args['label_field_name'] in item else None for
+                            if self._args['label_field_name'] in item else None
+                            for
                             item in tqdm(self._data)]
         # TODO: is it possible that the label list read doesn't cover all the
         # labels?
@@ -419,7 +422,8 @@ class Dataset:
 
                     if text_field_name not in self._weights:
                         self._weights[text_field_name] = []
-                    weights = [float(weight) for weight in item['weight'].split()]
+                    weights = [float(weight) for weight in
+                               item['weight'].split()]
                     # TODO un-hardcode
                     # add 1.0 for BOS and EOS
                     weights = [1.0] + weights + [1.0]
@@ -429,7 +433,9 @@ class Dataset:
                     if 'weight' in item:
                         text, self._weights[text_field_name][index] = \
                             remove_stopwords(text, stopwords='nltk',
-                                             weights=self._weights[text_field_name][index])
+                                             weights=
+                                             self._weights[text_field_name][
+                                                 index])
                     else:
                         text = remove_stopwords(text, stopwords='nltk')
 
@@ -453,7 +459,8 @@ class Dataset:
             assert len(self._sequences[text_field_name]) == self._num_examples, \
                 str(self._num_examples) + ' ' + str(
                     len(self._sequences[text_field_name]))
-            assert len(self._sequence_lengths[text_field_name]) == self._num_examples
+            assert len(
+                self._sequence_lengths[text_field_name]) == self._num_examples
 
     def get_tokenizer(self):
         if self._args['tokenizer_'] == "tweet_tokenizer":
@@ -461,13 +468,15 @@ class Dataset:
         elif self._args['tokenizer_'] == "tweet_tokenizer_keep_handles":
             self._tokenizer = tweet_tokenizer_keep_handles.tokenize
         elif self._args['tokenizer_'] == "ruder_tokenizer":
-            self._tokenizer = functools.partial(ruder_tokenizer, preserve_case=False)
+            self._tokenizer = functools.partial(ruder_tokenizer,
+                                                preserve_case=False)
         elif self._args['tokenizer_'] == "split_tokenizer":
             self._tokenizer = functools.partial(split_tokenizer)
         elif self._args['tokenizer_'] == "lower_tokenizer":
             self._tokenizer = functools.partial(lower_tokenizer)
         else:
-            raise ValueError("unrecognized tokenizer: %s" % self._args['tokenizer_'])
+            raise ValueError(
+                "unrecognized tokenizer: %s" % self._args['tokenizer_'])
 
     def get_stemmer(self):
         if self._args['stemmer'] == 'porter_stemmer':
@@ -518,7 +527,6 @@ class Dataset:
         make_dir(self._save_vocab_dir)
         with codecs.open(os.path.join(self._save_vocab_dir, "vocab_v2i.json"),
                          mode='w', encoding='utf-8')as file:
-            # TODO ???
             if self._categorical_vocab:
                 json.dump(self._categorical_vocab.mapping, file,
                           ensure_ascii=False, indent=4)
@@ -531,7 +539,8 @@ class Dataset:
         self._vocab_i2v_dict = dict()
         if self._categorical_vocab and self._categorical_vocab.reverse_mapping:
             for i in range(len(self._categorical_vocab.reverse_mapping)):
-                self._vocab_i2v_dict[i] = self._categorical_vocab.reverse_mapping[i]
+                self._vocab_i2v_dict[i] = \
+                self._categorical_vocab.reverse_mapping[i]
         elif self._vocab_v2i_dict:
             for k, v in self._vocab_v2i_dict.items():
                 self._vocab_i2v_dict[int(v)] = k
@@ -540,8 +549,6 @@ class Dataset:
             json.dump(self._vocab_i2v_dict, file, ensure_ascii=False, indent=4)
 
     def save_vocab(self):
-
-        # TODO vocab_dir  vs save_vocab_dir
 
         # save the built vocab to the disk for future use
         if not self._save_vocab_dir:
@@ -561,10 +568,12 @@ class Dataset:
                          for i in self._train_index]
         if self._args['vocab_all']:
             training_docs += [self._sequences[text_field_name][i]
-                              for text_field_name in self._args['text_field_names']
+                              for text_field_name in
+                              self._args['text_field_names']
                               for i in self._valid_index]
             training_docs += [self._sequences[text_field_name][i]
-                              for text_field_name in self._args['text_field_names']
+                              for text_field_name in
+                              self._args['text_field_names']
                               for i in self._test_index]
         return training_docs
 
@@ -653,7 +662,6 @@ class Dataset:
                                    max_vocab_size=self._args['max_vocab_size'])
             categorical_vocab.freeze()
             self._categorical_vocab = categorical_vocab
-            # TODO bug ?
             self.init_vocab_processor()
 
 
@@ -663,8 +671,9 @@ class Dataset:
             if self._load_vocab_name == 'vocab_v2i.json':
                 print('Use self-generated vocab mapping.')
                 # this vocabulary mapping is generated solely on the training data
-                with codecs.open(os.path.join(self._vocab_dir, 'vocab_v2i.json'),
-                                 mode='r', encoding='utf-8') as file:
+                with codecs.open(
+                    os.path.join(self._vocab_dir, 'vocab_v2i.json'),
+                    mode='r', encoding='utf-8') as file:
                     self._vocab_v2i_dict = json.load(file)
             else:
                 # use the pretrained word embeddings' dictionary
@@ -676,14 +685,14 @@ class Dataset:
                 if self._args['pretrained_only']:
                     # Using the pre-trained word embeddings' vocab only
                     # Converting everything else into OOV
-                    # TODO
-                    self._vocab_v2i_dict = load_pretrianed_vocab_dict(pretrained_path)
+                    self._vocab_v2i_dict = load_pretrianed_vocab_dict(
+                        pretrained_path)
                 else:
                     # Vocab must contain all training data's vocab
                     if self._args['expand_vocab']:
-                        print('Combine pre-trained word embeddings\' vocabulary mapping '
-                              'with all the word types appearing in the training data.')
-                        # TODO multiple training data for merged vocabulary
+                        print(
+                            'Combine pre-trained word embeddings\' vocabulary mapping '
+                            'with all the word types appearing in the training data.')
                         # raise NotImplementedError('Combine pre-trained word embedding '
                         #                           'and training data dictionary Not '
                         #                           'Implemented!')
@@ -713,7 +722,8 @@ class Dataset:
                         # use training vocab only, reorder vocab to [not in glove, in glove]
                         print('Use training vocab only.')
 
-                        self._args['random_size'], self._vocab_v2i_dict = reorder_vocab(
+                        self._args[
+                            'random_size'], self._vocab_v2i_dict = reorder_vocab(
                             pretrained_path,
                             train_vocab_list)
 
@@ -740,7 +750,6 @@ class Dataset:
             assert categorical_vocab.mapping == self._vocab_v2i_dict
 
         # save the vocab if using pre-trained word embeddings
-        # TODO ???
         if not self._load_vocab_name == 'vocab_v2i.json':
             self._categorical_vocab = categorical_vocab
             self._save_vocab_dir = self._tfrecord_dir
@@ -762,12 +771,14 @@ class Dataset:
         else:
             for text_field_name in self._args['text_field_names']:
                 self._sequences[text_field_name] = list(
-                    self._vocab_processor.transform(self._sequences[text_field_name]))
+                    self._vocab_processor.transform(
+                        self._sequences[text_field_name]))
 
         for text_field_name in self._args['text_field_names']:
             self._sequences[text_field_name] = [list(i)
                                                 for i
-                                                in self._sequences[text_field_name]]
+                                                in self._sequences[
+                                                    text_field_name]]
 
     def write_examples(self, file_name, split_index, labeled):
         # write to TFRecord data file
@@ -792,16 +803,19 @@ class Dataset:
                             value=self._sequences[text_field_name][index]))
                     feature[text_field_name + '_length'] = tf.train.Feature(
                         int64_list=tf.train.Int64List(
-                            value=[self._sequence_lengths[text_field_name][index]]))
+                            value=[self._sequence_lengths[text_field_name][
+                                       index]]))
 
                     if self._weights:
-                        feature[text_field_name + '_weights'] = tf.train.Feature(
+                        feature[
+                            text_field_name + '_weights'] = tf.train.Feature(
                             float_list=tf.train.FloatList(
                                 value=self._weights[text_field_name][index])
                         )
 
                     types, counts = get_types_and_counts(
-                        self._sequences[text_field_name][index])  # including BOS and EOS
+                        self._sequences[text_field_name][
+                            index])  # including BOS and EOS
                     assert len(types) == len(counts)
                     assert len(types) > 0
                     for t in types:
@@ -813,15 +827,18 @@ class Dataset:
 
                     feature[text_field_name + '_types'] = tf.train.Feature(
                         int64_list=tf.train.Int64List(value=types))
-                    feature[text_field_name + '_type_counts'] = tf.train.Feature(
+                    feature[
+                        text_field_name + '_type_counts'] = tf.train.Feature(
                         int64_list=tf.train.Int64List(value=counts))
-                    feature[text_field_name + '_types_length'] = tf.train.Feature(
+                    feature[
+                        text_field_name + '_types_length'] = tf.train.Feature(
                         int64_list=tf.train.Int64List(value=[len(types)]))
 
                     if self._args['write_bow']:
                         # This assumes a single vocabulary shared among all sequence kinds
-                        bow = bag_of_words(self._sequences[text_field_name][index],
-                                           self._args['vocab_size']).tolist()
+                        bow = bag_of_words(
+                            self._sequences[text_field_name][index],
+                            self._args['vocab_size']).tolist()
                         feature[text_field_name + '_bow'] = tf.train.Feature(
                             float_list=tf.train.FloatList(value=bow))
 
@@ -846,8 +863,9 @@ class Dataset:
                             float_list=tf.train.FloatList(
                                 value=[label]))
                     else:
-                        raise TypeError('Label type other than "int" or "float" not '
-                                        'implemented!')
+                        raise TypeError(
+                            'Label type other than "int" or "float" not '
+                            'implemented!')
                 else:
                     # label = self._label_list[index]
                     # assert label is None
@@ -919,12 +937,13 @@ class Dataset:
         assert len(valid_ind_set.intersection(unlabeled_ind_set)) == 0
         assert len(test_ind_set.intersection(unlabeled_ind_set)) == 0
 
-        print("Before subsampling: train : valid : test : unlabeled = %d : %d : "
-              "%d : %d" %
-              (len(train_ind),
-               len(valid_ind),
-               len(test_ind),
-               len(unlabeled_ind)))
+        print(
+            "Before subsampling: train : valid : test : unlabeled = %d : %d : "
+            "%d : %d" %
+            (len(train_ind),
+             len(valid_ind),
+             len(test_ind),
+             len(unlabeled_ind)))
 
         if subsample_ratio is not None and subsample_ratio < 1.0:
             train_ind = self.subsample(
@@ -936,12 +955,13 @@ class Dataset:
             unlabeled_ind = self.subsample(
                 unlabeled_ind, random_seed, subsample_ratio)
 
-            print("After subsampling, train : valid : test : unlabeled = %d : %d : "
-                  "%d : %d" %
-                  (len(train_ind),
-                   len(valid_ind),
-                   len(test_ind),
-                   len(unlabeled_ind)))
+            print(
+                "After subsampling, train : valid : test : unlabeled = %d : %d : "
+                "%d : %d" %
+                (len(train_ind),
+                 len(valid_ind),
+                 len(test_ind),
+                 len(unlabeled_ind)))
         else:
             print('No subsampling.')
 
@@ -1084,7 +1104,7 @@ def merge_dict_write_tfrecord(json_dirs,
     # json_dir/vocab_freq_dict.json
 
     # Assumes that all datasets have
-    # the same text_field_names and label_field_name TODO
+    # the same text_field_names and label_field_name
     # max_document_lengths = []
     for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
         dataset = Dataset(json_dir,
@@ -1123,7 +1143,7 @@ def merge_dict_write_tfrecord(json_dirs,
     # generate word id mapping, which is then used as the merged vocabulary
     # for all the datasets
     dataset = Dataset(json_dir=None,
-                      tfrecord_dir=None,  # TODO
+                      tfrecord_dir=None,
                       vocab_dir=merged_dir,
                       generate_basic_vocab=False,
                       vocab_given=True,
@@ -1244,12 +1264,12 @@ def merge_pretrain_write_tfrecord(json_dirs,
     pretrained_path = os.path.join(vocab_dir, vocab_name)
 
     if pretrained_only:
-    # no need to pre-compute vocab, simply
+        # no need to pre-compute vocab, simply
 
-    # get the vocab from the training data of each dataset
-    # Assumes that all datasets have
-    # the same text_field_names and label_field_name
-    train_vocab_set = set()  # use list to keep order
+        # get the vocab from the training data of each dataset
+        # Assumes that all datasets have
+        # the same text_field_names and label_field_name
+        train_vocab_set = set()  # use list to keep order
     if padding:
         max_document_lengths = []
     for json_dir, tfrecord_dir in zip(json_dirs, tfrecord_dirs):
@@ -1280,7 +1300,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
 
     specials = [OOV, BOS, EOS]  # make sure OOV is indexed 0
     if LINEBREAK in train_vocab_set:
-        specials += [LINEBREAK]  # linebreaks may not appear in some sentence-level
+        specials += [
+            LINEBREAK]  # linebreaks may not appear in some sentence-level
         #  dataset
 
     train_vocab_set.difference_update(set(specials))

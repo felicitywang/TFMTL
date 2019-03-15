@@ -1,9 +1,10 @@
-import make_wiki_adjacencies
-import graph_manip
-import pandas as pd
-import numpy as np
-import pickle as pkl
 import json
+import pickle as pkl
+
+import graph_manip
+import make_wiki_adjacencies
+import numpy as np
+import pandas as pd
 
 
 def convert_title(title):
@@ -23,10 +24,13 @@ def get_cluster_articles(G, categories):
         if category in G.nodes():
             for neighbor in G.neighbors(category):
                 if neighbor[:9] != "Category:":
-                    topics = [category for category in G.neighbors(neighbor) if category[:9] == "Category:"]
+                    topics = [category for category in G.neighbors(neighbor) if
+                              category[:9] == "Category:"]
                     articles.append([neighbor, topics])
                     if len(articles) % 100 == 0:
-                        print("    number of articles: %i, last article topics: %s" % (len(articles), str(topics)))
+                        print(
+                            "    number of articles: %i, last article topics: %s" % (
+                            len(articles), str(topics)))
     return articles
 
 
@@ -46,7 +50,8 @@ def partition_dataset(rows, fraction_train, fraction_dev):
     return train_rows, dev_rows, test_rows
 
 
-def main(article_categories_file, cluster_groupings_file, cluster_names_file, dataset_file, fraction_train=.7,
+def main(article_categories_file, cluster_groupings_file, cluster_names_file,
+         dataset_file, fraction_train=.7,
          fraction_dev=.15):
     # attach articles to category graph
     G = graph_manip.Graph()
@@ -64,18 +69,24 @@ def main(article_categories_file, cluster_groupings_file, cluster_names_file, da
 
     # write out articles and labels sorted randomly and separated into dev and training set
     # note that the format of the dataset is: [{"text":<article>,"label":<category title>},...]
-    for i, (cluster_id, cluster_categories) in enumerate(clusters_categories.items()):
+    for i, (cluster_id, cluster_categories) in enumerate(
+        clusters_categories.items()):
         if i > 44: break
         articles = get_cluster_articles(G, cluster_categories)
         for article in articles:
-            rows.append({"text": str(article[0]), "label": clusters_names[cluster_id], "labels": article[1]})
+            rows.append(
+                {"text": str(article[0]), "label": clusters_names[cluster_id],
+                 "labels": article[1]})
         if ((i + 1) % 1) == 0:
-            print("there are " + str(len(articles)) + " articles in cluster \"" + clusters_names[cluster_id] + "\"")
+            print(
+                "there are " + str(len(articles)) + " articles in cluster \"" +
+                clusters_names[cluster_id] + "\"")
             print(str(i + 1) + " / " + str(len(clusters_categories)))
 
     np.random.shuffle(rows)
 
-    train_rows, dev_rows, test_rows = partition_dataset(rows, fraction_train, fraction_dev)
+    train_rows, dev_rows, test_rows = partition_dataset(rows, fraction_train,
+                                                        fraction_dev)
 
     with open(dataset_file + "_train.json", 'w') as f:
         json.dump(train_rows, f)
@@ -96,4 +107,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.article_categories_file, args.cluster_groupings_file, args.cluster_names_file, args.dataset_file)
+    main(args.article_categories_file, args.cluster_groupings_file,
+         args.cluster_names_file, args.dataset_file)

@@ -70,12 +70,14 @@ def make_job(dataset, vocab, task, init_or_expand, finetune_or_freeze):
     if task == 'st':
         datasets = dataset
         dataset_paths = os.path.join(dataset_dir,
-                                     vocab + "_glove_" + init_or_expand, dataset)
+                                     vocab + "_glove_" + init_or_expand,
+                                     dataset)
         class_sizes = str(CLASS_SIZES[dataset])
         alphas = '1'
         topic_paths = os.path.join(json_dir, dataset, "data.json.gz")
         vocab_size_file = os.path.join(dataset_dir,
-                                       vocab + "_glove_" + init_or_expand, dataset,
+                                       vocab + "_glove_" + init_or_expand,
+                                       dataset,
                                        'vocab_size.txt')
     else:
         datasets = ' '.join([dataset] + RUDER_AUX_TASK_DICT[dataset])

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-import numpy as np
 import tensorflow as tf
 
 
@@ -24,8 +23,10 @@ class EmbedTests(tf.test.TestCase):
             with tf.variable_scope("foo_scope") as varscope:
                 tmp = tf.get_variable("tmp", shape=[1])
 
-                cell_fw = tf.contrib.rnn.LSTMCell(64, initializer=tf.contrib.layers.xavier_initializer())
-                cell_bw = tf.contrib.rnn.LSTMCell(64, initializer=tf.contrib.layers.xavier_initializer())
+                cell_fw = tf.contrib.rnn.LSTMCell(64,
+                                                  initializer=tf.contrib.layers.xavier_initializer())
+                cell_bw = tf.contrib.rnn.LSTMCell(64,
+                                                  initializer=tf.contrib.layers.xavier_initializer())
                 inputs = tf.constant([[[1.], [2.], [3.]], [[4.], [5.], [6.]]])
                 lengths = tf.constant([3, 3])
                 outputs, last_state = tf.nn.bidirectional_dynamic_rnn(cell_fw,
@@ -53,7 +54,8 @@ class EmbedTests(tf.test.TestCase):
             sess.run(init_ops)
 
             seq1_tmp_val, seq1_outputs_val, seq1_last_state_val, seq2_tmp_val, seq2_outputs_val, seq2_last_state_val = sess.run(
-                [seq1_tmp, seq1_outputs, seq1_last_state, seq2_tmp, seq2_outputs, seq2_last_state])
+                [seq1_tmp, seq1_outputs, seq1_last_state, seq2_tmp,
+                 seq2_outputs, seq2_last_state])
 
             all_var, train_var = sess.run([all_variables, trainable_variables])
 

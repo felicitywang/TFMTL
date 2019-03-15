@@ -48,7 +48,8 @@ def main():
     # train
     for topic in tqdm(os.listdir(train_dir)):
         for filename in os.listdir(os.path.join(train_dir, topic)):
-            with open(os.path.join(train_dir, topic, filename), encoding='latin-1') \
+            with open(os.path.join(train_dir, topic, filename),
+                      encoding='latin-1') \
                 as file:
                 text = file.read()
                 train_list.append({
@@ -63,7 +64,8 @@ def main():
     # test
     for topic in tqdm(os.listdir(test_dir)):
         for filename in os.listdir(os.path.join(test_dir, topic)):
-            with open(os.path.join(test_dir, topic, filename), encoding='latin-1') \
+            with open(os.path.join(test_dir, topic, filename),
+                      encoding='latin-1') \
                 as file:
                 text = file.read()
                 test_list.append({

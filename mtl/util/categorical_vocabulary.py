@@ -66,8 +66,9 @@ class CategoricalVocabulary(object):
                 self._reverse_mapping_dict = dict()
                 for word, word_id in mapping.items():
                     self._reverse_mapping_dict[word_id] = word
-                self._reverse_mapping = [self._reverse_mapping_dict[i] for i in range(
-                    len(self._reverse_mapping_dict))]
+                self._reverse_mapping = [self._reverse_mapping_dict[i] for i in
+                                         range(
+                                             len(self._reverse_mapping_dict))]
 
     def __len__(self):
         """Returns total count of mappings. Including unknown token."""

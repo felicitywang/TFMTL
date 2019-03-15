@@ -17,9 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-import os
 import json
+import os
+
+import tensorflow as tf
 
 from mtl.layers.mlp import dense_layer, mlp
 from mtl.util.encoder_factory import build_encoders
@@ -96,14 +97,16 @@ class GenerativeMult(object):
             elif self._hps.input_key == 'tfidf':
                 x.append(batch[text_field_name + '_tfidf'])
             else:
-                raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+                raise ValueError(
+                    "unrecognized input key: %s" % (self._hps.input_key))
 
         if self._hps.experiment_name == "RUDER_NAACL_18":
             # Using serial-lbirnn
             #   -use last token of last sequence as feature representation
             indices = input_lengths[-1]
             ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-            indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+            indices = tf.subtract(indices,
+                                  ones)  # last token is at pos. length-1
             kwargs = {'indices': indices}
         else:
             kwargs = {}
@@ -152,12 +155,14 @@ class GenerativeMult(object):
             elif self._hps.input_key == 'tfidf':
                 x.append(batch[text_field_name + '_tfidf'])
             else:
-                raise ValueError("unrecognized input key: %s" % (self._hps.input_key))
+                raise ValueError(
+                    "unrecognized input key: %s" % (self._hps.input_key))
 
         if self._hps.experiment_name == "RUDER_NAACL_18":
             indices = input_lengths[-1]
             ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
-            indices = tf.subtract(indices, ones)  # last token is at pos. length-1
+            indices = tf.subtract(indices,
+                                  ones)  # last token is at pos. length-1
             kwargs = {'indices': indices}
         else:
             kwargs = {}

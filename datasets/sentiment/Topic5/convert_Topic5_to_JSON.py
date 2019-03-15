@@ -1,6 +1,6 @@
-import os
-import json
 import gzip
+import json
+import os
 import sys
 
 TOPIC_5WAY_LABELS = [-2.0, -1.0, 0.0, 1.0, 2.0]

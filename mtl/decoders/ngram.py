@@ -18,8 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow.contrib.seq2seq import sequence_loss
 from tensorflow.contrib.layers import embed_sequence
+from tensorflow.contrib.seq2seq import sequence_loss
 
 
 def ngram(x, z, vocab_size, embed_dim, ngram_order=3):

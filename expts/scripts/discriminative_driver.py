@@ -15,8 +15,6 @@
 # limitations under the License.
 # ============================================================================
 
-# TODO tune alphas
-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -207,7 +205,7 @@ def get_num_records(tf_record_filename):
 
 def get_vocab_size(dataset_paths):
     """Read the vocab_size in args.json in the TFRecord paths
-  
+
     :param dataset_paths: list, paths to the datasets' TFRecord files
     :return: int, size of the vocabulary
     """
@@ -250,7 +248,8 @@ def train_model(model,
         if embed_fn in ['embed_sequence', 'pretrained']:
             # TODO text_field_name ?
             if 'input_key' == 'weights':
-                additional_encoder_kwargs[dataset_name]['weights'] = train_batches[
+                additional_encoder_kwargs[dataset_name]['weights'] = \
+                train_batches[
                     dataset_name]['text_weights']
         elif embed_fn == 'pretrained':
             additional_encoder_kwargs[dataset_name]['is_training'] = True
@@ -265,7 +264,7 @@ def train_model(model,
             if args.experiment_name == "RUDER_NAACL_18":
                 # use last token of last sequence as feature representation
                 indices = train_batches[dataset_name][
-                    'seq2_length']  # TODO(seth): un-hard code this
+                    'seq2_length']
                 ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
                 # last token is at pos. length-1
                 indices = tf.subtract(indices, ones)
@@ -293,7 +292,6 @@ def train_model(model,
         losses[dataset] = model.get_loss(train_batches[dataset],
                                          dataset,
                                          dataset,
-                                         # TODO currently no weighted embed ???
                                          additional_encoder_kwargs=additional_encoder_kwargs,
                                          # sequence in train mode
                                          is_training=True)
@@ -311,8 +309,6 @@ def train_model(model,
 
     # Training ops
     global_step_tensor = tf.train.get_or_create_global_step()
-    zero_global_step_op = global_step_tensor.assign(
-        0)  # TODO this is never used
 
     train_ops = dict()
     optim = tf.train.RMSPropOptimizer(learning_rate=args.lr0)
@@ -380,7 +376,6 @@ def train_model(model,
             sess.run(init_ops)
 
         else:
-            # finetune TODO
             assert len(args.datasets) == 1
             checkpoint_path_load = model_info[args.datasets[0]][
                 'checkpoint_path_load']
@@ -400,7 +395,6 @@ def train_model(model,
             sess.run([_train_init_op, _valid_init_op])
 
             init_value = float('-inf')
-            # TODO
             if args.tuning_metric == 'MAE_MACRO':
                 init_value = float('inf')
             best_eval_performance[dataset_name] = {"epoch": -1,
@@ -454,7 +448,8 @@ def train_model(model,
 
             if args.summaries_dir:
                 train_loss_summary = tf.Summary(
-                    value=[tf.Summary.Value(tag="loss", simple_value=train_loss)])
+                    value=[
+                        tf.Summary.Value(tag="loss", simple_value=train_loss)])
                 train_file_writer.add_summary(
                     train_loss_summary, global_step=step)
 
@@ -473,13 +468,16 @@ def train_model(model,
                                                         _eval_labels,
                                                         _eval_iter,
                                                         metrics=dataset_info[
-                                                            dataset_name]['metrics'],
+                                                            dataset_name][
+                                                            'metrics'],
                                                         labels=dataset_info[
-                                                            dataset_name]['labels'],
+                                                            dataset_name][
+                                                            'labels'],
                                                         args=args,
                                                         get_topic_op=_get_topic_op,
                                                         topic_path=dataset_info[
-                                                            dataset_name]['topic_path'],
+                                                            dataset_name][
+                                                            'topic_path'],
                                                         eval_loss_op=_loss_op)
                 model_info[dataset_name]['valid_metrics'] = _metrics
 
@@ -490,42 +488,51 @@ def train_model(model,
             # in a serial manner and not "in parallel" (i.e., a batch from each)
             valid_loss = 0.0
             for (dataset_name, alpha) in zip(*[args.datasets, args.alphas]):
-                valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics'][
-                    'eval_loss']
+                valid_loss += float(alpha) * \
+                              model_info[dataset_name]['valid_metrics'][
+                                  'eval_loss']
 
             main_task_tuning_metric = model_info[args.datasets[0]
             ]['valid_metrics'][args.tuning_metric]
 
             if args.summaries_dir:
                 valid_loss_summary = tf.Summary(
-                    value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
+                    value=[
+                        tf.Summary.Value(tag="loss", simple_value=valid_loss)])
                 valid_file_writer.add_summary(
                     valid_loss_summary, global_step=step)
                 valid_main_task_tuning_metric_summary = tf.Summary(value=[
                     tf.Summary.Value(tag="main-task-" + args.tuning_metric,
                                      simple_value=main_task_tuning_metric)])
-                valid_file_writer.add_summary(valid_main_task_tuning_metric_summary,
-                                              global_step=step)
+                valid_file_writer.add_summary(
+                    valid_main_task_tuning_metric_summary,
+                    global_step=step)
 
-            if (main_task_tuning_metric >= args.early_stopping_acc_threshold) and (
+            if (
+                main_task_tuning_metric >= args.early_stopping_acc_threshold) and (
                 len(main_task_dev_tuning_metric) >= args.patience) and (
-                main_task_tuning_metric < main_task_dev_tuning_metric[-args.patience]):
+                main_task_tuning_metric < main_task_dev_tuning_metric[
+                -args.patience]):
                 print(
                     "Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(
-                        epoch, args.patience, args.early_stopping_acc_threshold))
+                        epoch, args.patience,
+                        args.early_stopping_acc_threshold))
                 stopping_criterion_reached = True
 
             main_task_dev_tuning_metric.append(main_task_tuning_metric)
 
             if args.reporting_metric != "Acc":
-                main_task_performance = model_info[args.datasets[0]]['valid_metrics'][
+                main_task_performance = \
+                model_info[args.datasets[0]]['valid_metrics'][
                     args.reporting_metric]
                 if args.summaries_dir:
                     valid_main_task_performance_summary = tf.Summary(value=[
-                        tf.Summary.Value(tag="main-task-{}".format(args.reporting_metric),
-                                         simple_value=main_task_performance)])
-                    valid_file_writer.add_summary(valid_main_task_performance_summary,
-                                                  global_step=step)
+                        tf.Summary.Value(
+                            tag="main-task-{}".format(args.reporting_metric),
+                            simple_value=main_task_performance)])
+                    valid_file_writer.add_summary(
+                        valid_main_task_performance_summary,
+                        global_step=step)
 
             # Log performance(s)
             str_ = '[epoch=%d/%d step=%d (%d s)] train_loss=%s valid_loss=%s (per batch)' % (
@@ -552,7 +559,8 @@ def train_model(model,
                         pass
                     else:
                         str_ += '%s=%f ' % (m, s)
-                if 'Confusion_Matrix' in model_info[dataset_name]['valid_metrics']:
+                if 'Confusion_Matrix' in model_info[dataset_name][
+                    'valid_metrics']:
                     str_ += 'Confusion_Matrix:\n'
                     str_ += '\n'.join('  '.join('%4d' % x for x in y) for y in
                                       model_info[dataset_name]['valid_metrics'][
@@ -695,18 +703,22 @@ def test_model(model, dataset_info, args):
                                                         _eval_labels,
                                                         _eval_iter,
                                                         metrics=
-                                                        dataset_info[dataset_name][
+                                                        dataset_info[
+                                                            dataset_name][
                                                             'metrics'],
                                                         labels=
-                                                        dataset_info[dataset_name][
+                                                        dataset_info[
+                                                            dataset_name][
                                                             'labels'],
                                                         args=args,
                                                         get_topic_op=_get_topic_op,
                                                         topic_path=
-                                                        dataset_info[dataset_name][
+                                                        dataset_info[
+                                                            dataset_name][
                                                             'topic_path'],
                                                         eval_loss_op=
-                                                        model_info[dataset_name][
+                                                        model_info[
+                                                            dataset_name][
                                                             'test_loss_op'])
                 model_info[dataset_name]['test_metrics'] = _metrics
 
@@ -732,7 +744,8 @@ def test_model(model, dataset_info, args):
                         pass
                     else:
                         str_ += '%s=%f ' % (m, s)
-                if 'Confusion_Matrix' in model_info[dataset_name]['test_metrics']:
+                if 'Confusion_Matrix' in model_info[dataset_name][
+                    'test_metrics']:
                     str_ += 'Confusion_Matrix:\n'
                     str_ += '\n'.join('  '.join('%4d' % x for x in y) for y in
                                       model_info[dataset_name]['test_metrics'][
@@ -830,14 +843,16 @@ def predict(model, dataset_info, args):
 
             make_dir(args.predict_output_folder)
 
-            with open(os.path.join(args.predict_output_folder, model_name) + '.tsv',
-                      'w') as file:
+            with open(
+                os.path.join(args.predict_output_folder, model_name) + '.tsv',
+                'w') as file:
                 # for i in _predictions:
                 #   file.write(str(i))
                 file.write(output)
 
-            with open(os.path.join(args.predict_output_folder, model_name) + '.json',
-                      'wt') as file:
+            with open(
+                os.path.join(args.predict_output_folder, model_name) + '.json',
+                'wt') as file:
                 json.dump(data, file, ensure_ascii=False)
 
     logging.info(str_)
@@ -860,7 +875,7 @@ def get_all_predictions(session, pred_op, pred_iterator):
 
 def get_all_pred_res(session, pred_op, pred_iterator, args):
     """Get all the predict results for a predict batch
-  
+
     (id, predicted label and softmax values for each class)
     used for predict mode only
     """
@@ -1126,8 +1141,9 @@ def main():
                 if args.input_key == 'tokens':
                     FEATURES[text_field_name] = tf.VarLenFeature(dtype=tf.int64)
                 elif args.input_key == 'bow':
-                    FEATURES[text_field_name + '_bow'] = tf.FixedLenFeature([vocab_size],
-                                                                            dtype=tf.float32)
+                    FEATURES[text_field_name + '_bow'] = tf.FixedLenFeature(
+                        [vocab_size],
+                        dtype=tf.float32)
                 elif args.input_key == 'tfidf':
                     FEATURES[text_field_name + '_tfidf'] = tf.FixedLenFeature(
                         [vocab_size], dtype=tf.float32)
@@ -1393,7 +1409,6 @@ def fill_info_dicts(dataset_info, args):
 
 
 def fill_pred_op_info(dataset_info, model, args, model_info):
-    # TODO(seth): refactor populating `additional_encoder_kwargs` into a function?
     additional_encoder_kwargs = dict()
 
     for dataset_name in model_info:
@@ -1411,9 +1426,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
         elif args.mode == 'predict':
             batch = model_info[dataset_name]['pred_batch']
 
-        # TODO change to input key
         if embed_fn in ['embed_sequence', 'pretrained']:
-            # TODO text field name???
 
             if args.input_key == 'weights':
                 additional_encoder_kwargs[dataset_name]['weights'] = batch[
@@ -1430,7 +1443,7 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
             additional_encoder_kwargs[dataset_name]['is_training'] = False
             if args.experiment_name == "RUDER_NAACL_18":
                 # use last token of last sequence as feature representation
-                indices = batch['seq2_length']  # TODO(seth): un-hard code this
+                indices = batch['seq2_length']  #
                 ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
                 # last token is at pos. length-1
                 indices = tf.subtract(indices, ones)
@@ -1486,7 +1499,6 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
             batch = model_info[dataset_name]['test_batch']
 
         if embed_fn in ['embed_sequence', 'pretrained']:
-            # TODO text field name???
             if args.input_key == 'weights':
                 additional_encoder_kwargs[dataset_name]['weights'] = batch[
                     'text_weights']
@@ -1502,7 +1514,7 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
             additional_encoder_kwargs[dataset_name]['is_training'] = False
             if args.experiment_name == "RUDER_NAACL_18":
                 # use last token of last sequence as feature representation
-                indices = batch['seq2_length']  # TODO(seth): un-hard code this
+                indices = batch['seq2_length']
                 ones = tf.ones([tf.shape(indices)[0]], dtype=tf.int64)
                 # last token is at pos. length-1
                 indices = tf.subtract(indices, ones)

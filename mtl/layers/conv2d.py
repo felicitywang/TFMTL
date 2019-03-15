@@ -32,13 +32,13 @@ from tensorflow.python.ops import nn_ops
 
 class _Conv(base.Layer):
     """Abstract nD convolution layer (private, used as implementation base).
-  
+
     This layer creates a convolution kernel that is convolved
     (actually cross-correlated) with the layer input to produce a tensor of
     outputs. If `use_bias` is True (and a `bias_initializer` is provided),
     a bias vector is created and added to the outputs. Finally, if
     `activation` is not `None`, it is applied to the outputs as well.
-  
+
     Arguments:
       rank: An integer, the rank of the convolution, e.g. "2" for 2D convolution.
       filters: Integer, the dimensionality of the output space (i.e. the number
@@ -106,7 +106,8 @@ class _Conv(base.Layer):
                                     **kwargs)
         self.rank = rank
         self.filters = filters
-        self.kernel_size = utils.normalize_tuple(kernel_size, rank, 'kernel_size')
+        self.kernel_size = utils.normalize_tuple(kernel_size, rank,
+                                                 'kernel_size')
         self.strides = utils.normalize_tuple(strides, rank, 'strides')
         self.padding = utils.normalize_padding(padding)
         self.data_format = utils.normalize_data_format(data_format)
@@ -184,17 +185,21 @@ class _Conv(base.Layer):
                     bias = array_ops.reshape(self.bias, (1, self.filters, 1))
                     outputs += bias
                 if self.rank == 2:
-                    outputs = nn.bias_add(outputs, self.bias, data_format='NCHW')
+                    outputs = nn.bias_add(outputs, self.bias,
+                                          data_format='NCHW')
                 if self.rank == 3:
                     # As of Mar 2017, direct addition is significantly slower than
                     # bias_add when computing gradients. To use bias_add, we collapse Z
                     # and Y into a single dimension to obtain a 4D input tensor.
                     outputs_shape = outputs.shape.as_list()
                     outputs_4d = array_ops.reshape(outputs,
-                                                   [outputs_shape[0], outputs_shape[1],
-                                                    outputs_shape[2] * outputs_shape[3],
+                                                   [outputs_shape[0],
+                                                    outputs_shape[1],
+                                                    outputs_shape[2] *
+                                                    outputs_shape[3],
                                                     outputs_shape[4]])
-                    outputs_4d = nn.bias_add(outputs_4d, self.bias, data_format='NCHW')
+                    outputs_4d = nn.bias_add(outputs_4d, self.bias,
+                                             data_format='NCHW')
                     outputs = array_ops.reshape(outputs_4d, outputs_shape)
             else:
                 outputs = nn.bias_add(outputs, self.bias, data_format='NHWC')
@@ -235,13 +240,13 @@ class _Conv(base.Layer):
 
 class Conv2D(_Conv):
     """2D convolution layer (e.g. spatial convolution over images).
-  
+
     This layer creates a convolution kernel that is convolved
     (actually cross-correlated) with the layer input to produce a tensor of
     outputs. If `use_bias` is True (and a `bias_initializer` is provided),
     a bias vector is created and added to the outputs. Finally, if
     `activation` is not `None`, it is applied to the outputs as well.
-  
+
     Arguments:
       filters: Integer, the dimensionality of the output space (i.e. the number
         of filters in the convolution).
@@ -261,7 +266,7 @@ class Conv2D(_Conv):
         `channels_last` corresponds to inputs with shape
         `(batch, height, width, channels)` while `channels_first` corresponds to
         inputs with shape `(batch, channels, height, width)`.
-  
+
       dilation_rate: An integer or tuple/list of 2 integers, specifying
         the dilation rate to use for dilated convolution.
         Can be a single integer to specify the same value for
@@ -349,13 +354,13 @@ def conv2d(inputs,
            name=None,
            reuse=None):
     """Functional interface for the 2D convolution layer.
-  
+
     This layer creates a convolution kernel that is convolved
     (actually cross-correlated) with the layer input to produce a tensor of
     outputs. If `use_bias` is True (and a `bias_initializer` is provided),
     a bias vector is created and added to the outputs. Finally, if
     `activation` is not `None`, it is applied to the outputs as well.
-  
+
     Arguments:
       inputs: Tensor input.
       filters: Integer, the dimensionality of the output space (i.e. the number
@@ -376,7 +381,7 @@ def conv2d(inputs,
         `channels_last` corresponds to inputs with shape
         `(batch, height, width, channels)` while `channels_first` corresponds to
         inputs with shape `(batch, channels, height, width)`.
-  
+
       dilation_rate: An integer or tuple/list of 2 integers, specifying
         the dilation rate to use for dilated convolution.
         Can be a single integer to specify the same value for
@@ -405,10 +410,10 @@ def conv2d(inputs,
       name: A string, the name of the layer.
       reuse: Boolean, whether to reuse the weights of a previous layer
         by the same name.
-  
+
     Returns:
       Output tensor.
-  
+
     Raises:
       ValueError: if eager execution is enabled.
     """

@@ -17,15 +17,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 
 def mvn_diag_kl(p_loc=None, p_log_sigma=None, q_loc=None,
                 q_log_sigma=None, pq=True):
     """Compute the analytic KL divergence between two multivariate
     Gaussians (p and q) with diagonal Sigma.
-  
+
     """
     if pq:
         p_mu = tf.convert_to_tensor(p_loc)

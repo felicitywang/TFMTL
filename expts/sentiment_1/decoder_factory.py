@@ -19,9 +19,9 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from mtl.decoders import unigram
 from mtl.decoders import cnn
 from mtl.decoders import shallow_cnn
+from mtl.decoders import unigram
 
 
 def build_template(name, decoder, vocab_size, **kwargs):

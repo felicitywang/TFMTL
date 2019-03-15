@@ -147,7 +147,8 @@ def main():
     #   os.path.join(os.path.dirname(os.path.dirname(sys.argv[1])), '1S.csv'),
     #   'w') as file:
     # with open(os.path.join(os.path.dirname(sys.argv[1]), '1S.csv'), 'w') as file:
-    with open(os.path.join(os.path.dirname(sys.argv[1]), '1S.csv'), 'w') as file:
+    with open(os.path.join(os.path.dirname(sys.argv[1]), '1S.csv'),
+              'w') as file:
 
         f1s = []
 
@@ -163,16 +164,19 @@ def main():
             # print(p_miss, p_fa)
 
             p_miss, p_falseAlarm = get_p_miss_p_false_alarm(
-                set(gold_doc_ids[domain]), set(pred_doc_ids[domain]), all_doc_ids)
+                set(gold_doc_ids[domain]), set(pred_doc_ids[domain]),
+                all_doc_ids)
             #
             # with open(
             #   os.path.join(os.path.dirname(os.path.dirname(sys.argv[1])), '1S.csv'),
             #   'a') as file:
-            f1 = 1 - 2 * (1 - p_miss) * (1 - p_falseAlarm) / (2 - p_miss - p_falseAlarm)
+            f1 = 1 - 2 * (1 - p_miss) * (1 - p_falseAlarm) / (
+                    2 - p_miss - p_falseAlarm)
             f1s.append(100 * f1)
             print(('{},{:.4f}%,{:.4f}%,{:.4f}%,{:.4f}%\t\t{:.4f}%'.format(
                 domain, 100.0 - 100.0 * p_miss, 100.0 * p_miss,
-                        100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm, 100 * f1)))
+                        100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm,
+                        100 * f1)))
             file.write('{},{:.4f}%,{:.4f}%,{:.4f}%,{:.4f}%\n'.format(
                 domain, 100.0 - 100.0 * p_miss, 100.0 * p_miss,
                         100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm))

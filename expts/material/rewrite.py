@@ -93,7 +93,8 @@ def main():
                     basedir = os.path.join(text_type, basedir, dir_name)
                     for subdir in subdirs:
                         pred_filename = os.path.join(
-                            'data/predictions', basedir, subdir, encoder, domain + '.tsv')
+                            'data/predictions', basedir, subdir, encoder,
+                            domain + '.tsv')
                         # print(pred_filename)
                         if not os.path.exists(pred_filename):
                             print(pred_filename, 'doesnt exist!')

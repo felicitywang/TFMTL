@@ -53,8 +53,10 @@ class ReducerTests(tf.test.TestCase):
         x_avg = avg_over_time(x)
         with self.test_session() as sess:
             x_avg_val = sess.run(x_avg)
-            self.assertAlmostEqual(x_avg_val[0], sum(X[0]) / len(X[0]), places=4)
-            self.assertAlmostEqual(x_avg_val[1], sum(X[1]) / len(X[1]), places=4)
+            self.assertAlmostEqual(x_avg_val[0], sum(X[0]) / len(X[0]),
+                                   places=4)
+            self.assertAlmostEqual(x_avg_val[1], sum(X[1]) / len(X[1]),
+                                   places=4)
 
     def test_avg_padding(self):
         X = [[1., 2., 1.], [2., 3., 0.]]

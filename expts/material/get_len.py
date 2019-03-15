@@ -1,17 +1,19 @@
 import gzip
 import json
-import sys
 import os
+import sys
 
 name = sys.argv[1]
-with gzip.open(os.path.join('data/json', name, 'data.json.gz'), mode='rt') as file:
+with gzip.open(os.path.join('data/json', name, 'data.json.gz'),
+               mode='rt') as file:
     data = json.load(file, encoding='utf-8')
     pos = [i for i in data if str(i['label']) == '1']
     neg = [i for i in data if str(i['label']) == '0']
     print(len(data), len(pos), len(neg))
 
 if os.path.exists(os.path.join('data/json', name, 'index.json.gz')):
-    with gzip.open(os.path.join('data/json', name, 'index.json.gz'), mode='rt') as file:
+    with gzip.open(os.path.join('data/json', name, 'index.json.gz'),
+                   mode='rt') as file:
         indices = json.load(file)
         train_data = [data[i] for i in indices['train']]
         valid_data = [data[i] for i in indices['valid']]

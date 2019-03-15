@@ -88,7 +88,8 @@ for task in ['mt']:
                 dataset] = no_pretrain_dict
 
             dataset_dir = os.path.join(data_dir, dataset + '-' + task)
-            reverse_vocab_path = os.path.join(dataset_dir, vocab + "_glove_init",
+            reverse_vocab_path = os.path.join(dataset_dir,
+                                              vocab + "_glove_init",
                                               "vocab_i2v.json")
             random_size_path = os.path.join(dataset_dir, vocab + "_glove_init",
                                             "random_size.txt")

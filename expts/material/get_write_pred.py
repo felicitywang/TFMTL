@@ -25,15 +25,13 @@ Usage:
 """
 
 import os
+import sys
+from itertools import product
 
 from mtl.util.util import load_json
 
-from itertools import product
-import sys
-
 
 def main():
-    from json_minify import json_minify
     # print(json_minify(open(sys.argv[1]).read())[410:430])
     args = load_json(sys.argv[1])
     eval_dirs = args['eval_dirs']

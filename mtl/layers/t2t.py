@@ -19,9 +19,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+from six.moves import xrange  # pylint: disable=redefined-builtin
 
 from mtl.layers.conv2d import conv2d as conv2d_wn
-from six.moves import xrange  # pylint: disable=redefined-builtin
 
 allow_defun = False
 

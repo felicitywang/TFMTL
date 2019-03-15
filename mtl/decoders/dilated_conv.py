@@ -19,9 +19,10 @@ from __future__ import print_function
 
 import tensorflow as tf
 from six.moves import xrange
+
+import mtl.util.registry as registry
 from mtl.layers.t2t import conv_block_wn
 from mtl.util.hparams import get_activation_fn
-import mtl.util.registry as registry
 
 
 @registry.register_hparams

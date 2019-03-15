@@ -18,8 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from six.moves import xrange
 from scipy.optimize import linear_sum_assignment
+from six.moves import xrange
 
 
 def aligned_accuracy(gold_labels, guess_labels):

@@ -17,10 +17,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from six.moves import xrange
-from itertools import product
 from collections import OrderedDict
+from itertools import product
+
 import tensorflow as tf
+from six.moves import xrange
 
 
 def entropy(logits):

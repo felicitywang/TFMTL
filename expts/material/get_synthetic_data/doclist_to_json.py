@@ -17,7 +17,8 @@ for line in docs_file:
     line = line.replace('\n', '')
     if line.startswith("doc_id:"):
         concat = concat[:len(concat) - 13]  # trim last "REPLACEWITHR "
-        docs_list.append({'doc_id': doc_id, 'text': concat, 'label': sys.argv[2]})
+        docs_list.append(
+            {'doc_id': doc_id, 'text': concat, 'label': sys.argv[2]})
         concat = ""
         doc_id = line[8:]
     else:

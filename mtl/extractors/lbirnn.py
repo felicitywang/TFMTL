@@ -18,10 +18,10 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+from mtl.extractors.ran_cell import RANCell
 from six.moves import xrange
 
 import mtl.util.registry as registry
-from mtl.extractors.ran_cell import RANCell
 from mtl.util.common import (validate_extractor_inputs,
                              listify,
                              unlistify)
@@ -95,7 +95,7 @@ def _lbirnn_helper(inputs,
                    scope=None,
                    **kwargs):
     """Stacked linear chain bi-directional RNN
-  
+
     Inputs
     _____
       inputs: batch of size [batch_size, batch_len, embed_size]
@@ -107,14 +107,14 @@ def _lbirnn_helper(inputs,
       cell_size: cell's output size
       initial_state_fwd: initial state for forward direction
       initial_state_bwd: initial state for backward direction
-  
+
     Outputs
     _______
       If the input word vectors have dimension D and indices is None,
       the output is a Tensor of size
         [batch_size, batch_len, cell_size_fwd + cell_size_bwd]
           = [batch_size, batch_len, 2*cell_size].
-  
+
       If indices is not None, the output is a Tensor of size
         [batch_size, cell_size_fwd + cell_size_bwd]
           = [batch_size, 2*cell_size]
@@ -127,7 +127,8 @@ def _lbirnn_helper(inputs,
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as varscope:
         # print("_lbirnn_helper scope={}".format(varscope))
         # reverse each batch example up through its length, maintaining right-padding
-        inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0, seq_axis=1)
+        inputs_rev = tf.reverse_sequence(inputs, lengths, batch_axis=0,
+                                         seq_axis=1)
 
         cells_fwd = get_multi_cell(cell_type, cell_size, num_layers)
         cells_bwd = get_multi_cell(cell_type, cell_size, num_layers)
@@ -246,18 +247,18 @@ def lbirnn(inputs,
            initial_state_bwd=None,
            **kwargs):
     """Serial stacked linear chain bi-directional RNN
-  
+
     If `indices` is specified for the last stage, the outputs of the tokens
     in the last stage as specified by `indices` will be returned.
     If `indices` is None for the last stage, the encodings for all tokens
     in the sequence are returned.
-  
+
     Inputs
     _____
       All arguments denoted with (*) should be given as lists,
       one element per stage in the series. The specifications given
       below are for a single stage.
-  
+
       inputs (*): Tensor of size [batch_size, batch_len, embed_size]
       lengths (*): Tensor of size [batch_size]
       indices: Tensor of which token index in each batch item should be output;
@@ -267,7 +268,7 @@ def lbirnn(inputs,
       cell_size: cell's output size
       initial_state_fwd: initial state for forward direction, may be None
       initial_state_bwd: initial state for backward direction, may be None
-  
+
     Outputs
     _______
     If the input word vectors have dimension D and the series has N stages:
@@ -287,7 +288,8 @@ def lbirnn(inputs,
     prev_varscope = None
     for n_stage in xrange(num_stages):
         # with tf.variable_scope("serial_lbirnn", reuse=tf.AUTO_REUSE) as varscope:
-        with tf.variable_scope("serial-lbirnn-seq{}".format(n_stage)) as varscope:
+        with tf.variable_scope(
+            "serial-lbirnn-seq{}".format(n_stage)) as varscope:
             if prev_varscope is not None:
                 prev_varscope.reuse_variables()
             if n_stage == num_stages - 1:

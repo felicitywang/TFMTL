@@ -16,6 +16,6 @@
     "write_tfidf": false,
     "preproc": true,
     "tokenizer": "lower_tokenizer",
-    "stemmer": "porter_stemmer",
+    "stemmer": "snowball_stemmer",
     "stopwords": "nltk"
 }

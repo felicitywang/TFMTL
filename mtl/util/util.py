@@ -32,7 +32,7 @@ from tqdm import tqdm
 def create_timestamp_bins(times):
     """Given a list of timestamps, create a dictionary mapping days in
     the range to a sequence of monotonically increasing integers.
-  
+
     Returns: a tuple of (dict, int) where
       dict: mapping from timestamp to integer
       int: number of bins
@@ -70,7 +70,7 @@ def get_dropout_mask(keep_prob, shape):
 class threadsafe_iter:
     """Takes an iterator/generator and makes it thread-safe by serializing
       call to the `next` method of given iterator/generator.
-  
+
     """
 
     def __init__(self, it):

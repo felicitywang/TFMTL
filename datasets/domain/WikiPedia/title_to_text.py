@@ -1,7 +1,8 @@
-from gensim.corpora.wikicorpus import extract_pages
 import argparse
-import json
 import bz2
+import json
+
+from gensim.corpora.wikicorpus import extract_pages
 
 
 def main(wiki_dump_file, data):

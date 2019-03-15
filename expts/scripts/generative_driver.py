@@ -20,9 +20,9 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse as ap
+import gzip
 import json
 import os
-import gzip
 from time import time
 
 import numpy as np
@@ -301,13 +301,16 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                                                         _eval_labels,
                                                         _eval_iter,
                                                         metrics=dataset_info[
-                                                            dataset_name]['metrics'],
+                                                            dataset_name][
+                                                            'metrics'],
                                                         labels=dataset_info[
-                                                            dataset_name]['labels'],
+                                                            dataset_name][
+                                                            'labels'],
                                                         args=args,
                                                         get_topic_op=_get_topic_op,
                                                         topic_path=dataset_info[
-                                                            dataset_name]['topic_path'])
+                                                            dataset_name][
+                                                            'topic_path'])
                 model_info[dataset_name]['valid_metrics'] = _metrics
 
             end_time = time()
@@ -383,9 +386,11 @@ def train_model(model, dataset_info, steps_per_epoch, args):
                 f.write(" ")
             f.write("\n")
             for dataset, acc in best_eval_acc.items():
-                f.write('Best accuracy for dataset {}: {}\n'.format(dataset, acc))
-            f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
-                                                                     best_total_acc_epoch))
+                f.write(
+                    'Best accuracy for dataset {}: {}\n'.format(dataset, acc))
+            f.write(
+                'Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
+                                                                 best_total_acc_epoch))
 
 
 def test_model(model, dataset_info, args):
@@ -502,8 +507,9 @@ def predict(model, dataset_info, args):
 
             # TODO write to output file
             make_dir(args.predict_output_folder)
-            with open(os.path.join(args.predict_output_folder, model_name) + '.pred',
-                      'w') as file:
+            with open(
+                os.path.join(args.predict_output_folder, model_name) + '.pred',
+                'w') as file:
                 for i in _predictions:
                     file.write(str(i) + '\n')
                 file.close
@@ -577,7 +583,8 @@ def compute_held_out_performance(session, pred_op, eval_label,
     while True:
         try:
             if args.experiment_name == "RUDER_NAACL_18":
-                y_true, y_pred, y_index = session.run([eval_label, pred_op, get_topic_op])
+                y_true, y_pred, y_index = session.run(
+                    [eval_label, pred_op, get_topic_op])
                 y_index = y_index.tolist()  # index of example in data.json
                 y_topic = [index2topic[idx] for idx in
                            y_index]  # topic for each example so we can macro-average across topics
@@ -733,7 +740,8 @@ def main():
                     FEATURES[text_field_name + '_tfidf'] = tf.FixedLenFeature(
                         [vocab_size], dtype=tf.float32)
                 else:
-                    raise ValueError("Input key %s not supported!" % (args.input_key))
+                    raise ValueError(
+                        "Input key %s not supported!" % (args.input_key))
 
     FEATURES['index'] = tf.FixedLenFeature([], dtype=tf.int64)
     if args.mode in ['train', 'test']:
@@ -982,13 +990,16 @@ def fill_topic_op(args, model_info):
     if args.experiment_name == "RUDER_NAACL_18":
         for dataset_name in model_info:
             if args.mode == 'train':
-                _valid_topic_op = get_topic(model_info[dataset_name]['valid_batch'])
+                _valid_topic_op = get_topic(
+                    model_info[dataset_name]['valid_batch'])
                 model_info[dataset_name]['valid_topic_op'] = _valid_topic_op
             elif args.mode == 'test':
-                _test_topic_op = get_topic(model_info[dataset_name]['test_batch'])
+                _test_topic_op = get_topic(
+                    model_info[dataset_name]['test_batch'])
                 model_info[dataset_name]['test_topic_op'] = _test_topic_op
             elif args.mode == 'predict':
-                _pred_topic_op = get_topic(model_info[dataset_name]['pred_batch'])
+                _pred_topic_op = get_topic(
+                    model_info[dataset_name]['pred_batch'])
                 model_info[dataset_name]['pred_topic_op'] = _pred_topic_op
     else:
         pass

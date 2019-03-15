@@ -20,6 +20,7 @@ from __future__ import print_function
 import tensorflow as tf
 from tensorflow.contrib.seq2seq import sequence_loss
 from tensorflow.contrib.training import HParams
+
 from mtl.layers.t2t import conv1d
 
 

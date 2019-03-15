@@ -16,20 +16,7 @@
 # limitations under the License.
 # ==============================================================================
 
-import argparse
-import json
-import os
-import threading
-import datetime
-
-import model
-import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.ops import variables
-from tensorflow.python.ops import lookup_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.saved_model import signature_constants as sig_constants
 
 tf.logging.set_verbosity(tf.logging.INFO)
 

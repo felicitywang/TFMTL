@@ -1,7 +1,7 @@
-import sys
 import gzip
 import json
 import os
+import sys
 
 folder = sys.argv[1]
 with gzip.open(os.path.join(folder, 'data.json.gz'), mode='rt') as file:

@@ -1,6 +1,6 @@
-import os
-import json
 import gzip
+import json
+import os
 import sys
 
 NLI_LABELS = ['contradiction', 'entailment', 'neutral']
@@ -17,13 +17,15 @@ def readMultinliData(datafolder="./data/", debug=True, num_instances=20):
                   "genre": [],
                   "labels": []}
     data_train, _ = parseMultinliFile(os.path.join(datafolder,
-                                                   'multinli_0.9/multinli_0.9/multinli_0.9_train.txt'),  # NOQA
+                                                   'multinli_0.9/multinli_0.9/multinli_0.9_train.txt'),
+                                      # NOQA
                                       data_train,
                                       {},
                                       max_count,
                                       "train")
     data_dev = {"seq1": [], "seq2": [], "stance": [], "genre": [], "labels": []}
-    data_test = {"seq1": [], "seq2": [], "stance": [], "genre": [], "labels": []}
+    data_test = {"seq1": [], "seq2": [], "stance": [], "genre": [],
+                 "labels": []}
     data_dev, data_test = parseMultinliFile(os.path.join(datafolder,
                                                          'multinli_0.9/multinli_0.9/multinli_0.9_dev_matched.txt'),
                                             # NOQA

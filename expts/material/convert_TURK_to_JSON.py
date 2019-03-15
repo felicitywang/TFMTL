@@ -18,7 +18,6 @@ Each domain would have a positive and a negative cut to convert their
 average score to binary labels
 """
 
-import math
 import gzip
 import json
 import os

@@ -49,14 +49,16 @@ def main():
 
         directory = os.path.join(json_dir, domain + '_turk_reg')
         make_dir(directory)
-        with gzip.open(os.path.join(directory, 'data.json.gz'), mode='wt') as file:
+        with gzip.open(os.path.join(directory, 'data.json.gz'),
+                       mode='wt') as file:
             json.dump(data, file, ensure_ascii=False)
 
     # open test
     for domain in domains:
         directory = os.path.join(json_dir, domain + '_turk_reg')
         # print(directory)
-        with gzip.open(os.path.join(directory, 'data.json.gz'), mode='rt') as file:
+        with gzip.open(os.path.join(directory, 'data.json.gz'),
+                       mode='rt') as file:
             test = json.load(file)
             print('{}: all={}'.format(
                 directory,

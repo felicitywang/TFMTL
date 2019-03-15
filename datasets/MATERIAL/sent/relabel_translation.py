@@ -141,7 +141,8 @@ def main():
                 result = translate_speech(found, translation_file_path)
                 result_file_path = os.path.join(result_dir, label,
                                                 original_file_name.replace(
-                                                    ".an", ".labeled.eng.SPEECH"))
+                                                    ".an",
+                                                    ".labeled.eng.SPEECH"))
             else:
                 # result = translate(found, translation_file_path, 'TEXT')
                 result = translate_text(found, translation_file_path)
@@ -246,9 +247,9 @@ def get_times(str_):
 def translate_speech(times, translated_file_path, start_right=None,
                      end_left=None):
     """Finds the original part in the translated file, replace the labeled
-  
+
     part to its English translation
-  
+
     :param times: tuple, start and end time or the labeled documents
     :param translated_file_path: path to the translated file
     :return: labeled translation
@@ -290,9 +291,9 @@ def translate_speech(times, translated_file_path, start_right=None,
 
 def translate_text(labeled, translated_file_path):
     """Finds the original part in the translated file, replace the labeled
-  
+
     part to its English translation
-  
+
     :param labeled: labeled text in foreign language
     :param translated_file_path: path to the translated file
     :return: labeled translation
@@ -317,16 +318,18 @@ def translate_text(labeled, translated_file_path):
             originals += original
             # print('Original:', original)
             translation = line[2]
-            if labeled_no_linebreaks.startswith(original) or original.startswith(
+            if labeled_no_linebreaks.startswith(
+                original) or original.startswith(
                 labeled_no_linebreaks):
                 # print('Found!')
                 result += translation + ' '
                 if labeled.startswith('\n'.encode('utf-8')):
                     result = '\n' + result
                 if labeled.startswith(original):
-                    labeled_no_linebreaks = labeled_no_linebreaks.replace(original,
-                                                                          ''.encode(
-                                                                              'utf-8'))
+                    labeled_no_linebreaks = labeled_no_linebreaks.replace(
+                        original,
+                        ''.encode(
+                            'utf-8'))
                     labeled = labeled.replace(original, ''.encode('utf-8'))
                 else:
                     labeled_no_linebreaks = labeled_no_linebreaks.replace(

@@ -126,14 +126,17 @@ for task in ['st', 'mt']:
                                                   "_glove_init", dataset,
                                                   "vocab_i2v.json")
 
-                random_size_path = os.path.join(dataset_dir, vocab + "_glove_init",
+                random_size_path = os.path.join(dataset_dir,
+                                                vocab + "_glove_init",
                                                 dataset,
                                                 "random_size.txt")
             else:
-                reverse_vocab_path = os.path.join(dataset_dir, vocab + "_glove_init",
+                reverse_vocab_path = os.path.join(dataset_dir,
+                                                  vocab + "_glove_init",
                                                   "vocab_i2v.json")
 
-                random_size_path = os.path.join(dataset_dir, vocab + "_glove_init",
+                random_size_path = os.path.join(dataset_dir,
+                                                vocab + "_glove_init",
                                                 "random_size.txt")
             # print(dataset_dir, reverse_vocab_path, random_size_path)
 

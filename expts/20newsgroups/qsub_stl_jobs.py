@@ -382,7 +382,8 @@ def run_single_experiment(meta_config, exp_params_comb, qsub_params, debug):
             exp_params_comb['finetune_dataset_name'], exp_params_comb)
         exp_params_comb['finetune_dataset_name'] = complete_path_name(
             exp_params_comb['finetune_dataset_name'], exp_params_comb)
-        exp_params_comb['dataset_name'] = exp_params_comb['finetune_dataset_name']
+        exp_params_comb['dataset_name'] = exp_params_comb[
+            'finetune_dataset_name']
     else:
         exp_params_comb['dataset_name'] = complete_path_name(
             exp_params_comb['dataset_name'], exp_params_comb)

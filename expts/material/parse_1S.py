@@ -62,7 +62,8 @@ def main():
 
                 p_miss = float(scores[1].strip('%')) / 100
                 p_fa = float(scores[2].strip('%')) / 100
-                p_merged = 1 - 2 * (1 - p_miss) * (1 - p_fa) / (2 - p_miss - p_fa)
+                p_merged = 1 - 2 * (1 - p_miss) * (1 - p_fa) / (
+                        2 - p_miss - p_fa)
 
                 p_misses[domain_name] = p_miss
                 p_fas[domain_name] = p_fa
