@@ -53,7 +53,8 @@ pip install -r requirements.txt
 
 - `expts/`:
   - `scripts/`: scripts to write TFRecord data and to run the model
-  - `experiment_name`: setup, configuration, running scripts, etc. for a particular experiment
+  - `example/`: example code to run experiments
+  - `experiment_name/`: setup, configuration, running scripts, etc. for a particular experiment
   - ...
   <!-- - TODO example folders -->
 - `mtl/`: main codebase

@@ -43,8 +43,6 @@ For Python package requirements and other general info see `../../requirement.tx
     - `convert_TEXT_to_JSON.py`: python script to convert to text to predict from plain text to json format
     - `discriminative_driver.py`: driver script to run the MUTL model'
 
-    <!-- TODO generative_driver.py ? -->
-
 
 
 # Pipeline
@@ -77,7 +75,7 @@ Run `./setup.sh` to setup the data.
 - for multiple datasets
     - Modify default args file `args_merged.json` or use another name (e.g. `args_oneinput_nopretrain.json`)
     - Write TFRecord data with `python ../scripts/write_tfrecords_merged.py DATASET_1 DATASET_2 ... [args_....json]`, e.g. `python ../scripts/write_tfrecords_merged.py SSTb LMRD` or `python ../scripts/write_tfrecords_merged.py SSTb LMRD args_oneinput_nopretrain.json`
-- if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte xxxx in position xxxx: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
+- if errors like `UnicodeDecodeError: 'ascii' codec can't decode byte bbbb in position bbbb: ordinal not in range(128)` occur, try setting system variable `export LC_ALL='en_US.utf8'`
 
 
 ## 2. Run Discriminative MULT
@@ -128,10 +126,8 @@ Relevant source files:
 
 ### Optional Arguments
 
-<!-- TODO categories -->
+<!-- TODO -->
 * `experiment_name`: A string for the name of the experiment.
-
-
 
 
 ### 2.1 Train the model
@@ -162,7 +158,6 @@ Use the trained model to evaluate on the test set.
 
 ### 2.3. Predict with the model
 
-<!-- TODO other features? -->
 Use the trained model to predict unlabeled data. When writing TFRecord data for the unlabeled data to predict, remember to use the same vocabulary as the training data.
 
 - Relevant source code
@@ -210,11 +205,10 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
     - `mtl/embedders/pretrained.py`
 
 ### Steps
-<!--  TODO elmo -->
-0. Currently the supported pre-trained word embeddings are Glove, fasttext, word2vec, word2vec slim. See `pretrained_word_embeddings/README.md` for more information.
-1. Download pre-trained word embedding files using `pretrained_word_embeddings/download...`
-2. Write TFRecord data: specify `pretrained_file` and `expand_vocab` in the args file. e.g. See `args_oneinput_glove_expand.json`, `args_oneinput_glove_init.json`
-3. Write encoder configuration file:
+1. Currently the supported pre-trained word embeddings are Glove, fasttext, word2vec, word2vec slim. See `pretrained_word_embeddings/README.md` for more information.
+2. Download pre-trained word embedding files using `pretrained_word_embeddings/download...`
+3. Write TFRecord data: specify `pretrained_file` and `expand_vocab` in the args file. e.g. See `args_oneinput_glove_expand.json`, `args_oneinput_glove_init.json`
+4. Write encoder configuration file:
     - for `embed_fn`, use either `expand_pretrained` or `init_pretrained`
         - `expand_pretrained`: expand training vocab with pre-trained file's vocabulary, new embeddings can be either trainable or not
         - `init_pretrained`: initialize training vocab with pre-trained word embeddings, new embeddings always trainable
@@ -254,7 +248,7 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
 ## Arguments of the generated TFRecord files
 
 - generated after writing TFRecord files
-- e.g., in 'TASK/data/tf/merged/DATASETXXX_DATASETYYY/min_(min_freq)_max_(max_freq)/DATASETXXX'
+- e.g., in 'TASK/data/tf/merged/DATASETAAA_DATASETBBB/min_(min_freq)_max_(max_freq)/DATASETAAA'
 
 - num_classes: number of class labels
 - max_document_length: maximum document length used to generate the TFRecord files
@@ -271,10 +265,3 @@ Pre-trained word embeddings are commonly used in NLP tasks nowadays. Four popula
 - has_unlabeled: whether there is unlabeled data
 - unlabeled_path: path to the TFRecord file of the unlabeled data
 - unlabeled_size: size of the unlabeled data
-
-
-
-
-
-
-

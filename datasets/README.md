@@ -1,8 +1,8 @@
-<!-- TODO all datasets -->
-<!-- TODO datasets cleanup -->
-<!-- TODO setup.sh for each dataset (mainly download link) -->
+# Datasets
 
-# Overview
+Datasets of different domains for text classification.
+
+## Overview
 
 | type      | name                            | #items     | #labels | unit      | summary                                              |
 | --------- | ------------------------------- | ---------- | ------- | --------- | ---------------------------------------------------- |
@@ -37,15 +37,13 @@
 | emotion   | Twitter_18                      | 2,524      | 18      | sentence  | Emotional tweets                                     |
 
 
-<!-- TODO formatting -->
-### file structure
+## File Structure
 ```
 datasets/
 dataset_type/
 e.g.
 sentiment/ : sentiment analysis
 emotion/ : emotion detection
-dialogue/ : dialogue discourse act
 topic/ : topic
 
 dataset_name/
@@ -67,5 +65,4 @@ index.json.gz : indices of train/test/(valid) if given
 text_field_names: names of all the text fields if not 'text'
 label_field_name: name of the label field if not 'label'
 ```
-### path
-`/export/b02/fwang/mlvae/tasks/datasets/`
+
