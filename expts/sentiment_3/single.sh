@@ -1,1 +1,0 @@
-python ../scripts/discriminative_driver.py --datasets RTU --dataset_paths data/tf/single/RTU/min_100_max_-1/ --class_sizes 2 --vocab_path data/tf/single/RTU/min_100_max_-1/vocab_size.txt --model mult --encoder_architecture paragram_phrase_tied_word_embeddings

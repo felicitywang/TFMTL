@@ -1,7 +1,0 @@
-GOV GOV_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_tweet_dan_meanmax_relu_0.1_nopretrain 0.5
-LIF LIF_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_tweet_dan_meanmax_relu_0.1_nopretrain 0.5
-HEA HEA_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_tweet_dan_meanmax_relu_0.1_nopretrain 0.5
-MIL MIL_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_tweet_dan_meanmax_relu_0.1_nopretrain 0.5
-SPO SPO_turk_60_50_min_1_max_-1_vocab_-1_doc_-1_tok_tweet_dan_meanmax_relu_0.1_nopretrain 0.5
-
-
