@@ -14,15 +14,6 @@
 # =============================================================================
 
 # synthetic data
-# mkdir -p data/json/GOV_syn_p100r1000/
-# mkdir -p data/json/LIF_syn_p100r1000/
-# mkdir -p data/json/HEA_syn_p100r1000/
-# mkdir -p data/json/BUS_syn_p100r1000/
-# mkdir -p data/json/BUS_syn_p100r1000/
-# mkdir -p data/json/LAW_syn_p100r1000/
-# mkdir -p data/json/MIL_syn_p100r1000/
-# mkdir -p data/json/SPO_syn_p100r1000/
-
 mkdir -p data/json/GOV_syn_p1000r1000/
 mkdir -p data/json/LIF_syn_p1000r1000/
 mkdir -p data/json/HEA_syn_p1000r1000/
@@ -31,18 +22,6 @@ mkdir -p data/json/BUS_syn_p1000r1000/
 mkdir -p data/json/LAW_syn_p1000r1000/
 mkdir -p data/json/MIL_syn_p1000r1000/
 mkdir -p data/json/SPO_syn_p1000r1000/
-
-# mkdir -p data/json/GOV_syn_p11000r11000/
-# mkdir -p data/json/LIF_syn_p11000r11000/
-# mkdir -p data/json/HEA_syn_p11000r11000/
-# mkdir -p data/json/BUS_syn_p11000r11000/
-# mkdir -p data/json/BUS_syn_p11000r11000/
-# mkdir -p data/json/LAW_syn_p11000r11000/
-# mkdir -p data/json/MIL_syn_p11000r11000/
-# mkdir -p data/json/SPO_syn_p11000r11000/
-
-
-
 
 # copy synthetic data
 cp /export/a05/mahsay/domain/data/json/syn/p1000r1000/clean/GOV/data.json.gz data/json/GOV_syn_p1000r1000/data.json.gz

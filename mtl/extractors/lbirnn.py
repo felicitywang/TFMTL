@@ -21,6 +21,7 @@ import tensorflow as tf
 from six.moves import xrange
 
 import mtl.util.registry as registry
+from mtl.extractors.ran_cell import RANCell
 from mtl.util.common import (validate_extractor_inputs,
                              listify,
                              unlistify)
@@ -30,11 +31,16 @@ def get_multi_cell(cell_type, cell_size, num_layers):
   if cell_type == tf.contrib.rnn.GRUCell:
     cell = cell_type(cell_size,
                      kernel_initializer=tf.contrib.layers.xavier_initializer())
-
   elif cell_type == tf.contrib.rnn.LSTMCell:
     cell = cell_type(cell_size,
                      initializer=tf.contrib.layers.xavier_initializer())
-
+  # TODO initializer???
+  elif cell_type == tf.contrib.rnn.SRUCell:
+    cell = cell_type(cell_size,
+                     initializer=tf.contrib.layers.xavier_initializer())
+  # TODO layer num???
+  elif cell_type == RANCell:
+    cell = cell_type(num_units=cell_size)
   else:
     cell = cell_type(cell_size)
 
@@ -416,7 +422,7 @@ def lbirnn_stock(inputs,
   else:
     # shape states: [2, 2]
     # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L40)
-    if cell_type == tf.contrib.rnn.GRUCell:
+    if cell_type == tf.contrib.rnn.GRUCell or cell_type == RANCell:
       output = tf.concat([states[0], states[1]], 1)
     elif cell_type == tf.contrib.rnn.LSTMCell:
       output = tf.concat([states[0][1], states[1][1]], 1)

@@ -132,8 +132,10 @@ def parse_args():
                  help='Key of the dataset(s) to train and evaluate on')
   p.add_argument('--dataset_paths', nargs='+', type=str,
                  help="""Paths to the directory containing the TFRecord files
-                  (train.tf, valid.tf, test.tf) for the dataset(s) given by 
+                  (train.tf, valid.tf, test.tf) for the dataset(s) given by
                   the --datasets flag (in the same order)""")
+  p.add_argument('--precompute_path', type=str,
+                 help="Path to the file containing precomputed embeddings")
   p.add_argument('--vocab_size_file', type=str,
                  help='Path to the file containing the vocabulary size')
   p.add_argument('--architecture', type=str,
@@ -252,6 +254,9 @@ def train_model(model,
           dataset_name]['text_weights']
     elif embed_fn == 'pretrained':
       additional_encoder_kwargs[dataset_name]['is_training'] = True
+    elif embed_fn == 'tokenized_embed':
+      additional_encoder_kwargs[dataset_name][
+        'precompute_path'] = args.precompute_path
     else:
       pass
 
@@ -281,6 +286,10 @@ def train_model(model,
   # TODO multi loss
   losses = dict()
   for dataset in args.datasets:
+    # import pdb
+    # sess = tf.Session()
+    # sess.run(model_info[dataset_name]['train_iter'].initializer)
+    # batch = model_info[dataset_name]['train_batch']
     losses[dataset] = model.get_loss(train_batches[dataset],
                                      dataset,
                                      dataset,
@@ -390,15 +399,19 @@ def train_model(model,
 
       sess.run([_train_init_op, _valid_init_op])
 
+      init_value = float('-inf')
+      # TODO
+      if args.tuning_metric == 'MAE_MACRO':
+        init_value = float('inf')
       best_eval_performance[dataset_name] = {"epoch": -1,
-                                             "acc": float('-inf'),
+                                             args.tuning_metric: init_value,
                                              "performance": None
                                              }
 
-    best_total_acc = float('-inf')
-    best_total_acc_epoch = -1
+    best_total_tuning_metric = init_value
+    best_tuning_metric_epoch = -1
 
-    main_task_dev_accuracy = []
+    main_task_dev_tuning_metric = []
     stopping_criterion_reached = False
     early_stopping_dev_results = ""
 
@@ -410,7 +423,7 @@ def train_model(model,
 
       start_time = time()
 
-      total_acc = 0.0
+      total_tuning_metric = 0.0
 
       # Take steps_per_epoch gradient steps
       total_loss = 0
@@ -445,7 +458,7 @@ def train_model(model,
         train_file_writer.add_summary(
           train_loss_summary, global_step=step)
 
-      # Evaluate held-out accuracy
+      # Evaluate held-out tuning metric
       # if not args.test:  # Validation mode
       # Get performance metrics on each dataset
       for dataset_name in args.datasets:
@@ -480,28 +493,29 @@ def train_model(model,
         valid_loss += float(alpha) * model_info[dataset_name]['valid_metrics'][
           'eval_loss']
 
-      main_task_acc = model_info[args.datasets[0]
-      ]['valid_metrics']['Acc']
+      main_task_tuning_metric = model_info[args.datasets[0]
+      ]['valid_metrics'][args.tuning_metric]
 
       if args.summaries_dir:
         valid_loss_summary = tf.Summary(
           value=[tf.Summary.Value(tag="loss", simple_value=valid_loss)])
         valid_file_writer.add_summary(
           valid_loss_summary, global_step=step)
-        valid_main_task_accuracy_summary = tf.Summary(value=[
-          tf.Summary.Value(tag="main-task-acc", simple_value=main_task_acc)])
-        valid_file_writer.add_summary(valid_main_task_accuracy_summary,
+        valid_main_task_tuning_metric_summary = tf.Summary(value=[
+          tf.Summary.Value(tag="main-task-" + args.tuning_metric,
+                           simple_value=main_task_tuning_metric)])
+        valid_file_writer.add_summary(valid_main_task_tuning_metric_summary,
                                       global_step=step)
 
-      if (main_task_acc >= args.early_stopping_acc_threshold) and (
-        len(main_task_dev_accuracy) >= args.patience) and (
-        main_task_acc < main_task_dev_accuracy[-args.patience]):
+      if (main_task_tuning_metric >= args.early_stopping_acc_threshold) and (
+        len(main_task_dev_tuning_metric) >= args.patience) and (
+        main_task_tuning_metric < main_task_dev_tuning_metric[-args.patience]):
         print(
           "Stopping early at epoch {} (patience={}, early stopping acc threshold={})".format(
             epoch, args.patience, args.early_stopping_acc_threshold))
         stopping_criterion_reached = True
 
-      main_task_dev_accuracy.append(main_task_acc)
+      main_task_dev_tuning_metric.append(main_task_tuning_metric)
 
       if args.reporting_metric != "Acc":
         main_task_performance = model_info[args.datasets[0]]['valid_metrics'][
@@ -522,7 +536,8 @@ def train_model(model,
         _num_eval_total = model_info[dataset_name]['valid_metrics'][
           'ntotal']
         # TODO use other metric here for tuning
-        _eval_acc = model_info[dataset_name]['valid_metrics']['Acc']
+        _eval_tuning_metric = model_info[dataset_name]['valid_metrics'][
+          args.tuning_metric]
         # _eval_align_acc = model_info[dataset_name]['valid_metrics'][
         #  'aligned_accuracy']
 
@@ -544,8 +559,11 @@ def train_model(model,
                               'Confusion_Matrix'])
 
         # Track best-performing epoch for each dataset
-        if _eval_acc >= best_eval_performance[dataset_name]["acc"]:
-          best_eval_performance[dataset_name]["acc"] = _eval_acc
+        # use the newest best epoch for test
+        if _eval_tuning_metric >= best_eval_performance[dataset_name][
+          args.tuning_metric]:
+          best_eval_performance[dataset_name][args.tuning_metric] = \
+            _eval_tuning_metric
           best_eval_performance[dataset_name]["performance"] = \
             model_info[dataset_name]['valid_metrics'].copy()
           best_eval_performance[dataset_name]["epoch"] = epoch
@@ -556,13 +574,13 @@ def train_model(model,
         # # test
         # saver.save(sess.raw_session(), checkpoint_path)
 
-        total_acc += _eval_acc
+        total_tuning_metric += _eval_tuning_metric
 
       # Track best-performing epoch for collection of datasets
 
-      if total_acc >= best_total_acc:
-        best_total_acc = total_acc
-        best_total_acc_epoch = epoch
+      if total_tuning_metric >= best_total_tuning_metric:
+        best_total_tuning_metric = total_tuning_metric
+        best_tuning_metric_epoch = epoch
         best_epoch_results = str_
         if len(args.datasets) > 1:
           saver.save(sess.raw_session(),
@@ -587,8 +605,11 @@ def train_model(model,
         break
 
     print(best_eval_performance)
-    print('Best total accuracy: {} at epoch {}'.format(best_total_acc,
-                                                       best_total_acc_epoch))
+    print(
+      'Best total {}: {} at epoch {}'.format(
+        args.tuning_metric,
+        best_total_tuning_metric,
+        best_tuning_metric_epoch))
     print(best_epoch_results)
 
     with open(args.log_file, 'a') as f:
@@ -606,11 +627,12 @@ def train_model(model,
       f.write("\n")
       for dataset, values in best_eval_performance.items():
         f.write(
-          'Metrics on highest-accuracy epoch for dataset {}: {}\n'.format(
-            dataset, values))
+          'Metrics on highest-{} epoch for dataset {}: {}\n'.format(
+            args.tuning_metric, dataset, values))
 
-      f.write('Best total accuracy: {} at epoch {}\n\n'.format(best_total_acc,
-                                                               best_total_acc_epoch))
+      f.write('Best total {}: {} at epoch {}\n\n'.format(
+        args.tuning_metric, best_total_tuning_metric,
+        best_tuning_metric_epoch))
       if stopping_criterion_reached:
         f.write('STOPPED EARLY AFTER {} EPOCHS\n'.format(epoch))
         f.write(early_stopping_dev_results + '\n\n')
@@ -634,7 +656,7 @@ def test_model(model, dataset_info, args):
   fill_topic_op(args, model_info)
   print("filled topic op")
 
-  str_ = '\nAccuracy on the held-out test data using different saved models:'
+  str_ = '\n' + args.tuning_metric + ' on the held-out test data using different saved models:'
 
   model_names = args.datasets.copy()
   if len(args.datasets) > 1:
@@ -690,8 +712,8 @@ def test_model(model, dataset_info, args):
 
         _num_eval_total = model_info[dataset_name]['test_metrics'][
           'ntotal']
-        _eval_acc = model_info[dataset_name]['test_metrics'][
-          'Acc']
+        # _eval_acc = model_info[dataset_name]['test_metrics'][
+        #   'Acc']
         # _eval_align_acc = model_info[dataset_name]['test_metrics'][
         #  'aligned_accuracy']
         str_ += '\n'
@@ -886,6 +908,8 @@ def compute_held_out_performance(session,
   # Initialize eval iterator
   session.run(eval_iterator.initializer)
 
+  d = None
+
   if args.experiment_name == 'RUDER_NAACL_18':
     if topic_path != '' and topic_path is not None:
       with gzip.open(topic_path, mode='rt') as f:
@@ -899,8 +923,6 @@ def compute_held_out_performance(session,
             # Topic-2 and Topic-5 require examples' topics to compute metric,
             # so we need to read their corresponding files
             raise
-
-  d = None
 
   if d is not None:
     index2topic = dict()
@@ -1117,6 +1139,8 @@ def main():
             dtype=tf.int64)
           FEATURES[text_field_name + '_weights'] = tf.VarLenFeature(
             dtype=tf.float32)
+        elif args.input_key == 'tokenized':  # hacky fix to accept ELMo
+          break
         else:
           raise ValueError(
             "Input key %s not supported!" % args.input_key)
@@ -1398,6 +1422,10 @@ def fill_pred_op_info(dataset_info, model, args, model_info):
     if embed_fn == 'pretrained':
       additional_encoder_kwargs[dataset_name]['is_training'] = False
 
+    if embed_fn == 'tokenized_embed':
+      additional_encoder_kwargs[dataset_name][
+        'precompute_path'] = args.precompute_path
+
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False
       if args.experiment_name == "RUDER_NAACL_18":
@@ -1465,6 +1493,10 @@ def fill_eval_loss_op(args, model, dataset_info, model_info):
 
     if embed_fn == 'pretrained':
       additional_encoder_kwargs[dataset_name]['is_training'] = False
+
+    if embed_fn == 'tokenized_embed':
+      additional_encoder_kwargs[dataset_name][
+        'precompute_path'] = args.precompute_path
 
     if extract_fn == "serial_lbirnn":
       additional_encoder_kwargs[dataset_name]['is_training'] = False

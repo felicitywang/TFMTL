@@ -12,32 +12,24 @@
     // main expts folder
     "root_dir": "/export/a08/fwang/tfmtl/expts/material",
     // "root_dir": ".",
-    "architecture":
-    //
-    // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_100",
-    // "dan_meanmax_relu_0.0_glove_expand_finetune",
-    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
-    "dan_meanmax_relu_0.0_nopretrain",
-    // "dan_meanmax_relu_0.1_nopretrain",
-    // "bilstm_attention_3_nopretrain",
     // dataset suffixes
     "dataset_suffixes": [
         // "_tmp"
-        "_init_tmp_finetune_turk_80_50",
-        "_init_tmp_finetune_turk_80_50_turk_80_50_para",
-        "_init_tmp_finetune_train_turk_80_50_turk_80_50_para_valid_gold_oracle",
-        "_init_syn_p1000r1000_finetune_turk_80_50",
-        "_init_syn_p1000r1000_finetune_turk_80_50_turk_80_50_para",
-        "_init_syn_p1000r1000_finetune_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
+        "_gold_only",
+        "_init_gold_only_finetune_turk_90_50",
+        "_init_gold_only_finetune_turk_80_50",
+        "_init_gold_only_finetune_turk_70_50",
+        "_init_gold_only_finetune_turk_60_50",
+        "_init_gold_only_finetune_turk_50_50"
     ],
+    "architecture":
+    //
+    "dan_meanmax_relu_0.1_nopretrain",
+    // "dan_meanmax_relu_0.1_glove_only_nofinetune",
     // which args to use
     "args_paths": [
         "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
         // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
     ],
     /****************for predict mode only*****************/
     // input key: default tokens
@@ -46,17 +38,18 @@
     "subdirs": [
         // 1S one-best
         // one-best
-        "1S/tt33/",
-        "1S/mt-25.asr-s5init/"
-        // // bag-of-phrase
+        // "tt52",
+        "mt-30.asr-s8-mtc"
+    // // bag-of-phrase
         // "tt33.bop/concat",
         // "mt-25.asr-s5init.bop/concat/n1"
     ],
     //    Which eval sets to predict
     "eval_dirs": [
-        "DEV",
+        // "DEV"
         "EVAL1",
-        "EVAL2"
+        "EVAL2",
+        "EVAL3"
     ],
     //    Which type of texts to predict
     "text_types": [
@@ -65,8 +58,8 @@
     ],
     // no need to modify
     "predict_dataset": "<domains>",
-    "predict_tfrecord_path": "<root_dir>/data/pred/tf/<text_types>/<lang>/<eval_dirs>/<subdir>/<dataset_name>/<args_paths>/pred.tf",
-    "predict_output_folder": "<root_dir>/data/predictions/<text_types>/<lang>/<eval_dirs>/<subdir>/<name>",
+    "predict_tfrecord_path": "<root_dir>/data/pred/tf/<text_types>/1S/<eval_dirs>/<subdir>/<dataset_name>/<args_paths>/pred.tf",
+    "predict_output_folder": "<root_dir>/data/predictions/<text_types>/1S/<eval_dirs>/<subdir>/<name>",
     // When in debug mode, write shell scripts but do to qsub
     // You can also run shell scripts manually
     // NOTE: for predict mode, set debug to false and directly output to some
@@ -82,7 +75,8 @@
         "GOV",
         "BUS",
         "LAW",
-        "MIL"
+        "MIL",
+        "REL"
     ],
     // experiment name
     "expt_setup_name": "",

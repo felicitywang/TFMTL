@@ -43,13 +43,13 @@
     // other args should be from the used args
     "args_file_path":
     //
-    "args_nopretrain.json",
-    // "args_pretrained.json",
+    // "args_nopretrain.json",
+    "args_pretrained.json",
     // "args_reg.json",
     // Which args to use(according to previous args file)
     "args_path":
     //
-    "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",

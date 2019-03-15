@@ -19,6 +19,10 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from mtl.extractors.ran_cell import RANCell
+from mtl.extractors.rda_cell import RDACell
+from mtl.extractors.rwa_cell import RWACell
+
 
 def get_activation_fn(s):
   if s == 'elu':
@@ -107,6 +111,14 @@ def str2func(s):
     "tf.contrib.rnn.BasicLSTMCell": tf.contrib.rnn.BasicLSTMCell,
     "tf.contrib.rnn.LSTMCell": tf.contrib.rnn.LSTMCell,
     "tf.contrib.rnn.GRUCell": tf.contrib.rnn.GRUCell,
+
+    "tf.contrib.rnn.SRUCell": tf.contrib.rnn.SRUCell,
+
+    # TODO
+    "RANCell": RANCell,
+    "RDACell": RDACell,
+    "RWACell": RWACell,
+
   }
 
   res = None

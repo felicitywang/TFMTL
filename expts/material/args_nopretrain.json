@@ -8,7 +8,7 @@
     "text_field_names": [
         "text"
     ],
-    "train_ratio": 0.9,
+    "train_ratio": 0.8,
     "valid_ratio": 0.1,
     "random_seed": 42,
     "subsample_ratio": 1,
@@ -19,6 +19,6 @@
     // "tokenizer": "split_tokenizer"
     // "tokenizer": "tweet_tokenizer",
     "tokenizer": "lower_tokenizer",
-    "stemmer": "wordnet_stemmer",
+    "stemmer": "snowball_stemmer",
     "stopwords": "nltk"
 }

@@ -208,6 +208,8 @@ I recommend putting all such files in `submissions/subid_description/`, where th
 The formatted files to submit would be saved in
 submission_config_folder/eval_dir/translation/1{A,B}/d-domain.tgz
 
+├───
+
     - submissions/
         - subid_description/
             - 1A.txt

@@ -27,3 +27,7 @@ cp /export/a05/mahsay/domain/data/json/doc -fr data/pred/json
 
 # sentence level
 cp /export/a05/mahsay/domain/data/json/sent -fr data/pred/json
+
+
+cp /export/a05/mahsay/domain/data/json/doc/1S/ data/pred/json/doc/ -fr
+cp /export/a05/mahsay/domain/data/json/sent/1S/ data/pred/json/sent/ -fr

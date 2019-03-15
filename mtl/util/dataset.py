@@ -1218,7 +1218,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                                   write_bow=False,
                                   write_tfidf=False,
                                   expand_vocab=False,
-                                  pretrained_only=False,
+                                  pretrained_only=True,
                                   preproc=True,
                                   vocab_all=True):
   """Use the dictionary of the pre-trained word embedding, combine the words
@@ -1242,6 +1242,11 @@ def merge_pretrain_write_tfrecord(json_dirs,
   # json_dir/vocab_freq_dict.json
 
   pretrained_path = os.path.join(vocab_dir, vocab_name)
+
+  if pretrained_only:
+    # no need to pre-compute vocab, simply
+
+
 
   # get the vocab from the training data of each dataset
   # Assumes that all datasets have
@@ -1267,7 +1272,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       vocab_given=False,
                       generate_tf_record=False,
                       preproc=preproc,
-                      vocab_all=vocab_all)
+                      vocab_all=vocab_all,
+                      pretrained_only=pretrained_only)
     train_vocab_set = train_vocab_set.union(set(dataset.mapping))
     if padding:
       max_document_lengths.append(max_document_length)
@@ -1281,10 +1287,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
 
   train_vocab_set.difference_update(set(specials))
   train_vocab_list = specials + list(train_vocab_set)
-  random_size = None
-  reverse_vocab_path = None
 
-  if not expand_vocab:
+  if not expand_vocab: # init_vocab
     print('Use training vocab only.')
 
     random_size, vocab_v2i_all = reorder_vocab(pretrained_path,
@@ -1294,7 +1298,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
               "w") as file:
       file.write(str(random_size))
 
-  else:
+  elif expand_vocab:
 
     vocab_v2i_all, vocab_extra = combine_vocab(pretrained_path,
                                                train_vocab_list)
@@ -1304,6 +1308,7 @@ def merge_pretrain_write_tfrecord(json_dirs,
                      mode='w', encoding='utf-8') as file:
       json.dump(vocab_extra, file,
                 ensure_ascii=False, indent=4)
+
 
   with codecs.open(os.path.join(merged_dir, 'vocab_v2i.json'),
                    mode='w', encoding='utf-8') as file:
@@ -1348,7 +1353,8 @@ def merge_pretrain_write_tfrecord(json_dirs,
                       stemmer=stemmer,
                       stopwords='nltk',
                       preproc=preproc,
-                      vocab_all=vocab_all)
+                      vocab_all=vocab_all,
+                      pretrained_only=pretrained_only)
     args_dicts.append(dataset.args)
 
   return args_dicts

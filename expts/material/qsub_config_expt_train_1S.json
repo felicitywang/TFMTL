@@ -20,31 +20,26 @@
     // which domains to use
     "domains": [
         "GOV",
+        "MIL",
         "BUS",
         "LAW",
-        "MIL"
+        "REL"
     ],
     // experiment name
     "expt_setup_name": "",
     // dataset suffixes
     "dataset_suffixes": [
-        "_tmp"
+        "_gold_only"
     ],
     // what architecture in encoders.json to use
     "architecture":
     //
     // "dan_meanmax_relu_0.1_nopretrain",
-    "dan_meanmax_relu_0.0_nopretrain",
-    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
-    // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_100",
+    "dan_meanmax_relu_0.1_glove_only_finetune",
     // which args to use
     "args_paths": [
-        "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand"
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
-        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+        // "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
+        "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
     ],
     // No need to modify
     // CLSP Grid related
@@ -55,7 +50,7 @@
     // whether to use cpu or gpu
     "gpu_total_slots": 5,
     "gpu_slots_per_job": 2,
-    "cpu_total_slots": 100,
+    "cpu_total_slots": 200,
     "cpu_slots_per_job": 2,
     // mem_ram in GB
     "mem_ram": 3,
@@ -85,9 +80,9 @@
     "embedders_tied": false,
     "extractors_tied": false,
     // Optional to modify
-    "num_train_epochs": 30,
+    "num_train_epochs": 200,
     // no early stopping when 1.0
-    "early_stopping_acc_threshold": 1.0,
+    "early_stopping_acc_threshold": 0.0,
     // only needed when there's early stopping
     // "patience": 3,
     // default to 1 in STL mode
@@ -104,7 +99,7 @@
     "output_keep_prob": 1.0,
     "l2_weight": 0.0,
     "optimizer": "rmsprop",
-    "lr0": 0.001,
+    "lr0": 0.0001,
     // classification
     "metrics": "Acc Precision_Macro Recall_Macro F1_Macro",
     "tuning_metric": "Acc",

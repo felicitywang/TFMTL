@@ -8,11 +8,11 @@ python ../scripts/discriminative_driver.py \
        --topics_path data/json/SSTb/data.json.gz \
        --topic_field_name text \
        --encoder_config_file encoders.json \
-       --architecture meanmax_relu_0.1_glove_expand \
+       --architecture bilstm_glove_expand \
        --shared_mlp_layers 0 \
        --shared_hidden_dims 0 \
        --private_mlp_layers 1 \
-       --private_hidden_dims 64 \
+       --private_hidden_dims 128 \
        --alphas 1 \
        --optimizer rmsprop \
        --lr0 0.001 \

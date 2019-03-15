@@ -21,18 +21,16 @@
     // comment if classification(default)
     // "task": "regression",
     "architecture":
-    // "dan_meanmax_relu_0.1_glove_expand_finetune",
-    "dan_meanmax_relu_0.0_nopretrain",
-    // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
-    // "dan_meanmax_relu_0.1_nopretrain",
-    // "bilstm_attention_3_nopretrain",
+    "dan_meanmax_relu_0.1_nopretrain",
+    // "dan_meanmax_relu_0.1_glove_only_nofinetune",
     // input key: default tokens
     // which domains to use
     "domains": [
         "GOV",
         "BUS",
         "LAW",
-        "MIL"
+        "MIL",
+        "REL"
     ],
     // experiment name
     "expt_setup_name": "",
@@ -41,7 +39,7 @@
     // "init_dataset_suffix": "_train_syn_p1000r1000_valid_gold_one",
     "init_dataset_suffix": [
         //
-        "_tmp"
+        "_gold_only"
         // "_syn_p1000r1000"
         // "_train_syn_p1000r1000_valid_gold_oracle",
         // "_syn_p1000r1000_syn_p1000r1000_para",
@@ -52,9 +50,11 @@
     // FINE-TUNE dataset name
     "finetune_dataset_suffix": [
         //
+        "_turk_90_50",
         "_turk_80_50",
-        "_turk_80_50_turk_80_50_para",
-        "_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
+        "_turk_70_50",
+        "_turk_60_50",
+        "_turk_50_50"
     ],
     "finetune_dataset_name": "<domains>_init<init_dataset_suffix>_finetune<finetune_dataset_suffix>",
     // where to load the INIT model
@@ -64,10 +64,7 @@
     "args_paths":
     //
     "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_wiki-news-300d-1M_expand",
-    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_GoogleNews-vectors-negative300-SLIM_expand"
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only",
     // No need to modify
     // CLSP Grid related
     // for gpu: total_slots = gpu quota (=5)
@@ -108,7 +105,7 @@
     "embedders_tied": false,
     "extractors_tied": false,
     // Optional to modify
-    "num_train_epochs": 30,
+    "num_train_epochs": 50,
     // no early stopping when 1.0
     "early_stopping_acc_threshold": 1.0,
     // only needed when there's early stopping
@@ -127,7 +124,7 @@
     "output_keep_prob": 1.0,
     "l2_weight": 0.0,
     "optimizer": "rmsprop",
-    "lr0": 0.001,
+    "lr0": 0.0001,
     // classification
     "metrics": "Acc Precision_Macro Recall_Macro F1_Macro",
     "tuning_metric": "Acc",
