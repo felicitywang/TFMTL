@@ -5,42 +5,59 @@
     "bashrc_path": "/home/fwang/.bashrc",
     "cpu_venv": "source /home/fwang/cpu/bin/activate",
     "gpu_venv": "source /home/fwang/gpu/bin/activate",
-    "code_path": "/home/fay/jhu/lab/tfmtl/expts/scripts/discriminative_driver.py",
+    "code_path": "/export/a08/fwang/tfmtl/expts/scripts/discriminative_driver.py",
     "email": "fwang40@jhu.edu",
     "username": "fwang",
     "cpu_or_gpu": "gpu",
     // main expts folder
-    "root_dir": "/home/fay/jhu/lab/tfmtl/expts/example",
+    "root_dir": "/export/a08/fwang/tfmtl/expts/movie_reviews",
     // "root_dir": ".",
     // When in debug mode, write shell scripts but do to qsub
     // You can also run shell scripts manually
     // file and run it, instead of using qsub
-    "debug": true,
+    "debug": false,
     /****************for predict mode only*****************/
     // mode for driver script: train/test/predict/finetune
     // Modify these!!!
     "mode": "train",
     // "mode": "test",
-    // "mode": "finetune",
-    // comment if classification(default)
-    // "task": "regression",
-    "architecture": // "dan_meanmax_relu_0.0_nopretrain",
+    // which args to use
+    "args_paths":
+    //
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_ruder",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_ruder_glove.6B.100d_expand",
+    "min_0_max_-1_vocab_-1_doc_-1_tok_ruder_glove.6B.100d_init",
+    // "min_1_max_-1_vocab_-1_doc_-1_tok_ruder_glove.6B.100d_only",
+    "architecture":
+    // 1. dans
+    // "dan_meanmax_relu_0.0_nopretrain",
+    // "dan_meanmax_tanh_0.0_nopretrain",
+    //
+    // 2. glove
+    // "bilstm_glove_init_finetune",
+    // "bilstm_nopretrain",
+    // "bilstm_glove_expand_finetune",
+    //
+    // 3. dan + glove
+    "dan_meanmax_relu_0.0_glove_init_finetune",
+    // "dan_meanmax_relu_0.0_glove_expand_finetune",
+    // "dan_meanmax_relu_0.0_glove_expand_finetune",
     // "dan_meanmax_relu_0.1_glove_expand_finetune",
-    "bigru_nopretrain",
-    // "bilstm_attention_3_nopretrain",
+    // "dan_meanmax_tanh_0.0_glove_expand_finetune",
+    // "dan_meanmax_tanh_0.1_glove_expand_finetune",
     // input key: default tokens
     // which datasets to use
     "datasets": [
-        //
-        "SSTb"
+        "SST2 RTC"
     ],
-    // default to 20 for SSTb
-    "class_sizes": "5",
+    "dataset_name":
+    // TODO un hard-code this in qsub_mtl_jobs.py
+    "RTC_SST2",
+    // default to 20 for 20NewsGroups
+    "class_sizes": "2 2",
+    "alphas": "0.5 0.5",
     // experiment name
     "expt_setup_name": "",
-    // which args to use
-    "args_paths": //
-    "min_1_max_-1_vocab_-1_doc_-1_tok_tweet",
     // No need to modify
     // CLSP Grid related
     // for gpu: total_slots = gpu quota (=5)
@@ -48,50 +65,49 @@
     // for cpu: total_slots = cpu quota (=100)
     //          slots_per_job = # cpu cores to use
     // whether to use cpu or gpu
-    "gpu_total_slots": 5,
-    "gpu_slots_per_job": 2,
+    "gpu_total_slots": 4,
+    "gpu_slots_per_job": 1,
     "cpu_total_slots": 100,
     "cpu_slots_per_job": 2,
     // mem_ram in GB
-    "mem_ram": 3,
+    "mem_ram": 10,
     "num_intra_threads": 1,
     "num_inter_threads": 1,
     // Hyper-parameters / default relative paths
-    // dataset_name
-    "dataset_name": "<datasets>",
+    // // dataset_name
+    // "dataset_name": "<datasets>",
     // dataset paths: where the data.json.gz is stored
-    "dataset_paths": "<root_dir>/data/tf/single/<dataset_name>/<args_paths>",
+    // "dataset_paths": "<root_dir>/data/tf/merged/<dataset_name>/<args_paths>",
+    "dataset_paths": "<root_dir>/data/tf/merged/RTC_SST2/<args_paths>/SST2 <root_dir>/data/tf/merged/RTC_SST2/<args_paths>/RTC ",
     // topics paths
-    "topics_paths": "<root_dir>/data/json/<dataset_name>",
+    // "topics_paths": "<root_dir>/data/json/<dataset_name>",
+    "topics_paths": "data/json/SST2 data/json/RTC",
     // where to store results
     "results_dir": "<root_dir>/data/results/<expt_setup_name>/<name>",
     // where to store models(checkpoints)
     "checkpoint_dir": "<root_dir>/data/results/<expt_setup_name>/<name>/ckpt",
     // for finetune mode only
     // where to store summaries(for tensorboard), comment if not storing summaries
-    "summaries_dir": "<root_dir>/data/results/<expt_setup_name>/<name>/summ",
+    // "summaries_dir": "<root_dir>/data/results/<expt_setup_name>/<name>/summ",
     // where to store logs
     "log_file": "<root_dir>/data/results/<expt_setup_name>/<name>/<mode>.log",
     // configuration of encoders.json, will be read to generate encoders.json for each dataset
     "encoder_config_file": "<root_dir>/data/results/<expt_setup_name>/<name>/encoders.json",
     // what architecture in encoders.json to use
-    // default to false in stl mode
-    "embedders_tied": false,
-    "extractors_tied": false,
+    "embedders_tied": true,
+    "extractors_tied": true,
     // Optional to modify
-    "num_train_epochs": 30,
+    "num_train_epochs": 200,
     // no early stopping when 1.0
     "early_stopping_acc_threshold": 1.0,
     // only needed when there's early stopping
     // "patience": 3,
-    // default to 1 in STL mode
-    "alphas": "1",
     "model": "mult",
     "shared_mlp_layers": 0,
     "shared_hidden_dims": 0,
     // how many MLP layers and how dimensions of each
     "private_mlp_layers": 1,
-    "private_hidden_dims": 128,
+    "private_hidden_dims": 100,
     "input_keep_prob": 1.0,
     "output_keep_prob": 1.0,
     "l2_weight": 0.0,
@@ -105,6 +121,8 @@
     // "tuning_metric": "MSE",
     // "reporting_metric": "Acc MSE",
     "seed": [
-        42
+        42,
+        31,
+        11
     ]
 }

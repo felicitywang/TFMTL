@@ -288,32 +288,6 @@ extractors = {
             'initial_state_bwd': None
         }
     },
-    'biran': {
-        'extract_fn': 'serial_lbirnn_stock',
-        'extract_kwargs': {
-            'num_layers': 1,
-            'cell_type': 'RANCell',
-            'cell_size': CELL_SIZE,
-            'output_keep_prob': OUTPUT_KEEP_PROB,
-            'attention': False,
-            'attn_length': None,
-            'initial_state_fwd': None,
-            'initial_state_bwd': None
-        }
-    },
-    'bisru': {
-        'extract_fn': 'serial_lbirnn_stock',
-        'extract_kwargs': {
-            'num_layers': 1,
-            'cell_type': 'tf.contrib.rnn.SRUCell',
-            'cell_size': CELL_SIZE,
-            'output_keep_prob': OUTPUT_KEEP_PROB,
-            'attention': False,
-            'attn_length': None,
-            'initial_state_fwd': None,
-            'initial_state_bwd': None
-        }
-    },
     'bilstm_attention_3': {
         'extract_fn': 'serial_lbirnn_stock',
         'extract_kwargs': {
@@ -563,7 +537,7 @@ def main():
 
     print(encoders)
 
-    filename = 'qsub_config_encod.json' if len(sys.argv) == 1 else sys.argv[1]
+    filename = 'encoders.json' if len(sys.argv) == 1 else sys.argv[1]
     with codecs.open(filename, mode='w', encoding='utf-8') as file:
         json.dump(encoders, file, ensure_ascii=False, indent=4)
 
