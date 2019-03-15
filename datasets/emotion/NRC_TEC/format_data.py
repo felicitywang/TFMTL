@@ -14,7 +14,6 @@ for line in file.readlines():
     print(emotion)
     data_list.append({'id': id, 'text': text, 'emotion': emotion})
 
-
 df = pd.DataFrame(data_list)
 df['label'] = None
 label_encoder = LabelEncoder()

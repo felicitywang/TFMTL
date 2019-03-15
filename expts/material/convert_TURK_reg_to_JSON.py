@@ -28,40 +28,40 @@ from mtl.util.util import make_dir
 
 
 def main():
-  raw_dir = 'data/raw/TURK'
-  json_dir = 'data/json/'
+    raw_dir = 'data/raw/TURK'
+    json_dir = 'data/json/'
 
-  domains = ['GOV', 'LIF', 'BUS', 'LAW', 'HEA', 'MIL', 'SPO']
+    domains = ['GOV', 'LIF', 'BUS', 'LAW', 'HEA', 'MIL', 'SPO']
 
-  for domain in domains:
-    tsvpath = os.path.join(raw_dir, domain + '.tsv')
-    df = pd.read_csv(tsvpath, sep='\t')
-    data = []
-    index = 0
-    for item in df.to_dict('records'):
-      data.append({
-        'index': index,
-        'id': item['id'],
-        'text': item['sent'],
-        'label': float(item['score_mean']) / 100.0,
-      })
-      index += 1
+    for domain in domains:
+        tsvpath = os.path.join(raw_dir, domain + '.tsv')
+        df = pd.read_csv(tsvpath, sep='\t')
+        data = []
+        index = 0
+        for item in df.to_dict('records'):
+            data.append({
+                'index': index,
+                'id': item['id'],
+                'text': item['sent'],
+                'label': float(item['score_mean']) / 100.0,
+            })
+            index += 1
 
-    directory = os.path.join(json_dir, domain + '_turk_reg')
-    make_dir(directory)
-    with gzip.open(os.path.join(directory, 'data.json.gz'), mode='wt') as file:
-      json.dump(data, file, ensure_ascii=False)
+        directory = os.path.join(json_dir, domain + '_turk_reg')
+        make_dir(directory)
+        with gzip.open(os.path.join(directory, 'data.json.gz'), mode='wt') as file:
+            json.dump(data, file, ensure_ascii=False)
 
-  # open test
-  for domain in domains:
-    directory = os.path.join(json_dir, domain + '_turk_reg')
-    # print(directory)
-    with gzip.open(os.path.join(directory, 'data.json.gz'), mode='rt') as file:
-      test = json.load(file)
-      print('{}: all={}'.format(
-        directory,
-        len(test)))
+    # open test
+    for domain in domains:
+        directory = os.path.join(json_dir, domain + '_turk_reg')
+        # print(directory)
+        with gzip.open(os.path.join(directory, 'data.json.gz'), mode='rt') as file:
+            test = json.load(file)
+            print('{}: all={}'.format(
+                directory,
+                len(test)))
 
 
 if __name__ == '__main__':
-  main()
+    main()

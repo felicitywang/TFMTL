@@ -49,7 +49,7 @@ def main():
 
     all_dirs = {}
     for eval_dir, text_type, lang in product(
-            eval_dirs, text_types, subdirs):
+        eval_dirs, text_types, subdirs):
 
         directory = os.path.join(text_type, lang, eval_dir)
 
@@ -59,7 +59,7 @@ def main():
             all_dirs[directory] = subdirs[lang]
 
     for basedir, domain, dataset_suffix in product(
-            all_dirs, domains, dataset_suffixes):
+        all_dirs, domains, dataset_suffixes):
         dataset_path = domain + dataset_suffix
         for subdir in all_dirs[basedir]:
             num += 1

@@ -249,8 +249,8 @@ def create_qsub_params(meta_config):
         # 'e': os.path.join(meta_config.results_dir, 'e'),
         # 'o': os.path.join(meta_config.results_dir, 'o'),
         'l':
-        'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
-                                               meta_config.mem_ram)
+            'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
+                                                   meta_config.mem_ram)
     }
 
     if meta_config.cpu_or_gpu == 'cpu':
@@ -304,7 +304,7 @@ def complete_path_name(path_name_template, exp_params_comb):
 
     # Replace the leading '/' if there was one
     if path_name_template.startswith('/') and \
-            not new_path_name.startswith('/'):
+        not new_path_name.startswith('/'):
         new_path_name = '/' + new_path_name
 
     return new_path_name
@@ -509,7 +509,7 @@ def consistent(encoders, exp_comb):
             all_embed_kwargs.append(embed_kwargs)
 
         if not all(
-                [d1 == d2 for d1 in all_embed_kwargs for d2 in all_embed_kwargs]):
+            [d1 == d2 for d1 in all_embed_kwargs for d2 in all_embed_kwargs]):
             # different embedder argument values
             return False
 

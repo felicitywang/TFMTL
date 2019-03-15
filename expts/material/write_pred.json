@@ -41,58 +41,57 @@
     // Which args.json file to use
     // only 'text_field_name' and 'label_field_name' are used
     // other args should be from the used args
-    "args_file_path":
-    //
+    "args_file_path": //
     // "args_nopretrain.json",
     "args_pretrained.json",
     // "args_reg.json",
     // Which args to use(according to previous args file)
-    "args_path":
-    //
+    "args_path": //
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",
     // Which subdirectories to predict
-    "subdirs": {
-        // "1A": [
-        //     // one-best
-        //     "t6/mt-4.asr-s5",
-        //     "tt18"
-        //     // // bag-of-phrase
-        //     // "t6.bop/concat",
-        //     // "tt18.bop/concat"
-        // ],
-        // "1B": [
-        //     // one-best
-        //     "t6/mt-5.asr-s5",
-        //     "tt20"
-        //     // // bag-of-phrase
-        //     // "t6.bop/concat",
-        //     // "tt20.bop/concat"
-        // ],
-        "1S": [
-            // one-best
-            "tt12",
-            "mt-12.asr-s5init"
-            // bag-of-phrase
-            // "tt12.bop/concat",
-            // "mt-12.asr-s5init.bop/concat"
-        ]
-    },
-    //    Which eval sets to predict
-    "eval_dirs": [
-        "DEV"
-        //   "EVAL1",
-        //   "EVAL2",
-        //   "EVAL3",
-        //   "ANALYSIS1",
-        //   "ANALYSIS2",
-        //   "goldDOMAIN"
-    ],
-    //    Which type of texts to predict
-    "text_types": [
-        //        "sent",
-        "doc"
+    "subdirs"
+    : {
+    // "1A": [
+    //     // one-best
+    //     "t6/mt-4.asr-s5",
+    //     "tt18"
+    //     // // bag-of-phrase
+    //     // "t6.bop/concat",
+    //     // "tt18.bop/concat"
+    // ],
+    // "1B": [
+    //     // one-best
+    //     "t6/mt-5.asr-s5",
+    //     "tt20"
+    //     // // bag-of-phrase
+    //     // "t6.bop/concat",
+    //     // "tt20.bop/concat"
+    // ],
+    "1S": [
+        // one-best
+        "tt12",
+        "mt-12.asr-s5init"
+        // bag-of-phrase
+        // "tt12.bop/concat",
+        // "mt-12.asr-s5init.bop/concat"
     ]
+},
+//    Which eval sets to predict
+"eval_dirs": [
+"DEV"
+//   "EVAL1",
+//   "EVAL2",
+//   "EVAL3",
+//   "ANALYSIS1",
+//   "ANALYSIS2",
+//   "goldDOMAIN"
+],
+//    Which type of texts to predict
+"text_types": [
+//        "sent",
+"doc"
+]
 }

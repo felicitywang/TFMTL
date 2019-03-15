@@ -30,7 +30,7 @@ def main():
     args = load_json(sys.argv[1])
 
     for domain, dataset_suffix, args_file_path in product(
-            args['domains'], args['dataset_suffixes'], args['args_file_paths']):
+        args['domains'], args['dataset_suffixes'], args['args_file_paths']):
         print('cd {}'.format(args['root_dir']))
         print(
             '{} {} {}{} {}'.format(

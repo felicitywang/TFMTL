@@ -13,7 +13,6 @@ if debug:
 else:
     root_dir = '/export/a08/fwang/tfmtl/'
 
-
 encoder_dict = {
     "serial_birnn_stock_glove_init_finetune": {
         "embedders_tied": True,
@@ -58,7 +57,7 @@ init_dict = {
     "embed_fn": "init_glove",
     "embed_kwargs": {
         "embed_dim": 100,
-        "glove_path": root_dir+"pretrained_word_embeddings/glove/glove.6B.100d.txt",
+        "glove_path": root_dir + "pretrained_word_embeddings/glove/glove.6B.100d.txt",
         "trainable": None,  # TODO
         "reverse_vocab_path": None,  # TODO
         # "data/tf/merged/Target_Topic2/glove.6B.100d_init/vocab_i2v.json",
@@ -81,7 +80,7 @@ expand_dict = {
     "embed_fn": "expand_glove",
     "embed_kwargs": {
         "embed_dim": 100,
-        "glove_path": root_dir+"pretrained_word_embeddings/glove/glove.6B.100d.txt",
+        "glove_path": root_dir + "pretrained_word_embeddings/glove/glove.6B.100d.txt",
         "trainable": None  # TODO
     },
     "extract_fn": "serial_lbirnn_stock",

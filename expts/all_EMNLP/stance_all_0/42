@@ -1,0 +1,1516 @@
+VALIDATION RESULTS
+[epoch=1/300 step=104 (32 s)] train_loss=3.9660657415023217 valid_loss=6.501144831761335 (per batch)
+(Stance) ntotal=984.000000 Acc=0.579268 ncorrect=570.000000 eval_loss=0.998617 **F1_PosNeg_Macro=0.364892** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.183951 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.337612 ncorrect=1657.000000 eval_loss=1.227240 *F1_PosNeg_Macro=0.239631* 
+(Target) ntotal=625.000000 Acc=0.521600 ncorrect=326.000000 eval_loss=1.091337 *F1_PosNeg_Macro=0.342163* 
+[epoch=2/300 step=208 (30 s)] train_loss=3.686903791931959 valid_loss=6.993033107885948 (per batch)
+(Stance) ntotal=984.000000 Acc=0.575203 ncorrect=566.000000 eval_loss=0.958062 **F1_PosNeg_Macro=0.363816** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.918137 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.330073 ncorrect=1620.000000 eval_loss=1.114036 *F1_PosNeg_Macro=0.146072* 
+(Target) ntotal=625.000000 Acc=0.529600 ncorrect=331.000000 eval_loss=1.002797 *F1_PosNeg_Macro=0.346234* 
+[epoch=3/300 step=312 (30 s)] train_loss=3.553862894956882 valid_loss=6.886099048226308 (per batch)
+(Stance) ntotal=984.000000 Acc=0.519309 ncorrect=511.000000 eval_loss=1.043874 **F1_PosNeg_Macro=0.448436** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.682225 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.353301 ncorrect=1734.000000 eval_loss=1.151732 *F1_PosNeg_Macro=0.250208* 
+(Target) ntotal=625.000000 Acc=0.531200 ncorrect=332.000000 eval_loss=1.008269 *F1_PosNeg_Macro=0.346917* 
+[epoch=4/300 step=416 (31 s)] train_loss=3.4961433118352523 valid_loss=6.996417058698642 (per batch)
+(Stance) ntotal=984.000000 Acc=0.556911 ncorrect=548.000000 eval_loss=1.001943 **F1_PosNeg_Macro=0.354816** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.870446 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.343317 ncorrect=1685.000000 eval_loss=1.101100 *F1_PosNeg_Macro=0.343526* 
+(Target) ntotal=625.000000 Acc=0.552000 ncorrect=345.000000 eval_loss=1.022928 *F1_PosNeg_Macro=0.467875* 
+[epoch=5/300 step=520 (30 s)] train_loss=3.486209431519875 valid_loss=7.182507524964137 (per batch)
+(Stance) ntotal=984.000000 Acc=0.410569 ncorrect=404.000000 eval_loss=1.117156 **F1_PosNeg_Macro=0.419188** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.949927 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.346373 ncorrect=1700.000000 eval_loss=1.114263 *F1_PosNeg_Macro=0.377870* 
+(Target) ntotal=625.000000 Acc=0.531200 ncorrect=332.000000 eval_loss=1.001161 *F1_PosNeg_Macro=0.346917* 
+[epoch=6/300 step=624 (31 s)] train_loss=3.493800374177786 valid_loss=6.652219665814669 (per batch)
+(Stance) ntotal=984.000000 Acc=0.385163 ncorrect=379.000000 eval_loss=1.123733 **F1_PosNeg_Macro=0.217241** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.440157 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.348207 ncorrect=1709.000000 eval_loss=1.101260 *F1_PosNeg_Macro=0.285130* 
+(Target) ntotal=625.000000 Acc=0.531200 ncorrect=332.000000 eval_loss=0.987071 *F1_PosNeg_Macro=0.346917* 
+[epoch=7/300 step=728 (30 s)] train_loss=3.4244508800598292 valid_loss=6.705443913508684 (per batch)
+(Stance) ntotal=984.000000 Acc=0.554878 ncorrect=546.000000 eval_loss=1.053199 **F1_PosNeg_Macro=0.429084** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.539993 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.333537 ncorrect=1637.000000 eval_loss=1.123240 *F1_PosNeg_Macro=0.253434* 
+(Target) ntotal=625.000000 Acc=0.531200 ncorrect=332.000000 eval_loss=0.989012 *F1_PosNeg_Macro=0.346917* 
+[epoch=8/300 step=832 (33 s)] train_loss=3.4582087506468477 valid_loss=6.630644897505259 (per batch)
+(Stance) ntotal=984.000000 Acc=0.544715 ncorrect=536.000000 eval_loss=1.032840 **F1_PosNeg_Macro=0.393531** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.473829 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.340261 ncorrect=1670.000000 eval_loss=1.125799 *F1_PosNeg_Macro=0.249799* 
+(Target) ntotal=625.000000 Acc=0.539200 ncorrect=337.000000 eval_loss=0.998177 *F1_PosNeg_Macro=0.525990* 
+[epoch=9/300 step=936 (31 s)] train_loss=3.4184551107195706 valid_loss=6.666327715569582 (per batch)
+(Stance) ntotal=984.000000 Acc=0.539634 ncorrect=531.000000 eval_loss=1.019046 **F1_PosNeg_Macro=0.343703** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.547246 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.337205 ncorrect=1655.000000 eval_loss=1.112532 *F1_PosNeg_Macro=0.249685* 
+(Target) ntotal=625.000000 Acc=0.483200 ncorrect=302.000000 eval_loss=0.987504 *F1_PosNeg_Macro=0.523850* 
+[epoch=10/300 step=1040 (30 s)] train_loss=3.4065257534384727 valid_loss=6.545287873080143 (per batch)
+(Stance) ntotal=984.000000 Acc=0.570122 ncorrect=561.000000 eval_loss=0.953485 **F1_PosNeg_Macro=0.361717** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.413562 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.339242 ncorrect=1665.000000 eval_loss=1.120359 *F1_PosNeg_Macro=0.278546* 
+(Target) ntotal=625.000000 Acc=0.531200 ncorrect=332.000000 eval_loss=1.057881 *F1_PosNeg_Macro=0.346917* 
+[epoch=11/300 step=1144 (32 s)] train_loss=3.4031882813343635 valid_loss=6.286083398797573 (per batch)
+(Stance) ntotal=984.000000 Acc=0.532520 ncorrect=524.000000 eval_loss=1.021572 **F1_PosNeg_Macro=0.353959** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.195110 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.361247 ncorrect=1773.000000 eval_loss=1.103520 *F1_PosNeg_Macro=0.349977* 
+(Target) ntotal=625.000000 Acc=0.544000 ncorrect=340.000000 eval_loss=0.965881 *F1_PosNeg_Macro=0.351792* 
+[epoch=12/300 step=1248 (30 s)] train_loss=3.3656338481948924 valid_loss=6.327548847595851 (per batch)
+(Stance) ntotal=984.000000 Acc=0.570122 ncorrect=561.000000 eval_loss=0.952885 **F1_PosNeg_Macro=0.360253** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.366116 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.358802 ncorrect=1761.000000 eval_loss=1.096783 *F1_PosNeg_Macro=0.251698* 
+(Target) ntotal=625.000000 Acc=0.584000 ncorrect=365.000000 eval_loss=0.911764 *F1_PosNeg_Macro=0.365798* 
+[epoch=13/300 step=1352 (32 s)] train_loss=3.3626957025665503 valid_loss=5.972871637267945 (per batch)
+(Stance) ntotal=984.000000 Acc=0.311992 ncorrect=307.000000 eval_loss=1.154518 **F1_PosNeg_Macro=0.299231** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=2.801282 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.355746 ncorrect=1746.000000 eval_loss=1.112303 *F1_PosNeg_Macro=0.301740* 
+(Target) ntotal=625.000000 Acc=0.587200 ncorrect=367.000000 eval_loss=0.904769 *F1_PosNeg_Macro=0.437507* 
+[epoch=14/300 step=1456 (30 s)] train_loss=3.273843203886197 valid_loss=6.617034922616604 (per batch)
+(Stance) ntotal=984.000000 Acc=0.582317 ncorrect=573.000000 eval_loss=0.958243 **F1_PosNeg_Macro=0.372471** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.675827 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.356561 ncorrect=1750.000000 eval_loss=1.099444 *F1_PosNeg_Macro=0.310063* 
+(Target) ntotal=625.000000 Acc=0.612800 ncorrect=383.000000 eval_loss=0.883520 *F1_PosNeg_Macro=0.478644* 
+[epoch=15/300 step=1560 (29 s)] train_loss=3.3428569734096527 valid_loss=6.60971796951997 (per batch)
+(Stance) ntotal=984.000000 Acc=0.475610 ncorrect=468.000000 eval_loss=1.031354 **F1_PosNeg_Macro=0.310460** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.621082 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.337408 ncorrect=1656.000000 eval_loss=1.117358 *F1_PosNeg_Macro=0.251403* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=0.839923 *F1_PosNeg_Macro=0.623233* 
+[epoch=16/300 step=1664 (31 s)] train_loss=3.308330145592873 valid_loss=6.089023326337338 (per batch)
+(Stance) ntotal=984.000000 Acc=0.436992 ncorrect=430.000000 eval_loss=1.042286 **F1_PosNeg_Macro=0.264989** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.072305 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.345762 ncorrect=1697.000000 eval_loss=1.099111 *F1_PosNeg_Macro=0.245394* 
+(Target) ntotal=625.000000 Acc=0.609600 ncorrect=381.000000 eval_loss=0.875321 *F1_PosNeg_Macro=0.586489* 
+[epoch=17/300 step=1768 (35 s)] train_loss=3.2505040461054215 valid_loss=7.131176239863421 (per batch)
+(Stance) ntotal=984.000000 Acc=0.395325 ncorrect=389.000000 eval_loss=1.172625 **F1_PosNeg_Macro=0.254927** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.830961 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.341687 ncorrect=1677.000000 eval_loss=1.120466 *F1_PosNeg_Macro=0.275646* 
+(Target) ntotal=625.000000 Acc=0.524800 ncorrect=328.000000 eval_loss=1.007125 *F1_PosNeg_Macro=0.397734* 
+[epoch=18/300 step=1872 (30 s)] train_loss=3.2344162200505915 valid_loss=6.230459943642984 (per batch)
+(Stance) ntotal=984.000000 Acc=0.474593 ncorrect=467.000000 eval_loss=1.051481 **F1_PosNeg_Macro=0.465943** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.273967 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.364303 ncorrect=1788.000000 eval_loss=1.092571 *F1_PosNeg_Macro=0.368786* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=0.812441 *F1_PosNeg_Macro=0.564100* 
+[epoch=19/300 step=1976 (34 s)] train_loss=3.2129876252550345 valid_loss=6.3549923653021825 (per batch)
+(Stance) ntotal=984.000000 Acc=0.587398 ncorrect=578.000000 eval_loss=0.902043 **F1_PosNeg_Macro=0.366801** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.426895 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.355134 ncorrect=1743.000000 eval_loss=1.112974 *F1_PosNeg_Macro=0.250331* 
+(Target) ntotal=625.000000 Acc=0.609600 ncorrect=381.000000 eval_loss=0.913081 *F1_PosNeg_Macro=0.575135* 
+[epoch=20/300 step=2080 (32 s)] train_loss=3.1900790064380717 valid_loss=6.498812773861946 (per batch)
+(Stance) ntotal=984.000000 Acc=0.355691 ncorrect=350.000000 eval_loss=1.140575 **F1_PosNeg_Macro=0.300862** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.389186 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.367359 ncorrect=1803.000000 eval_loss=1.089964 *F1_PosNeg_Macro=0.290403* 
+(Target) ntotal=625.000000 Acc=0.633600 ncorrect=396.000000 eval_loss=0.879087 *F1_PosNeg_Macro=0.477055* 
+[epoch=21/300 step=2184 (32 s)] train_loss=3.1544348758000593 valid_loss=5.91511691094209 (per batch)
+(Stance) ntotal=984.000000 Acc=0.553862 ncorrect=545.000000 eval_loss=0.946097 **F1_PosNeg_Macro=0.491291** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.052488 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.365526 ncorrect=1794.000000 eval_loss=1.104055 *F1_PosNeg_Macro=0.334661* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=0.812477 *F1_PosNeg_Macro=0.560062* 
+[epoch=22/300 step=2288 (34 s)] train_loss=3.14264837709757 valid_loss=6.1168725306407 (per batch)
+(Stance) ntotal=984.000000 Acc=0.596545 ncorrect=587.000000 eval_loss=0.925876 **F1_PosNeg_Macro=0.581301** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=3.225681 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.382437 ncorrect=1877.000000 eval_loss=1.092510 *F1_PosNeg_Macro=0.405175* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=0.872805 *F1_PosNeg_Macro=0.551059* 
+[epoch=23/300 step=2392 (31 s)] train_loss=3.078646949564035 valid_loss=6.247408896226149 (per batch)
+(Stance) ntotal=984.000000 Acc=0.572154 ncorrect=563.000000 eval_loss=0.929003 **F1_PosNeg_Macro=0.511043** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.430253 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.362673 ncorrect=1780.000000 eval_loss=1.119017 *F1_PosNeg_Macro=0.331913* 
+(Target) ntotal=625.000000 Acc=0.676800 ncorrect=423.000000 eval_loss=0.769136 *F1_PosNeg_Macro=0.662840* 
+[epoch=24/300 step=2496 (31 s)] train_loss=3.057775616645813 valid_loss=8.035677794806467 (per batch)
+(Stance) ntotal=984.000000 Acc=0.508130 ncorrect=500.000000 eval_loss=0.984390 **F1_PosNeg_Macro=0.525460** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.079919 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.357172 ncorrect=1753.000000 eval_loss=1.107186 *F1_PosNeg_Macro=0.276116* 
+(Target) ntotal=625.000000 Acc=0.622400 ncorrect=389.000000 eval_loss=0.864183 *F1_PosNeg_Macro=0.639780* 
+[epoch=25/300 step=2600 (34 s)] train_loss=3.0245579102864633 valid_loss=7.310179235537847 (per batch)
+(Stance) ntotal=984.000000 Acc=0.613821 ncorrect=604.000000 eval_loss=0.929941 **F1_PosNeg_Macro=0.562547** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=4.469626 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.383252 ncorrect=1881.000000 eval_loss=1.095873 *F1_PosNeg_Macro=0.426347* 
+(Target) ntotal=625.000000 Acc=0.633600 ncorrect=396.000000 eval_loss=0.814740 *F1_PosNeg_Macro=0.637183* 
+[epoch=26/300 step=2704 (31 s)] train_loss=3.004126005447828 valid_loss=6.195904231224304 (per batch)
+(Stance) ntotal=984.000000 Acc=0.614837 ncorrect=605.000000 eval_loss=0.874693 **F1_PosNeg_Macro=0.614727** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=3.474918 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.372657 ncorrect=1829.000000 eval_loss=1.093945 *F1_PosNeg_Macro=0.336719* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=0.752349 *F1_PosNeg_Macro=0.639592* 
+[epoch=27/300 step=2808 (30 s)] train_loss=3.00719773167601 valid_loss=6.620297616949447 (per batch)
+(Stance) ntotal=984.000000 Acc=0.613821 ncorrect=604.000000 eval_loss=0.860746 **F1_PosNeg_Macro=0.631297** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=3.911968 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.370823 ncorrect=1820.000000 eval_loss=1.096642 *F1_PosNeg_Macro=0.301635* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=0.750942 *F1_PosNeg_Macro=0.652548* 
+[epoch=28/300 step=2912 (31 s)] train_loss=2.9795739920093465 valid_loss=6.641631828592374 (per batch)
+(Stance) ntotal=984.000000 Acc=0.631098 ncorrect=621.000000 eval_loss=0.788804 **F1_PosNeg_Macro=0.505225** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=3.993943 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.390994 ncorrect=1919.000000 eval_loss=1.089355 *F1_PosNeg_Macro=0.420803* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=0.769530 *F1_PosNeg_Macro=0.667835* 
+[epoch=29/300 step=3016 (33 s)] train_loss=2.933232115438351 valid_loss=7.047888290347196 (per batch)
+(Stance) ntotal=984.000000 Acc=0.618902 ncorrect=609.000000 eval_loss=0.862947 **F1_PosNeg_Macro=0.570755** 
+(FNC-1) ntotal=10231.000000 Acc=0.002248 ncorrect=23.000000 eval_loss=4.326965 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.378973 ncorrect=1860.000000 eval_loss=1.097989 *F1_PosNeg_Macro=0.421253* 
+(Target) ntotal=625.000000 Acc=0.694400 ncorrect=434.000000 eval_loss=0.759987 *F1_PosNeg_Macro=0.693709* 
+[epoch=30/300 step=3120 (31 s)] train_loss=2.892986965294068 valid_loss=7.864576079715521 (per batch)
+(Stance) ntotal=984.000000 Acc=0.590447 ncorrect=581.000000 eval_loss=0.892849 **F1_PosNeg_Macro=0.581474** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.148822 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.384882 ncorrect=1889.000000 eval_loss=1.087848 *F1_PosNeg_Macro=0.379307* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=0.735058 *F1_PosNeg_Macro=0.674295* 
+[epoch=31/300 step=3224 (31 s)] train_loss=2.891124265984847 valid_loss=7.380877983111602 (per batch)
+(Stance) ntotal=984.000000 Acc=0.666667 ncorrect=656.000000 eval_loss=0.783238 **F1_PosNeg_Macro=0.667112** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=4.761609 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.365933 ncorrect=1796.000000 eval_loss=1.100041 *F1_PosNeg_Macro=0.270735* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=0.735990 *F1_PosNeg_Macro=0.679332* 
+[epoch=32/300 step=3328 (32 s)] train_loss=2.8418050717848997 valid_loss=8.26124310841163 (per batch)
+(Stance) ntotal=984.000000 Acc=0.663618 ncorrect=653.000000 eval_loss=0.771930 **F1_PosNeg_Macro=0.672631** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.576227 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.363284 ncorrect=1783.000000 eval_loss=1.110250 *F1_PosNeg_Macro=0.313590* 
+(Target) ntotal=625.000000 Acc=0.632000 ncorrect=395.000000 eval_loss=0.802836 *F1_PosNeg_Macro=0.614938* 
+[epoch=33/300 step=3432 (30 s)] train_loss=2.7956446145589533 valid_loss=8.176931009078638 (per batch)
+(Stance) ntotal=984.000000 Acc=0.532520 ncorrect=524.000000 eval_loss=0.928241 **F1_PosNeg_Macro=0.533828** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.379254 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.360636 ncorrect=1770.000000 eval_loss=1.098500 *F1_PosNeg_Macro=0.318986* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=0.770936 *F1_PosNeg_Macro=0.648482* 
+[epoch=34/300 step=3536 (31 s)] train_loss=2.8021526150405407 valid_loss=7.889005153110395 (per batch)
+(Stance) ntotal=984.000000 Acc=0.692073 ncorrect=681.000000 eval_loss=0.703539 **F1_PosNeg_Macro=0.634404** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=5.351395 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.380196 ncorrect=1866.000000 eval_loss=1.096909 *F1_PosNeg_Macro=0.391291* 
+(Target) ntotal=625.000000 Acc=0.683200 ncorrect=427.000000 eval_loss=0.737161 *F1_PosNeg_Macro=0.674456* 
+[epoch=35/300 step=3640 (30 s)] train_loss=2.714596226811409 valid_loss=8.088446558247774 (per batch)
+(Stance) ntotal=984.000000 Acc=0.603659 ncorrect=594.000000 eval_loss=0.859682 **F1_PosNeg_Macro=0.568533** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.378396 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.359821 ncorrect=1766.000000 eval_loss=1.124480 *F1_PosNeg_Macro=0.299090* 
+(Target) ntotal=625.000000 Acc=0.688000 ncorrect=430.000000 eval_loss=0.725889 *F1_PosNeg_Macro=0.668816* 
+[epoch=36/300 step=3744 (32 s)] train_loss=2.716309187790522 valid_loss=8.017374762930931 (per batch)
+(Stance) ntotal=984.000000 Acc=0.704268 ncorrect=693.000000 eval_loss=0.693103 **F1_PosNeg_Macro=0.702666** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.491582 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.383456 ncorrect=1882.000000 eval_loss=1.090105 *F1_PosNeg_Macro=0.390096* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=0.742586 *F1_PosNeg_Macro=0.661883* 
+[epoch=37/300 step=3848 (30 s)] train_loss=2.6841535634146285 valid_loss=7.508813479542733 (per batch)
+(Stance) ntotal=984.000000 Acc=0.697154 ncorrect=686.000000 eval_loss=0.705092 **F1_PosNeg_Macro=0.690451** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=5.024732 *F1_PosNeg_Macro=0.002010* 
+(MultiNLI) ntotal=4908.000000 Acc=0.398737 ncorrect=1957.000000 eval_loss=1.082188 *F1_PosNeg_Macro=0.408800* 
+(Target) ntotal=625.000000 Acc=0.696000 ncorrect=435.000000 eval_loss=0.696802 *F1_PosNeg_Macro=0.684876* 
+[epoch=38/300 step=3952 (32 s)] train_loss=2.710449105845048 valid_loss=7.678287510191783 (per batch)
+(Stance) ntotal=984.000000 Acc=0.650407 ncorrect=640.000000 eval_loss=0.758417 **F1_PosNeg_Macro=0.619844** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.122146 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.379381 ncorrect=1862.000000 eval_loss=1.097782 *F1_PosNeg_Macro=0.334810* 
+(Target) ntotal=625.000000 Acc=0.710400 ncorrect=444.000000 eval_loss=0.699942 *F1_PosNeg_Macro=0.688362* 
+[epoch=39/300 step=4056 (31 s)] train_loss=2.6123509868406334 valid_loss=8.315797004409326 (per batch)
+(Stance) ntotal=984.000000 Acc=0.676829 ncorrect=666.000000 eval_loss=0.819217 **F1_PosNeg_Macro=0.704620** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=5.708545 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.404645 ncorrect=1986.000000 eval_loss=1.088729 *F1_PosNeg_Macro=0.423074* 
+(Target) ntotal=625.000000 Acc=0.708800 ncorrect=443.000000 eval_loss=0.699305 *F1_PosNeg_Macro=0.685575* 
+[epoch=40/300 step=4160 (31 s)] train_loss=2.6046250144449563 valid_loss=8.053054336171884 (per batch)
+(Stance) ntotal=984.000000 Acc=0.769309 ncorrect=757.000000 eval_loss=0.560720 **F1_PosNeg_Macro=0.755199** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=5.656524 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.370008 ncorrect=1816.000000 eval_loss=1.129523 *F1_PosNeg_Macro=0.270996* 
+(Target) ntotal=625.000000 Acc=0.696000 ncorrect=435.000000 eval_loss=0.706287 *F1_PosNeg_Macro=0.681974* 
+[epoch=41/300 step=4264 (31 s)] train_loss=2.5978269313390436 valid_loss=8.873356931981368 (per batch)
+(Stance) ntotal=984.000000 Acc=0.685976 ncorrect=675.000000 eval_loss=0.708061 **F1_PosNeg_Macro=0.674248** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=6.368327 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.401385 ncorrect=1970.000000 eval_loss=1.090550 *F1_PosNeg_Macro=0.433345* 
+(Target) ntotal=625.000000 Acc=0.704000 ncorrect=440.000000 eval_loss=0.706419 *F1_PosNeg_Macro=0.680584* 
+[epoch=42/300 step=4368 (31 s)] train_loss=2.5163481080761323 valid_loss=8.214860300471384 (per batch)
+(Stance) ntotal=984.000000 Acc=0.681911 ncorrect=671.000000 eval_loss=0.700427 **F1_PosNeg_Macro=0.668207** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=5.697394 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.392013 ncorrect=1924.000000 eval_loss=1.099817 *F1_PosNeg_Macro=0.414422* 
+(Target) ntotal=625.000000 Acc=0.716800 ncorrect=448.000000 eval_loss=0.717222 *F1_PosNeg_Macro=0.690739* 
+[epoch=43/300 step=4472 (29 s)] train_loss=2.5418578824744773 valid_loss=7.7986157820966 (per batch)
+(Stance) ntotal=984.000000 Acc=0.791667 ncorrect=779.000000 eval_loss=0.518764 **F1_PosNeg_Macro=0.779038** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=5.452754 *F1_PosNeg_Macro=0.002009* 
+(MultiNLI) ntotal=4908.000000 Acc=0.402812 ncorrect=1977.000000 eval_loss=1.086457 *F1_PosNeg_Macro=0.380463* 
+(Target) ntotal=625.000000 Acc=0.708800 ncorrect=443.000000 eval_loss=0.740641 *F1_PosNeg_Macro=0.710176* 
+[epoch=44/300 step=4576 (29 s)] train_loss=2.488661028158206 valid_loss=8.616210697514889 (per batch)
+(Stance) ntotal=984.000000 Acc=0.738821 ncorrect=727.000000 eval_loss=0.579220 **F1_PosNeg_Macro=0.733886** 
+(FNC-1) ntotal=10231.000000 Acc=0.001368 ncorrect=14.000000 eval_loss=6.242632 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.385289 ncorrect=1891.000000 eval_loss=1.089587 *F1_PosNeg_Macro=0.297431* 
+(Target) ntotal=625.000000 Acc=0.700800 ncorrect=438.000000 eval_loss=0.704772 *F1_PosNeg_Macro=0.681646* 
+[epoch=45/300 step=4680 (29 s)] train_loss=2.4723697061148973 valid_loss=9.355372854092947 (per batch)
+(Stance) ntotal=984.000000 Acc=0.736789 ncorrect=725.000000 eval_loss=0.598223 **F1_PosNeg_Macro=0.709165** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=6.893219 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.400163 ncorrect=1964.000000 eval_loss=1.091379 *F1_PosNeg_Macro=0.394061* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=0.772551 *F1_PosNeg_Macro=0.637433* 
+[epoch=46/300 step=4784 (29 s)] train_loss=2.4380689395161776 valid_loss=8.922244798009977 (per batch)
+(Stance) ntotal=984.000000 Acc=0.736789 ncorrect=725.000000 eval_loss=0.585145 **F1_PosNeg_Macro=0.712424** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=6.545138 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418908 ncorrect=2056.000000 eval_loss=1.081866 *F1_PosNeg_Macro=0.445910* 
+(Target) ntotal=625.000000 Acc=0.699200 ncorrect=437.000000 eval_loss=0.710096 *F1_PosNeg_Macro=0.694165* 
+[epoch=47/300 step=4888 (29 s)] train_loss=2.4105108632491183 valid_loss=8.614852438179346 (per batch)
+(Stance) ntotal=984.000000 Acc=0.800813 ncorrect=788.000000 eval_loss=0.501655 **F1_PosNeg_Macro=0.783976** 
+(FNC-1) ntotal=10231.000000 Acc=0.002444 ncorrect=25.000000 eval_loss=6.312115 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.398941 ncorrect=1958.000000 eval_loss=1.089207 *F1_PosNeg_Macro=0.335053* 
+(Target) ntotal=625.000000 Acc=0.715200 ncorrect=447.000000 eval_loss=0.711876 *F1_PosNeg_Macro=0.702665* 
+[epoch=48/300 step=4992 (29 s)] train_loss=2.377255817445425 valid_loss=9.719716053054883 (per batch)
+(Stance) ntotal=984.000000 Acc=0.632114 ncorrect=622.000000 eval_loss=0.773254 **F1_PosNeg_Macro=0.629692** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.121565 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.384474 ncorrect=1887.000000 eval_loss=1.136188 *F1_PosNeg_Macro=0.395922* 
+(Target) ntotal=625.000000 Acc=0.707200 ncorrect=442.000000 eval_loss=0.688709 *F1_PosNeg_Macro=0.686579* 
+[epoch=49/300 step=5096 (30 s)] train_loss=2.387874572036358 valid_loss=8.962671139282294 (per batch)
+(Stance) ntotal=984.000000 Acc=0.752033 ncorrect=740.000000 eval_loss=0.561080 **F1_PosNeg_Macro=0.775809** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=6.624098 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418093 ncorrect=2052.000000 eval_loss=1.077348 *F1_PosNeg_Macro=0.418742* 
+(Target) ntotal=625.000000 Acc=0.699200 ncorrect=437.000000 eval_loss=0.700145 *F1_PosNeg_Macro=0.676491* 
+[epoch=50/300 step=5200 (33 s)] train_loss=2.313375708861993 valid_loss=9.389007696757712 (per batch)
+(Stance) ntotal=984.000000 Acc=0.848577 ncorrect=835.000000 eval_loss=0.399328 **F1_PosNeg_Macro=0.839562** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.137084 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406072 ncorrect=1993.000000 eval_loss=1.080946 *F1_PosNeg_Macro=0.366807* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=0.771650 *F1_PosNeg_Macro=0.651801* 
+[epoch=51/300 step=5304 (30 s)] train_loss=2.3426051179950056 valid_loss=9.024222088318604 (per batch)
+(Stance) ntotal=984.000000 Acc=0.827236 ncorrect=814.000000 eval_loss=0.437571 **F1_PosNeg_Macro=0.822199** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=6.789945 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408517 ncorrect=2005.000000 eval_loss=1.079162 *F1_PosNeg_Macro=0.399980* 
+(Target) ntotal=625.000000 Acc=0.688000 ncorrect=430.000000 eval_loss=0.717545 *F1_PosNeg_Macro=0.666870* 
+[epoch=52/300 step=5408 (30 s)] train_loss=2.2879246450387516 valid_loss=9.798493744490239 (per batch)
+(Stance) ntotal=984.000000 Acc=0.823171 ncorrect=810.000000 eval_loss=0.434559 **F1_PosNeg_Macro=0.816285** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.462193 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412999 ncorrect=2027.000000 eval_loss=1.122222 *F1_PosNeg_Macro=0.456531* 
+(Target) ntotal=625.000000 Acc=0.700800 ncorrect=438.000000 eval_loss=0.779519 *F1_PosNeg_Macro=0.700677* 
+[epoch=53/300 step=5512 (31 s)] train_loss=2.2747509705905733 valid_loss=9.655459384085276 (per batch)
+(Stance) ntotal=984.000000 Acc=0.805894 ncorrect=793.000000 eval_loss=0.462631 **F1_PosNeg_Macro=0.772908** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.305541 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.395681 ncorrect=1942.000000 eval_loss=1.087569 *F1_PosNeg_Macro=0.358605* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=0.799718 *F1_PosNeg_Macro=0.655257* 
+[epoch=54/300 step=5616 (30 s)] train_loss=2.2743372017374406 valid_loss=9.72406519161394 (per batch)
+(Stance) ntotal=984.000000 Acc=0.855691 ncorrect=842.000000 eval_loss=0.381982 **F1_PosNeg_Macro=0.848227** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.497121 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.402608 ncorrect=1976.000000 eval_loss=1.109807 *F1_PosNeg_Macro=0.461774* 
+(Target) ntotal=625.000000 Acc=0.692800 ncorrect=433.000000 eval_loss=0.735154 *F1_PosNeg_Macro=0.691362* 
+[epoch=55/300 step=5720 (29 s)] train_loss=2.199472272911897 valid_loss=10.351920942293527 (per batch)
+(Stance) ntotal=984.000000 Acc=0.880081 ncorrect=866.000000 eval_loss=0.331499 **F1_PosNeg_Macro=0.867481** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.083908 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412999 ncorrect=2027.000000 eval_loss=1.122916 *F1_PosNeg_Macro=0.426875* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=0.813598 *F1_PosNeg_Macro=0.680282* 
+[epoch=56/300 step=5824 (33 s)] train_loss=2.180708820716693 valid_loss=9.317095851372832 (per batch)
+(Stance) ntotal=984.000000 Acc=0.887195 ncorrect=873.000000 eval_loss=0.309416 **F1_PosNeg_Macro=0.867873** 
+(FNC-1) ntotal=10231.000000 Acc=0.003714 ncorrect=38.000000 eval_loss=7.161781 *F1_PosNeg_Macro=0.014990* 
+(MultiNLI) ntotal=4908.000000 Acc=0.387531 ncorrect=1902.000000 eval_loss=1.094115 *F1_PosNeg_Macro=0.326091* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=0.751784 *F1_PosNeg_Macro=0.669529* 
+[epoch=57/300 step=5928 (31 s)] train_loss=2.159842773985404 valid_loss=9.401580116859614 (per batch)
+(Stance) ntotal=984.000000 Acc=0.793699 ncorrect=781.000000 eval_loss=0.486473 **F1_PosNeg_Macro=0.772818** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=7.093603 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409128 ncorrect=2008.000000 eval_loss=1.099494 *F1_PosNeg_Macro=0.465366* 
+(Target) ntotal=625.000000 Acc=0.708800 ncorrect=443.000000 eval_loss=0.722010 *F1_PosNeg_Macro=0.675905* 
+[epoch=58/300 step=6032 (31 s)] train_loss=2.1236354175668497 valid_loss=9.666444089015325 (per batch)
+(Stance) ntotal=984.000000 Acc=0.828252 ncorrect=815.000000 eval_loss=0.433871 **F1_PosNeg_Macro=0.801321** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=7.340207 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408924 ncorrect=2007.000000 eval_loss=1.139482 *F1_PosNeg_Macro=0.435078* 
+(Target) ntotal=625.000000 Acc=0.694400 ncorrect=434.000000 eval_loss=0.752884 *F1_PosNeg_Macro=0.658339* 
+[epoch=59/300 step=6136 (32 s)] train_loss=2.104589181450697 valid_loss=9.925515417773754 (per batch)
+(Stance) ntotal=984.000000 Acc=0.893293 ncorrect=879.000000 eval_loss=0.286871 **F1_PosNeg_Macro=0.864921** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.801997 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422372 ncorrect=2073.000000 eval_loss=1.074003 *F1_PosNeg_Macro=0.444806* 
+(Target) ntotal=625.000000 Acc=0.699200 ncorrect=437.000000 eval_loss=0.762645 *F1_PosNeg_Macro=0.697215* 
+[epoch=60/300 step=6240 (33 s)] train_loss=2.0801168721742354 valid_loss=10.182427987523187 (per batch)
+(Stance) ntotal=984.000000 Acc=0.861789 ncorrect=848.000000 eval_loss=0.337476 **F1_PosNeg_Macro=0.870081** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=7.820342 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.377547 ncorrect=1853.000000 eval_loss=1.189879 *F1_PosNeg_Macro=0.354732* 
+(Target) ntotal=625.000000 Acc=0.636800 ncorrect=398.000000 eval_loss=0.834730 *F1_PosNeg_Macro=0.638663* 
+[epoch=61/300 step=6344 (31 s)] train_loss=2.059931175210155 valid_loss=10.833554797829725 (per batch)
+(Stance) ntotal=984.000000 Acc=0.766260 ncorrect=754.000000 eval_loss=0.530800 **F1_PosNeg_Macro=0.732847** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.424799 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.401182 ncorrect=1969.000000 eval_loss=1.127757 *F1_PosNeg_Macro=0.361762* 
+(Target) ntotal=625.000000 Acc=0.712000 ncorrect=445.000000 eval_loss=0.750199 *F1_PosNeg_Macro=0.678904* 
+[epoch=62/300 step=6448 (31 s)] train_loss=2.0379453467635007 valid_loss=10.834516915086752 (per batch)
+(Stance) ntotal=984.000000 Acc=0.899390 ncorrect=885.000000 eval_loss=0.278146 **F1_PosNeg_Macro=0.883058** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=8.647306 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.397311 ncorrect=1950.000000 eval_loss=1.136466 *F1_PosNeg_Macro=0.402106* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=0.772598 *F1_PosNeg_Macro=0.686720* 
+[epoch=63/300 step=6552 (31 s)] train_loss=2.0231012435486684 valid_loss=10.668456387854159 (per batch)
+(Stance) ntotal=984.000000 Acc=0.854675 ncorrect=841.000000 eval_loss=0.345516 **F1_PosNeg_Macro=0.874852** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.430121 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.401997 ncorrect=1973.000000 eval_loss=1.126763 *F1_PosNeg_Macro=0.448997* 
+(Target) ntotal=625.000000 Acc=0.712000 ncorrect=445.000000 eval_loss=0.766057 *F1_PosNeg_Macro=0.693277* 
+[epoch=64/300 step=6656 (32 s)] train_loss=1.9723363659129693 valid_loss=10.019434383941386 (per batch)
+(Stance) ntotal=984.000000 Acc=0.917683 ncorrect=903.000000 eval_loss=0.250218 **F1_PosNeg_Macro=0.903591** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=7.726701 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.381418 ncorrect=1872.000000 eval_loss=1.263612 *F1_PosNeg_Macro=0.379976* 
+(Target) ntotal=625.000000 Acc=0.705600 ncorrect=441.000000 eval_loss=0.778904 *F1_PosNeg_Macro=0.710661* 
+[epoch=65/300 step=6760 (31 s)] train_loss=1.9534554263720145 valid_loss=10.30744871953741 (per batch)
+(Stance) ntotal=984.000000 Acc=0.770325 ncorrect=758.000000 eval_loss=0.545722 **F1_PosNeg_Macro=0.741360** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=7.873478 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.394866 ncorrect=1938.000000 eval_loss=1.101173 *F1_PosNeg_Macro=0.368770* 
+(Target) ntotal=625.000000 Acc=0.680000 ncorrect=425.000000 eval_loss=0.787075 *F1_PosNeg_Macro=0.641429* 
+[epoch=66/300 step=6864 (30 s)] train_loss=1.9634194707927795 valid_loss=11.532484303395718 (per batch)
+(Stance) ntotal=984.000000 Acc=0.920732 ncorrect=906.000000 eval_loss=0.234648 **F1_PosNeg_Macro=0.902718** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.319716 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.388753 ncorrect=1908.000000 eval_loss=1.167466 *F1_PosNeg_Macro=0.249699* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=0.810655 *F1_PosNeg_Macro=0.674080* 
+[epoch=67/300 step=6968 (30 s)] train_loss=1.9011826406304653 valid_loss=10.334706850655568 (per batch)
+(Stance) ntotal=984.000000 Acc=0.818089 ncorrect=805.000000 eval_loss=0.442994 **F1_PosNeg_Macro=0.831967** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.002441 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414629 ncorrect=2035.000000 eval_loss=1.102871 *F1_PosNeg_Macro=0.401752* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=0.786401 *F1_PosNeg_Macro=0.673165* 
+[epoch=68/300 step=7072 (30 s)] train_loss=1.891120908065484 valid_loss=11.346705243655313 (per batch)
+(Stance) ntotal=984.000000 Acc=0.920732 ncorrect=906.000000 eval_loss=0.199782 **F1_PosNeg_Macro=0.911608** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.289588 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422575 ncorrect=2074.000000 eval_loss=1.091360 *F1_PosNeg_Macro=0.424564* 
+(Target) ntotal=625.000000 Acc=0.692800 ncorrect=433.000000 eval_loss=0.765975 *F1_PosNeg_Macro=0.675516* 
+[epoch=69/300 step=7176 (31 s)] train_loss=1.9136718726502016 valid_loss=10.7968310911686 (per batch)
+(Stance) ntotal=984.000000 Acc=0.836382 ncorrect=823.000000 eval_loss=0.367926 **F1_PosNeg_Macro=0.846233** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.548845 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419519 ncorrect=2059.000000 eval_loss=1.105267 *F1_PosNeg_Macro=0.441688* 
+(Target) ntotal=625.000000 Acc=0.689600 ncorrect=431.000000 eval_loss=0.774793 *F1_PosNeg_Macro=0.687785* 
+[epoch=70/300 step=7280 (30 s)] train_loss=1.7990001013072638 valid_loss=11.191218594156016 (per batch)
+(Stance) ntotal=984.000000 Acc=0.928862 ncorrect=914.000000 eval_loss=0.195871 **F1_PosNeg_Macro=0.909916** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.936632 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.424409 ncorrect=2083.000000 eval_loss=1.113055 *F1_PosNeg_Macro=0.398832* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=0.945660 *F1_PosNeg_Macro=0.598325* 
+[epoch=71/300 step=7384 (31 s)] train_loss=1.8197237556943526 valid_loss=11.269589713922677 (per batch)
+(Stance) ntotal=984.000000 Acc=0.799797 ncorrect=787.000000 eval_loss=0.506347 **F1_PosNeg_Macro=0.822339** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.818784 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418297 ncorrect=2053.000000 eval_loss=1.126219 *F1_PosNeg_Macro=0.469215* 
+(Target) ntotal=625.000000 Acc=0.683200 ncorrect=427.000000 eval_loss=0.818240 *F1_PosNeg_Macro=0.686644* 
+[epoch=72/300 step=7488 (31 s)] train_loss=1.8125857965877423 valid_loss=10.736692099540662 (per batch)
+(Stance) ntotal=984.000000 Acc=0.931911 ncorrect=917.000000 eval_loss=0.187284 **F1_PosNeg_Macro=0.930836** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=8.623960 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421964 ncorrect=2071.000000 eval_loss=1.118136 *F1_PosNeg_Macro=0.382694* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=0.807312 *F1_PosNeg_Macro=0.674539* 
+[epoch=73/300 step=7592 (30 s)] train_loss=1.7806215674544756 valid_loss=10.846734281734397 (per batch)
+(Stance) ntotal=984.000000 Acc=0.952236 ncorrect=937.000000 eval_loss=0.149830 **F1_PosNeg_Macro=0.945837** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.696948 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416259 ncorrect=2043.000000 eval_loss=1.118369 *F1_PosNeg_Macro=0.422436* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=0.881587 *F1_PosNeg_Macro=0.673713* 
+[epoch=74/300 step=7696 (31 s)] train_loss=1.7497217351427445 valid_loss=10.551480710038389 (per batch)
+(Stance) ntotal=984.000000 Acc=0.932927 ncorrect=918.000000 eval_loss=0.180348 **F1_PosNeg_Macro=0.933630** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.388351 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.373879 ncorrect=1835.000000 eval_loss=1.210338 *F1_PosNeg_Macro=0.293672* 
+(Target) ntotal=625.000000 Acc=0.705600 ncorrect=441.000000 eval_loss=0.772444 *F1_PosNeg_Macro=0.708883* 
+[epoch=75/300 step=7800 (33 s)] train_loss=1.7615453019165075 valid_loss=11.255142921725145 (per batch)
+(Stance) ntotal=984.000000 Acc=0.857724 ncorrect=844.000000 eval_loss=0.344967 **F1_PosNeg_Macro=0.839091** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=8.950712 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.398533 ncorrect=1956.000000 eval_loss=1.140659 *F1_PosNeg_Macro=0.305684* 
+(Target) ntotal=625.000000 Acc=0.680000 ncorrect=425.000000 eval_loss=0.818805 *F1_PosNeg_Macro=0.665679* 
+[epoch=76/300 step=7904 (31 s)] train_loss=1.7063177442894533 valid_loss=10.86620154881802 (per batch)
+(Stance) ntotal=984.000000 Acc=0.943089 ncorrect=928.000000 eval_loss=0.155028 **F1_PosNeg_Macro=0.927532** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.657371 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429299 ncorrect=2107.000000 eval_loss=1.136878 *F1_PosNeg_Macro=0.460089* 
+(Target) ntotal=625.000000 Acc=0.632000 ncorrect=395.000000 eval_loss=0.916925 *F1_PosNeg_Macro=0.632685* 
+[epoch=77/300 step=8008 (30 s)] train_loss=1.746271441045862 valid_loss=10.948971004411579 (per batch)
+(Stance) ntotal=984.000000 Acc=0.927846 ncorrect=913.000000 eval_loss=0.182703 **F1_PosNeg_Macro=0.909118** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.828310 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.400570 ncorrect=1966.000000 eval_loss=1.121769 *F1_PosNeg_Macro=0.324607* 
+(Target) ntotal=625.000000 Acc=0.697600 ncorrect=436.000000 eval_loss=0.816189 *F1_PosNeg_Macro=0.679193* 
+[epoch=78/300 step=8112 (31 s)] train_loss=1.6647507642897277 valid_loss=11.113669962221039 (per batch)
+(Stance) ntotal=984.000000 Acc=0.942073 ncorrect=927.000000 eval_loss=0.158609 **F1_PosNeg_Macro=0.923457** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.985765 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406072 ncorrect=1993.000000 eval_loss=1.151937 *F1_PosNeg_Macro=0.417856* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=0.817360 *F1_PosNeg_Macro=0.649483* 
+[epoch=79/300 step=8216 (31 s)] train_loss=1.6268197409808636 valid_loss=10.659649291094869 (per batch)
+(Stance) ntotal=984.000000 Acc=0.965447 ncorrect=950.000000 eval_loss=0.108557 **F1_PosNeg_Macro=0.959275** 
+(FNC-1) ntotal=10231.000000 Acc=0.001173 ncorrect=12.000000 eval_loss=8.373076 *F1_PosNeg_Macro=0.004789* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429707 ncorrect=2109.000000 eval_loss=1.136340 *F1_PosNeg_Macro=0.428816* 
+(Target) ntotal=625.000000 Acc=0.620800 ncorrect=388.000000 eval_loss=1.041677 *F1_PosNeg_Macro=0.618904* 
+[epoch=80/300 step=8320 (33 s)] train_loss=1.6602200212386937 valid_loss=11.136265704432168 (per batch)
+(Stance) ntotal=984.000000 Acc=0.958333 ncorrect=943.000000 eval_loss=0.121174 **F1_PosNeg_Macro=0.949457** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.960369 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415852 ncorrect=2041.000000 eval_loss=1.150834 *F1_PosNeg_Macro=0.376654* 
+(Target) ntotal=625.000000 Acc=0.684800 ncorrect=428.000000 eval_loss=0.903888 *F1_PosNeg_Macro=0.623016* 
+[epoch=81/300 step=8424 (31 s)] train_loss=1.5785771652769585 valid_loss=10.40938242765812 (per batch)
+(Stance) ntotal=984.000000 Acc=0.973577 ncorrect=958.000000 eval_loss=0.081424 **F1_PosNeg_Macro=0.974711** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=8.317717 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419112 ncorrect=2057.000000 eval_loss=1.125054 *F1_PosNeg_Macro=0.384318* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=0.885188 *F1_PosNeg_Macro=0.686103* 
+[epoch=82/300 step=8528 (31 s)] train_loss=1.5644016939287002 valid_loss=11.58892385093734 (per batch)
+(Stance) ntotal=984.000000 Acc=0.965447 ncorrect=950.000000 eval_loss=0.102848 **F1_PosNeg_Macro=0.959183** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.433183 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422575 ncorrect=2074.000000 eval_loss=1.148041 *F1_PosNeg_Macro=0.403430* 
+(Target) ntotal=625.000000 Acc=0.676800 ncorrect=423.000000 eval_loss=0.904852 *F1_PosNeg_Macro=0.681073* 
+[epoch=83/300 step=8632 (32 s)] train_loss=1.5757327145681932 valid_loss=12.411946289203106 (per batch)
+(Stance) ntotal=984.000000 Acc=0.731707 ncorrect=720.000000 eval_loss=0.753691 **F1_PosNeg_Macro=0.675583** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.660520 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425428 ncorrect=2088.000000 eval_loss=1.132391 *F1_PosNeg_Macro=0.427798* 
+(Target) ntotal=625.000000 Acc=0.707200 ncorrect=442.000000 eval_loss=0.865345 *F1_PosNeg_Macro=0.709200* 
+[epoch=84/300 step=8736 (31 s)] train_loss=1.5303658745609796 valid_loss=12.020468800861199 (per batch)
+(Stance) ntotal=984.000000 Acc=0.978659 ncorrect=963.000000 eval_loss=0.077477 **F1_PosNeg_Macro=0.982343** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.644626 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.380807 ncorrect=1869.000000 eval_loss=1.344122 *F1_PosNeg_Macro=0.344228* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=0.954244 *F1_PosNeg_Macro=0.661441* 
+[epoch=85/300 step=8840 (30 s)] train_loss=1.4982456433085294 valid_loss=11.227985600267466 (per batch)
+(Stance) ntotal=984.000000 Acc=0.883130 ncorrect=869.000000 eval_loss=0.291323 **F1_PosNeg_Macro=0.878407** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=8.895156 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420742 ncorrect=2065.000000 eval_loss=1.146462 *F1_PosNeg_Macro=0.468313* 
+(Target) ntotal=625.000000 Acc=0.697600 ncorrect=436.000000 eval_loss=0.895044 *F1_PosNeg_Macro=0.671573* 
+[epoch=86/300 step=8944 (31 s)] train_loss=1.4882040109771948 valid_loss=11.590675226350626 (per batch)
+(Stance) ntotal=984.000000 Acc=0.845528 ncorrect=832.000000 eval_loss=0.376950 **F1_PosNeg_Macro=0.792605** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.102708 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412184 ncorrect=2023.000000 eval_loss=1.164457 *F1_PosNeg_Macro=0.368801* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=0.946560 *F1_PosNeg_Macro=0.669142* 
+[epoch=87/300 step=9048 (30 s)] train_loss=1.5033926089795737 valid_loss=11.876525991388526 (per batch)
+(Stance) ntotal=984.000000 Acc=0.982724 ncorrect=967.000000 eval_loss=0.062736 **F1_PosNeg_Macro=0.978809** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.633792 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411573 ncorrect=2020.000000 eval_loss=1.176116 *F1_PosNeg_Macro=0.353312* 
+(Target) ntotal=625.000000 Acc=0.646400 ncorrect=404.000000 eval_loss=1.003883 *F1_PosNeg_Macro=0.651300* 
+[epoch=88/300 step=9152 (30 s)] train_loss=1.4645634553610132 valid_loss=11.301350807207518 (per batch)
+(Stance) ntotal=984.000000 Acc=0.913618 ncorrect=899.000000 eval_loss=0.212962 **F1_PosNeg_Macro=0.879297** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=8.991574 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425224 ncorrect=2087.000000 eval_loss=1.161255 *F1_PosNeg_Macro=0.413527* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=0.935560 *F1_PosNeg_Macro=0.672325* 
+[epoch=89/300 step=9256 (32 s)] train_loss=1.4386685936926649 valid_loss=11.734925301812398 (per batch)
+(Stance) ntotal=984.000000 Acc=0.900407 ncorrect=886.000000 eval_loss=0.269349 **F1_PosNeg_Macro=0.868434** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=9.249289 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418297 ncorrect=2053.000000 eval_loss=1.176631 *F1_PosNeg_Macro=0.473259* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=1.039657 *F1_PosNeg_Macro=0.629540* 
+[epoch=90/300 step=9360 (32 s)] train_loss=1.414799111465422 valid_loss=11.246162767249803 (per batch)
+(Stance) ntotal=984.000000 Acc=0.946138 ncorrect=931.000000 eval_loss=0.132667 **F1_PosNeg_Macro=0.921035** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=8.962313 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414833 ncorrect=2036.000000 eval_loss=1.168954 *F1_PosNeg_Macro=0.444619* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=0.982230 *F1_PosNeg_Macro=0.644062* 
+[epoch=91/300 step=9464 (31 s)] train_loss=1.4338706948149662 valid_loss=11.091722924510638 (per batch)
+(Stance) ntotal=984.000000 Acc=0.941057 ncorrect=926.000000 eval_loss=0.134758 **F1_PosNeg_Macro=0.922848** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=8.865658 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421149 ncorrect=2067.000000 eval_loss=1.176371 *F1_PosNeg_Macro=0.406183* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=0.914935 *F1_PosNeg_Macro=0.660437* 
+[epoch=92/300 step=9568 (32 s)] train_loss=1.398684262441328 valid_loss=12.236503206766569 (per batch)
+(Stance) ntotal=984.000000 Acc=0.824187 ncorrect=811.000000 eval_loss=0.471298 **F1_PosNeg_Macro=0.763060** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.627131 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.427262 ncorrect=2097.000000 eval_loss=1.150310 *F1_PosNeg_Macro=0.415273* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=0.987764 *F1_PosNeg_Macro=0.641488* 
+[epoch=93/300 step=9672 (29 s)] train_loss=1.3388342946911087 valid_loss=12.180364753726202 (per batch)
+(Stance) ntotal=984.000000 Acc=0.916667 ncorrect=902.000000 eval_loss=0.204528 **F1_PosNeg_Macro=0.882461** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.831697 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412795 ncorrect=2026.000000 eval_loss=1.218248 *F1_PosNeg_Macro=0.369114* 
+(Target) ntotal=625.000000 Acc=0.678400 ncorrect=424.000000 eval_loss=0.925892 *F1_PosNeg_Macro=0.656022* 
+[epoch=94/300 step=9776 (30 s)] train_loss=1.3620375140498464 valid_loss=11.411145817808425 (per batch)
+(Stance) ntotal=984.000000 Acc=0.981707 ncorrect=966.000000 eval_loss=0.046927 **F1_PosNeg_Macro=0.975007** 
+(FNC-1) ntotal=10231.000000 Acc=0.001564 ncorrect=16.000000 eval_loss=9.113491 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420130 ncorrect=2062.000000 eval_loss=1.244474 *F1_PosNeg_Macro=0.373373* 
+(Target) ntotal=625.000000 Acc=0.688000 ncorrect=430.000000 eval_loss=1.006254 *F1_PosNeg_Macro=0.669950* 
+[epoch=95/300 step=9880 (32 s)] train_loss=1.3343383643346338 valid_loss=11.626253182212942 (per batch)
+(Stance) ntotal=984.000000 Acc=0.984756 ncorrect=969.000000 eval_loss=0.046096 **F1_PosNeg_Macro=0.990652** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=9.302362 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422575 ncorrect=2074.000000 eval_loss=1.338002 *F1_PosNeg_Macro=0.473841* 
+(Target) ntotal=625.000000 Acc=0.680000 ncorrect=425.000000 eval_loss=0.939794 *F1_PosNeg_Macro=0.655909* 
+[epoch=96/300 step=9984 (32 s)] train_loss=1.3174176970138574 valid_loss=12.418699677203758 (per batch)
+(Stance) ntotal=984.000000 Acc=0.993902 ncorrect=978.000000 eval_loss=0.029483 **F1_PosNeg_Macro=0.991238** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.046195 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.395069 ncorrect=1939.000000 eval_loss=1.365744 *F1_PosNeg_Macro=0.420987* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=0.977278 *F1_PosNeg_Macro=0.687270* 
+[epoch=97/300 step=10088 (32 s)] train_loss=1.2999940390626972 valid_loss=11.88807351184197 (per batch)
+(Stance) ntotal=984.000000 Acc=0.926829 ncorrect=912.000000 eval_loss=0.189644 **F1_PosNeg_Macro=0.894299** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=9.516306 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.430318 ncorrect=2112.000000 eval_loss=1.206938 *F1_PosNeg_Macro=0.427051* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=0.975186 *F1_PosNeg_Macro=0.658371* 
+[epoch=98/300 step=10192 (31 s)] train_loss=1.2678026498402828 valid_loss=12.401139382943988 (per batch)
+(Stance) ntotal=984.000000 Acc=0.990854 ncorrect=975.000000 eval_loss=0.036466 **F1_PosNeg_Macro=0.985475** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.176856 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416463 ncorrect=2044.000000 eval_loss=1.211507 *F1_PosNeg_Macro=0.427433* 
+(Target) ntotal=625.000000 Acc=0.694400 ncorrect=434.000000 eval_loss=0.976310 *F1_PosNeg_Macro=0.700724* 
+[epoch=99/300 step=10296 (32 s)] train_loss=1.2465373948216438 valid_loss=12.268076527655984 (per batch)
+(Stance) ntotal=984.000000 Acc=0.965447 ncorrect=950.000000 eval_loss=0.079112 **F1_PosNeg_Macro=0.944583** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=9.861415 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408517 ncorrect=2005.000000 eval_loss=1.214404 *F1_PosNeg_Macro=0.354888* 
+(Target) ntotal=625.000000 Acc=0.630400 ncorrect=394.000000 eval_loss=1.113146 *F1_PosNeg_Macro=0.639430* 
+[epoch=100/300 step=10400 (32 s)] train_loss=1.245469079961857 valid_loss=10.731831869275238 (per batch)
+(Stance) ntotal=984.000000 Acc=0.988821 ncorrect=973.000000 eval_loss=0.035592 **F1_PosNeg_Macro=0.982553** 
+(FNC-1) ntotal=10231.000000 Acc=0.002541 ncorrect=26.000000 eval_loss=8.435544 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415037 ncorrect=2037.000000 eval_loss=1.259671 *F1_PosNeg_Macro=0.378806* 
+(Target) ntotal=625.000000 Acc=0.689600 ncorrect=431.000000 eval_loss=1.001026 *F1_PosNeg_Macro=0.696165* 
+[epoch=101/300 step=10504 (32 s)] train_loss=1.2302494361065328 valid_loss=11.664676061031432 (per batch)
+(Stance) ntotal=984.000000 Acc=0.996951 ncorrect=981.000000 eval_loss=0.018055 **F1_PosNeg_Macro=0.995604** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=9.370560 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425632 ncorrect=2089.000000 eval_loss=1.267723 *F1_PosNeg_Macro=0.399278* 
+(Target) ntotal=625.000000 Acc=0.694400 ncorrect=434.000000 eval_loss=1.008338 *F1_PosNeg_Macro=0.704600* 
+[epoch=102/300 step=10608 (31 s)] train_loss=1.2002301503760884 valid_loss=11.957439046236091 (per batch)
+(Stance) ntotal=984.000000 Acc=0.983740 ncorrect=968.000000 eval_loss=0.046243 **F1_PosNeg_Macro=0.990199** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=9.460476 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417074 ncorrect=2047.000000 eval_loss=1.269108 *F1_PosNeg_Macro=0.376525* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=1.181612 *F1_PosNeg_Macro=0.646339* 
+[epoch=103/300 step=10712 (30 s)] train_loss=1.191510187050041 valid_loss=12.404710194864908 (per batch)
+(Stance) ntotal=984.000000 Acc=0.971545 ncorrect=956.000000 eval_loss=0.076073 **F1_PosNeg_Macro=0.958394** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=10.049575 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.432967 ncorrect=2125.000000 eval_loss=1.215688 *F1_PosNeg_Macro=0.450011* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=1.063374 *F1_PosNeg_Macro=0.651271* 
+[epoch=104/300 step=10816 (31 s)] train_loss=1.135703501649774 valid_loss=12.928105037812239 (per batch)
+(Stance) ntotal=984.000000 Acc=0.932927 ncorrect=918.000000 eval_loss=0.182328 **F1_PosNeg_Macro=0.923024** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.219891 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429503 ncorrect=2108.000000 eval_loss=1.242441 *F1_PosNeg_Macro=0.470041* 
+(Target) ntotal=625.000000 Acc=0.609600 ncorrect=381.000000 eval_loss=1.283445 *F1_PosNeg_Macro=0.610489* 
+[epoch=105/300 step=10920 (30 s)] train_loss=1.1960585457451929 valid_loss=12.214658398773278 (per batch)
+(Stance) ntotal=984.000000 Acc=0.997967 ncorrect=982.000000 eval_loss=0.011750 **F1_PosNeg_Macro=0.996048** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=9.819585 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413407 ncorrect=2029.000000 eval_loss=1.281845 *F1_PosNeg_Macro=0.357724* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=1.101478 *F1_PosNeg_Macro=0.666722* 
+[epoch=106/300 step=11024 (32 s)] train_loss=1.1368565227066239 valid_loss=12.001611671892878 (per batch)
+(Stance) ntotal=984.000000 Acc=0.969512 ncorrect=954.000000 eval_loss=0.080569 **F1_PosNeg_Macro=0.961582** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=9.543440 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.432967 ncorrect=2125.000000 eval_loss=1.218332 *F1_PosNeg_Macro=0.441128* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=1.159271 *F1_PosNeg_Macro=0.652495* 
+[epoch=107/300 step=11128 (33 s)] train_loss=1.1593577929844077 valid_loss=12.679658153481208 (per batch)
+(Stance) ntotal=984.000000 Acc=0.978659 ncorrect=963.000000 eval_loss=0.055311 **F1_PosNeg_Macro=0.975447** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.150344 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412184 ncorrect=2023.000000 eval_loss=1.343702 *F1_PosNeg_Macro=0.355197* 
+(Target) ntotal=625.000000 Acc=0.684800 ncorrect=428.000000 eval_loss=1.130301 *F1_PosNeg_Macro=0.686635* 
+[epoch=108/300 step=11232 (30 s)] train_loss=1.0999067194150904 valid_loss=12.149199735246096 (per batch)
+(Stance) ntotal=984.000000 Acc=0.992886 ncorrect=977.000000 eval_loss=0.023790 **F1_PosNeg_Macro=0.993849** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=9.693531 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.428892 ncorrect=2105.000000 eval_loss=1.295253 *F1_PosNeg_Macro=0.431803* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=1.136626 *F1_PosNeg_Macro=0.690130* 
+[epoch=109/300 step=11336 (31 s)] train_loss=1.0815322024640268 valid_loss=11.922643081265955 (per batch)
+(Stance) ntotal=984.000000 Acc=0.933943 ncorrect=919.000000 eval_loss=0.165719 **F1_PosNeg_Macro=0.900700** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=9.267334 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406887 ncorrect=1997.000000 eval_loss=1.370960 *F1_PosNeg_Macro=0.335416* 
+(Target) ntotal=625.000000 Acc=0.684800 ncorrect=428.000000 eval_loss=1.118630 *F1_PosNeg_Macro=0.676281* 
+[epoch=110/300 step=11440 (31 s)] train_loss=1.0880979429572248 valid_loss=12.593506955443761 (per batch)
+(Stance) ntotal=984.000000 Acc=0.989837 ncorrect=974.000000 eval_loss=0.026795 **F1_PosNeg_Macro=0.987983** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.076504 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425835 ncorrect=2090.000000 eval_loss=1.340038 *F1_PosNeg_Macro=0.463373* 
+(Target) ntotal=625.000000 Acc=0.689600 ncorrect=431.000000 eval_loss=1.150170 *F1_PosNeg_Macro=0.678227* 
+[epoch=111/300 step=11544 (31 s)] train_loss=1.0468814388956302 valid_loss=11.775378852458866 (per batch)
+(Stance) ntotal=984.000000 Acc=0.997967 ncorrect=982.000000 eval_loss=0.006459 **F1_PosNeg_Macro=0.997586** 
+(FNC-1) ntotal=10231.000000 Acc=0.001857 ncorrect=19.000000 eval_loss=9.355951 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422779 ncorrect=2075.000000 eval_loss=1.293117 *F1_PosNeg_Macro=0.442647* 
+(Target) ntotal=625.000000 Acc=0.688000 ncorrect=430.000000 eval_loss=1.119852 *F1_PosNeg_Macro=0.688212* 
+[epoch=112/300 step=11648 (31 s)] train_loss=1.065998748320943 valid_loss=12.909101035257873 (per batch)
+(Stance) ntotal=984.000000 Acc=0.985772 ncorrect=970.000000 eval_loss=0.038131 **F1_PosNeg_Macro=0.981752** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.387559 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.427058 ncorrect=2096.000000 eval_loss=1.273690 *F1_PosNeg_Macro=0.409728* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=1.209721 *F1_PosNeg_Macro=0.662139* 
+[epoch=113/300 step=11752 (30 s)] train_loss=1.0190677373858097 valid_loss=12.594558185218379 (per batch)
+(Stance) ntotal=984.000000 Acc=0.975610 ncorrect=960.000000 eval_loss=0.067559 **F1_PosNeg_Macro=0.962987** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=9.954667 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410554 ncorrect=2015.000000 eval_loss=1.350879 *F1_PosNeg_Macro=0.356024* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=1.221454 *F1_PosNeg_Macro=0.638487* 
+[epoch=114/300 step=11856 (31 s)] train_loss=1.042572323931381 valid_loss=12.558948681561741 (per batch)
+(Stance) ntotal=984.000000 Acc=0.997967 ncorrect=982.000000 eval_loss=0.009441 **F1_PosNeg_Macro=0.997584** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=9.830358 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407905 ncorrect=2002.000000 eval_loss=1.450326 *F1_PosNeg_Macro=0.332821* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=1.268823 *F1_PosNeg_Macro=0.673808* 
+[epoch=115/300 step=11960 (30 s)] train_loss=0.9820687809171011 valid_loss=13.058573859545048 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.008350 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=10.244388 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.404442 ncorrect=1985.000000 eval_loss=1.501913 *F1_PosNeg_Macro=0.330714* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=1.303923 *F1_PosNeg_Macro=0.681047* 
+[epoch=116/300 step=12064 (32 s)] train_loss=0.9739868960638817 valid_loss=13.528179848936793 (per batch)
+(Stance) ntotal=984.000000 Acc=0.969512 ncorrect=954.000000 eval_loss=0.071418 **F1_PosNeg_Macro=0.949898** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.810222 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422372 ncorrect=2073.000000 eval_loss=1.416655 *F1_PosNeg_Macro=0.469680* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=1.229884 *F1_PosNeg_Macro=0.648801* 
+[epoch=117/300 step=12168 (32 s)] train_loss=0.9902737536915363 valid_loss=12.441719966220896 (per batch)
+(Stance) ntotal=984.000000 Acc=0.994919 ncorrect=979.000000 eval_loss=0.010824 **F1_PosNeg_Macro=0.991717** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=9.760669 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421964 ncorrect=2071.000000 eval_loss=1.339025 *F1_PosNeg_Macro=0.396755* 
+(Target) ntotal=625.000000 Acc=0.635200 ncorrect=397.000000 eval_loss=1.331203 *F1_PosNeg_Macro=0.613033* 
+[epoch=118/300 step=12272 (32 s)] train_loss=0.955084407540898 valid_loss=12.696497468551238 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.006648 **F1_PosNeg_Macro=0.999557** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=9.902305 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425020 ncorrect=2086.000000 eval_loss=1.433169 *F1_PosNeg_Macro=0.466910* 
+(Target) ntotal=625.000000 Acc=0.633600 ncorrect=396.000000 eval_loss=1.354376 *F1_PosNeg_Macro=0.606044* 
+[epoch=119/300 step=12376 (34 s)] train_loss=0.9368119772049025 valid_loss=12.780878328000648 (per batch)
+(Stance) ntotal=984.000000 Acc=0.969512 ncorrect=954.000000 eval_loss=0.065997 **F1_PosNeg_Macro=0.948120** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.910252 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429707 ncorrect=2109.000000 eval_loss=1.329085 *F1_PosNeg_Macro=0.418423* 
+(Target) ntotal=625.000000 Acc=0.612800 ncorrect=383.000000 eval_loss=1.475545 *F1_PosNeg_Macro=0.607268* 
+[epoch=120/300 step=12480 (31 s)] train_loss=0.9480671883748772 valid_loss=12.938777149578211 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.005131 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=10.034053 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414629 ncorrect=2035.000000 eval_loss=1.442240 *F1_PosNeg_Macro=0.366481* 
+(Target) ntotal=625.000000 Acc=0.608000 ncorrect=380.000000 eval_loss=1.457353 *F1_PosNeg_Macro=0.612576* 
+[epoch=121/300 step=12584 (32 s)] train_loss=0.8875269032186435 valid_loss=12.437954328629004 (per batch)
+(Stance) ntotal=984.000000 Acc=0.997967 ncorrect=982.000000 eval_loss=0.003809 **F1_PosNeg_Macro=0.999113** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=9.657771 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417278 ncorrect=2048.000000 eval_loss=1.489984 *F1_PosNeg_Macro=0.373938* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=1.286390 *F1_PosNeg_Macro=0.665266* 
+[epoch=122/300 step=12688 (31 s)] train_loss=0.886227389497575 valid_loss=12.936022956217474 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.002921 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=10.029303 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.400367 ncorrect=1965.000000 eval_loss=1.603954 *F1_PosNeg_Macro=0.314916* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=1.299846 *F1_PosNeg_Macro=0.652361* 
+[epoch=123/300 step=12792 (30 s)] train_loss=0.9089428965996306 valid_loss=13.700692187340664 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001794 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.850220 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412184 ncorrect=2023.000000 eval_loss=1.475366 *F1_PosNeg_Macro=0.355926* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=1.373312 *F1_PosNeg_Macro=0.676385* 
+[epoch=124/300 step=12896 (31 s)] train_loss=0.8666490262123541 valid_loss=12.979769546404864 (per batch)
+(Stance) ntotal=984.000000 Acc=0.932927 ncorrect=918.000000 eval_loss=0.172126 **F1_PosNeg_Macro=0.891211** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=9.955481 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411980 ncorrect=2022.000000 eval_loss=1.544073 *F1_PosNeg_Macro=0.362401* 
+(Target) ntotal=625.000000 Acc=0.686400 ncorrect=429.000000 eval_loss=1.308090 *F1_PosNeg_Macro=0.685369* 
+[epoch=125/300 step=13000 (33 s)] train_loss=0.8553789391791304 valid_loss=13.699348479317864 (per batch)
+(Stance) ntotal=984.000000 Acc=0.993902 ncorrect=978.000000 eval_loss=0.014319 **F1_PosNeg_Macro=0.995802** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.892532 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.434189 ncorrect=2131.000000 eval_loss=1.356887 *F1_PosNeg_Macro=0.448009* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=1.435610 *F1_PosNeg_Macro=0.682259* 
+[epoch=126/300 step=13104 (31 s)] train_loss=0.8405838990158652 valid_loss=13.790310886237197 (per batch)
+(Stance) ntotal=984.000000 Acc=0.972561 ncorrect=957.000000 eval_loss=0.062934 **F1_PosNeg_Macro=0.950906** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=10.751963 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410758 ncorrect=2016.000000 eval_loss=1.482860 *F1_PosNeg_Macro=0.367115* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=1.492553 *F1_PosNeg_Macro=0.627051* 
+[epoch=127/300 step=13208 (32 s)] train_loss=0.8416512135949094 valid_loss=12.838083859230988 (per batch)
+(Stance) ntotal=984.000000 Acc=0.989837 ncorrect=974.000000 eval_loss=0.024142 **F1_PosNeg_Macro=0.983560** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=9.795044 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407294 ncorrect=1999.000000 eval_loss=1.607336 *F1_PosNeg_Macro=0.341904* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=1.411563 *F1_PosNeg_Macro=0.646365* 
+[epoch=128/300 step=13312 (32 s)] train_loss=0.8315066667945268 valid_loss=13.581821073806704 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000713 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.529006 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425224 ncorrect=2087.000000 eval_loss=1.506183 *F1_PosNeg_Macro=0.402760* 
+(Target) ntotal=625.000000 Acc=0.640000 ncorrect=400.000000 eval_loss=1.545920 *F1_PosNeg_Macro=0.657006* 
+[epoch=129/300 step=13416 (31 s)] train_loss=0.817078549755164 valid_loss=13.0793446773196 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.005519 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.102902 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.426650 ncorrect=2094.000000 eval_loss=1.473624 *F1_PosNeg_Macro=0.414557* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=1.497300 *F1_PosNeg_Macro=0.662771* 
+[epoch=130/300 step=13520 (32 s)] train_loss=0.7862103509900268 valid_loss=13.132853790618052 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.004515 **F1_PosNeg_Macro=0.998462** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=10.101546 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420334 ncorrect=2063.000000 eval_loss=1.563018 *F1_PosNeg_Macro=0.440097* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=1.463774 *F1_PosNeg_Macro=0.645106* 
+[epoch=131/300 step=13624 (31 s)] train_loss=0.780256773918294 valid_loss=13.04302060692392 (per batch)
+(Stance) ntotal=984.000000 Acc=0.996951 ncorrect=981.000000 eval_loss=0.013302 **F1_PosNeg_Macro=0.994554** 
+(FNC-1) ntotal=10231.000000 Acc=0.001564 ncorrect=16.000000 eval_loss=9.952190 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409332 ncorrect=2009.000000 eval_loss=1.665167 *F1_PosNeg_Macro=0.348691* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=1.412362 *F1_PosNeg_Macro=0.682011* 
+[epoch=132/300 step=13728 (31 s)] train_loss=0.7904468847331233 valid_loss=13.651119108457948 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001308 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=10.652773 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.432355 ncorrect=2122.000000 eval_loss=1.558400 *F1_PosNeg_Macro=0.419133* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=1.438638 *F1_PosNeg_Macro=0.652096* 
+[epoch=133/300 step=13832 (31 s)] train_loss=0.7741439727872673 valid_loss=13.275226533214786 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001368 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=10.163236 *F1_PosNeg_Macro=0.001206* 
+(MultiNLI) ntotal=4908.000000 Acc=0.428688 ncorrect=2104.000000 eval_loss=1.477635 *F1_PosNeg_Macro=0.466574* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=1.632988 *F1_PosNeg_Macro=0.676625* 
+[epoch=134/300 step=13936 (32 s)] train_loss=0.7562556989623073 valid_loss=13.488563303261747 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.006002 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.455707 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425020 ncorrect=2086.000000 eval_loss=1.501913 *F1_PosNeg_Macro=0.411894* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=1.524942 *F1_PosNeg_Macro=0.639216* 
+[epoch=135/300 step=14040 (32 s)] train_loss=0.7595029033226848 valid_loss=13.232460794288208 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001180 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001173 ncorrect=12.000000 eval_loss=10.125889 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.423798 ncorrect=2080.000000 eval_loss=1.616628 *F1_PosNeg_Macro=0.394069* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=1.488763 *F1_PosNeg_Macro=0.658754* 
+[epoch=136/300 step=14144 (34 s)] train_loss=0.7138547156075499 valid_loss=14.036391939990482 (per batch)
+(Stance) ntotal=984.000000 Acc=0.992886 ncorrect=977.000000 eval_loss=0.014911 **F1_PosNeg_Macro=0.995792** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=10.647800 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406683 ncorrect=1996.000000 eval_loss=1.784496 *F1_PosNeg_Macro=0.431254* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=1.589184 *F1_PosNeg_Macro=0.647483* 
+[epoch=137/300 step=14248 (33 s)] train_loss=0.6910932587723857 valid_loss=14.337786464566717 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.007499 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=11.154459 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421964 ncorrect=2071.000000 eval_loss=1.595946 *F1_PosNeg_Macro=0.432433* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=1.579883 *F1_PosNeg_Macro=0.643179* 
+[epoch=138/300 step=14352 (34 s)] train_loss=0.7162242573036705 valid_loss=13.853945273721635 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000483 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001271 ncorrect=13.000000 eval_loss=10.617786 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419723 ncorrect=2060.000000 eval_loss=1.652830 *F1_PosNeg_Macro=0.470097* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=1.582846 *F1_PosNeg_Macro=0.667323* 
+[epoch=139/300 step=14456 (31 s)] train_loss=0.6547046538337151 valid_loss=14.7054302673466 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.002528 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=11.162285 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415648 ncorrect=2040.000000 eval_loss=1.933144 *F1_PosNeg_Macro=0.470287* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=1.607473 *F1_PosNeg_Macro=0.642143* 
+[epoch=140/300 step=14560 (31 s)] train_loss=0.683964144590181 valid_loss=14.138625630971113 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000537 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=10.684166 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.424613 ncorrect=2084.000000 eval_loss=1.744057 *F1_PosNeg_Macro=0.392329* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=1.709866 *F1_PosNeg_Macro=0.650727* 
+[epoch=141/300 step=14664 (31 s)] train_loss=0.7144582554179718 valid_loss=14.161819757919334 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000425 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.828822 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418500 ncorrect=2054.000000 eval_loss=1.727242 *F1_PosNeg_Macro=0.472947* 
+(Target) ntotal=625.000000 Acc=0.680000 ncorrect=425.000000 eval_loss=1.605330 *F1_PosNeg_Macro=0.680803* 
+[epoch=142/300 step=14768 (31 s)] train_loss=0.6467228495687147 valid_loss=14.014990677832046 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000315 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=10.879996 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.433782 ncorrect=2129.000000 eval_loss=1.600088 *F1_PosNeg_Macro=0.452663* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=1.534592 *F1_PosNeg_Macro=0.648670* 
+[epoch=143/300 step=14872 (31 s)] train_loss=0.6114923330505218 valid_loss=14.035627175203864 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000164 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=10.729903 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.432355 ncorrect=2122.000000 eval_loss=1.682769 *F1_PosNeg_Macro=0.462318* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=1.622792 *F1_PosNeg_Macro=0.665764* 
+[epoch=144/300 step=14976 (31 s)] train_loss=0.6802162342291223 valid_loss=13.924885384259778 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000177 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=10.701422 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.426039 ncorrect=2091.000000 eval_loss=1.573097 *F1_PosNeg_Macro=0.402008* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=1.650189 *F1_PosNeg_Macro=0.649324* 
+[epoch=145/300 step=15080 (30 s)] train_loss=0.5991640707462256 valid_loss=14.451425760257939 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000630 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=10.940478 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.433782 ncorrect=2129.000000 eval_loss=1.784165 *F1_PosNeg_Macro=0.439533* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=1.726153 *F1_PosNeg_Macro=0.629663* 
+[epoch=146/300 step=15184 (33 s)] train_loss=0.5851366182354328 valid_loss=14.83123433695112 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.003986 **F1_PosNeg_Macro=0.998471** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=11.337862 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414018 ncorrect=2032.000000 eval_loss=1.797248 *F1_PosNeg_Macro=0.421393* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=1.692138 *F1_PosNeg_Macro=0.668068* 
+[epoch=147/300 step=15288 (31 s)] train_loss=0.6314715144113646 valid_loss=14.52001368251843 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.002975 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=10.875421 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.431337 ncorrect=2117.000000 eval_loss=1.577594 *F1_PosNeg_Macro=0.444262* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=2.064024 *F1_PosNeg_Macro=0.598529* 
+[epoch=148/300 step=15392 (30 s)] train_loss=0.545922024369317 valid_loss=14.324773169273286 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000226 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=10.742203 *F1_PosNeg_Macro=0.001603* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421149 ncorrect=2067.000000 eval_loss=1.804733 *F1_PosNeg_Macro=0.461904* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=1.777611 *F1_PosNeg_Macro=0.652432* 
+[epoch=149/300 step=15496 (30 s)] train_loss=0.565805529217379 valid_loss=14.935591861156228 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000695 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=11.404521 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.426447 ncorrect=2093.000000 eval_loss=1.714409 *F1_PosNeg_Macro=0.417444* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=1.815967 *F1_PosNeg_Macro=0.639370* 
+[epoch=150/300 step=15600 (33 s)] train_loss=0.5997337503770093 valid_loss=14.025283487350102 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000658 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=10.421512 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.424002 ncorrect=2081.000000 eval_loss=1.883557 *F1_PosNeg_Macro=0.399601* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=1.719556 *F1_PosNeg_Macro=0.651252* 
+[epoch=151/300 step=15704 (31 s)] train_loss=0.562908336593934 valid_loss=14.196470490626739 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000528 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=10.652220 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.428077 ncorrect=2101.000000 eval_loss=1.698610 *F1_PosNeg_Macro=0.430885* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=1.845113 *F1_PosNeg_Macro=0.653640* 
+[epoch=152/300 step=15808 (30 s)] train_loss=0.5231686066396762 valid_loss=15.726327134298685 (per batch)
+(Stance) ntotal=984.000000 Acc=0.968496 ncorrect=953.000000 eval_loss=0.085107 **F1_PosNeg_Macro=0.961115** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=11.233290 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422983 ncorrect=2076.000000 eval_loss=1.782052 *F1_PosNeg_Macro=0.420608* 
+(Target) ntotal=625.000000 Acc=0.588800 ncorrect=368.000000 eval_loss=2.625878 *F1_PosNeg_Macro=0.544446* 
+[epoch=153/300 step=15912 (32 s)] train_loss=0.545472665066392 valid_loss=15.201712280799592 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.004175 **F1_PosNeg_Macro=0.999557** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=11.252773 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419723 ncorrect=2060.000000 eval_loss=2.059515 *F1_PosNeg_Macro=0.469860* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=1.885250 *F1_PosNeg_Macro=0.646932* 
+[epoch=154/300 step=16016 (32 s)] train_loss=0.5217466684835717 valid_loss=14.479009563570603 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.002447 **F1_PosNeg_Macro=0.999557** 
+(FNC-1) ntotal=10231.000000 Acc=0.002639 ncorrect=27.000000 eval_loss=10.645535 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422779 ncorrect=2075.000000 eval_loss=1.940167 *F1_PosNeg_Macro=0.463814* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=1.890861 *F1_PosNeg_Macro=0.651519* 
+[epoch=155/300 step=16120 (31 s)] train_loss=0.5097965563968151 valid_loss=15.071960702136153 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000473 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=11.218871 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.430318 ncorrect=2112.000000 eval_loss=1.798231 *F1_PosNeg_Macro=0.428602* 
+(Target) ntotal=625.000000 Acc=0.640000 ncorrect=400.000000 eval_loss=2.054387 *F1_PosNeg_Macro=0.648895* 
+[epoch=156/300 step=16224 (32 s)] train_loss=0.5049518418159445 valid_loss=14.598874289175225 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000755 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=10.989559 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.428688 ncorrect=2104.000000 eval_loss=1.731246 *F1_PosNeg_Macro=0.431579* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=1.877314 *F1_PosNeg_Macro=0.665827* 
+[epoch=157/300 step=16328 (44 s)] train_loss=0.5260866005359836 valid_loss=15.313653813947989 (per batch)
+(Stance) ntotal=984.000000 Acc=0.997967 ncorrect=982.000000 eval_loss=0.005787 **F1_PosNeg_Macro=0.997578** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=11.336837 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421964 ncorrect=2071.000000 eval_loss=2.052797 *F1_PosNeg_Macro=0.463877* 
+(Target) ntotal=625.000000 Acc=0.678400 ncorrect=424.000000 eval_loss=1.918233 *F1_PosNeg_Macro=0.680074* 
+[epoch=158/300 step=16432 (35 s)] train_loss=0.4849810122491013 valid_loss=14.949489601395449 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000162 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=11.210885 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.427465 ncorrect=2098.000000 eval_loss=1.862194 *F1_PosNeg_Macro=0.439006* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=1.876248 *F1_PosNeg_Macro=0.638336* 
+[epoch=159/300 step=16536 (32 s)] train_loss=0.45767386883660666 valid_loss=15.597333262585302 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000099 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=11.567770 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410554 ncorrect=2015.000000 eval_loss=2.149216 *F1_PosNeg_Macro=0.418756* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=1.880248 *F1_PosNeg_Macro=0.678593* 
+[epoch=160/300 step=16640 (31 s)] train_loss=0.4689792351341916 valid_loss=15.01994219307048 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000954 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=11.055452 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422779 ncorrect=2075.000000 eval_loss=1.901455 *F1_PosNeg_Macro=0.416996* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=2.062081 *F1_PosNeg_Macro=0.661292* 
+[epoch=161/300 step=16744 (32 s)] train_loss=0.4539740733299158 valid_loss=16.3399916021776 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000079 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.163869 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413610 ncorrect=2030.000000 eval_loss=2.182217 *F1_PosNeg_Macro=0.451913* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=1.993827 *F1_PosNeg_Macro=0.678066* 
+[epoch=162/300 step=16848 (33 s)] train_loss=0.467259634740213 valid_loss=16.685666194085634 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.003089 **F1_PosNeg_Macro=0.999557** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.308916 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.401385 ncorrect=1970.000000 eval_loss=2.364352 *F1_PosNeg_Macro=0.432778* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=2.009310 *F1_PosNeg_Macro=0.680546* 
+[epoch=163/300 step=16952 (32 s)] train_loss=0.4319248892157842 valid_loss=17.167472111898213 (per batch)
+(Stance) ntotal=984.000000 Acc=0.978659 ncorrect=963.000000 eval_loss=0.050053 **F1_PosNeg_Macro=0.961630** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=12.618858 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406887 ncorrect=1997.000000 eval_loss=2.322192 *F1_PosNeg_Macro=0.355072* 
+(Target) ntotal=625.000000 Acc=0.636800 ncorrect=398.000000 eval_loss=2.176370 *F1_PosNeg_Macro=0.630860* 
+[epoch=164/300 step=17056 (33 s)] train_loss=0.43317125293917624 valid_loss=15.704411829531121 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000074 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=11.461876 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411369 ncorrect=2019.000000 eval_loss=2.194074 *F1_PosNeg_Macro=0.354117* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=2.048387 *F1_PosNeg_Macro=0.633195* 
+[epoch=165/300 step=17160 (32 s)] train_loss=0.43292013010767944 valid_loss=15.268537097511285 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000113 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=11.085929 *F1_PosNeg_Macro=0.000402* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422575 ncorrect=2074.000000 eval_loss=2.097567 *F1_PosNeg_Macro=0.398554* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=2.084929 *F1_PosNeg_Macro=0.645981* 
+[epoch=166/300 step=17264 (34 s)] train_loss=0.42302028163483274 valid_loss=15.497856193881105 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000017 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=11.424316 *F1_PosNeg_Macro=0.001608* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429503 ncorrect=2108.000000 eval_loss=1.938476 *F1_PosNeg_Macro=0.439099* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=2.135047 *F1_PosNeg_Macro=0.632524* 
+[epoch=167/300 step=17368 (33 s)] train_loss=0.40292795829911765 valid_loss=16.447261681883884 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000066 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.034246 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419723 ncorrect=2060.000000 eval_loss=2.278977 *F1_PosNeg_Macro=0.389220* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=2.133971 *F1_PosNeg_Macro=0.676219* 
+[epoch=168/300 step=17472 (34 s)] train_loss=0.42652064673655754 valid_loss=15.999833862327336 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000059 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=11.764431 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422983 ncorrect=2076.000000 eval_loss=1.997281 *F1_PosNeg_Macro=0.414153* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=2.238063 *F1_PosNeg_Macro=0.624776* 
+[epoch=169/300 step=17576 (35 s)] train_loss=0.43454744794339956 valid_loss=15.64762893672831 (per batch)
+(Stance) ntotal=984.000000 Acc=0.993902 ncorrect=978.000000 eval_loss=0.016201 **F1_PosNeg_Macro=0.989778** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=11.394893 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.423390 ncorrect=2078.000000 eval_loss=2.065873 *F1_PosNeg_Macro=0.436242* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=2.170662 *F1_PosNeg_Macro=0.650462* 
+[epoch=170/300 step=17680 (32 s)] train_loss=0.3554200635025364 valid_loss=16.28370731084583 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000082 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=11.885403 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.431133 ncorrect=2116.000000 eval_loss=2.149794 *F1_PosNeg_Macro=0.428036* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=2.248429 *F1_PosNeg_Macro=0.636723* 
+[epoch=171/300 step=17784 (31 s)] train_loss=0.3906589806806201 valid_loss=16.178902225792868 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000198 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=11.788902 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419927 ncorrect=2061.000000 eval_loss=2.118282 *F1_PosNeg_Macro=0.402565* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=2.271521 *F1_PosNeg_Macro=0.642653* 
+[epoch=172/300 step=17888 (31 s)] train_loss=0.36783497129713044 valid_loss=16.612461363099133 (per batch)
+(Stance) ntotal=984.000000 Acc=0.987805 ncorrect=972.000000 eval_loss=0.032797 **F1_PosNeg_Macro=0.979752** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=11.651584 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408313 ncorrect=2004.000000 eval_loss=2.256878 *F1_PosNeg_Macro=0.373101* 
+(Target) ntotal=625.000000 Acc=0.619200 ncorrect=387.000000 eval_loss=2.671202 *F1_PosNeg_Macro=0.608679* 
+[epoch=173/300 step=17992 (33 s)] train_loss=0.3863254155230956 valid_loss=17.124526850319803 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.002275 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=12.241264 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.402404 ncorrect=1975.000000 eval_loss=2.662691 *F1_PosNeg_Macro=0.390803* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=2.218297 *F1_PosNeg_Macro=0.659032* 
+[epoch=174/300 step=18096 (34 s)] train_loss=0.3762969833097276 valid_loss=16.50386354185071 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000155 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=11.966490 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421760 ncorrect=2070.000000 eval_loss=2.285571 *F1_PosNeg_Macro=0.404415* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=2.251647 *F1_PosNeg_Macro=0.662429* 
+[epoch=175/300 step=18200 (35 s)] train_loss=0.3372922209877848 valid_loss=16.802833270976215 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000032 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.142258 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420538 ncorrect=2064.000000 eval_loss=2.405933 *F1_PosNeg_Macro=0.466841* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=2.254610 *F1_PosNeg_Macro=0.634156* 
+[epoch=176/300 step=18304 (32 s)] train_loss=0.35009634372353016 valid_loss=15.648613069989572 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000059 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001368 ncorrect=14.000000 eval_loss=11.139432 *F1_PosNeg_Macro=0.002006* 
+(MultiNLI) ntotal=4908.000000 Acc=0.429503 ncorrect=2108.000000 eval_loss=2.241742 *F1_PosNeg_Macro=0.436831* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=2.267380 *F1_PosNeg_Macro=0.660573* 
+[epoch=177/300 step=18408 (33 s)] train_loss=0.3486446211371423 valid_loss=15.692573306676982 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000211 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.002835 ncorrect=29.000000 eval_loss=10.981451 *F1_PosNeg_Macro=0.004769* 
+(MultiNLI) ntotal=4908.000000 Acc=0.426854 ncorrect=2095.000000 eval_loss=2.350119 *F1_PosNeg_Macro=0.450557* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=2.360793 *F1_PosNeg_Macro=0.615094* 
+[epoch=178/300 step=18512 (33 s)] train_loss=0.3427721815035581 valid_loss=16.242674402872268 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000208 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=11.584088 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.427465 ncorrect=2098.000000 eval_loss=2.355927 *F1_PosNeg_Macro=0.445333* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=2.302452 *F1_PosNeg_Macro=0.659180* 
+[epoch=179/300 step=18616 (33 s)] train_loss=0.3278330474719881 valid_loss=16.87209023834871 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000063 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=11.964052 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411369 ncorrect=2019.000000 eval_loss=2.530431 *F1_PosNeg_Macro=0.452950* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=2.377545 *F1_PosNeg_Macro=0.664334* 
+[epoch=180/300 step=18720 (34 s)] train_loss=0.3069948198783025 valid_loss=17.659673444897876 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000028 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.499597 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407702 ncorrect=2001.000000 eval_loss=2.711464 *F1_PosNeg_Macro=0.455679* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=2.448584 *F1_PosNeg_Macro=0.636611* 
+[epoch=181/300 step=18824 (32 s)] train_loss=0.33273936481226396 valid_loss=17.526141133724682 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000259 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=12.625614 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422779 ncorrect=2075.000000 eval_loss=2.454419 *F1_PosNeg_Macro=0.430105* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=2.445848 *F1_PosNeg_Macro=0.649369* 
+[epoch=182/300 step=18928 (33 s)] train_loss=0.308383152805653 valid_loss=17.0232109664089 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000014 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=11.824705 *F1_PosNeg_Macro=0.001608* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421760 ncorrect=2070.000000 eval_loss=2.688956 *F1_PosNeg_Macro=0.471181* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=2.509535 *F1_PosNeg_Macro=0.620816* 
+[epoch=183/300 step=19032 (31 s)] train_loss=0.30540822143757396 valid_loss=16.53938329187331 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000080 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001271 ncorrect=13.000000 eval_loss=11.323659 *F1_PosNeg_Macro=0.004806* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417482 ncorrect=2049.000000 eval_loss=2.495597 *F1_PosNeg_Macro=0.455755* 
+(Target) ntotal=625.000000 Acc=0.620800 ncorrect=388.000000 eval_loss=2.720047 *F1_PosNeg_Macro=0.630960* 
+[epoch=184/300 step=19136 (31 s)] train_loss=0.2979501948439065 valid_loss=16.712988131816296 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000724 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=11.441683 *F1_PosNeg_Macro=0.000802* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407905 ncorrect=2002.000000 eval_loss=2.637959 *F1_PosNeg_Macro=0.358998* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=2.632623 *F1_PosNeg_Macro=0.613323* 
+[epoch=185/300 step=19240 (32 s)] train_loss=0.29259107161529896 valid_loss=17.090146518927337 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000021 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=11.765139 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412388 ncorrect=2024.000000 eval_loss=2.630592 *F1_PosNeg_Macro=0.378780* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=2.694394 *F1_PosNeg_Macro=0.653225* 
+[epoch=186/300 step=19344 (33 s)] train_loss=0.28404478228094376 valid_loss=17.37943375749808 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000249 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.320964 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.424002 ncorrect=2081.000000 eval_loss=2.410437 *F1_PosNeg_Macro=0.419211* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=2.647783 *F1_PosNeg_Macro=0.611004* 
+[epoch=187/300 step=19448 (32 s)] train_loss=0.2466921035554081 valid_loss=17.881466240283107 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000125 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.766576 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422372 ncorrect=2073.000000 eval_loss=2.603196 *F1_PosNeg_Macro=0.457333* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=2.511569 *F1_PosNeg_Macro=0.670985* 
+[epoch=188/300 step=19552 (33 s)] train_loss=0.25837560465788556 valid_loss=19.331527995572497 (per batch)
+(Stance) ntotal=984.000000 Acc=0.976626 ncorrect=961.000000 eval_loss=0.053664 **F1_PosNeg_Macro=0.967617** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.928815 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.402404 ncorrect=1975.000000 eval_loss=2.930780 *F1_PosNeg_Macro=0.413395* 
+(Target) ntotal=625.000000 Acc=0.638400 ncorrect=399.000000 eval_loss=3.418269 *F1_PosNeg_Macro=0.566355* 
+[epoch=189/300 step=19656 (31 s)] train_loss=0.2911965221624436 valid_loss=17.511504850755045 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000136 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=12.366877 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415037 ncorrect=2037.000000 eval_loss=2.601377 *F1_PosNeg_Macro=0.387524* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=2.543115 *F1_PosNeg_Macro=0.661005* 
+[epoch=190/300 step=19760 (32 s)] train_loss=0.29796351379064406 valid_loss=16.647295176253362 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.001774 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=11.581748 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420130 ncorrect=2062.000000 eval_loss=2.585983 *F1_PosNeg_Macro=0.413264* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=2.477790 *F1_PosNeg_Macro=0.662735* 
+[epoch=191/300 step=19864 (31 s)] train_loss=0.24179342717906577 valid_loss=18.07919208467878 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000419 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=12.654507 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417685 ncorrect=2050.000000 eval_loss=2.793802 *F1_PosNeg_Macro=0.442544* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=2.630466 *F1_PosNeg_Macro=0.654384* 
+[epoch=192/300 step=19968 (33 s)] train_loss=0.24845125565698603 valid_loss=17.501038555035887 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000016 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001271 ncorrect=13.000000 eval_loss=12.101840 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409943 ncorrect=2012.000000 eval_loss=2.799591 *F1_PosNeg_Macro=0.362184* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=2.599592 *F1_PosNeg_Macro=0.635176* 
+[epoch=193/300 step=20072 (31 s)] train_loss=0.2486066897728191 valid_loss=17.94444626039465 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000214 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.339931 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411165 ncorrect=2018.000000 eval_loss=2.979166 *F1_PosNeg_Macro=0.389091* 
+(Target) ntotal=625.000000 Acc=0.683200 ncorrect=427.000000 eval_loss=2.625135 *F1_PosNeg_Macro=0.675724* 
+[epoch=194/300 step=20176 (33 s)] train_loss=0.24391039751785334 valid_loss=15.209864430016456 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000164 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.005278 ncorrect=54.000000 eval_loss=10.082056 *F1_PosNeg_Macro=0.007531* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420334 ncorrect=2063.000000 eval_loss=2.532654 *F1_PosNeg_Macro=0.420191* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=2.594990 *F1_PosNeg_Macro=0.668703* 
+[epoch=195/300 step=20280 (33 s)] train_loss=0.24178334493513795 valid_loss=17.345134516875248 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000044 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=11.992239 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408517 ncorrect=2005.000000 eval_loss=2.708935 *F1_PosNeg_Macro=0.378738* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=2.643916 *F1_PosNeg_Macro=0.650596* 
+[epoch=196/300 step=20384 (32 s)] train_loss=0.2174490406728532 valid_loss=18.354986730844043 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000114 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.527376 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409535 ncorrect=2010.000000 eval_loss=3.072659 *F1_PosNeg_Macro=0.374685* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=2.754838 *F1_PosNeg_Macro=0.652973* 
+[epoch=197/300 step=20488 (32 s)] train_loss=0.2612975624273041 valid_loss=17.360460370929108 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000161 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=11.840138 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418704 ncorrect=2055.000000 eval_loss=2.720575 *F1_PosNeg_Macro=0.407210* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=2.799587 *F1_PosNeg_Macro=0.641974* 
+[epoch=198/300 step=20592 (32 s)] train_loss=0.2226469834080175 valid_loss=18.50542129686433 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000129 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=12.555234 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.404442 ncorrect=1985.000000 eval_loss=3.030471 *F1_PosNeg_Macro=0.385518* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=2.919587 *F1_PosNeg_Macro=0.649900* 
+[epoch=199/300 step=20696 (34 s)] train_loss=0.22452476832631874 valid_loss=18.119358044272786 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000106 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.579150 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420742 ncorrect=2065.000000 eval_loss=2.718497 *F1_PosNeg_Macro=0.426963* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=2.821604 *F1_PosNeg_Macro=0.653648* 
+[epoch=200/300 step=20800 (35 s)] train_loss=0.1978821624763371 valid_loss=17.999705167745738 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000121 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.002541 ncorrect=26.000000 eval_loss=12.217238 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420130 ncorrect=2062.000000 eval_loss=2.905247 *F1_PosNeg_Macro=0.426331* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=2.877099 *F1_PosNeg_Macro=0.624066* 
+[epoch=201/300 step=20904 (33 s)] train_loss=0.20476191113167574 valid_loss=18.05166100788815 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000022 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=12.420713 *F1_PosNeg_Macro=0.002009* 
+(MultiNLI) ntotal=4908.000000 Acc=0.422168 ncorrect=2072.000000 eval_loss=2.692772 *F1_PosNeg_Macro=0.434715* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=2.938153 *F1_PosNeg_Macro=0.619693* 
+[epoch=202/300 step=21008 (32 s)] train_loss=0.22469531208648383 valid_loss=17.911401153630692 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000145 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001173 ncorrect=12.000000 eval_loss=11.866273 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411980 ncorrect=2022.000000 eval_loss=3.193030 *F1_PosNeg_Macro=0.386286* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=2.851953 *F1_PosNeg_Macro=0.640834* 
+[epoch=203/300 step=21112 (31 s)] train_loss=0.1861793065710082 valid_loss=17.47006524037385 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000088 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=11.532585 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418297 ncorrect=2053.000000 eval_loss=3.039806 *F1_PosNeg_Macro=0.388043* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=2.897587 *F1_PosNeg_Macro=0.662416* 
+[epoch=204/300 step=21216 (33 s)] train_loss=0.19176502807441956 valid_loss=19.210463125339942 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000493 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.132245 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408924 ncorrect=2007.000000 eval_loss=3.101605 *F1_PosNeg_Macro=0.375094* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=2.976120 *F1_PosNeg_Macro=0.633199* 
+[epoch=205/300 step=21320 (32 s)] train_loss=0.17129757821857522 valid_loss=18.980597876456027 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000145 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.778195 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421149 ncorrect=2067.000000 eval_loss=3.181933 *F1_PosNeg_Macro=0.420890* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.020326 *F1_PosNeg_Macro=0.658340* 
+[epoch=206/300 step=21424 (31 s)] train_loss=0.20994995005477135 valid_loss=18.7598445903218 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000113 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.633773 *F1_PosNeg_Macro=0.000402* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416667 ncorrect=2045.000000 eval_loss=3.073200 *F1_PosNeg_Macro=0.426732* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=3.052758 *F1_PosNeg_Macro=0.639878* 
+[epoch=207/300 step=21528 (30 s)] train_loss=0.21434262035507765 valid_loss=18.504776710661098 (per batch)
+(Stance) ntotal=984.000000 Acc=0.996951 ncorrect=981.000000 eval_loss=0.005126 **F1_PosNeg_Macro=0.998669** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.550623 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.426039 ncorrect=2091.000000 eval_loss=2.825960 *F1_PosNeg_Macro=0.437924* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=3.123068 *F1_PosNeg_Macro=0.629382* 
+[epoch=208/300 step=21632 (30 s)] train_loss=0.18546245961369306 valid_loss=18.673139061663242 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000012 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.622863 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421964 ncorrect=2071.000000 eval_loss=2.978034 *F1_PosNeg_Macro=0.439927* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=3.072229 *F1_PosNeg_Macro=0.660046* 
+[epoch=209/300 step=21736 (35 s)] train_loss=0.15183984134856787 valid_loss=19.22956564641493 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000101 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=13.111549 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414629 ncorrect=2035.000000 eval_loss=3.137264 *F1_PosNeg_Macro=0.399256* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=2.980652 *F1_PosNeg_Macro=0.640834* 
+[epoch=210/300 step=21840 (35 s)] train_loss=0.1794012143778113 valid_loss=18.99556381458308 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000013 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.922724 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420945 ncorrect=2066.000000 eval_loss=3.011468 *F1_PosNeg_Macro=0.433947* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.061359 *F1_PosNeg_Macro=0.653870* 
+[epoch=211/300 step=21944 (35 s)] train_loss=0.17787647818317964 valid_loss=17.702707767914642 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000030 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001466 ncorrect=15.000000 eval_loss=11.363122 *F1_PosNeg_Macro=0.003594* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410758 ncorrect=2016.000000 eval_loss=3.298794 *F1_PosNeg_Macro=0.377268* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=3.040762 *F1_PosNeg_Macro=0.639327* 
+[epoch=212/300 step=22048 (35 s)] train_loss=0.17118403223689535 valid_loss=19.44493936871705 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.004034 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.556357 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.404238 ncorrect=1984.000000 eval_loss=3.642127 *F1_PosNeg_Macro=0.358711* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=3.242422 *F1_PosNeg_Macro=0.608043* 
+[epoch=213/300 step=22152 (32 s)] train_loss=0.18686410616625765 valid_loss=18.757760235667067 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000026 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=12.658078 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421149 ncorrect=2067.000000 eval_loss=3.089022 *F1_PosNeg_Macro=0.422449* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=3.010635 *F1_PosNeg_Macro=0.657342* 
+[epoch=214/300 step=22256 (36 s)] train_loss=0.14471835774011546 valid_loss=19.725852976070005 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000041 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.340902 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412592 ncorrect=2025.000000 eval_loss=3.196365 *F1_PosNeg_Macro=0.390316* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=3.188545 *F1_PosNeg_Macro=0.652395* 
+[epoch=215/300 step=22360 (37 s)] train_loss=0.14727577349844978 valid_loss=18.595251506306102 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000090 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001564 ncorrect=16.000000 eval_loss=12.522722 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417889 ncorrect=2051.000000 eval_loss=3.136993 *F1_PosNeg_Macro=0.427349* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=2.935447 *F1_PosNeg_Macro=0.657321* 
+[epoch=216/300 step=22464 (33 s)] train_loss=0.1588815645476722 valid_loss=18.684211622276393 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000262 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=12.469577 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.425632 ncorrect=2089.000000 eval_loss=3.109227 *F1_PosNeg_Macro=0.439890* 
+(Target) ntotal=625.000000 Acc=0.656000 ncorrect=410.000000 eval_loss=3.105145 *F1_PosNeg_Macro=0.649744* 
+[epoch=217/300 step=22568 (33 s)] train_loss=0.13551730466853174 valid_loss=20.434498199418382 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000766 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.533398 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408517 ncorrect=2005.000000 eval_loss=3.520364 *F1_PosNeg_Macro=0.438811* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=3.379971 *F1_PosNeg_Macro=0.607670* 
+[epoch=218/300 step=22672 (31 s)] train_loss=0.19953565390789244 valid_loss=19.733678101144992 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000026 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=13.228672 *F1_PosNeg_Macro=0.001206* 
+(MultiNLI) ntotal=4908.000000 Acc=0.417482 ncorrect=2049.000000 eval_loss=3.302379 *F1_PosNeg_Macro=0.449460* 
+(Target) ntotal=625.000000 Acc=0.640000 ncorrect=400.000000 eval_loss=3.202601 *F1_PosNeg_Macro=0.626876* 
+[epoch=219/300 step=22776 (37 s)] train_loss=0.13750013999235586 valid_loss=18.289199825613828 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000188 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=11.884186 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419927 ncorrect=2061.000000 eval_loss=3.338465 *F1_PosNeg_Macro=0.428946* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=3.066360 *F1_PosNeg_Macro=0.652424* 
+[epoch=220/300 step=22880 (37 s)] train_loss=0.12956576075913956 valid_loss=20.48774654341167 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000009 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.727148 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409943 ncorrect=2012.000000 eval_loss=3.632821 *F1_PosNeg_Macro=0.455694* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=3.127769 *F1_PosNeg_Macro=0.663966* 
+[epoch=221/300 step=22984 (33 s)] train_loss=0.1404353632412949 valid_loss=20.29306544142921 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000022 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=13.853589 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416055 ncorrect=2042.000000 eval_loss=3.308303 *F1_PosNeg_Macro=0.414426* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.131151 *F1_PosNeg_Macro=0.642868* 
+[epoch=222/300 step=23088 (31 s)] train_loss=0.14118533210724904 valid_loss=18.851140292262627 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000103 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.329540 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420945 ncorrect=2066.000000 eval_loss=3.268650 *F1_PosNeg_Macro=0.434615* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.252847 *F1_PosNeg_Macro=0.663191* 
+[epoch=223/300 step=23192 (30 s)] train_loss=0.14951546458100368 valid_loss=18.713377194406295 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000125 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001759 ncorrect=18.000000 eval_loss=12.052594 *F1_PosNeg_Macro=0.002408* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412388 ncorrect=2024.000000 eval_loss=3.585789 *F1_PosNeg_Macro=0.404067* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=3.074869 *F1_PosNeg_Macro=0.673825* 
+[epoch=224/300 step=23296 (37 s)] train_loss=0.13329407879898378 valid_loss=19.107862830452646 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000061 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=12.614699 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419519 ncorrect=2059.000000 eval_loss=3.383147 *F1_PosNeg_Macro=0.433354* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=3.109956 *F1_PosNeg_Macro=0.676747* 
+[epoch=225/300 step=23400 (40 s)] train_loss=0.13097674036217855 valid_loss=19.840866383732276 (per batch)
+(Stance) ntotal=984.000000 Acc=0.970528 ncorrect=955.000000 eval_loss=0.087061 **F1_PosNeg_Macro=0.946916** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.893846 *F1_PosNeg_Macro=0.000804* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418297 ncorrect=2053.000000 eval_loss=3.704418 *F1_PosNeg_Macro=0.470304* 
+(Target) ntotal=625.000000 Acc=0.672000 ncorrect=420.000000 eval_loss=3.155541 *F1_PosNeg_Macro=0.675594* 
+[epoch=226/300 step=23504 (34 s)] train_loss=0.1363590123177206 valid_loss=19.419092703677396 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000060 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.720785 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411573 ncorrect=2020.000000 eval_loss=3.445322 *F1_PosNeg_Macro=0.385798* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.252926 *F1_PosNeg_Macro=0.632315* 
+[epoch=227/300 step=23608 (34 s)] train_loss=0.13257188721845872 valid_loss=19.84517132635362 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000023 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.978402 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415240 ncorrect=2038.000000 eval_loss=3.591835 *F1_PosNeg_Macro=0.447720* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.274912 *F1_PosNeg_Macro=0.658283* 
+[epoch=228/300 step=23712 (33 s)] train_loss=0.10363650699030831 valid_loss=20.113880001961107 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000018 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.992754 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407702 ncorrect=2001.000000 eval_loss=3.818012 *F1_PosNeg_Macro=0.406703* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.303095 *F1_PosNeg_Macro=0.656040* 
+[epoch=229/300 step=23816 (34 s)] train_loss=0.13227306888568188 valid_loss=20.42568532007485 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000143 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.131207 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406887 ncorrect=1997.000000 eval_loss=3.978303 *F1_PosNeg_Macro=0.440034* 
+(Target) ntotal=625.000000 Acc=0.646400 ncorrect=404.000000 eval_loss=3.316033 *F1_PosNeg_Macro=0.618762* 
+[epoch=230/300 step=23920 (34 s)] train_loss=0.12338736867154519 valid_loss=19.671988683151653 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000021 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.818625 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420742 ncorrect=2065.000000 eval_loss=3.593225 *F1_PosNeg_Macro=0.439357* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.260118 *F1_PosNeg_Macro=0.644872* 
+[epoch=231/300 step=24024 (33 s)] train_loss=0.13949005380651705 valid_loss=20.25842667489159 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000035 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.799925 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420334 ncorrect=2063.000000 eval_loss=3.686641 *F1_PosNeg_Macro=0.440071* 
+(Target) ntotal=625.000000 Acc=0.598400 ncorrect=374.000000 eval_loss=3.771826 *F1_PosNeg_Macro=0.601651* 
+[epoch=232/300 step=24128 (32 s)] train_loss=0.10120311787664622 valid_loss=19.50415143271158 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000051 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=12.579776 *F1_PosNeg_Macro=0.002409* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411980 ncorrect=2022.000000 eval_loss=3.604820 *F1_PosNeg_Macro=0.410771* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.319505 *F1_PosNeg_Macro=0.649514* 
+[epoch=233/300 step=24232 (30 s)] train_loss=0.09499702600951511 valid_loss=19.794215973560966 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000027 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.690900 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.401997 ncorrect=1973.000000 eval_loss=3.792913 *F1_PosNeg_Macro=0.356090* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.310375 *F1_PosNeg_Macro=0.640200* 
+[epoch=234/300 step=24336 (34 s)] train_loss=0.131142859031535 valid_loss=20.2213447861762 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000002 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=13.180670 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.427465 ncorrect=2098.000000 eval_loss=3.637034 *F1_PosNeg_Macro=0.441256* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.403639 *F1_PosNeg_Macro=0.650881* 
+[epoch=235/300 step=24440 (33 s)] train_loss=0.09788890897501162 valid_loss=18.847564506027187 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001466 ncorrect=15.000000 eval_loss=11.815595 *F1_PosNeg_Macro=0.003994* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421557 ncorrect=2069.000000 eval_loss=3.671083 *F1_PosNeg_Macro=0.425919* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=3.360884 *F1_PosNeg_Macro=0.653739* 
+[epoch=236/300 step=24544 (34 s)] train_loss=0.13257422159168625 valid_loss=20.578300781858463 (per batch)
+(Stance) ntotal=984.000000 Acc=0.961382 ncorrect=946.000000 eval_loss=0.176191 **F1_PosNeg_Macro=0.951300** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.946579 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414425 ncorrect=2034.000000 eval_loss=3.726347 *F1_PosNeg_Macro=0.418071* 
+(Target) ntotal=625.000000 Acc=0.638400 ncorrect=399.000000 eval_loss=3.729185 *F1_PosNeg_Macro=0.627627* 
+[epoch=237/300 step=24648 (35 s)] train_loss=0.117242656041631 valid_loss=19.323357615249435 (per batch)
+(Stance) ntotal=984.000000 Acc=0.998984 ncorrect=983.000000 eval_loss=0.002084 **F1_PosNeg_Macro=0.998028** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.441445 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411777 ncorrect=2021.000000 eval_loss=3.483024 *F1_PosNeg_Macro=0.405756* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.396806 *F1_PosNeg_Macro=0.643257* 
+[epoch=238/300 step=24752 (31 s)] train_loss=0.10827037297184024 valid_loss=20.821858112278232 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000445 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.249972 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415852 ncorrect=2041.000000 eval_loss=4.160511 *F1_PosNeg_Macro=0.447272* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=3.410930 *F1_PosNeg_Macro=0.638725* 
+[epoch=239/300 step=24856 (35 s)] train_loss=0.1082146159856559 valid_loss=19.605572617702133 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000029 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=12.373868 *F1_PosNeg_Macro=0.001608* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414833 ncorrect=2036.000000 eval_loss=3.801670 *F1_PosNeg_Macro=0.419580* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=3.430005 *F1_PosNeg_Macro=0.665482* 
+[epoch=240/300 step=24960 (34 s)] train_loss=0.08378264922787629 valid_loss=21.18446583120196 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000161 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=13.517987 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.405868 ncorrect=1992.000000 eval_loss=4.113603 *F1_PosNeg_Macro=0.434117* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.552714 *F1_PosNeg_Macro=0.654171* 
+[epoch=241/300 step=25064 (36 s)] train_loss=0.12394903105635316 valid_loss=20.123737332910892 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000023 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.111621 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419723 ncorrect=2060.000000 eval_loss=3.659018 *F1_PosNeg_Macro=0.428190* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=3.353075 *F1_PosNeg_Macro=0.666852* 
+[epoch=242/300 step=25168 (33 s)] train_loss=0.08654827062720799 valid_loss=18.915540119819777 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000005 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001564 ncorrect=16.000000 eval_loss=11.733307 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418297 ncorrect=2053.000000 eval_loss=3.795156 *F1_PosNeg_Macro=0.432713* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=3.387072 *F1_PosNeg_Macro=0.642642* 
+[epoch=243/300 step=25272 (33 s)] train_loss=0.0963812875059773 valid_loss=20.378481213270323 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.002665 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000782 ncorrect=8.000000 eval_loss=12.961414 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412388 ncorrect=2024.000000 eval_loss=4.025862 *F1_PosNeg_Macro=0.435894* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.388540 *F1_PosNeg_Macro=0.642788* 
+[epoch=244/300 step=25376 (36 s)] train_loss=0.1317648542505765 valid_loss=19.949092892893198 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000333 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=12.502825 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412184 ncorrect=2023.000000 eval_loss=4.035019 *F1_PosNeg_Macro=0.414304* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=3.410917 *F1_PosNeg_Macro=0.631429* 
+[epoch=245/300 step=25480 (35 s)] train_loss=0.08379913965263505 valid_loss=19.770831084241898 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000060 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=12.608434 *F1_PosNeg_Macro=0.002007* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414018 ncorrect=2032.000000 eval_loss=3.800534 *F1_PosNeg_Macro=0.423305* 
+(Target) ntotal=625.000000 Acc=0.676800 ncorrect=423.000000 eval_loss=3.361803 *F1_PosNeg_Macro=0.672606* 
+[epoch=246/300 step=25584 (33 s)] train_loss=0.08748812651792658 valid_loss=21.06497499277953 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000179 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=13.576269 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412592 ncorrect=2025.000000 eval_loss=3.922084 *F1_PosNeg_Macro=0.413987* 
+(Target) ntotal=625.000000 Acc=0.646400 ncorrect=404.000000 eval_loss=3.566443 *F1_PosNeg_Macro=0.612760* 
+[epoch=247/300 step=25688 (30 s)] train_loss=0.10296011996002527 valid_loss=20.69802512450699 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000012 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=13.260874 *F1_PosNeg_Macro=0.001207* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416667 ncorrect=2045.000000 eval_loss=3.860607 *F1_PosNeg_Macro=0.427963* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=3.576533 *F1_PosNeg_Macro=0.672240* 
+[epoch=248/300 step=25792 (34 s)] train_loss=0.09539529803116736 valid_loss=19.96160009615523 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000520 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.384736 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.405664 ncorrect=1991.000000 eval_loss=3.983433 *F1_PosNeg_Macro=0.373037* 
+(Target) ntotal=625.000000 Acc=0.638400 ncorrect=399.000000 eval_loss=3.592912 *F1_PosNeg_Macro=0.604868* 
+[epoch=249/300 step=25896 (36 s)] train_loss=0.10016925300932109 valid_loss=20.856678103135145 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000026 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=13.313725 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407498 ncorrect=2000.000000 eval_loss=3.986184 *F1_PosNeg_Macro=0.402045* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.556743 *F1_PosNeg_Macro=0.664628* 
+[epoch=250/300 step=26000 (34 s)] train_loss=0.08018759902185699 valid_loss=21.553652529988142 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000279 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=13.640591 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410758 ncorrect=2016.000000 eval_loss=4.244871 *F1_PosNeg_Macro=0.428780* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.667911 *F1_PosNeg_Macro=0.638819* 
+[epoch=251/300 step=26104 (32 s)] train_loss=0.0973821344982359 valid_loss=20.72238862154394 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000124 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001662 ncorrect=17.000000 eval_loss=13.171552 *F1_PosNeg_Macro=0.002006* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419723 ncorrect=2060.000000 eval_loss=3.856645 *F1_PosNeg_Macro=0.430251* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.694068 *F1_PosNeg_Macro=0.605885* 
+[epoch=252/300 step=26208 (30 s)] train_loss=0.06591830367473396 valid_loss=21.63709383128377 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000026 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.624021 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408109 ncorrect=2003.000000 eval_loss=4.094202 *F1_PosNeg_Macro=0.382977* 
+(Target) ntotal=625.000000 Acc=0.624000 ncorrect=390.000000 eval_loss=3.918845 *F1_PosNeg_Macro=0.630765* 
+[epoch=253/300 step=26312 (36 s)] train_loss=0.08873927435927752 valid_loss=20.356637133311192 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000027 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=13.034775 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411777 ncorrect=2021.000000 eval_loss=3.866331 *F1_PosNeg_Macro=0.412000* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=3.455505 *F1_PosNeg_Macro=0.664029* 
+[epoch=254/300 step=26416 (35 s)] train_loss=0.08473141464621502 valid_loss=20.756884701470767 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000030 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000977 ncorrect=10.000000 eval_loss=12.748041 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408109 ncorrect=2003.000000 eval_loss=4.487459 *F1_PosNeg_Macro=0.432614* 
+(Target) ntotal=625.000000 Acc=0.670400 ncorrect=419.000000 eval_loss=3.521355 *F1_PosNeg_Macro=0.667281* 
+[epoch=255/300 step=26520 (33 s)] train_loss=0.08160471715174603 valid_loss=20.753213933567093 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.003190 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=12.538841 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407090 ncorrect=1998.000000 eval_loss=4.479418 *F1_PosNeg_Macro=0.401819* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=3.731765 *F1_PosNeg_Macro=0.667181* 
+[epoch=256/300 step=26624 (33 s)] train_loss=0.0757088360968772 valid_loss=20.37892969656284 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000006 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=12.615244 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414425 ncorrect=2034.000000 eval_loss=4.231162 *F1_PosNeg_Macro=0.410470* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=3.532518 *F1_PosNeg_Macro=0.667714* 
+[epoch=257/300 step=26728 (34 s)] train_loss=0.09983858377115841 valid_loss=22.17102746247099 (per batch)
+(Stance) ntotal=984.000000 Acc=0.964431 ncorrect=949.000000 eval_loss=0.120691 **F1_PosNeg_Macro=0.950867** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=13.956375 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.399552 ncorrect=1961.000000 eval_loss=4.546469 *F1_PosNeg_Macro=0.363743* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.547493 *F1_PosNeg_Macro=0.654008* 
+[epoch=258/300 step=26832 (35 s)] train_loss=0.10113587318597603 valid_loss=22.03826682918852 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000617 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=14.209955 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420130 ncorrect=2062.000000 eval_loss=4.045008 *F1_PosNeg_Macro=0.439672* 
+(Target) ntotal=625.000000 Acc=0.640000 ncorrect=400.000000 eval_loss=3.782687 *F1_PosNeg_Macro=0.615575* 
+[epoch=259/300 step=26936 (33 s)] train_loss=0.07417189581690309 valid_loss=21.642445304325523 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000053 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=13.944230 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.419315 ncorrect=2058.000000 eval_loss=4.005364 *F1_PosNeg_Macro=0.428918* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.692798 *F1_PosNeg_Macro=0.645386* 
+[epoch=260/300 step=27040 (33 s)] train_loss=0.09387162315374553 valid_loss=20.199942459673522 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.002053 ncorrect=21.000000 eval_loss=12.381618 *F1_PosNeg_Macro=0.002409* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420538 ncorrect=2064.000000 eval_loss=4.225602 *F1_PosNeg_Macro=0.433587* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.592719 *F1_PosNeg_Macro=0.636708* 
+[epoch=261/300 step=27144 (34 s)] train_loss=0.08430105421077354 valid_loss=21.684561657229665 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=13.544980 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412388 ncorrect=2024.000000 eval_loss=4.691682 *F1_PosNeg_Macro=0.460182* 
+(Target) ntotal=625.000000 Acc=0.673600 ncorrect=421.000000 eval_loss=3.447899 *F1_PosNeg_Macro=0.666820* 
+[epoch=262/300 step=27248 (31 s)] train_loss=0.06419941492082214 valid_loss=20.805626555247873 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000013 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=12.967262 *F1_PosNeg_Macro=0.001205* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414629 ncorrect=2035.000000 eval_loss=4.388655 *F1_PosNeg_Macro=0.423313* 
+(Target) ntotal=625.000000 Acc=0.676800 ncorrect=423.000000 eval_loss=3.449697 *F1_PosNeg_Macro=0.675886* 
+[epoch=263/300 step=27352 (37 s)] train_loss=0.0598662120789059 valid_loss=20.795450018653113 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000036 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000977 ncorrect=10.000000 eval_loss=13.133398 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412388 ncorrect=2024.000000 eval_loss=4.120214 *F1_PosNeg_Macro=0.408118* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=3.541802 *F1_PosNeg_Macro=0.655668* 
+[epoch=264/300 step=27456 (35 s)] train_loss=0.09216064544892788 valid_loss=21.510195856194056 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000202 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.989262 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.394662 ncorrect=1937.000000 eval_loss=5.047332 *F1_PosNeg_Macro=0.333802* 
+(Target) ntotal=625.000000 Acc=0.657600 ncorrect=411.000000 eval_loss=3.473399 *F1_PosNeg_Macro=0.656734* 
+[epoch=265/300 step=27560 (34 s)] train_loss=0.06315000971538282 valid_loss=19.00487426329683 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.003225 ncorrect=33.000000 eval_loss=11.349361 *F1_PosNeg_Macro=0.004411* 
+(MultiNLI) ntotal=4908.000000 Acc=0.420334 ncorrect=2063.000000 eval_loss=4.211651 *F1_PosNeg_Macro=0.439283* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.443860 *F1_PosNeg_Macro=0.659421* 
+[epoch=266/300 step=27664 (32 s)] train_loss=0.05524951185422931 valid_loss=20.678462090226773 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000002 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=12.605333 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.406683 ncorrect=1996.000000 eval_loss=4.457653 *F1_PosNeg_Macro=0.412800* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.615473 *F1_PosNeg_Macro=0.631466* 
+[epoch=267/300 step=27768 (31 s)] train_loss=0.06296386525396039 valid_loss=20.693909012808405 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=12.783070 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409128 ncorrect=2008.000000 eval_loss=4.385992 *F1_PosNeg_Macro=0.426082* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=3.524846 *F1_PosNeg_Macro=0.659875* 
+[epoch=268/300 step=27872 (30 s)] train_loss=0.06937945049186676 valid_loss=21.570820011680222 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.619015 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414425 ncorrect=2034.000000 eval_loss=4.398480 *F1_PosNeg_Macro=0.419840* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.553322 *F1_PosNeg_Macro=0.656176* 
+[epoch=269/300 step=27976 (30 s)] train_loss=0.08487904634464354 valid_loss=21.97897429657727 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000097 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=14.135886 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411165 ncorrect=2018.000000 eval_loss=4.244546 *F1_PosNeg_Macro=0.414175* 
+(Target) ntotal=625.000000 Acc=0.652800 ncorrect=408.000000 eval_loss=3.598445 *F1_PosNeg_Macro=0.622696* 
+[epoch=270/300 step=28080 (30 s)] train_loss=0.0569621424948296 valid_loss=21.57935815306324 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000020 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.711082 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408517 ncorrect=2005.000000 eval_loss=4.330641 *F1_PosNeg_Macro=0.415678* 
+(Target) ntotal=625.000000 Acc=0.667200 ncorrect=417.000000 eval_loss=3.537615 *F1_PosNeg_Macro=0.654239* 
+[epoch=271/300 step=28184 (41 s)] train_loss=0.05192545759608764 valid_loss=21.875632753822146 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000025 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.870309 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411573 ncorrect=2020.000000 eval_loss=4.459079 *F1_PosNeg_Macro=0.412224* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=3.546219 *F1_PosNeg_Macro=0.655924* 
+[epoch=272/300 step=28288 (40 s)] train_loss=0.10465865169957694 valid_loss=22.34570627395064 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000012 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=14.272109 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415037 ncorrect=2037.000000 eval_loss=4.454776 *F1_PosNeg_Macro=0.423157* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.618809 *F1_PosNeg_Macro=0.652648* 
+[epoch=273/300 step=28392 (37 s)] train_loss=0.07156830642963122 valid_loss=21.216613464399938 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000076 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=13.297949 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412592 ncorrect=2025.000000 eval_loss=4.270059 *F1_PosNeg_Macro=0.407192* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=3.648530 *F1_PosNeg_Macro=0.632834* 
+[epoch=274/300 step=28496 (41 s)] train_loss=0.0451399259412601 valid_loss=22.81033297383322 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000339 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=14.625986 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415240 ncorrect=2038.000000 eval_loss=4.501103 *F1_PosNeg_Macro=0.423420* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.682905 *F1_PosNeg_Macro=0.645042* 
+[epoch=275/300 step=28600 (52 s)] train_loss=0.08854252073443437 valid_loss=21.07081419907163 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000018 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=13.025727 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416667 ncorrect=2045.000000 eval_loss=4.414360 *F1_PosNeg_Macro=0.430639* 
+(Target) ntotal=625.000000 Acc=0.644800 ncorrect=403.000000 eval_loss=3.630709 *F1_PosNeg_Macro=0.627607* 
+[epoch=276/300 step=28704 (31 s)] train_loss=0.041116072041587105 valid_loss=21.247349197022874 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=13.136953 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.407702 ncorrect=2001.000000 eval_loss=4.517560 *F1_PosNeg_Macro=0.395912* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.592835 *F1_PosNeg_Macro=0.655066* 
+[epoch=277/300 step=28808 (39 s)] train_loss=0.053071366630488316 valid_loss=20.167834756247284 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000041 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001368 ncorrect=14.000000 eval_loss=12.237703 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.421557 ncorrect=2069.000000 eval_loss=4.432228 *F1_PosNeg_Macro=0.432760* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=3.497863 *F1_PosNeg_Macro=0.654379* 
+[epoch=278/300 step=28912 (42 s)] train_loss=0.08298035723269183 valid_loss=21.90743056655111 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001523 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000489 ncorrect=5.000000 eval_loss=13.361633 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.399144 ncorrect=1959.000000 eval_loss=5.013123 *F1_PosNeg_Macro=0.342924* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=3.531151 *F1_PosNeg_Macro=0.624074* 
+[epoch=279/300 step=29016 (32 s)] train_loss=0.04930237052121592 valid_loss=21.0480118707607 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000022 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=12.786831 *F1_PosNeg_Macro=0.000402* 
+(MultiNLI) ntotal=4908.000000 Acc=0.412184 ncorrect=2023.000000 eval_loss=4.682834 *F1_PosNeg_Macro=0.400069* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.578324 *F1_PosNeg_Macro=0.620265* 
+[epoch=280/300 step=29120 (38 s)] train_loss=0.050302032952675275 valid_loss=21.753555980845775 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000004 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=13.790700 *F1_PosNeg_Macro=0.002412* 
+(MultiNLI) ntotal=4908.000000 Acc=0.416463 ncorrect=2044.000000 eval_loss=4.475515 *F1_PosNeg_Macro=0.436782* 
+(Target) ntotal=625.000000 Acc=0.665600 ncorrect=416.000000 eval_loss=3.487337 *F1_PosNeg_Macro=0.664895* 
+[epoch=281/300 step=29224 (35 s)] train_loss=0.0713867666055913 valid_loss=22.218895483915645 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000017 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000000 ncorrect=0.000000 eval_loss=13.800216 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408924 ncorrect=2007.000000 eval_loss=4.768065 *F1_PosNeg_Macro=0.410990* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.650598 *F1_PosNeg_Macro=0.654504* 
+[epoch=282/300 step=29328 (32 s)] train_loss=0.07462645342790844 valid_loss=21.11988609183758 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000002 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000977 ncorrect=10.000000 eval_loss=12.759749 *F1_PosNeg_Macro=0.001606* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411165 ncorrect=2018.000000 eval_loss=4.666284 *F1_PosNeg_Macro=0.428667* 
+(Target) ntotal=625.000000 Acc=0.643200 ncorrect=402.000000 eval_loss=3.693851 *F1_PosNeg_Macro=0.629626* 
+[epoch=283/300 step=29432 (39 s)] train_loss=0.04220360722568181 valid_loss=20.91520040530077 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001075 ncorrect=11.000000 eval_loss=12.784949 *F1_PosNeg_Macro=0.002008* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409535 ncorrect=2010.000000 eval_loss=4.612339 *F1_PosNeg_Macro=0.418546* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.517909 *F1_PosNeg_Macro=0.651426* 
+[epoch=284/300 step=29536 (30 s)] train_loss=0.03906283088956942 valid_loss=19.93075487985565 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.001255 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.003128 ncorrect=32.000000 eval_loss=11.719658 *F1_PosNeg_Macro=0.004002* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411777 ncorrect=2021.000000 eval_loss=4.390978 *F1_PosNeg_Macro=0.438273* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=3.818864 *F1_PosNeg_Macro=0.656677* 
+[epoch=285/300 step=29640 (35 s)] train_loss=0.05974089754752754 valid_loss=20.979213949968305 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000002 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.003030 ncorrect=31.000000 eval_loss=12.441329 *F1_PosNeg_Macro=0.008734* 
+(MultiNLI) ntotal=4908.000000 Acc=0.414425 ncorrect=2034.000000 eval_loss=4.849073 *F1_PosNeg_Macro=0.430295* 
+(Target) ntotal=625.000000 Acc=0.646400 ncorrect=404.000000 eval_loss=3.688810 *F1_PosNeg_Macro=0.619425* 
+[epoch=286/300 step=29744 (31 s)] train_loss=0.058962019020538145 valid_loss=22.85637618475928 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000081 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=14.634922 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411165 ncorrect=2018.000000 eval_loss=4.646619 *F1_PosNeg_Macro=0.420386* 
+(Target) ntotal=625.000000 Acc=0.659200 ncorrect=412.000000 eval_loss=3.574755 *F1_PosNeg_Macro=0.648277* 
+[epoch=287/300 step=29848 (33 s)] train_loss=0.06237690960407004 valid_loss=21.000541228345504 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000012 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=12.740437 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.410758 ncorrect=2016.000000 eval_loss=4.730541 *F1_PosNeg_Macro=0.441301* 
+(Target) ntotal=625.000000 Acc=0.651200 ncorrect=407.000000 eval_loss=3.529550 *F1_PosNeg_Macro=0.642040* 
+[epoch=288/300 step=29952 (33 s)] train_loss=0.05133167586852166 valid_loss=22.379052397587564 (per batch)
+(Stance) ntotal=984.000000 Acc=0.952236 ncorrect=937.000000 eval_loss=0.199393 **F1_PosNeg_Macro=0.976701** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=13.715020 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413203 ncorrect=2028.000000 eval_loss=4.970321 *F1_PosNeg_Macro=0.429485* 
+(Target) ntotal=625.000000 Acc=0.654400 ncorrect=409.000000 eval_loss=3.494318 *F1_PosNeg_Macro=0.657210* 
+[epoch=289/300 step=30056 (37 s)] train_loss=0.051617521332217434 valid_loss=22.02616110109187 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000003 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=13.726717 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413407 ncorrect=2029.000000 eval_loss=4.784809 *F1_PosNeg_Macro=0.428670* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.514632 *F1_PosNeg_Macro=0.655631* 
+[epoch=290/300 step=30160 (31 s)] train_loss=0.07079553683860677 valid_loss=21.763431854706653 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000007 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000977 ncorrect=10.000000 eval_loss=13.627701 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415648 ncorrect=2040.000000 eval_loss=4.653982 *F1_PosNeg_Macro=0.422533* 
+(Target) ntotal=625.000000 Acc=0.675200 ncorrect=422.000000 eval_loss=3.481741 *F1_PosNeg_Macro=0.669044* 
+[epoch=291/300 step=30264 (34 s)] train_loss=0.03723656729602217 valid_loss=22.934461675259204 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000008 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000293 ncorrect=3.000000 eval_loss=14.576261 *F1_PosNeg_Macro=0.000805* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413610 ncorrect=2030.000000 eval_loss=4.674637 *F1_PosNeg_Macro=0.438240* 
+(Target) ntotal=625.000000 Acc=0.660800 ncorrect=413.000000 eval_loss=3.683555 *F1_PosNeg_Macro=0.652319* 
+[epoch=292/300 step=30368 (35 s)] train_loss=0.04842748697296665 valid_loss=21.876300381369596 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001466 ncorrect=15.000000 eval_loss=13.508326 *F1_PosNeg_Macro=0.003209* 
+(MultiNLI) ntotal=4908.000000 Acc=0.408109 ncorrect=2003.000000 eval_loss=4.754484 *F1_PosNeg_Macro=0.430887* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.613489 *F1_PosNeg_Macro=0.658536* 
+[epoch=293/300 step=30472 (35 s)] train_loss=0.0701986422415895 valid_loss=22.979560172049403 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000006 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000391 ncorrect=4.000000 eval_loss=14.602683 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.409128 ncorrect=2008.000000 eval_loss=4.801662 *F1_PosNeg_Macro=0.422692* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.575210 *F1_PosNeg_Macro=0.650589* 
+[epoch=294/300 step=30576 (31 s)] train_loss=0.06881583575305902 valid_loss=22.73525462631597 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000586 ncorrect=6.000000 eval_loss=14.352210 *F1_PosNeg_Macro=0.000403* 
+(MultiNLI) ntotal=4908.000000 Acc=0.405460 ncorrect=1990.000000 eval_loss=4.856066 *F1_PosNeg_Macro=0.413956* 
+(Target) ntotal=625.000000 Acc=0.662400 ncorrect=414.000000 eval_loss=3.526978 *F1_PosNeg_Macro=0.662371* 
+[epoch=295/300 step=30680 (37 s)] train_loss=0.03555820972058891 valid_loss=22.075450233413434 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=13.702599 *F1_PosNeg_Macro=0.000402* 
+(MultiNLI) ntotal=4908.000000 Acc=0.411369 ncorrect=2019.000000 eval_loss=4.760476 *F1_PosNeg_Macro=0.418036* 
+(Target) ntotal=625.000000 Acc=0.664000 ncorrect=415.000000 eval_loss=3.612374 *F1_PosNeg_Macro=0.653195* 
+[epoch=296/300 step=30784 (30 s)] train_loss=0.046987230381449106 valid_loss=22.491839952979426 (per batch)
+(Stance) ntotal=984.000000 Acc=0.994919 ncorrect=979.000000 eval_loss=0.011107 **F1_PosNeg_Macro=0.990225** 
+(FNC-1) ntotal=10231.000000 Acc=0.000880 ncorrect=9.000000 eval_loss=13.312097 *F1_PosNeg_Macro=0.001606* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413610 ncorrect=2030.000000 eval_loss=4.729538 *F1_PosNeg_Macro=0.431094* 
+(Target) ntotal=625.000000 Acc=0.593600 ncorrect=371.000000 eval_loss=4.439097 *F1_PosNeg_Macro=0.565767* 
+[epoch=297/300 step=30888 (35 s)] train_loss=0.039516241881606524 valid_loss=22.439940548245787 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000007 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000684 ncorrect=7.000000 eval_loss=13.860230 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415037 ncorrect=2037.000000 eval_loss=4.899628 *F1_PosNeg_Macro=0.429279* 
+(Target) ntotal=625.000000 Acc=0.641600 ncorrect=401.000000 eval_loss=3.680076 *F1_PosNeg_Macro=0.621845* 
+[epoch=298/300 step=30992 (30 s)] train_loss=0.07092468623746238 valid_loss=22.01276192860002 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000030 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.001466 ncorrect=15.000000 eval_loss=13.530587 *F1_PosNeg_Macro=0.002006* 
+(MultiNLI) ntotal=4908.000000 Acc=0.413814 ncorrect=2031.000000 eval_loss=4.832916 *F1_PosNeg_Macro=0.425043* 
+(Target) ntotal=625.000000 Acc=0.648000 ncorrect=405.000000 eval_loss=3.649228 *F1_PosNeg_Macro=0.627390* 
+[epoch=299/300 step=31096 (35 s)] train_loss=0.03468572356474963 valid_loss=21.993467868946908 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000011 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.002541 ncorrect=26.000000 eval_loss=12.900423 *F1_PosNeg_Macro=0.006349* 
+(MultiNLI) ntotal=4908.000000 Acc=0.398533 ncorrect=1956.000000 eval_loss=5.555174 *F1_PosNeg_Macro=0.411011* 
+(Target) ntotal=625.000000 Acc=0.668800 ncorrect=418.000000 eval_loss=3.537860 *F1_PosNeg_Macro=0.668887* 
+[epoch=300/300 step=31200 (31 s)] train_loss=0.04024254948142943 valid_loss=22.79813794497048 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000001 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000098 ncorrect=1.000000 eval_loss=14.421011 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.415444 ncorrect=2039.000000 eval_loss=4.886545 *F1_PosNeg_Macro=0.431506* 
+(Target) ntotal=625.000000 Acc=0.649600 ncorrect=406.000000 eval_loss=3.490580 *F1_PosNeg_Macro=0.634830* 
+
+Best single-epoch performance across all datasets
+[epoch=141/300 step=14664 (31 s)] train_loss=0.7144582554179718 valid_loss=14.161819757919334 (per batch)
+(Stance) ntotal=984.000000 Acc=1.000000 ncorrect=984.000000 eval_loss=0.000425 **F1_PosNeg_Macro=1.000000** 
+(FNC-1) ntotal=10231.000000 Acc=0.000195 ncorrect=2.000000 eval_loss=10.828822 *F1_PosNeg_Macro=0.000000* 
+(MultiNLI) ntotal=4908.000000 Acc=0.418500 ncorrect=2054.000000 eval_loss=1.727242 *F1_PosNeg_Macro=0.472947* 
+(Target) ntotal=625.000000 Acc=0.680000 ncorrect=425.000000 eval_loss=1.605330 *F1_PosNeg_Macro=0.680803* 
+
+Target FNC-1 Stance MultiNLI 
+Metrics on highest-F1_PosNeg_Macro epoch for dataset Target: {'F1_PosNeg_Macro': 0.7106608884073673, 'performance': {'ntotal': 625, 'ncorrect': 441, 'Acc': 0.7056, 'eval_loss': 0.778903865814209, 'F1_PosNeg_Macro': 0.7106608884073673}, 'epoch': 64}
+Metrics on highest-F1_PosNeg_Macro epoch for dataset FNC-1: {'F1_PosNeg_Macro': 0.014990138067061145, 'performance': {'ntotal': 10231, 'ncorrect': 38, 'Acc': 0.0037142019352946927, 'eval_loss': 7.161780965328217, 'F1_PosNeg_Macro': 0.014990138067061145}, 'epoch': 56}
+Metrics on highest-F1_PosNeg_Macro epoch for dataset Stance: {'F1_PosNeg_Macro': 1.0, 'performance': {'ntotal': 984, 'ncorrect': 984, 'Acc': 1.0, 'eval_loss': 1.2723636473310762e-06, 'F1_PosNeg_Macro': 1.0}, 'epoch': 300}
+Metrics on highest-F1_PosNeg_Macro epoch for dataset MultiNLI: {'F1_PosNeg_Macro': 0.4738407496923178, 'performance': {'ntotal': 4908, 'ncorrect': 2074, 'Acc': 0.42257538712306436, 'eval_loss': 1.3380016760948377, 'F1_PosNeg_Macro': 0.4738407496923178}, 'epoch': 95}
+Best total F1_PosNeg_Macro: 2.153750187523203 at epoch 141
+

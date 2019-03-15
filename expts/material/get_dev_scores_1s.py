@@ -168,14 +168,14 @@ def main():
             # with open(
             #   os.path.join(os.path.dirname(os.path.dirname(sys.argv[1])), '1S.csv'),
             #   'a') as file:
-            f1 = 1 - 2 * (1-p_miss)*(1-p_falseAlarm)/(2-p_miss-p_falseAlarm)
-            f1s.append(100*f1)
+            f1 = 1 - 2 * (1 - p_miss) * (1 - p_falseAlarm) / (2 - p_miss - p_falseAlarm)
+            f1s.append(100 * f1)
             print(('{},{:.4f}%,{:.4f}%,{:.4f}%,{:.4f}%\t\t{:.4f}%'.format(
                 domain, 100.0 - 100.0 * p_miss, 100.0 * p_miss,
-                100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm, 100*f1)))
+                        100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm, 100 * f1)))
             file.write('{},{:.4f}%,{:.4f}%,{:.4f}%,{:.4f}%\n'.format(
                 domain, 100.0 - 100.0 * p_miss, 100.0 * p_miss,
-                100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm))
+                        100.0 * p_falseAlarm, 100.0 - 100.0 * p_falseAlarm))
 
     print()
     for i in f1s:

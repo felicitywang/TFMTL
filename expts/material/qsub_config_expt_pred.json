@@ -12,8 +12,7 @@
     // main expts folder
     "root_dir": "/export/a08/fwang/tfmtl/expts/material",
     // "root_dir": ".",
-    "architecture":
-    //
+    "architecture": //
     // "dan_meanmax_relu_0.0_glove_only_nofinetune_proj_100",
     // "dan_meanmax_relu_0.0_glove_expand_finetune",
     // "dan_meanmax_relu_0.0_glove_expand_nofinetune",

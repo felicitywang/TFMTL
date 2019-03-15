@@ -58,7 +58,7 @@ def main():
     print(tfrecord_dir_name)
 
     if 'pretrained_file' not in args or not args[
-            'pretrained_file']:
+        'pretrained_file']:
         tfrecord_dir = os.path.join(tfrecord_dir, tfrecord_dir_name)
         dataset = Dataset(json_dir=json_dir,
                           tfrecord_dir=tfrecord_dir,

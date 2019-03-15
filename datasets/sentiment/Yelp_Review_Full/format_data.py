@@ -20,7 +20,6 @@ for line in file.readlines():
 file = open('train.json', 'w')
 json.dump(train_list, file)
 
-
 file = open('test.csv', 'r')
 test_list = []
 for line in file.readlines():
@@ -46,13 +45,11 @@ assert len(set(index['train']).intersection(index['test'])) == 0
 with gzip.open('index.json.gz', mode='wt') as file:
     json.dump(index, file)
 
-
 all_list = train_list
 all_list.extend(test_list)
 
 with gzip.open('data.json.gz', mode='wt') as file:
     json.dump(all_list, file)
-
 
 # test
 with gzip.open('data.json.gz', mode='rt') as file:
@@ -61,4 +58,3 @@ with gzip.open('data.json.gz', mode='rt') as file:
 with gzip.open('index.json.gz', 'rt') as file:
     index_dict = json.load(file)
     assert len(set(index['train']).intersection(index['test'])) == 0
-

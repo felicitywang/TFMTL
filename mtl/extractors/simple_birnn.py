@@ -25,62 +25,62 @@ from mtl.layers.rnn import stacked_rnn_cell
 
 @registry.register_hparams
 def simple_birnn_default():
-  hp = tf.contrib.training.HParams(
-    cell='lstm',
-    size=256,
-    depth=1,
-    combine='concat',
-    keep_prob=1.0
-  )
-  return hp
+    hp = tf.contrib.training.HParams(
+        cell='lstm',
+        size=256,
+        depth=1,
+        combine='concat',
+        keep_prob=1.0
+    )
+    return hp
 
 
 @registry.register_hparams
 def simple_birnn_regularized():
-  hp = tf.contrib.training.HParams(
-    cell='lstm',
-    size=256,
-    depth=1,
-    combine='concat',
-    keep_prob=0.75
-  )
-  return hp
+    hp = tf.contrib.training.HParams(
+        cell='lstm',
+        size=256,
+        depth=1,
+        combine='concat',
+        keep_prob=0.75
+    )
+    return hp
 
 
 @registry.register_encoder
 def simple_birnn(inputs, length, hp=None, is_training=True):
-  assert len(inputs.get_shape().as_list()) == 3
-  batch_size = tf.shape(inputs)[0]
-  keep_prob = hp.keep_prob if is_training else 1.0
-  cell_fw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="fw")
-  cell_bw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="bw")
-  outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
-    cell_fw,
-    cell_bw,
-    inputs,
-    sequence_length=length,
-    initial_state_fw=cell_fw.zero_state(batch_size, tf.float32),
-    initial_state_bw=cell_bw.zero_state(batch_size, tf.float32),
-    dtype=None,
-    parallel_iterations=None,
-    swap_memory=False,
-    time_major=False,
-    scope=None
-  )
-  fw, bw = output_states
-  all_states = []
-  assert type(fw) is tuple
-  assert type(bw) is tuple
-  fw = list(fw)
-  bw = list(bw)
-  for state in fw + bw:
-    if 'lstm' in hp.cell:
-      all_states += [state.h]
+    assert len(inputs.get_shape().as_list()) == 3
+    batch_size = tf.shape(inputs)[0]
+    keep_prob = hp.keep_prob if is_training else 1.0
+    cell_fw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="fw")
+    cell_bw = stacked_rnn_cell(hp.depth, hp.cell, hp.size, keep_prob, scope="bw")
+    outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
+        cell_fw,
+        cell_bw,
+        inputs,
+        sequence_length=length,
+        initial_state_fw=cell_fw.zero_state(batch_size, tf.float32),
+        initial_state_bw=cell_bw.zero_state(batch_size, tf.float32),
+        dtype=None,
+        parallel_iterations=None,
+        swap_memory=False,
+        time_major=False,
+        scope=None
+    )
+    fw, bw = output_states
+    all_states = []
+    assert type(fw) is tuple
+    assert type(bw) is tuple
+    fw = list(fw)
+    bw = list(bw)
+    for state in fw + bw:
+        if 'lstm' in hp.cell:
+            all_states += [state.h]
+        else:
+            all_states += state
+    if hp.combine == 'concat':
+        return tf.concat(all_states, axis=1)
+    elif hp.combine == 'sum':
+        return sum(all_states)
     else:
-      all_states += state
-  if hp.combine == 'concat':
-    return tf.concat(all_states, axis=1)
-  elif hp.combine == 'sum':
-    return sum(all_states)
-  else:
-    raise ValueError(hp.combine)
+        raise ValueError(hp.combine)

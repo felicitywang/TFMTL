@@ -37,16 +37,16 @@ import model
 import argparse as ap
 
 if __name__ == "__main__":
-  p = ap.ArgumentParser()
-  p.add_argument('path')
-  args = p.parse_args()
+    p = ap.ArgumentParser()
+    p.add_argument('path')
+    args = p.parse_args()
 
-  # Create a new graph and specify that as default
-  with tf.Graph().as_default():
-    batch = model.input_fn(args.path,
-                           num_epochs=1, shuffle=False,
-                           batch_size=32)
+    # Create a new graph and specify that as default
+    with tf.Graph().as_default():
+        batch = model.input_fn(args.path,
+                               num_epochs=1, shuffle=False,
+                               batch_size=32)
 
-    with tf.Session() as sess:
-      batch_v = sess.run(batch)
-      print(batch_v)
+        with tf.Session() as sess:
+            batch_v = sess.run(batch)
+            print(batch_v)

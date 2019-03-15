@@ -79,7 +79,7 @@ def main():
                                  domain + '_turk_' + str(pos) + '_' + str(neg))
         make_dir(directory)
         with gzip.open(
-                os.path.join(directory, 'data.json.gz'), mode='wt') as file:
+            os.path.join(directory, 'data.json.gz'), mode='wt') as file:
             json.dump(data, file, ensure_ascii=False)
 
     # open test
@@ -88,7 +88,7 @@ def main():
                                  domain + '_turk_' + str(pos) + '_' + str(neg))
         # print(directory)
         with gzip.open(
-                os.path.join(directory, 'data.json.gz'), mode='rt') as file:
+            os.path.join(directory, 'data.json.gz'), mode='rt') as file:
             test = json.load(file)
             print('{}: pos={} neg={} all={}'.format(
                 directory, len([i for i in test if int(i['label']) == 1]),

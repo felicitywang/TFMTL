@@ -98,7 +98,7 @@ def make_job(dataset, vocab, task, init_or_expand, finetune_or_freeze):
         alphas = ' '.join([str(1.0 / alpha_num)] * alpha_num)
 
     name = dataset + '_' + task + '_' + vocab + \
-        '_' + init_or_expand + '_' + finetune_or_freeze
+           '_' + init_or_expand + '_' + finetune_or_freeze
 
     result_dir = os.path.join(root_dir, 'early_results_11', dataset, name)
     make_dir(result_dir)

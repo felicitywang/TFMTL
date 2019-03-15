@@ -1,0 +1,26 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 30 \
+       --datasets SST2 \
+       --class_sizes 2 \
+       --dataset_paths data/tf/single/SST2/min_1_max_-1_vocab_-1_doc_-1_tok_tweet/ \
+       --topics_path data/json/SST2/data.json.gz \
+       --precompute_path data/h5/SST2/elmo_precompute.h5 \
+       --topic_field_name text \
+       --encoder_config_file encoders.json \
+       --architecture no_op_elmo_tfh \
+       --input_key tokenized \
+       --shared_mlp_layers 0 \
+       --shared_hidden_dims 0 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 128 \
+       --alphas 1 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --seed 42 \
+       --summaries_dir ./data/summ/SST2_elmo_2/ \
+       --checkpoint_dir ./data/ckpt/SST2_elmo_2/ \
+       --log_file ./data/logs/SST2_elmo_2.log \
+       --tuning_metric Acc \
+       --metrics Acc Precision_Macro Recall_Macro F1_Macro

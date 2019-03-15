@@ -1,0 +1,24 @@
+python ../scripts/discriminative_driver.py \
+       --model mult \
+       --mode train \
+       --num_train_epochs 30 \
+       --datasets RTC SSTb \
+       --class_sizes 2 5 \
+       --dataset_paths data/tf/merged/RTC_SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only/RTC/ data/tf/merged/RTC_SSTb/min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only/SSTb/ \
+       --topics_path data/json/RTC/data.json.gz data/json/SSTb/data.json.gz \
+       --topic_field_name text \
+       --encoder_config_file /home/ewong/tfmtl/expts/sentiment_2/encoders.json \
+       --architecture meanpool_linear_glove_only_finetune \
+       --shared_mlp_layers 1 \
+       --shared_hidden_dims 128 \
+       --private_mlp_layers 1 \
+       --private_hidden_dims 128 \
+       --alphas 0.5 0.5 \
+       --optimizer rmsprop \
+       --lr0 0.001 \
+       --seed 42 \
+       --summaries_dir ./data/summ/RTC_SSTb_glove_only/ \
+       --log_file data/logs/RTC_SSTb_glove_only.log \
+       --tuning_metric Acc \
+       --metrics Acc Recall_Macro Precision_Macro F1_Macro \
+       --checkpoint_dir data/ckpt/RTC_SSTb_glove/

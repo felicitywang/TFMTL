@@ -27,20 +27,20 @@ def rnn_and_pool(inputs,
                  initial_state=None,
                  reducer=reduce_max_over_time,
                  **kwargs):
-  cells = [cell_type(cell_size) for _ in xrange(num_layers)]
-  cell = tf.contrib.rnn.MultiRNNCell(cells)
+    cells = [cell_type(cell_size) for _ in xrange(num_layers)]
+    cell = tf.contrib.rnn.MultiRNNCell(cells)
 
-  if initial_state is None:
-    batch_size = tf.shape(inputs)[0]
-    initial_state = cell.zero_state(batch_size,
-                                    tf.float32)
+    if initial_state is None:
+        batch_size = tf.shape(inputs)[0]
+        initial_state = cell.zero_state(batch_size,
+                                        tf.float32)
 
-  # outputs has shape: <batch_size, batch_len, cell_size>
-  outputs, state = tf.nn.dynamic_rnn(cell=cell,
-                                     inputs=inputs,
-                                     sequence_length=lengths,
-                                     time_major=False,
-                                     initial_state=initial_state)
+    # outputs has shape: <batch_size, batch_len, cell_size>
+    outputs, state = tf.nn.dynamic_rnn(cell=cell,
+                                       inputs=inputs,
+                                       sequence_length=lengths,
+                                       time_major=False,
+                                       initial_state=initial_state)
 
-  # Pooling
-  return reducer(outputs, lengths=lengths, time_axis=1)
+    # Pooling
+    return reducer(outputs, lengths=lengths, time_axis=1)

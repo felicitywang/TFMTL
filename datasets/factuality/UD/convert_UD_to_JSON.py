@@ -24,15 +24,15 @@ import conllu
 
 
 def str2float(s):
-  try:
-    s = float(s)
-  except ValueError:
-    pass
-  return s
+    try:
+        s = float(s)
+    except ValueError:
+        pass
+    return s
 
 
 def is_float(e):
-  return isinstance(e, float)
+    return isinstance(e, float)
 
 
 dir = sys.argv[1]
@@ -42,33 +42,33 @@ index = 0
 
 
 def parse_data(file_name, starting_index, fields=FIELDS):
-  examples = []
-  index = starting_index
+    examples = []
+    index = starting_index
 
-  with codecs.open(file_name, mode='r', encoding='utf-8') as f:
-    data = f.read()
-    data = conllu.parse(data, fields=fields)
+    with codecs.open(file_name, mode='r', encoding='utf-8') as f:
+        data = f.read()
+        data = conllu.parse(data, fields=fields)
 
-    for example in data:
-      # TODO: clean up sentence? or does that happen downstream?
-      sentence = ' '.join([token['form'] for token in example])
-      scores = [token['factuality'] for token in example]
-      scores = list(map(str2float, scores))
-      mask = list(map(is_float, scores))
-      judgment_positions = [i for i, x in enumerate(mask) if x is True]
+        for example in data:
+            # TODO: clean up sentence? or does that happen downstream?
+            sentence = ' '.join([token['form'] for token in example])
+            scores = [token['factuality'] for token in example]
+            scores = list(map(str2float, scores))
+            mask = list(map(is_float, scores))
+            judgment_positions = [i for i, x in enumerate(mask) if x is True]
 
-      for position in judgment_positions:
-        examples.append({
-          'index': index,  # example index
-          'text': sentence,
-          'token_idx': position,  # which token's factuality is judged
-          'label': scores[position],  # factuality judgment
-        })
-        index += 1
+            for position in judgment_positions:
+                examples.append({
+                    'index': index,  # example index
+                    'text': sentence,
+                    'token_idx': position,  # which token's factuality is judged
+                    'label': scores[position],  # factuality judgment
+                })
+                index += 1
 
-  ending_index = index  # next example will have this index
-  index_list = list(range(starting_index, ending_index))
-  return examples, ending_index, index_list
+    ending_index = index  # next example will have this index
+    index_list = list(range(starting_index, ending_index))
+    return examples, ending_index, index_list
 
 
 train_file = dir + 'train.conll'
@@ -84,9 +84,9 @@ assert len(set(train_index).intersection(set(test_index))) == 0
 assert len(set(dev_index).intersection(set(test_index))) == 0
 
 index_dict = {
-  'train': train_index,
-  'dev': dev_index,
-  'test': test_index,
+    'train': train_index,
+    'dev': dev_index,
+    'test': test_index,
 }
 
 data_list = train_list
@@ -94,7 +94,7 @@ data_list.extend(dev_list)
 data_list.extend(test_list)
 
 with gzip.open(dir + 'index.json.gz', mode='wt') as f:
-  json.dump(index_dict, f, ensure_ascii=False)
+    json.dump(index_dict, f, ensure_ascii=False)
 
 with gzip.open(dir + 'data.json.gz', mode='wt') as f:
-  json.dump(data_list, f, ensure_ascii=False)
+    json.dump(data_list, f, ensure_ascii=False)

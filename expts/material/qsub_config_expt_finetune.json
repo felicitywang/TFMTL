@@ -20,8 +20,7 @@
     "mode": "finetune",
     // comment if classification(default)
     // "task": "regression",
-    "architecture":
-    // "dan_meanmax_relu_0.1_glove_expand_finetune",
+    "architecture": // "dan_meanmax_relu_0.1_glove_expand_finetune",
     "dan_meanmax_relu_0.0_nopretrain",
     // "dan_meanmax_relu_0.0_glove_expand_nofinetune",
     // "dan_meanmax_relu_0.1_nopretrain",
@@ -72,8 +71,7 @@
     "checkpoint_dir_init": "<root_dir>/data/results/<expt_setup_name>/<init_name>/ckpt",
     /****************for finetune mode only*****************/
     // which args to use
-    "args_paths":
-    //
+    "args_paths": //
     "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_init"
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_expand",

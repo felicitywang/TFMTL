@@ -36,124 +36,124 @@ import sklearn.metrics
 # TODO add p_miss and p_fa
 
 def accuracy_score(y_trues, y_preds, labels, topics):
-  return sklearn.metrics.accuracy_score(y_true=y_trues,
-                                        y_pred=y_preds,
-                                        normalize=True  # return fraction
-                                        )
+    return sklearn.metrics.accuracy_score(y_true=y_trues,
+                                          y_pred=y_preds,
+                                          normalize=True  # return fraction
+                                          )
 
 
 def accurate_number(y_trues, y_preds, labels, topics):
-  return sklearn.metrics.accuracy_score(y_true=y_trues,
-                                        y_pred=y_preds,
-                                        normalize=False  # return number
-                                        )
+    return sklearn.metrics.accuracy_score(y_true=y_trues,
+                                          y_pred=y_preds,
+                                          normalize=False  # return number
+                                          )
 
 
 def f1_macro(y_trues, y_preds, labels, topics):
-  """
-  macro-averaged (unweighted mean) f1 score of all classes
+    """
+    macro-averaged (unweighted mean) f1 score of all classes
 
-  :param y_trues: list of ground truth labels
-  :param y_preds: list of predicted labels
-  :param labels: labels for each class in a list, must specify
-  :return: float
-  """
-  assert labels is not None
-  return sklearn.metrics.f1_score(y_true=y_trues,
-                                  y_pred=y_preds,
-                                  labels=labels,
-                                  average='macro'
-                                  )
+    :param y_trues: list of ground truth labels
+    :param y_preds: list of predicted labels
+    :param labels: labels for each class in a list, must specify
+    :return: float
+    """
+    assert labels is not None
+    return sklearn.metrics.f1_score(y_true=y_trues,
+                                    y_pred=y_preds,
+                                    labels=labels,
+                                    average='macro'
+                                    )
 
 
 def f1_pos_neg_macro(y_trues, y_preds, labels, topics):
-  assert labels is not None
-  f1_scores = sklearn.metrics.f1_score(y_true=y_trues,
-                                       y_pred=y_preds,
-                                       # labels=labels,
-                                       average=None
-                                       )
-  # Assumes that POS and NEG-like labels are in positions 0 and 1
-  # and that any NONE-like labels are in position 2 onwards
-  # (and will be ignored)
-  return np.mean([f1_scores[0], f1_scores[1]])
+    assert labels is not None
+    f1_scores = sklearn.metrics.f1_score(y_true=y_trues,
+                                         y_pred=y_preds,
+                                         # labels=labels,
+                                         average=None
+                                         )
+    # Assumes that POS and NEG-like labels are in positions 0 and 1
+    # and that any NONE-like labels are in position 2 onwards
+    # (and will be ignored)
+    return np.mean([f1_scores[0], f1_scores[1]])
 
 
 def mse(y_trues, y_preds, labels, topics):
-  """
-  mean squared error
+    """
+    mean squared error
 
-  :param y_trues: list of ground truth scores
-  :param y_preds: list of predicted scores
-  :return: float
-  """
-  return sklearn.metrics.mean_squared_error(y_trues, y_preds)
+    :param y_trues: list of ground truth scores
+    :param y_preds: list of predicted scores
+    :return: float
+    """
+    return sklearn.metrics.mean_squared_error(y_trues, y_preds)
 
 
 def mae_macro(y_trues, y_preds, labels, topics):
-  """
-  macro-averaged (unweighted mean) over topics of mean absolute error
+    """
+    macro-averaged (unweighted mean) over topics of mean absolute error
 
-  :param y_trues: list of ground truth labels
-  :param y_preds: list of predicted labels
-  :return: float
-  """
-  if len(topics) == 0:
-    return float('inf')
+    :param y_trues: list of ground truth labels
+    :param y_preds: list of predicted labels
+    :return: float
+    """
+    if len(topics) == 0:
+        return float('inf')
 
-  topics_set = set(topics)
+    topics_set = set(topics)
 
-  preds = list(zip(*[y_trues, y_preds, topics]))
-  preds_by_topic = dict()
-  for topic in topics_set:
-    preds_by_topic[topic] = []
+    preds = list(zip(*[y_trues, y_preds, topics]))
+    preds_by_topic = dict()
+    for topic in topics_set:
+        preds_by_topic[topic] = []
 
-  # group predictions by topic
-  for pred in preds:
-    preds_by_topic[pred[2]].append(pred)
+    # group predictions by topic
+    for pred in preds:
+        preds_by_topic[pred[2]].append(pred)
 
-  maes = dict()
-  for topic, preds in preds_by_topic.items():
-    y_true = [p[0] for p in preds]
-    y_pred = [p[1] for p in preds]
+    maes = dict()
+    for topic, preds in preds_by_topic.items():
+        y_true = [p[0] for p in preds]
+        y_pred = [p[1] for p in preds]
 
-    if labels:
-      # macro-average over labels as well as over topics
-      # following code released for: https://arxiv.org/abs/1802.09913
-      tmp_maes = []
-      for label in labels:
-        true_pred_pairs = [(y_t, y_p) for y_t, y_p in
-                           zip(*[y_true, y_pred])
-                           if y_t == label]
-        if len(true_pred_pairs) == 0:
-          continue
-        tmp_y_true, tmp_y_pred = zip(*true_pred_pairs)
+        if labels:
+            # macro-average over labels as well as over topics
+            # following code released for: https://arxiv.org/abs/1802.09913
+            tmp_maes = []
+            for label in labels:
+                true_pred_pairs = [(y_t, y_p) for y_t, y_p in
+                                   zip(*[y_true, y_pred])
+                                   if y_t == label]
+                if len(true_pred_pairs) == 0:
+                    continue
+                tmp_y_true, tmp_y_pred = zip(*true_pred_pairs)
 
-        mean_absolute_error = sklearn.metrics.mean_absolute_error
-        tmp_mae = mean_absolute_error(y_true=tmp_y_true,
-                                      y_pred=tmp_y_pred,
-                                      multioutput='uniform_average')
-        tmp_maes.append(tmp_mae)
+                mean_absolute_error = sklearn.metrics.mean_absolute_error
+                tmp_mae = mean_absolute_error(y_true=tmp_y_true,
+                                              y_pred=tmp_y_pred,
+                                              multioutput='uniform_average')
+                tmp_maes.append(tmp_mae)
 
-      mae = np.mean(tmp_maes)
-    else:
-      # macro-average over topics but not labels
-      mae = sklearn.metrics.mean_absolute_error(y_true=y_true,
-                                                y_pred=y_pred,
-                                                multioutput='uniform_average')
-    maes[topic] = mae
+            mae = np.mean(tmp_maes)
+        else:
+            # macro-average over topics but not labels
+            mae = sklearn.metrics.mean_absolute_error(y_true=y_true,
+                                                      y_pred=y_pred,
+                                                      multioutput='uniform_average')
+        maes[topic] = mae
 
-  # simple mean of maes over topics
-  return sum(maes.values()) / len(maes.values())
+    # simple mean of maes over topics
+    return sum(maes.values()) / len(maes.values())
 
 
 def neg_mae_macro(y_trues, y_preds, labels, topics):
-  """
-  As for absolute error, lower is better
-  Thus use negative value in order to share the same interface when tuning
-  dev data with other metrics
-  """
-  return -mae_macro(y_trues, y_preds, labels, topics)
+    """
+    As for absolute error, lower is better
+    Thus use negative value in order to share the same interface when tuning
+    dev data with other metrics
+    """
+    return -mae_macro(y_trues, y_preds, labels, topics)
 
 
 # def recall_macro(y_trues, y_preds, labels, topics):
@@ -198,75 +198,75 @@ def neg_mae_macro(y_trues, y_preds, labels, topics):
 #
 
 def recall_macro(y_trues, y_preds, labels, topics):
-  """
-  macro-averaged (unweighted mean) over topics of recall score of all classes
+    """
+    macro-averaged (unweighted mean) over topics of recall score of all classes
 
-  :param y_trues: list of ground truth labels
-  :param y_preds: list of predicted labels
-  :param labels: labels for each class in a list, must specify
-  :return: float
-  """
-  assert labels is not None
-  return sklearn.metrics.recall_score(y_true=y_trues,
-                                      y_pred=y_preds,
-                                      labels=labels,
-                                      average='macro')
+    :param y_trues: list of ground truth labels
+    :param y_preds: list of predicted labels
+    :param labels: labels for each class in a list, must specify
+    :return: float
+    """
+    assert labels is not None
+    return sklearn.metrics.recall_score(y_true=y_trues,
+                                        y_pred=y_preds,
+                                        labels=labels,
+                                        average='macro')
 
 
 def precision_macro(y_trues, y_preds, labels, topics):
-  """
-  macro-averaged (unweighted mean) precision score of all classes
+    """
+    macro-averaged (unweighted mean) precision score of all classes
 
-  :param y_trues: list of ground truth labels
-  :param y_preds: list of predicted labels
-  :param labels: labels for each class in a list, must specify
-  :return: float
-  """
-  assert labels is not None
-  return sklearn.metrics.precision_score(y_true=y_trues,
-                                         y_pred=y_preds,
-                                         labels=labels,
-                                         average='macro')
+    :param y_trues: list of ground truth labels
+    :param y_preds: list of predicted labels
+    :param labels: labels for each class in a list, must specify
+    :return: float
+    """
+    assert labels is not None
+    return sklearn.metrics.precision_score(y_true=y_trues,
+                                           y_pred=y_preds,
+                                           labels=labels,
+                                           average='macro')
 
 
 def confusion_matrix(y_trues, y_preds, labels, topics):
-  """
-  confusion matrix C, C[i, j] is the number of observations known to be in
-  group i but predicted to be in group j
+    """
+    confusion matrix C, C[i, j] is the number of observations known to be in
+    group i but predicted to be in group j
 
-  :param y_trues: list of ground truth labels
-  :param y_preds: list of predicted labels
-  :param labels: labels for each class in a list, must specify
-  :return: array, shape = [n_classes, n_classes]
-  """
+    :param y_trues: list of ground truth labels
+    :param y_preds: list of predicted labels
+    :param labels: labels for each class in a list, must specify
+    :return: array, shape = [n_classes, n_classes]
+    """
 
-  assert labels is not None
+    assert labels is not None
 
-  return sklearn.metrics.confusion_matrix(y_trues,
-                                          y_preds,
-                                          labels=labels)
+    return sklearn.metrics.confusion_matrix(y_trues,
+                                            y_preds,
+                                            labels=labels)
 
 
 def pearson_r(y_trues, y_preds, labels=None):
-  return scipy.stats.pearsonr(y_trues, y_preds)
+    return scipy.stats.pearsonr(y_trues, y_preds)
 
 
 def metric2func(metric_name):
-  METRIC2FUNC = {
-    'Acc': accuracy_score,
-    'MAE_Macro': mae_macro,
-    'F1_Macro': f1_macro,
-    'F1_PosNeg_Macro': f1_pos_neg_macro,
-    'Neg_MAE_Macro': neg_mae_macro,
-    'Recall_Macro': recall_macro,
-    'Precision_Macro': precision_macro,
-    'Confusion_Matrix': confusion_matrix,
-    # TODO
-    'MSE': mse,
-    'Pearson_R': pearson_r
-  }
+    METRIC2FUNC = {
+        'Acc': accuracy_score,
+        'MAE_Macro': mae_macro,
+        'F1_Macro': f1_macro,
+        'F1_PosNeg_Macro': f1_pos_neg_macro,
+        'Neg_MAE_Macro': neg_mae_macro,
+        'Recall_Macro': recall_macro,
+        'Precision_Macro': precision_macro,
+        'Confusion_Matrix': confusion_matrix,
+        # TODO
+        'MSE': mse,
+        'Pearson_R': pearson_r
+    }
 
-  if metric_name in METRIC2FUNC:
-    return METRIC2FUNC[metric_name]
-  else:
-    raise NotImplementedError('Metric %s is not implemented!' % metric_name)
+    if metric_name in METRIC2FUNC:
+        return METRIC2FUNC[metric_name]
+    else:
+        raise NotImplementedError('Metric %s is not implemented!' % metric_name)

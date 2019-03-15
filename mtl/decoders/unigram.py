@@ -23,7 +23,7 @@ from tensorflow.contrib.seq2seq import sequence_loss
 
 
 def default_hparams():
-  return HParams(average_over_time=True)
+    return HParams(average_over_time=True)
 
 
 def unigram(batch, z, vocab_size=None,
@@ -31,48 +31,48 @@ def unigram(batch, z, vocab_size=None,
             counts_key="type_counts",
             lens_key="types_length",
             hp=default_hparams()):
-  targets = batch[targets_key]
-  counts = batch[counts_key]
-  lens = batch[lens_key]
-  assert vocab_size is not None
-  targets_shape = targets.get_shape()
-  if len(targets_shape) != 2:
-    raise ValueError("expected 2D targets: got %d" % (len(targets_shape)))
-  counts_shape = counts.get_shape()
-  if len(counts_shape) != 2:
-    raise ValueError("expected 2D counts: got %d" % (len(counts_shape)))
+    targets = batch[targets_key]
+    counts = batch[counts_key]
+    lens = batch[lens_key]
+    assert vocab_size is not None
+    targets_shape = targets.get_shape()
+    if len(targets_shape) != 2:
+        raise ValueError("expected 2D targets: got %d" % (len(targets_shape)))
+    counts_shape = counts.get_shape()
+    if len(counts_shape) != 2:
+        raise ValueError("expected 2D counts: got %d" % (len(counts_shape)))
 
-  input_dim = z.get_shape().as_list()[-1]
-  target_len = tf.shape(targets)[1]
-  with tf.variable_scope("output_projection"):
-    R = tf.get_variable(
-      "R",
-      [input_dim, vocab_size],
-      initializer=tf.contrib.layers.xavier_initializer())
-    b = tf.get_variable(
-      "b",
-      [vocab_size],
-      initializer=tf.zeros_initializer())
+    input_dim = z.get_shape().as_list()[-1]
+    target_len = tf.shape(targets)[1]
+    with tf.variable_scope("output_projection"):
+        R = tf.get_variable(
+            "R",
+            [input_dim, vocab_size],
+            initializer=tf.contrib.layers.xavier_initializer())
+        b = tf.get_variable(
+            "b",
+            [vocab_size],
+            initializer=tf.zeros_initializer())
 
-  with tf.name_scope("logits"):
-    logits = tf.nn.xw_plus_b(z, R, b)
-    logits = tf.expand_dims(logits, 1)
-    logits = tf.tile(logits, [1, target_len, 1])
+    with tf.name_scope("logits"):
+        logits = tf.nn.xw_plus_b(z, R, b)
+        logits = tf.expand_dims(logits, 1)
+        logits = tf.tile(logits, [1, target_len, 1])
 
-  with tf.name_scope("weights"):
-    weights = tf.to_float(tf.sequence_mask(lens, maxlen=target_len))
+    with tf.name_scope("weights"):
+        weights = tf.to_float(tf.sequence_mask(lens, maxlen=target_len))
 
-  with tf.name_scope("sequence_loss"):
-    losses = sequence_loss(logits, targets, weights,
-                           average_across_batch=False,
-                           average_across_timesteps=False)
+    with tf.name_scope("sequence_loss"):
+        losses = sequence_loss(logits, targets, weights,
+                               average_across_batch=False,
+                               average_across_timesteps=False)
 
-    if counts is not None:
-      losses *= tf.to_float(counts)
+        if counts is not None:
+            losses *= tf.to_float(counts)
 
-    batch_loss = tf.reduce_sum(losses, axis=1)
+        batch_loss = tf.reduce_sum(losses, axis=1)
 
-    if hp.average_over_time:
-      return batch_loss / tf.reduce_sum(weights, axis=1)
-    else:
-      return batch_loss
+        if hp.average_over_time:
+            return batch_loss / tf.reduce_sum(weights, axis=1)
+        else:
+            return batch_loss

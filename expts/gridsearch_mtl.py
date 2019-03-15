@@ -61,7 +61,7 @@ class MetaConfig(object):
 
 def dict_append(d1, d2):
     assert not set(d1.keys()).intersection(set(d2.keys())), \
-      "can't append overlapping dictionaries: d1={}, d2={}".format(d1, d2)
+        "can't append overlapping dictionaries: d1={}, d2={}".format(d1, d2)
 
     out = d1.copy()
     out.update(d2)
@@ -76,7 +76,7 @@ def enumerate_param_combs(tree):
 
     for key, value in tree.items():
         assert type(key) in [str], \
-          "Found non-str variable key: %s of type %s" % (key, type(key))
+            "Found non-str variable key: %s of type %s" % (key, type(key))
 
         if type(value) == list:
             is_dict = [type(subval) == dict for subval in value]
@@ -157,7 +157,7 @@ def write_exp_bash_script(temp_script_filename, meta_config, exp_params_comb):
             f.write('{}\n'.format(meta_config.cpu_venv))
         f.write('cd {}\n'.format(meta_config.root))
         if meta_config.gpu > 0:
-          f.write("CUDA_VISIBLE_DEVICES=`free-gpu` ")
+            f.write("CUDA_VISIBLE_DEVICES=`free-gpu` ")
         f.write('python -m {} {}'.format(meta_config.module, exp_flags))
 
 
@@ -195,7 +195,7 @@ def create_qsub_params(meta_config):
         'e': meta_config.jobs_dir,
         'l': 'mem_free={:d}G,ram_free={:d}G'.format(meta_config.mem_ram,
                                                     meta_config.mem_ram)
-      }
+    }
 
     if meta_config.slots_per_job > 1:
         qsub_params['pe smp'] = meta_config.slots_per_job
@@ -238,63 +238,63 @@ def complete_path_name(path_name_template, exp_params_comb):
 
     # Replace the leading '/' if there was one
     if path_name_template.startswith('/') and \
-       not new_path_name.startswith('/'):
+        not new_path_name.startswith('/'):
         new_path_name = '/' + new_path_name
 
     return new_path_name
 
 
 def write_encoder_file(exp_params_comb):
-  file_name = exp_params_comb['encoder_config_file']
-  architecture_name = exp_params_comb['architecture']
-  datasets = exp_params_comb['datasets'].split()
+    file_name = exp_params_comb['encoder_config_file']
+    architecture_name = exp_params_comb['architecture']
+    datasets = exp_params_comb['datasets'].split()
 
-  # get each dataset's encoder configuration
-  encoder_configs = dict()
-  for dataset in datasets:
-    tmp = exp_params_comb[dataset].copy()
-    embed_kwargs_names = tmp.pop('embed_kwargs_names').split()
-    tmp['embed_kwargs'] = {k: tmp.pop(k) for k in embed_kwargs_names}
-    extract_kwargs_names = tmp.pop('extract_kwargs_names').split()
-    tmp['extract_kwargs'] = {k: tmp.pop(k) for k in extract_kwargs_names}
-    encoder_configs[dataset] = tmp.copy()
+    # get each dataset's encoder configuration
+    encoder_configs = dict()
+    for dataset in datasets:
+        tmp = exp_params_comb[dataset].copy()
+        embed_kwargs_names = tmp.pop('embed_kwargs_names').split()
+        tmp['embed_kwargs'] = {k: tmp.pop(k) for k in embed_kwargs_names}
+        extract_kwargs_names = tmp.pop('extract_kwargs_names').split()
+        tmp['extract_kwargs'] = {k: tmp.pop(k) for k in extract_kwargs_names}
+        encoder_configs[dataset] = tmp.copy()
 
-  # construct the overall configuration
-  configuration = dict()
-  configuration[architecture_name] = dict()
-  configuration[architecture_name]['embedders_tied'] = \
-      exp_params_comb['embedders_tied']
-  configuration[architecture_name]['extractors_tied'] = \
-      exp_params_comb['extractors_tied']
+    # construct the overall configuration
+    configuration = dict()
+    configuration[architecture_name] = dict()
+    configuration[architecture_name]['embedders_tied'] = \
+        exp_params_comb['embedders_tied']
+    configuration[architecture_name]['extractors_tied'] = \
+        exp_params_comb['extractors_tied']
 
-  for dataset in datasets:
-    configuration[architecture_name][dataset] = encoder_configs[dataset]
+    for dataset in datasets:
+        configuration[architecture_name][dataset] = encoder_configs[dataset]
 
-  if configuration[architecture_name]['embedders_tied']:
-    # assert that embedder configs are the same
-    assert all([configuration[architecture_name][a]['embed_fn'] ==
-                configuration[architecture_name][b]['embed_fn']
-                for a in datasets
-                for b in datasets])
-    assert all([configuration[architecture_name][a]['embed_kwargs'] ==
-                configuration[architecture_name][b]['embed_kwargs']
-                for a in datasets
-                for b in datasets])
+    if configuration[architecture_name]['embedders_tied']:
+        # assert that embedder configs are the same
+        assert all([configuration[architecture_name][a]['embed_fn'] ==
+                    configuration[architecture_name][b]['embed_fn']
+                    for a in datasets
+                    for b in datasets])
+        assert all([configuration[architecture_name][a]['embed_kwargs'] ==
+                    configuration[architecture_name][b]['embed_kwargs']
+                    for a in datasets
+                    for b in datasets])
 
-  if configuration[architecture_name]['extractors_tied']:
-    # assert that extractor configs are the same
-    assert all([configuration[architecture_name][a]['extract_fn'] ==
-                configuration[architecture_name][b]['extract_fn']
-                for a in datasets
-                for b in datasets])
-    assert all([configuration[architecture_name][a]['extract_kwargs'] ==
-                configuration[architecture_name][b]['extract_kwargs']
-                for a in datasets
-                for b in datasets])
+    if configuration[architecture_name]['extractors_tied']:
+        # assert that extractor configs are the same
+        assert all([configuration[architecture_name][a]['extract_fn'] ==
+                    configuration[architecture_name][b]['extract_fn']
+                    for a in datasets
+                    for b in datasets])
+        assert all([configuration[architecture_name][a]['extract_kwargs'] ==
+                    configuration[architecture_name][b]['extract_kwargs']
+                    for a in datasets
+                    for b in datasets])
 
-  os.makedirs(os.path.dirname(file_name), exist_ok=True)
-  with open(file_name, 'w') as f:
-    json.dump(configuration, f)
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    with open(file_name, 'w') as f:
+        json.dump(configuration, f)
 
 
 def run_single_experiment(meta_config,
@@ -309,8 +309,8 @@ def run_single_experiment(meta_config,
     # res_dir = complete_path_name(meta_config.results_dir, exp_params_comb)
     jobs_dir = complete_path_name(meta_config.jobs_dir, exp_params_comb)
     for field in ['checkpoint_dir', 'log_file', 'summaries_dir', 'encoder_config_file']:
-      exp_params_comb[field] = complete_path_name(exp_params_comb[field],
-                                                  exp_params_comb)
+        exp_params_comb[field] = complete_path_name(exp_params_comb[field],
+                                                    exp_params_comb)
 
     if os.path.exists(exp_params_comb['log_file']):
         # job has already run/started
@@ -320,22 +320,22 @@ def run_single_experiment(meta_config,
         pass
 
     if debug:
-      print(exp_params_comb)
-      print('---')
+        print(exp_params_comb)
+        print('---')
 
     write_encoder_file(exp_params_comb)
 
     # Remove dataset-specific encoder information before writing bash script
     datasets = exp_params_comb['datasets'].split()
     for dataset in datasets:
-      exp_params_comb.pop(dataset)
+        exp_params_comb.pop(dataset)
 
     # Remove extraneous information
     for field in ['expt_setup_name',
                   'embedders_tied',
                   'extractors_tied',
                   'name']:
-      exp_params_comb.pop(field)
+        exp_params_comb.pop(field)
 
     # Write bash file to execute experiment
     temp_script_file = os.path.join(jobs_dir, '{}.sh'.format(name))
@@ -353,126 +353,126 @@ def run_single_experiment(meta_config,
 
 
 def consistent(encoders, exp_comb):
-  # Determine whether encoders' hyperparameters are consistent with each other
+    # Determine whether encoders' hyperparameters are consistent with each other
 
-  if len(encoders) == 1:
-    # an encoder is automatically consistent with itself
+    if len(encoders) == 1:
+        # an encoder is automatically consistent with itself
+        return True
+
+    embedders_tied = exp_comb['embedders_tied']
+    extractors_tied = exp_comb['extractors_tied']
+
+    embed_fns = set([enc['embed_fn'] for enc in encoders])
+    extract_fns = set([enc['extract_fn'] for enc in encoders])
+
+    # TODO(seth): refactor this check to avoid code duplication
+    if embedders_tied:
+        if len(embed_fns) != 1:
+            # different embedding functions
+            return False
+
+        embed_kwargs_names = set([enc['embed_kwargs_names'] for enc in encoders])
+        if len(embed_kwargs_names) != 1:
+            # different kinds of embedder arguments
+            return False
+
+        all_embed_kwargs = list()
+        for enc in encoders:
+            embed_kwargs_names = enc['embed_kwargs_names'].split()
+            embed_kwargs = {e_k_n: enc[e_k_n] for e_k_n in embed_kwargs_names}
+            all_embed_kwargs.append(embed_kwargs)
+
+        if not all([d1 == d2
+                    for d1 in all_embed_kwargs
+                    for d2 in all_embed_kwargs]):
+            # different embedder argument values
+            return False
+
+    if extractors_tied:
+        if len(extract_fns) != 1:
+            # different extractor functions
+            return False
+
+        extract_kwargs_names = set([enc['extract_kwargs_names']
+                                    for enc in encoders])
+        if len(extract_kwargs_names) != 1:
+            # different kinds of extractor arguments
+            return False
+
+        all_extract_kwargs = list()
+        for enc in encoders:
+            extract_kwargs_names = enc['extract_kwargs_names'].split()
+            extract_kwargs = {e_k_n: enc[e_k_n] for e_k_n in extract_kwargs_names}
+            all_extract_kwargs.append(extract_kwargs)
+
+        if not all([d1 == d2
+                    for d1 in all_extract_kwargs
+                    for d2 in all_extract_kwargs]):
+            # different extractor argument values
+            return False
+
     return True
-
-  embedders_tied = exp_comb['embedders_tied']
-  extractors_tied = exp_comb['extractors_tied']
-
-  embed_fns = set([enc['embed_fn'] for enc in encoders])
-  extract_fns = set([enc['extract_fn'] for enc in encoders])
-
-  # TODO(seth): refactor this check to avoid code duplication
-  if embedders_tied:
-    if len(embed_fns) != 1:
-      # different embedding functions
-      return False
-
-    embed_kwargs_names = set([enc['embed_kwargs_names'] for enc in encoders])
-    if len(embed_kwargs_names) != 1:
-      # different kinds of embedder arguments
-      return False
-
-    all_embed_kwargs = list()
-    for enc in encoders:
-      embed_kwargs_names = enc['embed_kwargs_names'].split()
-      embed_kwargs = {e_k_n: enc[e_k_n] for e_k_n in embed_kwargs_names}
-      all_embed_kwargs.append(embed_kwargs)
-
-    if not all([d1 == d2
-                for d1 in all_embed_kwargs
-                for d2 in all_embed_kwargs]):
-      # different embedder argument values
-      return False
-
-  if extractors_tied:
-    if len(extract_fns) != 1:
-      # different extractor functions
-      return False
-
-    extract_kwargs_names = set([enc['extract_kwargs_names']
-                                for enc in encoders])
-    if len(extract_kwargs_names) != 1:
-      # different kinds of extractor arguments
-      return False
-
-    all_extract_kwargs = list()
-    for enc in encoders:
-      extract_kwargs_names = enc['extract_kwargs_names'].split()
-      extract_kwargs = {e_k_n: enc[e_k_n] for e_k_n in extract_kwargs_names}
-      all_extract_kwargs.append(extract_kwargs)
-
-    if not all([d1 == d2
-                for d1 in all_extract_kwargs
-                for d2 in all_extract_kwargs]):
-      # different extractor argument values
-      return False
-
-  return True
 
 
 def dict2hash(d):
-  # Convert a dictionary into a hash
-  # This should be unique up to key names
-  contents = []
-  for k, v in d.items():
-    if isinstance(v, collections.Hashable):
-      contents.append(v)
-    elif type(v) == dict:
-      contents.append(tuple([dict2hash(v)]))
-  return hash(tuple(contents))
+    # Convert a dictionary into a hash
+    # This should be unique up to key names
+    contents = []
+    for k, v in d.items():
+        if isinstance(v, collections.Hashable):
+            contents.append(v)
+        elif type(v) == dict:
+            contents.append(tuple([dict2hash(v)]))
+    return hash(tuple(contents))
 
 
 def merge_combinations(exp_params_combs_list, encoder_params_combs_list):
-  # Combine experimental hyperparameters with an encoder per dataset
+    # Combine experimental hyperparameters with an encoder per dataset
 
-  # remove disallowed combinations
-  # e.g., those that have `share_embedder`=True
-  #       but have different settings for their embedder
+    # remove disallowed combinations
+    # e.g., those that have `share_embedder`=True
+    #       but have different settings for their embedder
 
-  # all allowable combinations of experimental hyperparameters
-  # and encoder hyperparameters
-  prod = list()
-  hashes = set()
+    # all allowable combinations of experimental hyperparameters
+    # and encoder hyperparameters
+    prod = list()
+    hashes = set()
 
-  for exp_comb in tqdm(exp_params_combs_list):
-    datasets = exp_comb['datasets'].split()
+    for exp_comb in tqdm(exp_params_combs_list):
+        datasets = exp_comb['datasets'].split()
 
-    # Each element of this list is itself a list of (dataset, encoder) pairs
-    # At this point, all hyperparameter values have been selected
-    dataset_encoder_pairs_list = list(itertools.
-                                      product(*[itertools.
-                                                product(
-                                                  (d,),
-                                                  encoder_params_combs_list
-                                                )
-                                                for d in datasets]))
-    for pairs in dataset_encoder_pairs_list:
-      encoders = [p[1] for p in pairs]
-      if not consistent(encoders, exp_comb):
-        # inconsistent
-        continue
-      else:
-        # Combine hyperparameters with encoder hyperparameters
-        # into a single data structure
-        new_comb = dict()
-        new_comb = exp_comb.copy()
-        for pair in pairs:
-          d = pair[0]
-          e = pair[1]
-          new_comb[d] = e
-          hash_ = dict2hash(new_comb)
-        if hash_ in hashes:
-            # We've seen this combination before. Don't add it again
-            break
-        else:
-          # this is a new combination
-          prod.append(new_comb)
+        # Each element of this list is itself a list of (dataset, encoder) pairs
+        # At this point, all hyperparameter values have been selected
+        dataset_encoder_pairs_list = list(itertools.
+                                          product(*[itertools.
+                                                  product(
+            (d,),
+            encoder_params_combs_list
+        )
+            for d in datasets]))
+        for pairs in dataset_encoder_pairs_list:
+            encoders = [p[1] for p in pairs]
+            if not consistent(encoders, exp_comb):
+                # inconsistent
+                continue
+            else:
+                # Combine hyperparameters with encoder hyperparameters
+                # into a single data structure
+                new_comb = dict()
+                new_comb = exp_comb.copy()
+                for pair in pairs:
+                    d = pair[0]
+                    e = pair[1]
+                    new_comb[d] = e
+                    hash_ = dict2hash(new_comb)
+                if hash_ in hashes:
+                    # We've seen this combination before. Don't add it again
+                    break
+                else:
+                    # this is a new combination
+                    prod.append(new_comb)
 
-  return prod
+    return prod
 
 
 def run_all_experiments(meta_config, exp_config, encoder_config, debug=False):
@@ -483,13 +483,13 @@ def run_all_experiments(meta_config, exp_config, encoder_config, debug=False):
                                                encoder_params_combs_list)
 
     for field in ['jobs_dir']:
-      # complete meta_config fields that depend on the values of other fields
-      # NOTE: this assumes that `field` has the same value for all elements
-      #       of exp_params_combs_list
-      setattr(meta_config,
-              field,
-              complete_path_name(getattr(meta_config, field),
-                                 exp_params_combs_list[0]))
+        # complete meta_config fields that depend on the values of other fields
+        # NOTE: this assumes that `field` has the same value for all elements
+        #       of exp_params_combs_list
+        setattr(meta_config,
+                field,
+                complete_path_name(getattr(meta_config, field),
+                                   exp_params_combs_list[0]))
 
     qsub_params = create_qsub_params(meta_config)
 

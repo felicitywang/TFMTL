@@ -66,7 +66,6 @@ for text_line in text.readlines():
 with open('data.json', 'w') as file:
     json.dump(all_list, file)
 
-
 # topic label not included in the traind/valid/test splits the author provided
 
 # text = open('train/dialogues_train.txt', 'r')

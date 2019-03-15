@@ -31,46 +31,46 @@ def _paragram_phrase_helper(inputs,
                             apply_activation=False,
                             activation_fn=None,
                             **kwargs):
-  """Processes inputs using the paragram_phrase
-  method of Wieting et al. (https://arxiv.org/abs/1511.08198)
+    """Processes inputs using the paragram_phrase
+    method of Wieting et al. (https://arxiv.org/abs/1511.08198)
+  
+    Inputs
+    ------
+      inputs: batch of size [batch_size, batch_Len, embed_size]
+      lengths: batch of size [batch_size]
+      reducer: pooling operation to apply to the word embeddings
+               to get the sentence embedding
+      apply_activation: whether to apply an activation function
+                        to the sentence embedding
+      activation_fn: (non-)linearity to apply to the reduced sentence embedding
+                     (linear projection if activation_fn=None)
+  
+    Outputs
+    -------
+      If the input word vectors have dimension D, the output is a Tensor of size
+      [batch_size, D].
+    """
 
-  Inputs
-  ------
-    inputs: batch of size [batch_size, batch_Len, embed_size]
-    lengths: batch of size [batch_size]
-    reducer: pooling operation to apply to the word embeddings
-             to get the sentence embedding
-    apply_activation: whether to apply an activation function
-                      to the sentence embedding
-    activation_fn: (non-)linearity to apply to the reduced sentence embedding
-                   (linear projection if activation_fn=None)
+    reducers = [reduce_avg_over_time,
+                reduce_var_over_time,
+                reduce_max_over_time,
+                reduce_min_over_time,
+                reduce_over_time]
+    assert reducer in reducers, "unrecognized paragram reducer: %s" % reducer
 
-  Outputs
-  -------
-    If the input word vectors have dimension D, the output is a Tensor of size
-    [batch_size, D].
-  """
+    if len(lengths.get_shape()) == 1:
+        lengths = tf.expand_dims(lengths, 1)
 
-  reducers = [reduce_avg_over_time,
-              reduce_var_over_time,
-              reduce_max_over_time,
-              reduce_min_over_time,
-              reduce_over_time]
-  assert reducer in reducers, "unrecognized paragram reducer: %s" % reducer
+    s_embedding = reducer(inputs, lengths=lengths, time_axis=1)
 
-  if len(lengths.get_shape()) == 1:
-    lengths = tf.expand_dims(lengths, 1)
+    if apply_activation:
+        embed_dim = inputs.get_shape().as_list()[2]
+        s_embedding = dense_layer(s_embedding,
+                                  embed_dim,
+                                  name="paragram_phrase",
+                                  activation=activation_fn)
 
-  s_embedding = reducer(inputs, lengths=lengths, time_axis=1)
-
-  if apply_activation:
-    embed_dim = inputs.get_shape().as_list()[2]
-    s_embedding = dense_layer(s_embedding,
-                              embed_dim,
-                              name="paragram_phrase",
-                              activation=activation_fn)
-
-  return s_embedding
+    return s_embedding
 
 
 def paragram_phrase(inputs,
@@ -78,35 +78,35 @@ def paragram_phrase(inputs,
                     reducer,
                     apply_activation,
                     activation_fn):
-  validate_extractor_inputs(inputs, lengths)
+    validate_extractor_inputs(inputs, lengths)
 
-  num_stages = len(inputs)
+    num_stages = len(inputs)
 
-  code = []
-  prev_varscope = None
-  for n_stage in xrange(num_stages):
-    with tf.variable_scope("paragram-seq{}".format(n_stage)) as varscope:
-      if prev_varscope is not None:
-        prev_varscope.reuse_variables()
-      p = _paragram_phrase_helper(inputs[n_stage],
-                                  lengths[n_stage],
-                                  reducer=reducer,
-                                  apply_activation=False,
-                                  activation_fn=None)
-      code.append(p)
-      prev_varscope = varscope
+    code = []
+    prev_varscope = None
+    for n_stage in xrange(num_stages):
+        with tf.variable_scope("paragram-seq{}".format(n_stage)) as varscope:
+            if prev_varscope is not None:
+                prev_varscope.reuse_variables()
+            p = _paragram_phrase_helper(inputs[n_stage],
+                                        lengths[n_stage],
+                                        reducer=reducer,
+                                        apply_activation=False,
+                                        activation_fn=None)
+            code.append(p)
+            prev_varscope = varscope
 
-  ranks = [len(p.get_shape()) for p in code]
-  assert all(rank == 2 for rank in ranks)  # <batch_size, embed_dim>
-  code = tf.concat(code, axis=1)
+    ranks = [len(p.get_shape()) for p in code]
+    assert all(rank == 2 for rank in ranks)  # <batch_size, embed_dim>
+    code = tf.concat(code, axis=1)
 
-  if apply_activation:
-    outputs = dense_layer(code,
-                          code.get_shape().as_list()[1],
-                          # keep same dimensionality
-                          name="paragram-output",
-                          activation=activation_fn)
-  else:
-    outputs = code
+    if apply_activation:
+        outputs = dense_layer(code,
+                              code.get_shape().as_list()[1],
+                              # keep same dimensionality
+                              name="paragram-output",
+                              activation=activation_fn)
+    else:
+        outputs = code
 
-  return outputs
+    return outputs

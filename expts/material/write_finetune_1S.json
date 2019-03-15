@@ -25,14 +25,12 @@
         // "_train_turk_80_50_turk_80_50_para_valid_gold_oracle"
     ],
     // "_turk_reg"
-    "args_file_path":
-    //
+    "args_file_path": //
     "args_pretrained.json",
     // "args_nopretrain.json",
     // "args_reg.json"
     // directory of the vocabulary of the data used to train the model
-    "args_path":
-    //
+    "args_path": //
     // "min_1_max_-1_vocab_-1_doc_-1_tok_lower"
     "min_1_max_-1_vocab_-1_doc_-1_tok_lower_glove.6B.300d_only"
 }

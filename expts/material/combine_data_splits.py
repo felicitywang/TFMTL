@@ -32,91 +32,91 @@ from mtl.util.util import make_dir
 base_dir = 'data/json/'
 
 DOMAINS = [
-  'GOV',
-  'LIF',
-  'BUS',
-  'LAW',
-  'SPO',
-  'HEA',
-  'MIL'
+    'GOV',
+    'LIF',
+    'BUS',
+    'LAW',
+    'SPO',
+    'HEA',
+    'MIL'
 ]
 
 
 def parse_args():
-  p = ap.ArgumentParser()
-  p.add_argument(
-    '--train_suffixes',
-    nargs='+',
-    type=str,
-    required=True,
-    help='suffixes of the names of the datasets to be the train split')
-  p.add_argument(
-    '--valid_suffixes',
-    nargs='+',
-    type=str,
-    default=[],
-    help='suffixes of the names of the datasets to be used as the valid split')
-  # test currently not supported
-  # p.add_argument('--test', type=str, nargs='?', required=False
-  #                help='Name of the dataset to be used as the test split')
-  return p.parse_args()
+    p = ap.ArgumentParser()
+    p.add_argument(
+        '--train_suffixes',
+        nargs='+',
+        type=str,
+        required=True,
+        help='suffixes of the names of the datasets to be the train split')
+    p.add_argument(
+        '--valid_suffixes',
+        nargs='+',
+        type=str,
+        default=[],
+        help='suffixes of the names of the datasets to be used as the valid split')
+    # test currently not supported
+    # p.add_argument('--test', type=str, nargs='?', required=False
+    #                help='Name of the dataset to be used as the test split')
+    return p.parse_args()
 
 
 def get_data(domain, suffix):
-  path = os.path.join(base_dir, domain + '_' + suffix, 'data.json.gz')
-  with gzip.open(path, 'rt') as file:
-    data = json.load(file)
-  return data
+    path = os.path.join(base_dir, domain + '_' + suffix, 'data.json.gz')
+    with gzip.open(path, 'rt') as file:
+        data = json.load(file)
+    return data
 
 
 def main():
-  args = parse_args()
+    args = parse_args()
 
-  for domain in tqdm(DOMAINS):
+    for domain in tqdm(DOMAINS):
 
-    train_data = []
-    valid_data = []
-    for train_suffix in args.train_suffixes:
-      train_data.extend(get_data(domain, train_suffix))
+        train_data = []
+        valid_data = []
+        for train_suffix in args.train_suffixes:
+            train_data.extend(get_data(domain, train_suffix))
 
-    for valid_suffix in args.valid_suffixes:
-      valid_data.extend(get_data(domain, valid_suffix))
+        for valid_suffix in args.valid_suffixes:
+            valid_data.extend(get_data(domain, valid_suffix))
 
-    index_dict = {
-      'train':
-        list(range(len(train_data))),
-      'valid':
-        list(range(len(train_data),
-                   len(train_data) + len(valid_data))),
-      'test': []
-    }
+        index_dict = {
+            'train':
+                list(range(len(train_data))),
+            'valid':
+                list(range(len(train_data),
+                           len(train_data) + len(valid_data))),
+            'test': []
+        }
 
-    suffix = '_'.join(args.train_suffixes)
-    if args.valid_suffixes:
-      suffix = 'train_' + suffix + '_valid_' + ' '.join(args.valid_suffixes)
+        suffix = '_'.join(args.train_suffixes)
+        if args.valid_suffixes:
+            suffix = 'train_' + suffix + '_valid_' + ' '.join(args.valid_suffixes)
 
-    dout = os.path.join(
-      base_dir,
-      domain + '_' + suffix
-    )
-    make_dir(dout)
+        dout = os.path.join(
+            base_dir,
+            domain + '_' + suffix
+        )
+        make_dir(dout)
 
-    print(dout)
-    print('train:', len(train_data))
-    print('valid:', len(valid_data))
+        print(dout)
+        print('train:', len(train_data))
+        print('valid:', len(valid_data))
 
-    # continue
+        # continue
 
-    data = train_data
-    data.extend(valid_data)
+        data = train_data
+        data.extend(valid_data)
 
-    with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
-      json.dump(data, file, ensure_ascii=False)
+        with gzip.open(os.path.join(dout, 'data.json.gz'), mode='wt') as file:
+            json.dump(data, file, ensure_ascii=False)
 
-    if domain != 'SPO' and args.valid_suffixes:
-      with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
-        json.dump(index_dict, file, ensure_ascii=False)
+        if domain != 'SPO' and args.valid_suffixes:
+            with gzip.open(os.path.join(dout, 'index.json.gz'), mode='wt') as file:
+                json.dump(index_dict, file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
-  main()
+    main()

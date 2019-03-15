@@ -414,13 +414,13 @@ for index, row in post_df.iterrows():
     post_df.set_value(
         index, 'parent_title',
         "" if parent_id != parent_id or parent_id not in
-                                        post_df.index
+              post_df.index
         else
         post_df.loc[parent_id].title)
     post_df.set_value(
         index, 'parent_body',
         "" if parent_id != parent_id or parent_id not in
-                                        post_df.index
+              post_df.index
         else
         post_df.loc[parent_id].body)
 

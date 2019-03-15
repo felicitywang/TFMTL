@@ -32,8 +32,7 @@
         "_gold_only"
     ],
     // what architecture in encoders.json to use
-    "architecture":
-    //
+    "architecture": //
     // "dan_meanmax_relu_0.1_nopretrain",
     "dan_meanmax_relu_0.1_glove_only_finetune",
     // which args to use

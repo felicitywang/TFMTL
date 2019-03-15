@@ -24,8 +24,7 @@
     // "mode": "finetune",
     // comment if classification(default)
     // "task": "regression",
-    "architecture":
-    // "dan_meanmax_relu_0.1_glove_expand_finetune",
+    "architecture": // "dan_meanmax_relu_0.1_glove_expand_finetune",
     // "dan_meanmax_relu_0.0_nopretrain",
     // "dan_meanmax_relu_0.1_nopretrain",
     // "bilstm_attention_3_nopretrain",
@@ -42,8 +41,7 @@
     // experiment name
     "expt_setup_name": "",
     // which args to use
-    "args_paths":
-    //
+    "args_paths": //
     "min_1_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_0_max_-1_vocab_-1_doc_-1_tok_lower",
     // "min_0_max_-1_vocab_-1_doc_-1_tok_split"

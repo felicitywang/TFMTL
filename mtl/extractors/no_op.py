@@ -17,16 +17,16 @@ import tensorflow as tf
 
 
 def concat_extractor(inputs, lengths, **kwargs):
-  """A no-op encoder, e.g., for use with bag-of-words features
-  that have already been encoded.
+    """A no-op encoder, e.g., for use with bag-of-words features
+    that have already been encoded.
+  
+    Inputs
+    ------
+      inputs: list of batches of size [batch_size, D]
+  
+    Outputs
+    -------
+      outputs: a Tensor of size [batch_size, len(inputs)*D].
+    """
 
-  Inputs
-  ------
-    inputs: list of batches of size [batch_size, D]
-
-  Outputs
-  -------
-    outputs: a Tensor of size [batch_size, len(inputs)*D].
-  """
-
-  return tf.concat(inputs, axis=1)  # concat along time axis
+    return tf.concat(inputs, axis=1)  # concat along time axis

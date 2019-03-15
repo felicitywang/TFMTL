@@ -3,28 +3,30 @@ import argparse
 import json
 import bz2
 
+
 def main(wiki_dump_file, data):
-    indices = {example["text"]:i for i,example in enumerate(data)}
+    indices = {example["text"]: i for i, example in enumerate(data)}
     print(len(data))
     print(data[0])
     num_replaced = 0
     with bz2.BZ2File(wiki_dump_file) as f:
-        for i,(title, content, pageid) in enumerate(extract_pages(f)):
+        for i, (title, content, pageid) in enumerate(extract_pages(f)):
             try:
                 data[indices[title]]["text"] = content
                 data[indices[title]]["replaced"] = True
                 if num_replaced % 100 == 0:
-                    print(content[:100]+"...\n")
+                    print(content[:100] + "...\n")
                 num_replaced += 1
             except Exception:
                 pass
             if i % 1000 == 0:
-                #print(title)
-                #print(content)
-                #print(pageid)
+                # print(title)
+                # print(content)
+                # print(pageid)
                 print("%i of %i, %i" % (num_replaced, len(data), i))
 
     return data
+
 
 def cleanup(data):
     new_data = []
@@ -33,6 +35,7 @@ def cleanup(data):
             del example["replaced"]
             new_data.append(example)
     return new_data
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -53,6 +56,6 @@ if __name__ == '__main__':
 
     data = main(args.wiki_dump_file, data)
 
-    for i,dataset_file in enumerate(dataset_files):
-        with open(dataset_file[:-5]+"_content.json", 'w') as f:
-            json.dump(cleanup(data[indices[i]:indices[i+1]]), f)
+    for i, dataset_file in enumerate(dataset_files):
+        with open(dataset_file[:-5] + "_content.json", 'w') as f:
+            json.dump(cleanup(data[indices[i]:indices[i + 1]]), f)

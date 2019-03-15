@@ -43,8 +43,7 @@
         // "_train_syn_p1000r1000_syn_p1000r1000_para_valid_gold_oracle"
     ],
     // what architecture in encoders.json to use
-    "architecture":
-    "dan_meanmax_relu_0.1_nopretrain",
+    "architecture": "dan_meanmax_relu_0.1_nopretrain",
     // "bilstm_nopretrain",
     // "bilstm_attention_3_nopretrain",
     // "cnn_nopretrain"

@@ -47,122 +47,122 @@ _all_cap_re = re.compile("([a-z0-9])([A-Z])")
 
 
 def _convert_camel_to_snake(name):
-  s1 = _first_cap_re.sub(r"\1_\2", name)
-  return _all_cap_re.sub(r"\1_\2", s1).lower()
+    s1 = _first_cap_re.sub(r"\1_\2", name)
+    return _all_cap_re.sub(r"\1_\2", s1).lower()
 
 
 def default_name(obj_class):
-  """Convert a class name to the registry's default name for the class.
-  Args:
-    obj_class: the name of a class
-  Returns:
-    The registry's default name for the class.
-  """
-  return _convert_camel_to_snake(obj_class.__name__)
+    """Convert a class name to the registry's default name for the class.
+    Args:
+      obj_class: the name of a class
+    Returns:
+      The registry's default name for the class.
+    """
+    return _convert_camel_to_snake(obj_class.__name__)
 
 
 def register_hparams(name=None):
-  """Register an HParams set. name defaults to function name snake-cased."""
+    """Register an HParams set. name defaults to function name snake-cased."""
 
-  def decorator(hp_fn, registration_name=None):
-    """Registers & returns hp_fn with registration_name or default name."""
-    hp_name = registration_name or default_name(hp_fn)
-    if hp_name in _HPARAMS:
-      raise LookupError("HParams set %s already registered." % hp_name)
-    _HPARAMS[hp_name] = hp_fn
-    return hp_fn
+    def decorator(hp_fn, registration_name=None):
+        """Registers & returns hp_fn with registration_name or default name."""
+        hp_name = registration_name or default_name(hp_fn)
+        if hp_name in _HPARAMS:
+            raise LookupError("HParams set %s already registered." % hp_name)
+        _HPARAMS[hp_name] = hp_fn
+        return hp_fn
 
-  # Handle if decorator was used without parens
-  if callable(name):
-    hp_fn = name
-    return decorator(hp_fn, registration_name=default_name(hp_fn))
+    # Handle if decorator was used without parens
+    if callable(name):
+        hp_fn = name
+        return decorator(hp_fn, registration_name=default_name(hp_fn))
 
-  return lambda hp_fn: decorator(hp_fn, name)
+    return lambda hp_fn: decorator(hp_fn, name)
 
 
 def register_encoder(name=None):
-  def decorator(fn, registration_name=None):
-    name = registration_name or default_name(fn)
-    if name in _ENCODERS:
-      raise LookupError("Encoder %s already registered." % name)
-    _ENCODERS[name] = fn
-    return fn
+    def decorator(fn, registration_name=None):
+        name = registration_name or default_name(fn)
+        if name in _ENCODERS:
+            raise LookupError("Encoder %s already registered." % name)
+        _ENCODERS[name] = fn
+        return fn
 
-  # Handle if decorator was used without parens
-  if callable(name):
-    fn = name
-    return decorator(fn, registration_name=default_name(fn))
+    # Handle if decorator was used without parens
+    if callable(name):
+        fn = name
+        return decorator(fn, registration_name=default_name(fn))
 
-  return lambda fn: decorator(fn, name)
+    return lambda fn: decorator(fn, name)
 
 
 def register_decoder(name=None):
-  """Register a decoder. name defaults to function name snake-cased."""
+    """Register a decoder. name defaults to function name snake-cased."""
 
-  def decorator(decoder_fn, registration_name=None):
-    """Register & return decoder_fn with registration_name or default name."""
-    decoder_name = registration_name or default_name(decoder_fn)
-    if decoder_name in _DECODERS:
-      raise LookupError("Decoder %s already registered." % decoder_name)
-    _DECODERS[decoder_name] = decoder_fn
-    return decoder_fn
+    def decorator(decoder_fn, registration_name=None):
+        """Register & return decoder_fn with registration_name or default name."""
+        decoder_name = registration_name or default_name(decoder_fn)
+        if decoder_name in _DECODERS:
+            raise LookupError("Decoder %s already registered." % decoder_name)
+        _DECODERS[decoder_name] = decoder_fn
+        return decoder_fn
 
-  # Handle if decorator was used without parens
-  if callable(name):
-    decoder_fn = name
-    return decorator(decoder_fn, registration_name=default_name(decoder_fn))
+    # Handle if decorator was used without parens
+    if callable(name):
+        decoder_fn = name
+        return decorator(decoder_fn, registration_name=default_name(decoder_fn))
 
-  return lambda decoder_fn: decorator(decoder_fn, name)
+    return lambda decoder_fn: decorator(decoder_fn, name)
 
 
 def display_list_by_prefix(names_list, starting_spaces=0):
-  """Creates a help string for names_list grouped by prefix."""
-  cur_prefix, result_lines = None, []
-  space = " " * starting_spaces
-  for name in sorted(names_list):
-    split = name.split("_", 1)
-    prefix = split[0]
-    if cur_prefix != prefix:
-      result_lines.append(space + prefix + ":")
-      cur_prefix = prefix
-    result_lines.append(space + "  * " + name)
-  return "\n".join(result_lines)
+    """Creates a help string for names_list grouped by prefix."""
+    cur_prefix, result_lines = None, []
+    space = " " * starting_spaces
+    for name in sorted(names_list):
+        split = name.split("_", 1)
+        prefix = split[0]
+        if cur_prefix != prefix:
+            result_lines.append(space + prefix + ":")
+            cur_prefix = prefix
+        result_lines.append(space + "  * " + name)
+    return "\n".join(result_lines)
 
 
 def hparams(name):
-  if name not in _HPARAMS:
-    error_msg = "HParams set %s never registered. Sets registered:\n%s"
-    raise LookupError(
-      error_msg % (name,
-                   display_list_by_prefix(list_hparams(), starting_spaces=4)))
-  return _HPARAMS[name]
+    if name not in _HPARAMS:
+        error_msg = "HParams set %s never registered. Sets registered:\n%s"
+        raise LookupError(
+            error_msg % (name,
+                         display_list_by_prefix(list_hparams(), starting_spaces=4)))
+    return _HPARAMS[name]
 
 
 def encoder(name):
-  if name not in _ENCODERS:
-    error_msg = "Encoder %s never registered. Encoders registered:\n%s"
-    raise LookupError(
-      error_msg % (name,
-                   display_list_by_prefix(list_decoders(), starting_spaces=4)))
-  return _ENCODERS[name]
+    if name not in _ENCODERS:
+        error_msg = "Encoder %s never registered. Encoders registered:\n%s"
+        raise LookupError(
+            error_msg % (name,
+                         display_list_by_prefix(list_decoders(), starting_spaces=4)))
+    return _ENCODERS[name]
 
 
 def decoder(name):
-  if name not in _DECODERS:
-    error_msg = "Decoder %s never registered. Decoders registered:\n%s"
-    raise LookupError(
-      error_msg % (name,
-                   display_list_by_prefix(list_decoders(), starting_spaces=4)))
-  return _DECODERS[name]
+    if name not in _DECODERS:
+        error_msg = "Decoder %s never registered. Decoders registered:\n%s"
+        raise LookupError(
+            error_msg % (name,
+                         display_list_by_prefix(list_decoders(), starting_spaces=4)))
+    return _DECODERS[name]
 
 
 def list_hparams():
-  return list(_HPARAMS)
+    return list(_HPARAMS)
 
 
 def list_encoders():
-  return list(_ENCODERS)
+    return list(_ENCODERS)
 
 
 def list_decoders():
-  return list(_DECODERS)
+    return list(_DECODERS)

@@ -27,29 +27,29 @@ from mtl.util.util import load_json
 
 
 def main():
-  args = load_json(sys.argv[1])
+    args = load_json(sys.argv[1])
 
-  # TODO
-  for domain, init_dataset_suffix, finetune_dataset_suffix in itertools.product(
-    args['domains'], args['init_dataset_suffix'],
-    args['finetune_dataset_suffix']):
-    print('cd {}'.format(args['root_dir']))
-    print(
-      '{} {} {}_init{}_finetune{} {} data/json/{}{} data/tf/single/{}{}/{}'.format(
-        args['python_path'],
-        args['code_path'],
-        domain,
-        init_dataset_suffix,
-        finetune_dataset_suffix,
-        args['args_file_path'],
-        domain,
-        finetune_dataset_suffix,
-        domain,
-        init_dataset_suffix,
-        args['args_path']
-      )
-    )
+    # TODO
+    for domain, init_dataset_suffix, finetune_dataset_suffix in itertools.product(
+        args['domains'], args['init_dataset_suffix'],
+        args['finetune_dataset_suffix']):
+        print('cd {}'.format(args['root_dir']))
+        print(
+            '{} {} {}_init{}_finetune{} {} data/json/{}{} data/tf/single/{}{}/{}'.format(
+                args['python_path'],
+                args['code_path'],
+                domain,
+                init_dataset_suffix,
+                finetune_dataset_suffix,
+                args['args_file_path'],
+                domain,
+                finetune_dataset_suffix,
+                domain,
+                init_dataset_suffix,
+                args['args_path']
+            )
+        )
 
 
 if __name__ == '__main__':
-  main()
+    main()
