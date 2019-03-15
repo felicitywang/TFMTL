@@ -37,32 +37,21 @@ Datasets of different domains for text classification.
 | emotion   | Twitter_18                      | 2,524      | 18      | sentence  | Emotional tweets                                     |
 
 
-## File Structure
+## File structure
 ```
-datasets/
-dataset_type/
-e.g.
-sentiment/ : sentiment analysis
-emotion/ : emotion detection
-topic/ : topic
-
-dataset_name/
-e.g. IMDB, SSTb, etc.
-README.md
-summary
-basic stats
-# items
-# labels(number of labels and what each one means)
-basic unit
-citation(bibtex)
-webpage link
-format_data.py : python script which converts the original data into json format
-original/ : all the original data
-data.json.gz : all the original data
-json block containing text fields, label field and metadata
-the 'label' field(or perhaps with other name) are all integers
-index.json.gz : indices of train/test/(valid) if given
-text_field_names: names of all the text fields if not 'text'
-label_field_name: name of the label field if not 'label'
+- datasets/
+    - dataset_type/
+        - dataset_name/
+            - README.md
+                - summary
+                - basic stats
+                - # items
+                - # labels(number of labels and what each one means)
+                - basic unit
+                - citation(bibtex)
+                - webpage link
+            - format_data.py : python script which converts the original data into json format
+            - text_field_names: names of all the text fields if not 'text'
+            - label_field_name: name of the label field if not 'label'
 ```
 
