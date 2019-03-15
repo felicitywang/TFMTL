@@ -69,7 +69,10 @@ pip install -r requirements.txt
 See `expts/README.md` for a detailed experiment pipeline.
 
 
-<!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place? -->
+## Embedders, Extractors, and Encoders
+See `ENCODER_README.md`.
+
+<!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place?
 ## Embedders, Extractors, and Encoders
 
 One focus of this repository is a collection of off-the-shelf functions
@@ -114,5 +117,5 @@ and `tfmtl/mtl/extractors`, respectively.
 
 The architecture to use in an experiment is given by the `--architecture` flag,
 and the file containing the architecture(s) is given by the `--encoder_config_file`
-flag. Multiple architectures can be placed in the same configuration file.
+flag. Multiple architectures can be placed in the same configuration file. -->
 
