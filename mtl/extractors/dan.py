@@ -32,15 +32,6 @@ def reduce(inputs, lengths, reducer):
     return s_embedding
 
 
-def drop_words(x, batch_size, n_time_steps, word_dropout_rate):
-    # if word_dropout_rate > 0:
-    mask = tf.random_uniform(
-        (batch_size, n_time_steps, 1)) >= word_dropout_rate
-    # print(mask)
-    x = tf.cast(mask, 'float32') * x
-    return x
-
-
 def dan(inputs,
         lengths,
         word_dropout_rate,
@@ -52,7 +43,7 @@ def dan(inputs,
         **kwargs):
     """Deep Averaging Network
     https://www.cs.umd.edu/~miyyer/pubs/2015_acl_dan.pdf
-  
+
     :param inputs: a sequence of word embeddings
     :param lengths: length of the sequence
     :param word_dropout_rate: how much word embeddings to drop
@@ -80,8 +71,12 @@ def dan(inputs,
         input_shape = tf.shape(x)
         batch_size = input_shape[0]
         n_time_steps = input_shape[1]
-        if is_training and word_dropout_rate > 0:
-            x = drop_words(x, batch_size, n_time_steps, word_dropout_rate)
+
+        # entire token word embedding dropout
+        all_ones = tf.ones((batch_size, n_time_steps, 1))
+        mask = tf.layers.dropout(
+            all_ones, rate=word_dropout_rate, training=is_training)
+        x = tf.cast(mask, 'float32') * x
         inputs[i] = x
 
     # all examples must have at least one word
