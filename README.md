@@ -72,6 +72,22 @@ See `expts/README.md` for a detailed experiment pipeline.
 ## Embedders, Extractors, and Encoders
 See `ENCODER_README.md`.
 
+
+## Authors
+http://www.cs.jhu.edu/~vandurme/
+
+https://cs.jhu.edu/~noa/
+
+http://sebner.com/
+
+https://www.linkedin.com/in/cnfxwang
+
+
+## License
+2-Clause BSD License
+
+
+
 <!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place?
 ## Embedders, Extractors, and Encoders
 
