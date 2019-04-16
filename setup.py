@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 REQUIRED_PACKAGES = ['six', 'enum34']
 
 setup(name='mtl',
-      version='0.1',
+      version='1.0',
       description='A TensorFlow Package for Multi-Task Learning',
       url='https://github.com/felicitywang/tfmtl',
       author='Johns Hopkins University',
