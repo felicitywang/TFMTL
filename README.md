@@ -1,5 +1,7 @@
 # A TensorFlow Framework for Multi-Task Learning
 
+<!-- TODO add description -->
+
 <!-- [![pipeline status](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/badges/master/pipeline.svg)](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/commits/master)
 
 ## Attribution
