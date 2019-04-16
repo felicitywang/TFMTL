@@ -1,6 +1,6 @@
 # A TensorFlow Framework for Multi-Task Learning
 
-[![pipeline status](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/badges/master/pipeline.svg)](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/commits/master)
+<!-- [![pipeline status](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/badges/master/pipeline.svg)](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/commits/master)
 
 ## Attribution
 
@@ -18,7 +18,7 @@ may be appropriate:
 
 Please refrain from sharing code in this repository beyond immediate
 collaborators, as parts of it may be related to work that is still under
-submission or will soon be submitted for publication.
+submission or will soon be submitted for publication. -->
 
 ## Requirements
 
@@ -54,13 +54,9 @@ pip install -r requirements.txt
 - `expts/`:
   - `scripts/`: scripts to write TFRecord data and to run the model
   - `example/`: example code to run experiments
-  - `experiment_name/`: setup, configuration, running scripts, etc. for a particular experiment
-  - ...
-  <!-- - TODO example folders -->
+    - `experiment_name/`: setup, configuration, running scripts, etc. for a particular experiment
 - `mtl/`: main codebase
-
 - `pretrained_word_embeddings/`: folder to save the pre-trained word embedding files
-
 - `tests/`: test files
 
 
@@ -85,7 +81,6 @@ https://www.linkedin.com/in/cnfxwang
 
 ## License
 2-Clause BSD License
-
 
 
 <!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place?
@@ -135,3 +130,6 @@ The architecture to use in an experiment is given by the `--architecture` flag,
 and the file containing the architecture(s) is given by the `--encoder_config_file`
 flag. Multiple architectures can be placed in the same configuration file. -->
 
+## Citation
+
+Add a footnote to the location of this repository.
