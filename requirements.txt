@@ -14,3 +14,4 @@ scipy
 gensim
 json_minify
 bs4
+html5lib

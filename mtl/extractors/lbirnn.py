@@ -38,8 +38,8 @@ def get_multi_cell(cell_type, cell_size, num_layers):
         cell = cell_type(cell_size,
                          initializer=tf.contrib.layers.xavier_initializer())
     # TODO layer num???
-    elif cell_type == RANCell:
-        cell = cell_type(num_units=cell_size)
+    # elif cell_type == RANCell:
+    #     cell = cell_type(num_units=cell_size)
     else:
         cell = cell_type(cell_size)
 
@@ -423,8 +423,9 @@ def lbirnn_stock(inputs,
     else:
         # shape states: [2, 2]
         # (cf. https://github.com/coastalcph/mtl-disparate/blob/master/mtl/nn.py#L40)
-        if cell_type == tf.contrib.rnn.GRUCell or cell_type == RANCell:
-            output = tf.concat([states[0], states[1]], 1)
+        # if cell_type == tf.contrib.rnn.GRUCell or cell_type == RANCell:
+        if cell_type == tf.contrib.rnn.GRUCell:
+                output = tf.concat([states[0], states[1]], 1)
         elif cell_type == tf.contrib.rnn.LSTMCell:
             output = tf.concat([states[0][1], states[1][1]], 1)
 
