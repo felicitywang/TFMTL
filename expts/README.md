@@ -4,7 +4,7 @@ Detailed instructions on how to run an experiment.
 
 # Requirements
 
-For Python package requirements and other general info see `../../requirement.txt`.
+For Python package requirements and other general info see `../../requirement.txt` and the installation guide in the main `README.md`.
 
 # File structure
 - `TASK/`: name of an experiment, e.g., `sentiment_1`, `all_EMNLP`, etc.
