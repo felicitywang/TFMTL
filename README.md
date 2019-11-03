@@ -1,31 +1,26 @@
-# A TensorFlow Framework for Multi-Task Learning
+# TFMTL: A TensorFlow Framework for Multi-Task Learning
 
-<!-- TODO add description -->
+TFMTL is a full-pipeline framework for multi-task learning text classification tasks developed in TensorFlow. You can download formatted text datasets, preprocess datasets, configure the embedding/encoding/FFN architectures by running a few scripts and modify the configurations in some JSON files. You can also easily add your own modules following the standard input/output. 
 
-<!-- [![pipeline status](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/badges/master/pipeline.svg)](https://gitlab.hltcoe.jhu.edu/vandurme/tfmtl/commits/master)
+Apart from the easy configuration of model architectures, multi-task learning(MTL) allows you to run multiple tasks together, with each you can configure a different architecture or choose the share parts of the models for better transfer. Pre-training and fine-tuning are also supported for better transfer.  
 
-## Attribution
+Because of the easy usage, flexible configuration for all text tasks, and the support for multi-task learning, this codebase is especially useful for running non-contextual baselines for text classification tasks; As it's developed in TensorFlow(when there's only TensorFlow 1.x), it can also serve as a good reference/learning tutorial for beginners/developers in TensorFlow for text tasks.  
 
-If code in this repository contributes to work to be submitted for
-publication, please consult the author(s) of the relevant code to
-agree on appropriate attribution. Depending on the usage, one of these
-may be appropriate:
+## Installation
 
-* No special attribution necessary. This will most often be the case;
-  for instance, for low-level infrastructure or simple baselines.
-* A mention in the **Acknowledgements** section of the eventual
-  publication.
-* Co-author on the publication. This may be appropriate if you are
-  relying on large portions of code that you did not write yourself.
+### Python 3 and Virtual Environment
+This codebase is written in Python 3. We recommend using conda for your virtual environment. 
 
-Please refrain from sharing code in this repository beyond immediate
-collaborators, as parts of it may be related to work that is still under
-submission or will soon be submitted for publication. -->
+In case you're not familiar with conda, below is an example script to create a new virtual environment with conda:
+```bash
+conda create --name tfmtl
+conda activate tfmtl
+conda install pip
+```
 
-## Requirements
+### Requirements
 
 The requirements are listed in `requirements.txt`. To install, run:
-
 ```
 pip install -U pip
 pip install -r requirements.txt
@@ -33,105 +28,66 @@ pip install -r requirements.txt
 
 ## Development
 
-* Set up the package using `python setup.py develop`
-* Implement tests by subclassing `tf.test.TestCase`. Put tests in
-  `tests` and affix `"test_*.py"` or `"*_test.py"`.
-* Follow the TensorFlow style guidelines.
-* You must submit work via pull (merge) requests; do not push
-  to `master` directly.
-* Make sure `run_checks.sh` completes before merging into
-  `origin/master`. You may need to run the following first:
+To install either
 
-  ``` bash
-  pip install flake8
-  pip install -U setuptools
-  ```
+```python setup.py develop```
 
-* Use `six` to maintain backwards compatibility with Python 2.7.
+or 
+
+```pip install mtl -e```
+
+Either allows you use the `mtl` package in an editable mdoe. 
+
 
 ## File Structure
 
-- `datasets/`: collection of different datasets of text classification tasks with summaries, dataset statistics and bibtex info
-
+- `datasets/`: collection of different datasets of text classification tasks with summaries, dataset statistics and bibtex info; for each dataset we also provide a script to download the dataset and convert them to a standard format in JSON. 
 - `expts/`:
-  - `scripts/`: scripts to write TFRecord data and to run the model
-  - `example/`: example code to run experiments
+  - `scripts/`: scripts to configure the run the model end-to-end
+  - `example/`: example code to run experiments with a detailed tutorial
     - `experiment_name/`: setup, configuration, running scripts, etc. for a particular experiment
-- `mtl/`: main codebase
-- `pretrained_word_embeddings/`: folder to save the pre-trained word embedding files
+- `mtl/`: source code of the mtl package
+    - `extractors`: modeuls for encoding layers(no-op DAN, CNN, LSTM, etc., each with further configuration support)
+    - `embedders`: modeuls for the embedding layers(no-op(for BOW), embedding, pre-trained word embedding, etc.)
+    - `optim`: optimizers
+    - `util`: helper functions
+- `pretrained_word_embeddings/`: folder to save the pre-trained word embedding files with easy downloading scripts
 - `tests/`: test files
 
 
 ## Running Experiments
 
-See `expts/README.md` for a detailed experiment pipeline.
+`expts/README.md` provides a detailed tutorial on how to modify the configurations and run experiments.
 
 
 ## Embedders, Extractors, and Encoders
-See `ENCODER_README.md`.
+`ENCODER_README.md` provides a detailed documentation of how the model is organized and how to develop your own model. 
 
 
-## Authors
-http://www.cs.jhu.edu/~vandurme/
+## Citation
+Our paper `Bag-of-Words Transfer: Non-Contextual Techniques for Multi-Task Learning` is accepted by [DeepLo-2019](https://sites.google.com/view/deeplo19/home)(Deep Learning for Low-Resource NLP Workshop, EMNLP 2019). It's focused on non-contextual ways for multi-task learning and uses this codebase. If you use this codebase, please cite our paper and add a footnote of this repo.
 
-https://cs.jhu.edu/~noa/
 
-http://sebner.com/
-
-https://www.linkedin.com/in/cnfxwang
-
+```
+@inproceedings{ebner-etal-2019-bag,
+    title = "Bag-of-Words Transfer: Non-Contextual Techniques for Multi-Task Learning",
+    author = "Ebner, Seth  and
+      Wang, Felicity  and
+      Van Durme, Benjamin",
+    booktitle = "Proceedings of the 2nd Workshop on Deep Learning Approaches for Low-Resource NLP (DeepLo 2019)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D19-6105",
+    pages = "40--46",
+    abstract = "Many architectures for multi-task learning (MTL) have been proposed to take advantage of transfer among tasks, often involving complex models and training procedures. In this paper, we ask if the sentence-level representations learned in previous approaches provide significant benefit beyond that provided by simply improving word-based representations. To investigate this question, we consider three techniques that ignore sequence information: a syntactically-oblivious pooling encoder, pre-trained non-contextual word embeddings, and unigram generative regularization. Compared to a state-of-the-art MTL approach to textual inference, the simple techniques we use yield similar performance on a universe of task combinations while reducing training time and model size.",
+}
+```
 
 ## License
 2-Clause BSD License
 
 
-<!-- TODO detailed lists of each encoder and corresponding arguments? perhaps in another place?
-## Embedders, Extractors, and Encoders
-
-One focus of this repository is a collection of off-the-shelf functions
-for transforming inputs into feature representations. These transformations
-are referred to as "encoders", and they consist of two steps: an embedding
-step that turns input token IDs into token embeddings, and an extraction step
-that turns the embeddings into feature representations. Together, the embedder
-and extractor constitute an encoder.
-
-An architecture is a specification of an encoder for each dataset in an experiment.
-Users specify encoder architectures in a JSON configuration file. An architecture
-is specified with a name (key) whose value is a dictionary with the following fields:
-
-* `embedders_tied`:
-  * `true` if all datasets should be embedded with the same function (i.e., shared parameters),
-  * `false` otherwise
-* `extractors_tied`:
-  * `true` if all datasets should have features extracted with the same function (i.e., shared parameters),
-  * `false` otherwise
-* Name of dataset A
-  * `embed_fn`: a string specifying an embedding function
-  * `embed_kwargs`: a dictionary specifying `argument: value` pairs (arguments are strings) for the embedding function
-  * `extract_fn`: a string specifying an extraction function
-  * `extract_kwargs`: a dictionary specifying `argument: value` pairs (arguments are strings) for the extraction function
-* Name of dataset B...
-
-`embed_fn`, `embed_kwargs`, `extract_fn`, and `extract_kwargs` must be fully specified,
-even if `embedders_tied` or `extractors_tied` is `true`. If `embedders_tied` is `true`
-for an architecture, then `embed_fn` and `embed_kwargs` must have identical values for
-all datasets specified in the given architecture (similarly if `extractors_tied` is `true`).
-
-`true` is the JSON equivalent of Python's `True` value.
-
-`false` is the JSON equivalent of Python's `False` value.
-
-`null` is the JSON equivalent of Python's `None` value.
-
-An example configuration file can be found at `tfmtl/tests/encoders.json`.
-
-Embedding functions and extraction functions can be found in `tfmtl/mtl/embedders`
-and `tfmtl/mtl/extractors`, respectively.
-
-The architecture to use in an experiment is given by the `--architecture` flag,
-and the file containing the architecture(s) is given by the `--encoder_config_file`
-flag. Multiple architectures can be placed in the same configuration file. -->
-
-## Citation
-
-Add a footnote to the location of this repository.
+## Contact
+GitHub issues are the best way for questions. Author emails can be found in our paper. 
