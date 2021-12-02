@@ -88,6 +88,7 @@ Our paper `Bag-of-Words Transfer: Non-Contextual Techniques for Multi-Task Learn
 ## License
 2-Clause BSD License
 
+This research is based upon work supported in part by the Intelligence Advanced Research Projects Activity (IARPA), (contract FA8650-17-C-9115). The views and conclusions herein are those of the authors and should not be interpreted as necessarily representing official policies, ex-pressed or implied, of ODNI, IARPA, or the U.S. Government. The U.S. Government is authorized to reproduce and distribute reprints for governmental purposes notwithstanding any copy-right annotation therein.
 
 ## Contact
 GitHub issues are the best way for questions. Author emails can be found in our paper. 
